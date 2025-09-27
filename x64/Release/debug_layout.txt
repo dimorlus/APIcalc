@@ -1,0 +1,45 @@
+OnCreate: GetControlHeight()=24, resultY=30, ScaleDPI(5)=6
+&Binary width=16
+SetMenuItemInfo result: 0, position: 1
+OnCreate: Input height=24 (GetControlHeight=24)
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+OnCreate: GetControlHeight()=24, resultY=30, ScaleDPI(5)=6
+&Binary width=16
+Menu item count: 1
+SetMenuItemInfo result: 0, position: 1, error: 1456
+OnCreate: Input height=24 (GetControlHeight=24)
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+ResizeWindow: inputHeight=24, gap=4, resultHeight=54, padding=54, total=136
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28
+=== UpdateLayout() called ===
+UpdateLayout: Expression edit - inputHeight=24
+UpdateLayout: Result edit - GetControlHeight=24, gap=4, yPos=28

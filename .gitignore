@@ -67,3 +67,4 @@ vc_redist.*
 log.txt*
 .tmp*/
 Reports/*
+*.pdb

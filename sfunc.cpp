@@ -138,7 +138,31 @@ int_t Now(int_t n)
 //  //return (int_t)mktime(timeinfo);
 //  return (int_t)time(NULL)+n*60*60;
 //}
+/*
+//https://vak.dreamwidth.org/993299.html
+int_t nearly_equal(double a, double b, int ignore_nbits)
+{
+    if (a == b)
+        return true;
 
+    // Разбираем функцию на мантиссу и экспоненту.
+    int a_exponent, b_exponent;
+    double a_mantissa = frexp(a, &a_exponent);
+    double b_mantissa = frexp(b, &b_exponent);
+
+    // Экспонены обязаны совпасть
+    if (a_exponent != b_exponent)
+        return false;
+
+    // Вычитаем мантиссы и сравниваем с лимитом
+    double delta = fabs(a_mantissa - b_mantissa);
+
+    // Определяем точность сравнения.
+    double limit = ldexp(1.0, ignore_nbits - 52);
+
+    return delta < limit?1:0;
+}
+*/
 float__t Erf(float__t x)
 {
     // constants
@@ -159,31 +183,7 @@ float__t Erf(float__t x)
 
     return sign*y;
 }
-/*
-//https://vak.dreamwidth.org/993299.html
-int_t nearly_equal(double a, double b, int ignore_nbits)
-{
-    if (a == b)
-        return true;
 
-    // арчсштрхь їшёыр эр ьрэђшёёѓ ш §ъёяюэхэђѓ.
-    int a_exponent, b_exponent;
-    double a_mantissa = frexp(a, &a_exponent);
-    double b_mantissa = frexp(b, &b_exponent);
-
-    // нъёяюэхэђћ юсџчрэћ ёютярёђќ.
-    if (a_exponent != b_exponent)
-        return false;
-
-    // Тћїшђрхь ьрэђшёёћ, юс№рчѓхь яюыюцшђхыќэѓў фхыќђѓ.
-    double delta = fabs(a_mantissa - b_mantissa);
-
-    // Юя№хфхыџхь яю№юу фюяѓёђшьющ №рчэшіћ.
-    double limit = ldexp(1.0, ignore_nbits - 52);
-
-    return delta < limit?1:0;
-}
-*/
 float__t Erfc(float__t x)
 {
     return 1-Erf(x);
@@ -1026,14 +1026,21 @@ int_t fprn(char *dest, char *sfmt, int args, value *v_stack) {
     return dst - dest;
 }
 
-//strftime(char *s, size_t maxsize, const char *fmt, const struct tm *t);
-//struct tm *gmtime(const time_t *timer);
+int timezone(void) //return seconds
+{
+    TIME_ZONE_INFORMATION tzi;
+    DWORD tzResult = GetTimeZoneInformation(&tzi);
+    long timezoneBias = tzi.Bias; // in minutes
+    int tzHours = timezoneBias * 60;
+    return tzHours;
+}
+
 int_t datatime(char *tstr)
 {
     time_t result = 0;
     int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
 
-    if (sscanf(tstr, "%4d.%2d.%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec))
+    if (tstr && sscanf(tstr, "%4d.%2d.%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec))
     {
         struct tm breakdown = {0};
         breakdown.tm_year = year - 1900; /* years since 1900 */
@@ -1042,32 +1049,9 @@ int_t datatime(char *tstr)
         breakdown.tm_hour = hour;
         breakdown.tm_min = min;
         breakdown.tm_sec = sec;
-        result = mktime(&breakdown) - _timezone;
+        result = mktime(&breakdown) - timezone();
     }
     return (int_t)result;
 }
 
-//int_t datatime(char *tstr)
-//{
-//  time_t result = 0;
-//  int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
 
-//  if (sscanf(tstr, "%4d.%2d.%2d %2d:%2d:%2d", &year, &month, &day, &hour, &min, &sec))
-//   {
-//    struct tm breakdown = {0};
-//    breakdown.tm_year = year - 1900; /* years since 1900 */
-//    breakdown.tm_mon = month - 1;
-//    breakdown.tm_mday = day;
-//    breakdown.tm_hour = hour;
-//    breakdown.tm_min = min;
-//    breakdown.tm_sec = sec;
-//    result = mktime(&breakdown)-_timezone;
-//   }
-// return (int_t)result;
-//}
-
-int_t time(char *dest, char *sfmt, int_t time)
-{
-    //strftime(
-    return 0;
-}

@@ -80,4 +80,3 @@ bool IsNaN(const double fVal);
 bool IsNaNL(const long double ldVal);
 int_t fprn(char *dest, char *sfmt, int args, value* v_stack);
 int_t datatime(char *tstr);
-int_t time(char *dest, char *sfmt, int_t time);

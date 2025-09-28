@@ -122,7 +122,6 @@ int b2str(char *str, const char *fmt, uint64_t b)
        }
 
       mask = 1ull << 63;
-      //for(w = 64; ((w > 0) && (mask > 1) && ((b & mask) == 0)); w--) mask >>=1;
       for(w = wide; ((w > 0) && (mask > 1) && ((b & mask) == 0)); w--) mask >>=1;
       if (wide <= w) wide = w;
 
@@ -341,9 +340,8 @@ int wchr2str(char *str, int i)
   wbuf[0] = *(wchar_t *)&i;
   wbuf[1] = L'\0';
 
-
-  WideCharToMultiByte(CP_OEMCP, 0, wbuf, -1,
-               (LPSTR)cbuf, 4, NULL, NULL);
+  if (i == '\t') cbuf[0] = ' ', cbuf[1] = '\0'; 
+  else WideCharToMultiByte(CP_OEMCP, 0, wbuf, -1, (LPSTR)cbuf, 4, NULL, NULL);
   return sprintf(str, "'%s'W", cbuf);
 #else /*_WIN_*/
  *str = '\0';

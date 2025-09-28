@@ -208,6 +208,14 @@ class symbol
     value    val;
     char*    name;
     symbol*  next;
+
+ inline symbol()
+     {
+      tag = tsVARIABLE;
+      func = NULL;
+      name = NULL;
+      next = NULL;
+ }
 };
 
 
@@ -235,6 +243,7 @@ class calculator
 
     inline unsigned string_hash_function(char* p);
     symbol* add(t_symbol tag, const char* name, void* func = NULL);
+    symbol* find(t_symbol tag, const char* name, void* func = NULL);
     t_operator scan(bool operand, bool percent);
     void  error(int pos, const char* msg);
     inline void  error(const char* msg) {error(pos-1, msg);}
@@ -257,6 +266,7 @@ class calculator
     inline int errps(void) {return errpos;};
     void addfvar(const char* name, float__t val);
     void addivar(const char* name, int_t val);
+    void addlvar(const char* name, float__t fval, int_t ival);
     bool checkvar(const char* name);
     void addfn(const char* name, void *func) {add(tsFFUNC1, name, func);}
     void addfn2(const char* name, void *func) {add(tsFFUNC2, name, func);}

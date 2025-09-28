@@ -1827,41 +1827,11 @@ int WinApiCalc::CalculateContentBasedWidth()
     
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
     
-    // Создаем тестовое выражение для получения максимального формата
-    char testExpr[20] = "0xFFFFFFFFFFFFFFFF"; // Длинное число для максимального bin формата
-    
+   
     int maxPixelWidth = 0;
     
-    try {
-        m_pCalculator->syntax(m_options);
-        int64_t iVal = 0;
-        long double fVal = m_pCalculator->evaluate(testExpr, &iVal);
-        
-        // Получаем строки форматированного вывода
-        char strings[20][80];
-        memset(strings, 0, sizeof(strings));
-        
-        int n = format_out(m_options, m_pCalculator->issyntax(), m_binWidth, 
-                          0, fVal, iVal, testExpr, strings, m_pCalculator);
-        
-        // Измеряем реальную пиксельную ширину каждой строки (как TextWidth в VCL)
-        for (int i = 0; i < n && i < 20; i++)
-        {
-            if (strings[i][0] != '\0')
-            {
-                SIZE textSize;
-                int len = (int)strlen(strings[i]);
-                if (GetTextExtentPoint32A(hdc, strings[i], len, &textSize))
-                {
-                    if (textSize.cx > maxPixelWidth)
-                        maxPixelWidth = textSize.cx;
-                }
-            }
-        }
-    }
-    catch (...)
     {
-        // На случай ошибки измеряем тестовую строку
+        //  измеряем тестовую строку
         char fallbackStr[80];
         memset(fallbackStr, 'W', 76);
         fallbackStr[76] = '\0';

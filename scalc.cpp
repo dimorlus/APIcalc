@@ -121,17 +121,26 @@ calculator::calculator(int cfg)
 #define M_E		2.7182818284590452354
   addfvar("pi", M_PI);
   addfvar("e", M_E);
-  addivar("max32",    0x7fffffff);
-  addivar("maxint",   0x7fffffff);
-  addivar("maxu32",   0xffffffff);
-  addivar("maxuint",  0xffffffff);
-  addivar("max64",    0x7fffffffffffffffull);
-  addivar("maxlong",  0x7fffffffffffffffull);
-  addivar("maxu64",   0xffffffffffffffffull);
-  addivar("maxulong", 0xffffffffffffffffull);
-  addivar("timezone", -_timezone/3600);
-  addivar("daylight", _daylight);
-  addivar("tz", _daylight-_timezone/3600);
+  addlvar("max32", 2147483647.0, 0x7fffffff); 
+  addlvar("maxint", 2147483647.0, 0x7fffffff); 
+  addlvar("maxu32", 4294967295.0, 0xffffffff); 
+  addlvar("maxuint", 4294967295.0, 0xffffffff); 
+  addlvar("max64", 9223372036854775807.0, 0x7fffffffffffffffull);
+  addlvar("maxlong", 9223372036854775807.0, 0x7fffffffffffffffull);
+  addlvar("maxu64", 18446744073709551615.0, 0xffffffffffffffffull);
+  addlvar("maxulong", 18446744073709551615.0, 0xffffffffffffffffull);
+ 
+  // Get system timezone information
+  TIME_ZONE_INFORMATION tzi;
+  DWORD tzResult = GetTimeZoneInformation(&tzi);
+  long timezoneBias = tzi.Bias; // in minutes
+  int daylight = (tzResult == TIME_ZONE_ID_DAYLIGHT) ? 1 : 0;
+  double tzHours = -timezoneBias / 60.0;
+  double currentTz = tzHours + (daylight ? -tzi.DaylightBias / 60.0 : 0);
+        
+  addlvar("timezone", tzHours, (int)tzHours);
+  addlvar("daylight", (float__t)daylight, daylight);
+  addlvar("tz", currentTz, (int)currentTz);
 }
 
 calculator::~calculator(void)
@@ -170,7 +179,7 @@ int calculator::varlist(char* buf, int bsize, int* maxlen)
             {
               if (sp->tag == tsVARIABLE)
               {
-                int written = snprintf(cp, bsize - (cp - buf), "%-10s = %-.5Lg\r\n", sp->name, (float__t)sp->val.get());
+                int written = snprintf(cp, bsize - (cp - buf), "%-10s = %-.5Lg\r\n", sp->name, (float__t)sp->val.fval);
                 if (written > localMax) localMax = written;
                 cp += written;
                 lineCount++;
@@ -252,11 +261,7 @@ symbol* calculator::add(t_symbol tag, const char* name, void* func)
     {
       if (scfg & UPCASE)
        {
-#ifdef _WIN_
         if (stricmp(sp->name, uname) == 0) return sp;
-#else  /*_WIN_*/
-	if (strcasecmp(sp->name, uname) == 0) return sp;
-#endif /*_WIN_*/
        }
       else
        {
@@ -274,11 +279,46 @@ symbol* calculator::add(t_symbol tag, const char* name, void* func)
   return sp;
 }
 
+symbol* calculator::find(t_symbol tag, const char* name, void* func)
+{
+    char* uname = strdup(name);
+
+    unsigned h = string_hash_function(uname) % hash_table_size;
+    symbol* sp;
+    for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+    {
+        if (scfg & UPCASE)
+        {
+          if (stricmp(sp->name, uname) == 0) return sp;
+        }
+        else
+        {
+          if (strcmp(sp->name, uname) == 0) return sp;
+        }
+    }
+    return nullptr;
+}
+
 void calculator::addfvar(const char* name, float__t val)
 {
  symbol* sp = add(tsVARIABLE, name);
  sp->val.tag = tvFLOAT;
  sp->val.fval = val;
+}
+
+void calculator::addivar(const char* name, int_t val)
+{
+    symbol* sp = add(tsVARIABLE, name);
+    sp->val.tag = tvINT;
+    sp->val.ival = val;
+}
+
+void calculator::addlvar(const char* name, float__t fval, int_t ival)
+{
+    symbol* sp = add(tsVARIABLE, name);
+    sp->val.tag = tvINT;
+    sp->val.fval = fval;
+    sp->val.ival = ival;    
 }
 
 bool calculator::checkvar(const char* name)
@@ -291,11 +331,7 @@ bool calculator::checkvar(const char* name)
     {
       if (scfg & UPCASE)
        {
-#ifdef _WIN_
         if (stricmp(sp->name, uname) == 0) return true;
-#else  /*_WIN_*/
-	if (strcasecmp(sp->name, uname) == 0) return true;
-#endif /*_WIN_*/
        }
       else
        {
@@ -305,12 +341,7 @@ bool calculator::checkvar(const char* name)
   return false;
 }
 
-void calculator::addivar(const char* name, int_t val)
-{
- symbol* sp = add(tsVARIABLE, name);
- sp->val.tag = tvINT;
- sp->val.ival = val;
-}
+
 
 int calculator::hscanf(char* str, int_t &ival, int &nn)
 {
@@ -1129,7 +1160,7 @@ t_operator calculator::scan(bool operand, bool percent)
     case '.': case '0': case '1': case '2': case '3': case '4': case '5':
     case '6': case '7': case '8': case '9': case '\\': case '$':
      {
-      int_t ival;
+      int_t ival = 0;
       float__t fval;
       int ierr = 0, ferr;
       char *ipos, *fpos;
@@ -1228,19 +1259,22 @@ t_operator calculator::scan(bool operand, bool percent)
           return toERROR;
         }
       *np = '\0';
-      //if (buf[pos+1]=='\0') return toEND;
-      //if (buf[pos] == '\0') return toEND;
-
-      symbol* sym = add(tsVARIABLE, name);
+      symbol* sym;
+      if (buf[pos] == '\0') sym = find(tsVARIABLE, name); //return toOPERAND; //return toEND;
+      else sym = add(tsVARIABLE, name);
       if (v_sp == max_stack_size)
         {
           error("stack overflow");
           return toERROR;
         }
-      v_stack[v_sp] = sym->val;
-      v_stack[v_sp].pos = pos;
-      v_stack[v_sp++].var = sym;
-      return (sym->tag == tsVARIABLE) ? toOPERAND : toFUNC;
+      if (sym)
+        {
+          v_stack[v_sp] = sym->val;
+          v_stack[v_sp].pos = pos;
+          v_stack[v_sp++].var = sym;
+          return (sym->tag == tsVARIABLE) ? toOPERAND : toFUNC;
+        }
+      else return toOPERAND;
     }
 }
 
@@ -1313,12 +1347,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
   const double maxdbl = *(double*)&i64maxdbl;
   const double mindbl = *(double*)&i64mindbl;
   //const float__t qnan = 0.0/0.0;
-  const float__t qnan = std::numeric_limits<float__t>::quiet_NaN();
+  constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN();
 
-  //size_t l = strlen(expression);
   buf = expression;
-  //buf[l + 1] = '\0';
-  //buf[l + 2] = '\0';
   v_sp = 0;
   o_sp = 0;
   pos = 0;

@@ -69,3 +69,4 @@ log.txt*
 Reports/*
 *.pdb
 .vs/*
+WinApiCalc/*

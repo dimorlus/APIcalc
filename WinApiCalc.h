@@ -139,8 +139,7 @@ public:
     
     // Variables dialog
     void ShowVariablesDialog();
-    static void AddVarToList(char* varName, long double value, void* context);
-
+   
     // History management
     void LoadHistory();
     void SaveHistory();

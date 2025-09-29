@@ -118,26 +118,11 @@ int_t Not(int_t n)
     return n^-1L;
 }
 
-
 int_t Now(int_t n)
 {
-    time_t rawtime;
-    struct tm timeinfo;
-    time(&rawtime);
-    gmtime_s(&timeinfo, &rawtime);  // Используем безопасную версию функции
-    return (int_t)mktime(&timeinfo) + n * 60 * 60;
+    return (int_t)time(NULL) + n * 60 * 60;
 }
 
-//int_t Now(int_t n)
-//{
-//  //time_t rawtime;
-//  //struct tm * timeinfo;
-//  //time(&rawtime);
-//  //timeinfo = localtime(&rawtime);
-//  //timeinfo = gmtime(&rawtime);
-//  //return (int_t)mktime(timeinfo);
-//  return (int_t)time(NULL)+n*60*60;
-//}
 /*
 //https://vak.dreamwidth.org/993299.html
 int_t nearly_equal(double a, double b, int ignore_nbits)

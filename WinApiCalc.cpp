@@ -2442,7 +2442,7 @@ void WinApiCalc::LoadSettings()
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\WinApiCalc", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        DWORD dwOptions = 0;
+        DWORD dwOptions = (FFLOAT + SCF + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT + DEG + STR + ALL + MNU + FRC + FRI);
         DWORD dwSize = sizeof(dwOptions);
         if (RegQueryValueExA(hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize) == ERROR_SUCCESS)
         {
@@ -2826,13 +2826,6 @@ static long double FontFunction(long double x)
     {
         size = -12; // Default font size in pixels (negative value)
     }
-    else if (size > 0)
-    {
-        // Positive values are treated as points, convert to pixels for more precision
-        // Points to pixels: approximately multiply by 1.33 (96 DPI standard)
-        size = -(size * 4 / 3); // Convert points to negative pixels
-    }
-    // Negative values are already pixels, use as-is
     
     g_pCalcInstance->SetFontSize(size);
     return x;
@@ -2846,22 +2839,10 @@ static long double VarsFunction(long double x)
         return x; // Return the value but don't execute
     }
     
-    // Show variables in a message box (simple implementation)
-    std::string varList = "Calculator Variables:\n\n";
-    // TODO: Implement proper variable listing when varlist method is available
-    // For now, just show a placeholder
-    varList += "Use vars() function to list all defined variables.\n";
-    varList += "Variables are case-sensitive depending on UPCASE option.";
-    
-    MessageBoxA(g_pCalcInstance->GetWindow(), varList.c_str(), "Variables List", MB_OK | MB_ICONINFORMATION);
+    if ((int)x) g_pCalcInstance->ShowVariablesDialog();
     return x;
 }
 
-void WinApiCalc::AddVarToList(char* varName, long double value, void* context) 
-{
-    // This will be called by varlist() method to populate variable list
-    // For now, it's a stub
-}
 
 // Message handler for about box.
 INT_PTR CALLBACK WinApiCalc::About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

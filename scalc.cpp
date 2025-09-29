@@ -241,7 +241,6 @@ unsigned calculator::string_hash_function(char* p)
       if (scfg & UPCASE) h = (h << 4) + toupper(*p++);
       else h = (h << 4) + *p++;
             
-
       if ((g = h & 0xF0000000) != 0)
         {
           h ^= g >> 24;
@@ -992,8 +991,7 @@ t_operator calculator::scan(bool operand, bool percent)
     case '\'':
      {
       int_t ival;
-      char* ipos;// , * fpos;
-      //wchar_t wc;
+      char* ipos;
       int n = 0;
 
       if (buf[pos] == '\\')
@@ -1079,8 +1077,7 @@ t_operator calculator::scan(bool operand, bool percent)
     case 'L':
      {
       int_t ival;
-      char* ipos;// , * fpos;
-      //wchar_t wc;
+      char* ipos;
       int n = 0;
 
       if (buf[pos] == '\'')
@@ -1132,7 +1129,7 @@ t_operator calculator::scan(bool operand, bool percent)
 #endif /*_WCHAR_*/
     case '"':
      {
-       char* ipos;// , * fpos;
+       char* ipos;
        char sbuf[STRBUF];
        int sidx = 0;
        ipos = buf+pos;
@@ -1161,7 +1158,7 @@ t_operator calculator::scan(bool operand, bool percent)
     case '6': case '7': case '8': case '9': case '\\': case '$':
      {
       int_t ival = 0;
-      float__t fval;
+      float__t fval = 0;
       int ierr = 0, ferr;
       char *ipos, *fpos;
       int n = 0;
@@ -1260,7 +1257,7 @@ t_operator calculator::scan(bool operand, bool percent)
         }
       *np = '\0';
       symbol* sym;
-      if (buf[pos] == '\0') sym = find(tsVARIABLE, name); //return toOPERAND; //return toEND;
+      if (buf[pos] == '\0') sym = find(tsVARIABLE, name); 
       else sym = add(tsVARIABLE, name);
       if (v_sp == max_stack_size)
         {

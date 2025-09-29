@@ -69,5 +69,6 @@ log.txt*
 Reports/*
 *.pdb
 *.pch
-.vs/*
-WinApiCalc/*
+.vs/
+WinApiCalc/
+x64/Debug/

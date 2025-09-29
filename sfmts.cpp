@@ -25,11 +25,6 @@
 #define M_PI	3.14159265358979323846
 #define M_E		2.7182818284590452354
 
-//int _matherr(struct _exception *e)
-//{
-//  return 1;             /* error has been handled */
-//}
-
 //----------------------------------
 int ones(unsigned char *cp, int from, int to)
 {
@@ -350,22 +345,6 @@ int wchr2str(char *str, int i)
  return 0;
 #endif  /*_WIN_*/
 }
-//---------------------------------------------------------------------------
-
-//   https://support.microsoft.com/en-us/help/167296/how-to-convert-a-unix-time-t-to-a-win32-filetime-or-systemtime
-//   #include <winbase.h>
-//   #include <winnt.h>
-//   #include <time.h>
-//
-//   void UnixTimeToFileTime(time_t t, LPFILETIME pft)
-//   {
-//     // Note that LONGLONG is a 64-bit value
-//     LONGLONG ll;
-//
-//     ll = Int32x32To64(t, 10000000) + 116444736000000000;
-//     pft->dwLowDateTime = (DWORD)ll;
-//     pft->dwHighDateTime = ll >> 32;
-//   }
 
 int nx_time2str(char *str, uint64_t time)
 {
@@ -384,14 +363,6 @@ int nx_time2str(char *str, uint64_t time)
   gmtime_s(&t, &safe_time);  // Используем безопасную версию функции с проверенным значением
   return (int)strftime(str, 80, "%a, %b %d %H:%M:%S %Y", &t);
 }
-//int nx_time2str(char *str, __int64 time)
-//{
-// struct tm t = *gmtime((time_t*)&time);
-// return strftime(str, 80, "%a, %b %d %H:%M:%S %Y", &t);
-// //return sprintf(str, "%s", ctime((time_t*)&time));
-//}
-//---------------------------------------------------------------------------
-
 
 void fraction(double val, double eps, int &num, int &denum)
 {

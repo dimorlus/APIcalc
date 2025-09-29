@@ -212,11 +212,13 @@ int d2nrmstr(char *str, float__t d)
       {
        rng++;
        dd /= 1000;
+	   if (rng > 308) break;
       }
      while (dd < 1)
       {
        rng--;
        dd *= 1000;
+	   if (rng < -308) break;
       }
     }
    if (d < 0) dd = -dd;
@@ -247,7 +249,7 @@ int b2scistr(char *str, float__t d)
    int rng = Empty;
    if (dd > 0)
     {
-     while (dd >= 1024)
+     while ((rng <= Yotta)&&(dd >= 1024))
       {
        rng++;
        dd /= 1024;
@@ -594,19 +596,22 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal,
 	 if (fVal > 0) val = fVal;
 	 else val = -fVal;
 	 double intpart = floor(val);
-	 if (intpart > 0)
-	  {
-	   fraction(val - intpart, 0.001, num, denum);
-	   if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
-	   else	sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
-	  }
-	 else
-	  {
-	   fraction(val, 0.001, num, denum);
-	   if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
-	   else sprintf(frcstr, "-%d/%d", num, denum);
-	  }
-	 if (denum) sprintf(strings[n++], "%65.64s F", frcstr);
+	 if (intpart < 1e15)
+	 {
+		 if (intpart > 0)
+		 {
+			 fraction(val - intpart, 0.001, num, denum);
+			 if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
+			 else	sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
+		 }
+		 else
+		 {
+			 fraction(val, 0.001, num, denum);
+			 if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
+			 else sprintf(frcstr, "-%d/%d", num, denum);
+		 }
+		 if (denum) sprintf(strings[n++], "%65.64s F", frcstr);
+	 }
 	}
 
    // (UI) Fraction inch output
@@ -619,26 +624,29 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal,
 	 else val = -fVal;
 	 val /= 25.4e-3;
 	 double intpart = floor(val);
-	 if (intpart > 0)
-	  {
-	   fraction(val - intpart, 0.001, num, denum);
-	   if (num && denum)
-		{
-		 if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
-		 else sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
-		}
-	   else
-		{
-		 sprintf(frcstr, "%.0f", intpart);
-		}
-	  }
-	 else
-	  {
-	   fraction(val, 0.001, num, denum);
-	   if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
-	   else sprintf(frcstr, "-%d/%d", num, denum);
-	  }
-	 sprintf(strings[n++], "%65.64s \"", frcstr);
+	 if (intpart < 1e15)
+	 {
+		 if (intpart > 0) 
+		 {
+			 fraction(val - intpart, 0.001, num, denum);
+			 if (num && denum)
+			 {
+				 if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
+				 else sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
+			 }
+			 else
+			 {
+				 sprintf(frcstr, "%.0f", intpart);
+			 }
+		 }
+		 else
+		 {
+			 fraction(val, 0.001, num, denum);
+			 if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
+			 else sprintf(frcstr, "-%d/%d", num, denum);
+		 }
+		 sprintf(strings[n++], "%65.64s \"", frcstr);
+	 }
 	}
 
    // (RO) Hex format found

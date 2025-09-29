@@ -238,7 +238,7 @@ unsigned calculator::string_hash_function(char* p)
   unsigned h = 0, g;
   while (*p)
     {
-      if (scfg & UPCASE) h = (h << 4) + toupper(*p++);
+      if (scfg & UPCASE) h = (h << 4) + tolower(*p++);
       else h = (h << 4) + *p++;
             
       if ((g = h & 0xF0000000) != 0)

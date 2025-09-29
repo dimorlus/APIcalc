@@ -50,6 +50,7 @@
 #define FRI     (1<<25) // (UI) Fraction inch output
 #define AUTO    (1<<26) // (UI) Auto output
 #define AUT     (1<<26) // (UI) Auto output
+#define TOP     (1<<27) // (UI) Always on top
 #define STRBUF  256     // bufer size for string operations
 
 #define _WCHAR_         // L'c' and 'c'W input format allow
@@ -101,6 +102,7 @@ typedef union
         int frc:1;
         int fri:1;
         int aut:1;
+		int top:1;
     };
 } toptions;
 #pragma pack(pop)

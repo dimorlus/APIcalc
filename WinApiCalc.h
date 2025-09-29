@@ -76,6 +76,9 @@ private:
     int m_dpiX;
     int m_dpiY;
     int m_resultLines;
+    int m_lastResultClientHeight; // measured client height of result edit control
+    int m_resultEditInternalPadding; // cached internal top/bottom padding inside result edit
+    int m_resultEditInternalHorzPadding; // cached left+right internal padding inside result edit
     
     // UI resources
     HBRUSH m_hWhiteBrush;
@@ -164,6 +167,7 @@ public:
     int CalculateContentBasedWidth(); // Новая функция для расчета на основе содержимого
     int CalculateCurrentResultWidth(); // Измерение ширины текущего результата
     void UpdateFont();
+    int MeasureTextHeightForWidth(const std::string &text, int width);
 
     // Utility
     void ShowHelp();
@@ -177,5 +181,7 @@ public:
     HMENU GetWindowMenu() const { return m_hMenu; }
     bool IsMenuVisible() const { return m_menuVisible; }
     void SetMenuVisible(bool visible) { m_menuVisible = visible; }
+    // Toggle MNU option and persist
+    void SetMenuVisibilityOption(bool visible);
     bool IsUIReady() const { return m_uiReady; }
 };

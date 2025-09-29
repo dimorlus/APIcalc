@@ -283,53 +283,10 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         }
         else if (GetKeyState(VK_CONTROL) < 0 && wParam != VK_CONTROL)
         {
-            // Ctrl+клавиша комбинации - теперь обрабатываются через акселераторы
-            // Этот код остается для совместимости, но акселераторы имеют приоритет
-            if (pThis)
-            {
-                switch (wParam)
-                {
-                case 'R':
-                    pThis->WrapExpressionWith("root2(", ")");
-                    return 0;
-                case 'S':
-                    pThis->WrapExpressionWith("(", ")^2");
-                    return 0;
-                case 'I':
-                    pThis->WrapExpressionWith("1/(", ")");
-                    return 0;
-                case VK_OEM_4: // Ctrl+[
-                case VK_OEM_6: // Ctrl+]
-                    pThis->WrapExpressionWith("(", ")");
-                    return 0;
-                case 'V': // Ctrl+V - Paste from clipboard
-                    if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(hWnd))
-                    {
-                        HANDLE hData = GetClipboardData(CF_TEXT);
-                        if (hData)
-                        {
-                            char* pszText = (char*)GlobalLock(hData);
-                            if (pszText)
-                            {
-                                // Get current selection
-                                DWORD dwStart, dwEnd;
-                                SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
-                                
-                                // Replace selection with clipboard text
-                                SendMessage(hWnd, EM_REPLACESEL, TRUE, (LPARAM)pszText);
-                                
-                                GlobalUnlock(hData);
-                            }
-                        }
-                        CloseClipboard();
-                    }
-                    return 0;
-                case VK_HOME:
-                    SetWindowPos(pThis->m_hWnd, nullptr, 100, 100, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-                    pThis->SetWindowOpacity(255); // Reset opacity to fully opaque
-                    pThis->UpdateMenuChecks();
-                    return 0;
-                }
+            // Delegate Ctrl+key combinations to the main handler for consistency
+            if (pThis) {
+                pThis->OnKeyDown(wParam);
+                return 0;
             }
         }
     }
@@ -790,6 +747,11 @@ void WinApiCalc::OnCreate()
     // Get menu handle
     m_hMenu = ::GetMenu(m_hWnd);
     
+    // Apply saved menu visibility (MNU flag): when MNU is set, menu should be hidden
+    ::SetMenu(m_hWnd, (m_options & MNU) ? NULL : m_hMenu);
+    m_menuVisible = ((m_options & MNU) == 0);
+    DrawMenuBar(m_hWnd);
+
     // Update menu states
     UpdateMenuChecks();
     
@@ -852,6 +814,10 @@ void WinApiCalc::OnCreate()
     
     // Set fixed window size immediately at creation
     ResizeWindow();
+        
+// Debug logging for history control was removed from OnCreate because yPos/displayLines are
+// only defined inside UpdateLayout(). Detailed logs for UpdateLayout are added in that
+// function where those variables are in scope.
 }
 
 void WinApiCalc::OnCommand(WPARAM wParam)
@@ -873,6 +839,9 @@ void WinApiCalc::OnCommand(WPARAM wParam)
         break;
     case ID_CALC_ESCMINIMIZED:
         ToggleOption(MIN);
+        break;
+    case ID_CALC_ALWAYSONTOP:
+        ToggleOption(TOP);
         break;
     case ID_CALC_OPACITY:
         // Insert "opacity(100)" text into expression field
@@ -1477,6 +1446,9 @@ void WinApiCalc::UpdateMenuChecks()
     CheckMenuItem(m_hMenu, ID_CALC_CASESENSETIVE, (m_options & UPCASE) ? MF_UNCHECKED : MF_CHECKED);  // Инверсия: UPCASE=case insensitive
     CheckMenuItem(m_hMenu, ID_CALC_FORCEDFLOAT, (m_options & FFLOAT) ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(m_hMenu, ID_CALC_ESCMINIMIZED, (m_options & MIN) ? MF_CHECKED : MF_UNCHECKED);
+    CheckMenuItem(m_hMenu, ID_CALC_ALWAYSONTOP, (m_options & TOP) ? MF_CHECKED : MF_UNCHECKED);
+    // Menu visibility is controlled via the pseudo-function menu(0) -> MenuFunction()
+    // and persisted in m_options (MNU). There is no separate menu item for this.
 
     // Format menu items
     CheckMenuItem(m_hMenu, ID_FORMAT_SCIENTIFIC, (m_options & SCI) ? MF_CHECKED : MF_UNCHECKED);
@@ -1515,6 +1487,18 @@ void WinApiCalc::UpdateMenuChecks()
 void WinApiCalc::ToggleOption(int flag)
 {
     m_options ^= flag;
+    // Special handling for some UI-related flags must be applied before layout updates
+    if (flag == TOP) {
+        // Apply always-on-top immediately
+        SetWindowPos(m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST,
+            0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+    else if (flag == MNU) {
+        // Show or hide menu and persist the option BEFORE resizing so AdjustWindowRect
+        // uses correct m_menuVisible value.
+        SetMenuVisibilityOption((m_options & MNU) ? false : true);
+    }
+
     UpdateMenuChecks();
     EvaluateExpression();
     ResizeWindow(); // Пересчитываем размер при изменении опций
@@ -1579,8 +1563,9 @@ void WinApiCalc::UpdateLayout()
     {
         if (!historyVisible)
         {
-            // Используем точное количество строк + достаточный запас для отображения
-            int lineHeight = GetCharHeight();
+            // Use control-based row height so UpdateLayout and ResizeWindow agree
+            // on how tall each result row is (avoids mismatch between GetCharHeight and control height).
+            int rowHeight = GetControlHeight();
             
             // Add adaptive gap between input and result fields based on font size
             int baseFontSize = 16; // Default font size
@@ -1595,26 +1580,57 @@ void WinApiCalc::UpdateLayout()
             sprintf_s(debugMsg, "UpdateLayout: Result edit - GetControlHeight=%d, gap=%d, yPos=%d", GetControlHeight(), gap, yPos);
             DebugLog(debugMsg);
             
-            int padding;
-            if (m_resultLines <= 2) {
-                // Для малых результатов: четырехкратный запас для гарантии
-                padding = max(lineHeight * 4, 40); // 4 строки или минимум 40px
-            } else if (m_resultLines <= 5) {
-                // Для средних результатов: тройной запас
-                padding = lineHeight * 3; // 3 строки всегда
-            } else if (m_resultLines <= 10) {
-                // Для больших результатов: двойной запас
-                padding = lineHeight * 2;
-            } else {
-                // Для очень больших результатов: полторы строки
-                padding = max(lineHeight * 3 / 2, 25);
-            }
-            int resultHeight = lineHeight * m_resultLines + padding; 
+            // Use a small, scaled padding to avoid large empty areas under the last
+            // line. Rely on scrollbars to handle overflow instead of adding row-sized
+            // padding. Keep the padding proportional to DPI.
+            int padding = ScaleDPI(4); // small conservative padding (4px at 96 DPI)
+            int resultHeight = rowHeight * m_resultLines + padding;
             
             SetWindowPos(m_hResultEdit, nullptr,
                 0, yPos, // Add gap between input and result
                 controlWidth, resultHeight,
                 SWP_NOZORDER | SWP_SHOWWINDOW);
+
+            // Measure and store actual client height of result edit to avoid mismatch
+            RECT wr={0}, cr={0};
+            if (m_hResultEdit) {
+                GetWindowRect(m_hResultEdit, &wr);
+                GetClientRect(m_hResultEdit, &cr);
+                m_lastResultClientHeight = cr.bottom - cr.top;
+                // Compute internal padding = measured client height - (rowHeight * reportedLines)
+                int reportedLinesLocal = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
+                if (reportedLinesLocal <= 0) reportedLinesLocal = m_resultLines;
+                int idealHeight = GetControlHeight() * reportedLinesLocal;
+                m_resultEditInternalPadding = m_lastResultClientHeight - idealHeight;
+                if (m_resultEditInternalPadding < 0) m_resultEditInternalPadding = 0;
+                // horizontal padding = control width - client width
+                int winW = wr.right - wr.left;
+                int cliW = cr.right - cr.left;
+                m_resultEditInternalHorzPadding = max(0, winW - cliW);
+            }
+            // Log the freshly measured client height for debugging
+            {
+                char mlog[128];
+                sprintf_s(mlog, sizeof(mlog), "UpdateLayout: measured m_lastResultClientHeight=%d", m_lastResultClientHeight);
+                DebugLog(mlog);
+            }
+
+#if ENABLE_DEBUG_LOG
+            // Log result edit metrics: window/client rect and reported line count
+            {
+                RECT wr={0}, cr={0};
+                if (m_hResultEdit) {
+                    GetWindowRect(m_hResultEdit, &wr);
+                    GetClientRect(m_hResultEdit, &cr);
+                }
+                int reportedLines = 0;
+                if (m_hResultEdit) reportedLines = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
+                char rdbg[256];
+                sprintf_s(rdbg, sizeof(rdbg), "UpdateLayout(DEBUG): ResultEdit WindowRect=(%d,%d)-(%d,%d) ClientRect=(%d,%d)-(%d,%d) yPos=%d resultHeight=%d reportedLines=%d m_resultLines=%d", 
+                    wr.left, wr.top, wr.right, wr.bottom, cr.left, cr.top, cr.right, cr.bottom, yPos, resultHeight, reportedLines, m_resultLines);
+                DebugLog(rdbg);
+            }
+#endif
         }
         else
         {
@@ -1627,7 +1643,7 @@ void WinApiCalc::UpdateLayout()
     if (m_hHistoryCombo && historyVisible)
     {
         // Use minimum 5 lines for history or current result lines, whichever is larger
-        int lineHeight = GetCharHeight();
+        int rowHeight = GetControlHeight();
         // Add adaptive gap between input and result fields based on font size
         int baseFontSize = 16; // Default font size
         int currentFontSize = abs(m_fontSize);
@@ -1635,24 +1651,26 @@ void WinApiCalc::UpdateLayout()
         
         // Scale gap with font size: smaller gap for smaller fonts, larger for bigger
         int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
-        int yPos = GetControlHeight() + gap; // Use GetControlHeight instead of lineHeight
+        int yPos = rowHeight + gap; // Use GetControlHeight instead of lineHeight
         
         int displayLines = max(m_resultLines, 5); // Минимум 5 строк для истории
         int padding;
-        if (displayLines <= 2) {
-            // Для малых результатов: четырехкратный запас для гарантии
-            padding = max(lineHeight * 4, 40); // 4 строки или минимум 40px
-        } else if (displayLines <= 5) {
-            // Для средних результатов: тройной запас
-            padding = lineHeight * 3; // 3 строки всегда
-        } else if (displayLines <= 10) {
-            // Для больших результатов: двойной запас
-            padding = lineHeight * 2;
-        } else {
-            // Для очень больших результатов: полторы строки
-            padding = max(lineHeight * 3 / 2, 25);
+        if (displayLines <= 1) {
+            padding = max(rowHeight * 1, 10);
         }
-        int historyHeight = lineHeight * displayLines + padding; 
+        else if (displayLines == 2) {
+            padding = max(rowHeight * 2, 12);
+        }
+        else if (displayLines <= 5) {
+            padding = rowHeight * 2;
+        }
+        else if (displayLines <= 10) {
+            padding = rowHeight * 2;
+        }
+        else {
+            padding = max(rowHeight * 3 / 2, 25);
+        }
+        int historyHeight = rowHeight * displayLines + padding; 
         
         SetWindowPos(m_hHistoryCombo, HWND_TOP, // Bring to top
             0, yPos, // Same position as result field with gap
@@ -1665,6 +1683,22 @@ void WinApiCalc::UpdateLayout()
         {
             SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0); // Select first item if none selected
         }
+#if ENABLE_DEBUG_LOG
+        // Log history control metrics for debugging (inside correct scope where yPos/displayLines are defined)
+        {
+            RECT wr={0}, cr={0};
+            if (m_hHistoryCombo) {
+                GetWindowRect(m_hHistoryCombo, &wr);
+                GetClientRect(m_hHistoryCombo, &cr);
+            }
+            int itemCount = 0;
+            if (m_hHistoryCombo) itemCount = (int)SendMessageA(m_hHistoryCombo, LB_GETCOUNT, 0, 0);
+            char hdbg[256];
+            sprintf_s(hdbg, sizeof(hdbg), "UpdateLayout(DEBUG): HistoryCombo WindowRect=(%d,%d)-(%d,%d) ClientRect=(%d,%d)-(%d,%d) yPos=%d historyHeight=%d displayLines=%d itemCount=%d", 
+                wr.left, wr.top, wr.right, wr.bottom, cr.left, cr.top, cr.right, cr.bottom, yPos, historyHeight, displayLines, itemCount);
+            DebugLog(hdbg);
+        }
+#endif
     }
 }
 
@@ -2314,6 +2348,14 @@ void WinApiCalc::SaveHistory()
         
         RegCloseKey(hKey);
     }
+    // Apply UI flags loaded from registry
+    // Ensure window handle may not be created yet; caller should call SetMenu/SetWindowPos after window creation if needed.
+    if (m_hWnd) {
+        SetWindowPos(m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST,
+            0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        SetMenu(m_hWnd, (m_options & MNU) ? NULL : m_hMenu);
+        DrawMenuBar(m_hWnd);
+    }
 }
 
 void WinApiCalc::AddToHistory(const std::string& expression) 
@@ -2566,9 +2608,10 @@ void WinApiCalc::ResizeWindow()
         clientWidth = ScaleDPI(WINDOW_MIN_WIDTH);
     }
     
-    // Используем точное количество строк + адаптивный запас
-    int lineHeight = GetCharHeight();
-    int inputHeight = GetControlHeight(); // Use safe GetControlHeight
+    // Use control-based row height so ResizeWindow and UpdateLayout agree on
+    // how tall each result row is (avoids mismatch between GetCharHeight and control height).
+    int rowHeight = GetControlHeight();
+    int inputHeight = rowHeight; // Use safe GetControlHeight
     
     // Проверяем, показывается ли история - для истории нужно минимум 5 строк
     BOOL historyVisible = m_hHistoryCombo && IsWindowVisible(m_hHistoryCombo);
@@ -2580,7 +2623,7 @@ void WinApiCalc::ResizeWindow()
         displayLines = m_resultLines;
     }
     
-    int resultHeight = lineHeight * displayLines;
+    int resultHeight = rowHeight * displayLines;
     
     // Add adaptive gap between input and result fields based on font size
     int baseFontSize = 16; // Default font size
@@ -2590,42 +2633,131 @@ void WinApiCalc::ResizeWindow()
     // Scale gap with font size: smaller gap for smaller fonts, larger for bigger
     int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
     
-    // Адаптивный запас: экстремальная защита от обрезания текста
-    int padding;
-    if (displayLines <= 2) {
-        // Для малых результатов: четырехкратный запас для гарантии
-        padding = max(lineHeight * 4, 40); // 4 строки или минимум 40px
-    } else if (displayLines <= 5) {
-        // Для средних результатов: тройной запас
-        padding = historyVisible ? lineHeight * 3 : lineHeight * 3; // 3 строки всегда
-    } else if (displayLines <= 10) {
-        // Для больших результатов: двойной запас
-        padding = lineHeight * 2;
-    } else {
-        // Для очень больших результатов: полторы строки
-        padding = max(lineHeight * 3 / 2, 25);
+    // Адаптивный запас: уменьшённый и более предсказуемый padding для
+    // малых чисел строк, чтобы не оставлять лишнюю пустую строку в результате.
+    // Для больших результатов оставляем расширенный запас для защиты от обрезания.
+    // Use a small, scaled padding instead of large multi-row padding to avoid
+    // visible blank lines under the last result line. Scrollbars handle overflow.
+    int padding = ScaleDPI(4);
+    // Two-pass resize strategy:
+    // 1) Apply the desired client width with a temporary height so controls can
+    //    reflow and we can measure the actual result edit client height (m_lastResultClientHeight).
+    // 2) Recompute final client height using the measured control height and apply final window size.
+
+    // Temporary client height: keep current client height if available, otherwise minimal
+    RECT curCr = {0};
+    int tempClientHeight = inputHeight + gap + rowHeight; // minimal reasonable temp height
+    if (m_hWnd) {
+        RECT cur; GetClientRect(m_hWnd, &cur); int ch = cur.bottom - cur.top; if (ch > 0) tempClientHeight = ch;
     }
-    int clientHeight = inputHeight + gap + resultHeight + padding; // Use inputHeight instead of lineHeight
+
+    RECT tempRect = { 0, 0, clientWidth, tempClientHeight };
+    LONG style = GetWindowLong(m_hWnd, GWL_STYLE);
+    style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
+    style |= (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
+    // Apply temp size to allow UpdateLayout to measure control client size with the correct width
+    AdjustWindowRect(&tempRect, style, m_menuVisible ? TRUE : FALSE);
+    SetWindowPos(m_hWnd, nullptr, 0, 0, tempRect.right - tempRect.left, tempRect.bottom - tempRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+    // Force layout to recalculate and measure the result edit client height
+    UpdateLayout();
+
+    // Debug: log whether we have a measured result client height after UpdateLayout
+    {
+        char mdbg[256];
+        sprintf_s(mdbg, sizeof(mdbg), "ResizeWindow: after temp UpdateLayout m_lastResultClientHeight=%d (displayLines=%d)", m_lastResultClientHeight, displayLines);
+        DebugLog(mdbg);
+    }
+
+    // Now compute final clientHeight using measured m_lastResultClientHeight if we have it
+    // Compute desired result client height from the edit control's reported
+    // line count (EM_GETLINECOUNT). This accounts for wrapped lines so the
+    // visible lines match the height we allocate.
+    int reportedLines = displayLines;
+    if (m_hResultEdit) {
+        reportedLines = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
+        if (reportedLines <= 0) reportedLines = displayLines;
+    }
+
+    // Adjust computed height by subtracting the measured internal padding so the
+    // visible text region aligns exactly to the requested number of rows.
+    // As a final attempt, measure the actual text height using DrawText wrapping
+    // to the computed client width. This is the most reliable way to get the
+    // rendered height that will be used inside the Edit control.
+    std::string resultText;
+    if (m_hResultEdit) {
+        int len = GetWindowTextLengthA(m_hResultEdit);
+        resultText.resize(len + 1);
+        GetWindowTextA(m_hResultEdit, &resultText[0], len + 1);
+        resultText.resize(len);
+    }
+
+    int measuredTextHeight = 0;
+    if (!resultText.empty()) {
+        int wrapWidth = clientWidth - m_resultEditInternalHorzPadding;
+        if (wrapWidth < 20) wrapWidth = clientWidth; // fallback
+        char dbgwrap[128]; sprintf_s(dbgwrap, sizeof(dbgwrap), "ResizeWindow: wrapWidth=%d clientWidth=%d horzPad=%d", wrapWidth, clientWidth, m_resultEditInternalHorzPadding); DebugLog(dbgwrap);
+        measuredTextHeight = MeasureTextHeightForWidth(resultText, wrapWidth);
+    }
+
+    int computedResultClientHeight = measuredTextHeight > 0 ? measuredTextHeight : (rowHeight * reportedLines - m_resultEditInternalPadding + ScaleDPI(2));
+    if (computedResultClientHeight < rowHeight) computedResultClientHeight = rowHeight; // at least one row
+    // Log measured vs computed for diagnostics
+    {
+        char dbgmeas[256];
+        sprintf_s(dbgmeas, sizeof(dbgmeas), "ResizeWindow: measured=%d computed=%d displayLines=%d rowHeight=%d", m_lastResultClientHeight, computedResultClientHeight, displayLines, rowHeight);
+        DebugLog(dbgmeas);
+    }
+
+    int clientHeight = inputHeight + gap + computedResultClientHeight;
     
     char debugMsg[200];
     sprintf_s(debugMsg, "ResizeWindow: inputHeight=%d, gap=%d, resultHeight=%d, padding=%d, total=%d", 
               inputHeight, gap, resultHeight, padding, clientHeight);
     DebugLog(debugMsg);
+    // Detailed debug: log computed parameters and menu state
+#if ENABLE_DEBUG_LOG
+    {
+        char dbg2[512];
+        RECT rcClient = {0,0,clientWidth,clientHeight};
+        sprintf_s(dbg2, sizeof(dbg2), "ResizeWindow(DEBUG): clientWidth=%d, clientHeight=%d, rowHeight=%d, inputHeight=%d, displayLines=%d, gap=%d, padding=%d, menuVisible=%d, hMenu=%p", 
+            clientWidth, clientHeight, rowHeight, inputHeight, displayLines, gap, padding, (int)(m_menuVisible ? 1 : 0), (void*)m_hMenu);
+        DebugLog(dbg2);
+    }
+#endif
     
     RECT rect = { 0, 0, clientWidth, clientHeight };
     
     // Убедимся, что стиль окна правильный (без изменения размеров)
-    LONG style = GetWindowLong(m_hWnd, GWL_STYLE);
     style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX); // Убираем возможность ресайза
     style |= (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
     SetWindowLong(m_hWnd, GWL_STYLE, style);
     
-    // ВАЖНО: bMenu = FALSE, так как у нас нет меню!
-    AdjustWindowRect(&rect, style, FALSE);
+    // Adjust for menu presence so the non-client area (menu bar) is accounted for.
+    // If the menu is visible, pass TRUE; otherwise FALSE.
+    AdjustWindowRect(&rect, style, m_menuVisible ? TRUE : FALSE);
+#if ENABLE_DEBUG_LOG
+    {
+        char dbg3[256];
+        sprintf_s(dbg3, sizeof(dbg3), "ResizeWindow(DEBUG): adjusted window size (w,h)=(%d,%d)", rect.right - rect.left, rect.bottom - rect.top);
+        DebugLog(dbg3);
+    }
+#endif
     
     SetWindowPos(m_hWnd, nullptr, 0, 0, 
         rect.right - rect.left, rect.bottom - rect.top, 
         SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+#if ENABLE_DEBUG_LOG
+    {
+        RECT wr={0}; RECT cr={0};
+        GetWindowRect(m_hWnd, &wr);
+        GetClientRect(m_hWnd, &cr);
+        char dbg4[256];
+        sprintf_s(dbg4, sizeof(dbg4), "ResizeWindow(DEBUG): final WindowRect=(%d,%d)-(%d,%d) size=(%d,%d) ClientRect=(%d,%d)-(%d,%d)",
+            wr.left, wr.top, wr.right, wr.bottom, wr.right-wr.left, wr.bottom-wr.top, cr.left, cr.top, cr.right, cr.bottom);
+        DebugLog(dbg4);
+    }
+#endif
     
     UpdateLayout();
 }
@@ -2732,15 +2864,13 @@ static long double MenuFunction(long double x)
     int show = (int)x;
     if (show != 0)
     {
-        // Show menu
-        ::SetMenu(g_pCalcInstance->GetWindow(), g_pCalcInstance->GetWindowMenu());
-        g_pCalcInstance->SetMenuVisible(true);
+        // Show menu and persist MNU cleared
+        g_pCalcInstance->SetMenuVisibilityOption(true);
     }
     else
     {
-        // Hide menu
-        ::SetMenu(g_pCalcInstance->GetWindow(), nullptr);
-        g_pCalcInstance->SetMenuVisible(false);
+        // Hide menu and persist MNU set
+        g_pCalcInstance->SetMenuVisibilityOption(false);
     }
     DrawMenuBar(g_pCalcInstance->GetWindow());
     g_pCalcInstance->ResizeWindow();
@@ -2862,4 +2992,69 @@ INT_PTR CALLBACK WinApiCalc::About(HWND hDlg, UINT message, WPARAM wParam, LPARA
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+void WinApiCalc::SetMenuVisibilityOption(bool visible)
+{
+    if (visible)
+    {
+        m_options &= ~MNU; // clear MNU -> menu visible
+        SetMenu(m_hWnd, m_hMenu);
+        m_menuVisible = true;
+    }
+    else
+    {
+        m_options |= MNU; // set MNU -> menu hidden
+        SetMenu(m_hWnd, NULL);
+        m_menuVisible = false;
+    }
+    DrawMenuBar(m_hWnd);
+    // Force immediate non-client recalculation so ResizeWindow uses correct metrics
+    SetWindowPos(m_hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+    // After the non-client area changed, force layout update so we can measure the
+    // result control's client height (m_lastResultClientHeight) before resizing.
+    // This addresses a timing mismatch where ResizeWindow() computed sizes
+    // before UpdateLayout() had measured the actual control height.
+    UpdateLayout();
+    ResizeWindow();
+    SaveSettings();
+}
+
+// Measure the rendered height of `text` when wrapped to `width` using the
+// same font as the controls. Returns height in pixels.
+int WinApiCalc::MeasureTextHeightForWidth(const std::string &text, int width)
+{
+    if (width <= 0) return GetControlHeight();
+
+    HDC hdc = GetDC(m_hWnd);
+    if (!hdc) return GetControlHeight();
+
+    // Use the window's result edit font if available
+    HFONT hFont = nullptr;
+    if (m_hResultEdit) hFont = (HFONT)SendMessage(m_hResultEdit, WM_GETFONT, 0, 0);
+    if (!hFont) {
+        // Create matching font if none is applied
+        hFont = CreateFontA(
+            ScaleDPI(m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+    }
+
+    HFONT hOld = (HFONT)SelectObject(hdc, hFont);
+
+    RECT rc = {0,0,width, INT_MAX};
+    // DT_CALCRECT requires right coordinate to be width for wrapping
+    rc.right = width;
+    DrawTextA(hdc, text.c_str(), (int)text.length(), &rc, DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+
+    int height = rc.bottom - rc.top;
+
+    SelectObject(hdc, hOld);
+    if (!((HFONT)SendMessage(m_hResultEdit, WM_GETFONT, 0, 0))) {
+        DeleteObject(hFont);
+    }
+    ReleaseDC(m_hWnd, hdc);
+
+    // Add a tiny inset so text doesn't touch bottom edge
+    return height + ScaleDPI(2);
 }

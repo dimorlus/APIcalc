@@ -38,7 +38,6 @@ calculator::calculator(int cfg)
   //randomize();
 
   add(tsFFUNC1, "abs", (void*)(float__t(*)(float__t))fabsl);
-  //add(tsIFFUNC3, "aeq", (void*)(int_t(*)(float__t, float__t, int_t))nearly_equal);
   add(tsFFUNC1, "erf", (void*)(float__t(*)(float__t))Erf);
   add(tsFFUNC1, "acos", (void*)(float__t(*)(float__t))Acos);
   add(tsFFUNC1, "asin", (void*)(float__t(*)(float__t))Asin);

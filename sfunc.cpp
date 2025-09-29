@@ -118,31 +118,7 @@ int_t Now(int_t n)
     return (int_t)time(NULL) + n * 60 * 60;
 }
 
-/*
-//https://vak.dreamwidth.org/993299.html
-int_t nearly_equal(double a, double b, int ignore_nbits)
-{
-    if (a == b)
-        return true;
 
-    // Разбираем функцию на мантиссу и экспоненту.
-    int a_exponent, b_exponent;
-    double a_mantissa = frexp(a, &a_exponent);
-    double b_mantissa = frexp(b, &b_exponent);
-
-    // Экспонены обязаны совпасть
-    if (a_exponent != b_exponent)
-        return false;
-
-    // Вычитаем мантиссы и сравниваем с лимитом
-    double delta = fabs(a_mantissa - b_mantissa);
-
-    // Определяем точность сравнения.
-    double limit = ldexp(1.0, ignore_nbits - 52);
-
-    return delta < limit?1:0;
-}
-*/
 float__t Erf(float__t x)
 {
     // constants

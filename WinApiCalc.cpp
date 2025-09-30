@@ -249,7 +249,7 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         
         if (wParam == VK_F1)
         {
-            if (pThis) pThis->OnHelp();
+            if (pThis) pThis->ShowHelp();
             return 0;
         }
     }
@@ -268,7 +268,7 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         
         if (wParam == VK_F1)
         {
-            if (pThis) pThis->OnHelp();
+            if (pThis) pThis->ShowHelp();
             return 0;
         }
         else if (wParam == VK_ESCAPE)
@@ -280,6 +280,26 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         {
             if (pThis) pThis->OnKeyDown(wParam);
             return 0;
+        }
+       else if (wParam == VK_DOWN || wParam == VK_UP)
+       {
+           // Open history on Down/Up when focus is in expression edit.
+           // Down -> select first (newest), Up -> select last (oldest).
+           if (pThis && pThis->m_hHistoryCombo)
+           {
+               int count = (int)SendMessageA(pThis->m_hHistoryCombo, LB_GETCOUNT, 0, 0);
+               if (count > 0 && !IsWindowVisible(pThis->m_hHistoryCombo))
+               {
+                   ShowWindow(pThis->m_hHistoryCombo, SW_SHOW);
+                   int sel = (wParam == VK_DOWN) ? 0 : max(0, count - 1);
+                   SendMessageA(pThis->m_hHistoryCombo, LB_SETCURSEL, sel, 0);
+                   SetFocus(pThis->m_hHistoryCombo);
+                   pThis->ResizeWindow();
+                   pThis->UpdateLayout();
+                   return 0; // handled
+               }
+           }
+           // If history already visible or empty, fall through to default handling
         }
         else if (GetKeyState(VK_CONTROL) < 0 && wParam != VK_CONTROL)
         {
@@ -357,7 +377,7 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc(HWND hWnd, UINT message, WPA
     {
         if (wParam == VK_F1)
         {
-            pThis->OnHelp();
+            pThis->ShowHelp();
             return 0;
         }
         else if (wParam == VK_ESCAPE)
@@ -573,7 +593,7 @@ LRESULT CALLBACK WinApiCalc::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             
             if (wParam == VK_F1)
             {
-                g_pApp->OnHelp();
+                g_pApp->ShowHelp();
                 return 0;
             }
             else if (wParam == VK_ESCAPE)
@@ -707,19 +727,20 @@ void WinApiCalc::OnCreate()
     m_originalResultEditProc = (WNDPROC)SetWindowLongPtrA(m_hResultEdit, GWLP_WNDPROC, (LONG_PTR)ResultEditSubclassProc);
     SetWindowLongPtrA(m_hResultEdit, GWLP_USERDATA, (LONG_PTR)this);
 
-    // Create history listbox (initially hidden, positioned over result field)
+    // Create history as an owned popup so it can extend beyond the main window bounds.
+    // Owner = m_hWnd so it will hide with the main window; WS_EX_TOOLWINDOW avoids taskbar entry.
     m_hHistoryCombo = CreateWindowExA(
-        WS_EX_CLIENTEDGE,
-        "LISTBOX", 
+        WS_EX_TOOLWINDOW,
+        "LISTBOX",
         "",
-        WS_CHILD | LBS_NOTIFY | WS_VSCROLL | WS_BORDER,
-        0, // No margins
-        GetControlHeight() + ScaleDPI(5), // Same Y as result field with gap
-        ScaleDPI(WINDOW_MIN_WIDTH), // Full width, no margins
-        ScaleDPI(CONTROL_HEIGHT * 5), // Height for 5+ lines as per SOW
-        m_hWnd, 
-        (HMENU)IDC_HISTORY_COMBO, 
-        m_hInst, 
+        WS_POPUP | LBS_NOTIFY | WS_VSCROLL | WS_BORDER,
+        0, // initial pos set by UpdateLayout (screen coords)
+        0,
+        ScaleDPI(WINDOW_MIN_WIDTH),
+        ScaleDPI(CONTROL_HEIGHT * 5),
+        m_hWnd, // owner window (keeps it tied to main window)
+        NULL,   // no menu handle for popup windows (do not pass control ID here)
+        m_hInst,
         nullptr);
 
     if (!m_hHistoryCombo)
@@ -727,6 +748,9 @@ void WinApiCalc::OnCreate()
         MessageBoxA(m_hWnd, "Failed to create history listbox control", "Error", MB_OK);
         return;
     }
+
+    // Ensure the popup is initially hidden (CreateWindowEx with WS_POPUP may still be visible on some platforms)
+    ShowWindow(m_hHistoryCombo, SW_HIDE);
 
     // Subclass history listbox to handle Del and Esc keys
     m_originalListBoxProc = (WNDPROC)SetWindowLongPtrA(m_hHistoryCombo, GWLP_WNDPROC, (LONG_PTR)ListBoxSubclassProc);
@@ -992,7 +1016,7 @@ void WinApiCalc::OnCommand(WPARAM wParam)
                     SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0); // Select first item
                 }
                 // Hide result field when history is visible
-                ShowWindow(m_hResultEdit, SW_HIDE);
+                //ShowWindow(m_hResultEdit, SW_HIDE);
             }
             else
             {
@@ -1259,70 +1283,6 @@ void WinApiCalc::OnDestroy()
     SaveHistory();
 }
 
-void WinApiCalc::OnHelp()
-{
-    // Получаем путь к текущему exe файлу и заменяем расширение на .chm
-    char exePath[MAX_PATH];
-    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
-    
-    // Найдем последнюю точку для замены расширения
-    char* lastDot = strrchr(exePath, '.');
-    if (lastDot != nullptr)
-    {
-        strcpy_s(lastDot, MAX_PATH - (lastDot - exePath), ".chm");
-    }
-    else
-    {
-        // Если нет расширения, просто добавим .chm
-        strcat_s(exePath, MAX_PATH, ".chm");
-    }
-    
-    // Проверяем существование CHM файла
-    DWORD fileAttributes = GetFileAttributesA(exePath);
-    if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-    {
-        // Файл существует, открываем его с помощью HTML Help API
-        char debugMsg[512];
-        sprintf_s(debugMsg, "Trying to open CHM file: %s", exePath);
-        MessageBoxA(m_hWnd, debugMsg, "Debug Help", MB_OK);
-        
-        HWND result = HtmlHelpA(m_hWnd, exePath, HH_DISPLAY_TOPIC, 0);
-        if (result == NULL)
-        {
-            MessageBoxA(m_hWnd, "HtmlHelpA failed", "Debug Help", MB_OK);
-        }
-        else
-        {
-            MessageBoxA(m_hWnd, "HtmlHelpA succeeded", "Debug Help", MB_OK);
-        }
-    }
-    else
-    {
-        // Файл не найден, показываем MessageBox с краткой справкой и информацией о CHM файле
-        std::string helpMessage = 
-            "Help file fcalc.chm not found in program directory.\n\n"
-            "Hotkeys:\n"
-            "F1 - Help\n"
-            "Ctrl+Home - Home position and opacity\n"
-            "Ctrl+R - root2(...)\n"
-            "Ctrl+S - (...)^2\n"
-            "Ctrl+I - 1/(...)\n"
-            "Ctrl+[ / Ctrl+] - (...)\n"
-            "Esc - Clear expression\n\n"
-            "For full help, place fcalc.chm file\n"
-            "in program directory: ";
-        
-        // Добавляем путь к каталогу программы
-        char* lastSlash = strrchr(exePath, '\\');
-        if (lastSlash != nullptr)
-        {
-            *lastSlash = '\0'; // Обрезаем имя файла, оставляя только путь к каталогу
-        }
-        helpMessage += exePath;
-        
-        MessageBoxA(m_hWnd, helpMessage.c_str(), "Help", MB_OK | MB_ICONINFORMATION);
-    }
-}
 
 void WinApiCalc::WrapExpressionWith(const char* prefix, const char* suffix)
 {
@@ -1361,7 +1321,7 @@ void WinApiCalc::OnKeyDown(WPARAM key)
     {
         // F1 - открыть помощь
         MessageBoxA(m_hWnd, "F1 detected!", "Debug", MB_OK);
-        OnHelp();
+        ShowHelp();
     }
     else if (key == VK_HOME && ctrlPressed)
     {
@@ -1567,33 +1527,26 @@ void WinApiCalc::UpdateLayout()
     {
         if (!historyVisible)
         {
-            // Use control-based row height so UpdateLayout and ResizeWindow agree
-            // on how tall each result row is (avoids mismatch between GetCharHeight and control height).
+            // Position and size result edit (history hidden)
             int rowHeight = GetControlHeight();
-            
-            // Add adaptive gap between input and result fields based on font size
-            int baseFontSize = 16; // Default font size
+            int baseFontSize = 16;
             int currentFontSize = abs(m_fontSize);
             if (m_fontSize == 0) currentFontSize = baseFontSize;
-            
-            // Scale gap with font size: smaller gap for smaller fonts, larger for bigger
-            int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
-            int yPos = GetControlHeight() + gap; // Use GetControlHeight instead of lineHeight
-            
-            char debugMsg[200];
-            sprintf_s(debugMsg, "UpdateLayout: Result edit - GetControlHeight=%d, gap=%d, yPos=%d", GetControlHeight(), gap, yPos);
-            DebugLog(debugMsg);
-            
-            // Use a small, scaled padding to avoid large empty areas under the last
-            // line. Rely on scrollbars to handle overflow instead of adding row-sized
-            // padding. Keep the padding proportional to DPI.
-            int padding = ScaleDPI(4); // small conservative padding (4px at 96 DPI)
+            int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize));
+            int yPos = rowHeight + gap;
+            int padding = ScaleDPI(4);
             int resultHeight = rowHeight * m_resultLines + padding;
-            
+
             SetWindowPos(m_hResultEdit, nullptr,
-                0, yPos, // Add gap between input and result
+                0, yPos,
                 controlWidth, resultHeight,
                 SWP_NOZORDER | SWP_SHOWWINDOW);
+
+            // Ensure history is hidden when not in use
+            if (IsWindowVisible(m_hHistoryCombo))
+                ShowWindow(m_hHistoryCombo, SW_HIDE);
+
+// (end of not-history-visible branch)
 
             // Measure and store actual client height of result edit to avoid mismatch
             RECT wr={0}, cr={0};
@@ -1639,54 +1592,45 @@ void WinApiCalc::UpdateLayout()
         else
         {
             // Hide result field when history is visible
-            ShowWindow(m_hResultEdit, SW_HIDE);
+            //ShowWindow(m_hResultEdit, SW_HIDE);
+            // Keep result field visible; history popup will be shown on top.
+            // Avoid hiding m_hResultEdit to prevent clearing the client area.
+
         }
     }
     
     // History listbox - show in place of result field when visible
     if (m_hHistoryCombo && historyVisible)
     {
-        // Use minimum 5 lines for history or current result lines, whichever is larger
+        // Compute popup size: min 5 visible lines, cap to avoid overly tall popup
         int rowHeight = GetControlHeight();
-        // Add adaptive gap between input and result fields based on font size
-        int baseFontSize = 16; // Default font size
+        int baseFontSize = 16;
         int currentFontSize = abs(m_fontSize);
         if (m_fontSize == 0) currentFontSize = baseFontSize;
-        
-        // Scale gap with font size: smaller gap for smaller fonts, larger for bigger
-        int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
-        int yPos = rowHeight + gap; // Use GetControlHeight instead of lineHeight
-        
-        int displayLines = max(m_resultLines, 5); // Минимум 5 строк для истории
-        int padding;
-        if (displayLines <= 1) {
-            padding = max(rowHeight * 1, 10);
-        }
-        else if (displayLines == 2) {
-            padding = max(rowHeight * 2, 12);
-        }
-        else if (displayLines <= 5) {
-            padding = rowHeight * 2;
-        }
-        else if (displayLines <= 10) {
-            padding = rowHeight * 2;
-        }
-        else {
-            padding = max(rowHeight * 3 / 2, 25);
-        }
-        int historyHeight = rowHeight * displayLines + padding; 
-        
-        SetWindowPos(m_hHistoryCombo, HWND_TOP, // Bring to top
-            0, yPos, // Same position as result field with gap
-            controlWidth, historyHeight,
+        int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize));
+        int yPos = rowHeight + gap;
+
+        const int minVisibleLines = 5;
+        const int maxVisibleLines = 7; // cap for popup height
+        int requestedLines = max(m_resultLines, minVisibleLines);
+        int visibleLines = min(requestedLines, maxVisibleLines);
+        int padding = ScaleDPI(4);
+        int historyHeight = rowHeight * visibleLines + padding;
+
+        // Position the popup in screen coords and show it
+        POINT pt = { 0, yPos };
+        ClientToScreen(m_hWnd, &pt);
+        int popupWidth = controlWidth;
+        SetWindowPos(m_hHistoryCombo, HWND_TOP,
+            pt.x, pt.y,
+            popupWidth, historyHeight,
             SWP_SHOWWINDOW);
-            
+
         // Ensure history has focus and selection
         SetFocus(m_hHistoryCombo);
         if (SendMessage(m_hHistoryCombo, LB_GETCURSEL, 0, 0) == LB_ERR)
-        {
-            SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0); // Select first item if none selected
-        }
+            SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0);
+    }        
 #if ENABLE_DEBUG_LOG
         // Log history control metrics for debugging (inside correct scope where yPos/displayLines are defined)
         {
@@ -1703,7 +1647,7 @@ void WinApiCalc::UpdateLayout()
             DebugLog(hdbg);
         }
 #endif
-    }
+    
 }
 
 int WinApiCalc::GetCharWidth()

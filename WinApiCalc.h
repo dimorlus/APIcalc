@@ -16,35 +16,6 @@ const int CONTROL_MARGIN = 0;  // No margins as per requirements
 const int HISTORY_HEIGHT = 100;
 const int MAX_HISTORY = 100;
 
-// Expression calculator options (from SOW)
-#define PAS     (1<<0)   // Pascal assignment style
-#define SCI     (1<<1)   // Scientific format
-#define UPCASE  (1<<2)   // Case insensitive
-#define UTMP    (1<<3)   // Using $n for temp
-#define FFLOAT  (1<<4)   // Forced float
-#define DEG     (1<<5)   // Degrees format
-#define SCF     (1<<6)   // Scientific format found
-#define ENG     (1<<7)   // Engineering format found
-#define STR     (1<<8)   // String format found
-#define HEX     (1<<9)   // Hex format found
-#define OCT     (1<<10)  // Octal format found
-#define FBIN    (1<<11)  // Binary format found
-#define DAT     (1<<12)  // Date time format found
-#define CHR     (1<<13)  // Char format found
-#define WCH     (1<<14)  // WChar format found
-#define ESC     (1<<15)  // Escape format found
-#define CMP     (1<<16)  // Computing format found
-#define NRM     (1<<17)  // Normalized output
-#define IGR     (1<<18)  // Integer output
-#define UNS     (1<<19)  // Unsigned output
-#define ALL     (1<<20)  // All outputs
-#define MIN     (1<<21)  // Esc minimized feature
-#define MNU     (1<<22)  // Show/hide menu feature
-#define UTM     (1<<23)  // Unix time
-#define FRC     (1<<24)  // Fraction output
-#define FRI     (1<<25)  // Fraction inch output
-#define AUT     (1<<26)  // Auto output
-
 // Main application class
 class WinApiCalc
 {
@@ -137,7 +108,6 @@ public:
     void OnCtrlMinus(); // Decrease font size by 1px
     
     // Helper functions for hotkeys
-    void OnHelp();
     void WrapExpressionWith(const char* prefix, const char* suffix);
     
     // Variables dialog

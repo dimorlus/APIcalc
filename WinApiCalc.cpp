@@ -755,9 +755,13 @@ void WinApiCalc::OnCreate()
     // Update menu states
     UpdateMenuChecks();
     
+    // Apply saved "always on top" (TOP) option at startup
+    SetWindowPos(m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
     // Set window opacity
     SetWindowOpacity(m_opacity);
-
+    
     // Create expression input LAST so it draws on top
     int inputHeight = GetControlHeight();
     sprintf_s(debugMsg, "OnCreate: Input height=%d (GetControlHeight=%d)", inputHeight, GetControlHeight());
@@ -1878,7 +1882,7 @@ int WinApiCalc::CalculateContentBasedWidth()
     SelectObject(hdc, hOldFont);
     DeleteObject(hFont);
     ReleaseDC(m_hWnd, hdc);
-    
+
     // Если ничего не получили, используем fallback
     if (maxPixelWidth == 0)
         return CalculateOptimalWidth(76);
@@ -2802,6 +2806,7 @@ void WinApiCalc::ShowHelp()
         "Esc - Minimize (if enabled)",
         "Calculator Help", MB_OK | MB_ICONINFORMATION);
 }
+
 void WinApiCalc::SetWindowOpacity(int opacity) 
 {
     if (!m_hWnd) return;

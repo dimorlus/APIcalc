@@ -113,6 +113,7 @@ enum t_value
   tvINT,
   tvFLOAT,
   tvPERCENT,
+  tvCOMPLEX,
   tvSTR
 };
 
@@ -146,11 +147,14 @@ enum t_symbol
   tsIFUNC1, //int f(int x)
   tsIFUNC2, //int f(int x, int y)
   tsFFUNC1, //float f(float x)
+  tsCFUNCC1, //complex f(complex x)
+  tsFFUNCC1, //float f(complex x)
   tsFFUNC2, //float f(float x, float y)
   tsFFUNC3,//float f(float x, float y, float z)
   tsIFFUNC3,//int f(float x, float y, int z)
   tsPFUNCn, //int printf(char *format, ...)
-  tsSIFUNC1 //int f(char *s)
+  tsSIFUNC1, //int f(char *s)
+  tsNUM
 };
 
 class value
@@ -163,6 +167,7 @@ class value
      {
       int_t  ival;
       float__t fval;
+      float__t imval;
      };
     char *sval;
 
@@ -172,6 +177,7 @@ class value
       var = NULL;
       ival = 0;
       fval = 0;
+	  imval = 0;
       pos = 0;
       sval = NULL;
      }
@@ -217,7 +223,7 @@ class symbol
       func = NULL;
       name = NULL;
       next = NULL;
- }
+     }
 };
 
 
@@ -226,6 +232,7 @@ const int max_expression_length = 1024;
 
 const int hash_table_size = 1013;
 
+typedef void (*complex_func_t)(long double re, long double im, long double& out_re, long double& out_im);
 
 class calculator
 {
@@ -244,8 +251,10 @@ class calculator
     int   errpos;
 
     inline unsigned string_hash_function(char* p);
+    inline unsigned string_hash_function(char first, char* p);
     symbol* add(t_symbol tag, const char* name, void* func = NULL);
     symbol* find(t_symbol tag, const char* name, void* func = NULL);
+    symbol* find(const char* name, void* func = NULL);
     t_operator scan(bool operand, bool percent);
     void  error(int pos, const char* msg);
     inline void  error(const char* msg) {error(pos-1, msg);}
@@ -274,8 +283,8 @@ class calculator
     void addfn2(const char* name, void *func) {add(tsFFUNC2, name, func);}
     void varlist(void (*f)(char*, float__t));
     void varlist(void (*f)(char*, value*));
-  int varlist(char* buf, int bsize, int* maxlen = nullptr);
-    float__t evaluate(char* expr, __int64 *piVal = NULL);
+    int varlist(char* buf, int bsize, int* maxlen = nullptr);
+    float__t evaluate(char* expr, __int64 *piVal = NULL, float__t *pimval = NULL);
     char *Sres(void) {return sres;};
     ~calculator(void);
 };
@@ -285,6 +294,7 @@ extern bool IsNaNL(const long double ldVal);
 #define isnan(a) (a != a)
 
 #endif
+
 
 
 

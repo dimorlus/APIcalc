@@ -30,6 +30,13 @@ A scientific calculator application built using pure Win32 API without MFC depen
 - **Logarithmic**: ln (natural log), log (base 10)
 - **Other**: sqrt, exp, abs, floor, ceil, round
 
+### **Complex Number Support**
+
+- All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
+- Complex numbers can be entered in the form `a+bi` (e.g., `1+2i`, `3-4i`).
+- Functions like `sinñ`, `cosñ`, `expñ`, `absñ`, etc., work with complex arguments.
+- The result is displayed in the form `a+bi` if the imaginary part is nonzero.
+
 ### Constants
 
 - **pi**: 3.14159265358979323846

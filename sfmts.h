@@ -17,6 +17,7 @@ extern int wchr2str(char *str, int i);
 extern int nx_time2str(char *str, uint64_t time);
 extern void fraction(double val, double eps, int &num, int &denum);
 extern int format_out(int Options, int scfg, int binwide, int n, 
-	    float__t fVal, int64_t iVal, char* expr, char strings[20][80], calculator* ccalc);
-//n = format_out(opts.options, scfg, binwide, n, fVal, iVal, exprBuf, strings, ccalc);
+	    float__t fVal, float__t imVal, int64_t iVal, char* expr, 
+	    char strings[20][80], calculator* ccalc);
+//n = format_out(opts.options, scfg, binwide, n, fVal, imVal, iVal, exprBuf, strings, ccalc);
 #endif

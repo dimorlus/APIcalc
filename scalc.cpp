@@ -20,6 +20,10 @@
 //#include "sfmts.h"
 #include "sfunc.h"
 
+#define M_PI	3.14159265358979323846
+#define M_E		2.7182818284590452354
+
+
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
@@ -113,11 +117,23 @@ calculator::calculator(int cfg)
   add(tsFFUNC1, "rnd", (void*)(float__t(*)(float__t))Random);
   add(tsFFUNC3, "vout", (void*)(float__t(*)(float__t, float__t, float__t))Vout);
   add(tsFFUNC3, "cmp", (void*)(float__t(*)(float__t, float__t, float__t))Cmp);
-
-
   add(tsFFUNC2, "ee", (void*)(float__t(*)(float__t,float__t))Ee);
-#define M_PI		3.14159265358979323846
-#define M_E		2.7182818284590452354
+
+  add(tsCFUNCC1, "sinc", (void*)SinC);
+  add(tsCFUNCC1, "cosc", (void*)CosC);
+  add(tsCFUNCC1, "expc", (void*)ExpC);
+  add(tsFFUNCC1, "absc", (void*)(float__t(*)(float__t,float__t))AbsC);
+  add(tsCFUNCC1, "tanc", (void*)TanC);
+  add(tsCFUNCC1, "cotc", (void*)CotC);
+  add(tsCFUNCC1, "asinc", (void*)AsinC);
+  add(tsCFUNCC1, "acosc", (void*)AcosC);
+  add(tsCFUNCC1, "atanc", (void*)AtanC);
+  add(tsCFUNCC1, "sinhc", (void*)SinhC);
+  add(tsCFUNCC1, "coshc", (void*)CoshC);
+  add(tsCFUNCC1, "tanhc", (void*)TanhC);
+  add(tsCFUNCC1, "lnc", (void*)LnC);
+  add(tsCFUNCC1, "sqrtc", (void*)SqrtC);
+
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
@@ -155,6 +171,7 @@ calculator::~calculator(void)
       {
        nsp = sp->next;
        free(sp->name);
+	   sp->name = NULL;
        delete sp;
        sp = nsp;
        hash_table[i] = NULL;
@@ -232,6 +249,35 @@ void calculator::varlist(void (*f)(char*, value*))
     }
 }
 
+unsigned calculator::string_hash_function(char first, char* p)
+{
+    unsigned h = 0, g;
+    // Обрабатываем первый символ
+    h = (h << 4) + first;
+
+    if ((g = h & 0xF0000000) != 0)
+    {
+        h ^= g >> 24;
+    }
+    h &= ~g;
+
+    // Далее обычная строка
+    while (*p)
+    {
+        if (scfg & UPCASE)
+            h = (h << 4) + tolower(*p++);
+        else
+            h = (h << 4) + *p++;
+
+        if ((g = h & 0xF0000000) != 0)
+        {
+            h ^= g >> 24;
+        }
+        h &= ~g;
+    }
+    return h;
+}
+
 unsigned calculator::string_hash_function(char* p)
 {
   unsigned h = 0, g;
@@ -253,7 +299,7 @@ symbol* calculator::add(t_symbol tag, const char* name, void* func)
 {
   char *uname = strdup(name);
 
-  unsigned h = string_hash_function(uname) % hash_table_size;
+  unsigned h = string_hash_function('0'+tag, uname) % hash_table_size;
   symbol* sp;
   for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -281,7 +327,7 @@ symbol* calculator::find(t_symbol tag, const char* name, void* func)
 {
     char* uname = strdup(name);
 
-    unsigned h = string_hash_function(uname) % hash_table_size;
+    unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
     symbol* sp;
     for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -292,6 +338,29 @@ symbol* calculator::find(t_symbol tag, const char* name, void* func)
         else
         {
           if (strcmp(sp->name, uname) == 0) return sp;
+        }
+    }
+    return nullptr;
+}
+
+symbol* calculator::find(const char* name, void* func)
+{
+    char* uname = strdup(name);
+
+    for (t_symbol tag = tsVARIABLE; tag < tsNUM; tag = (t_symbol)(tag + 1))
+    {
+        unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
+        symbol* sp;
+        for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+        {
+            if (scfg & UPCASE)
+            {
+                if (stricmp(sp->name, uname) == 0) return sp;
+            }
+            else
+            {
+                if (strcmp(sp->name, uname) == 0) return sp;
+            }
         }
     }
     return nullptr;
@@ -323,7 +392,7 @@ bool calculator::checkvar(const char* name)
 {
   char *uname = strdup(name);
 
-  unsigned h = string_hash_function(uname) % hash_table_size;
+  unsigned h = string_hash_function('0'+ tsVARIABLE, uname) % hash_table_size;
   symbol* sp;
   for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -1232,8 +1301,24 @@ t_operator calculator::scan(bool operand, bool percent)
           fpos++;
           v_stack[v_sp].tag = tvPERCENT;
          }
+        else 
+        if (*fpos == 'i')
+        {
+          fpos++;
+          v_stack[v_sp].tag = tvCOMPLEX;
+        }
         else v_stack[v_sp].tag = tvFLOAT;
-        v_stack[v_sp].fval = fval;
+
+        if (v_stack[v_sp].tag == tvCOMPLEX)
+        {
+            v_stack[v_sp].imval = fval;
+            v_stack[v_sp].fval = 0;
+        }
+        else
+        {
+            v_stack[v_sp].fval = fval;
+            v_stack[v_sp].imval = 0;
+        }
         pos = fpos - buf;
        }
       v_stack[v_sp].pos = pos;
@@ -1257,6 +1342,8 @@ t_operator calculator::scan(bool operand, bool percent)
       *np = '\0';
       symbol* sym;
       if (buf[pos] == '\0') sym = find(tsVARIABLE, name); 
+      else 
+      if (buf[pos] == '(') sym = find(name);
       else sym = add(tsVARIABLE, name);
       if (v_sp == max_stack_size)
         {
@@ -1332,7 +1419,7 @@ bool calculator::assign()
   }
 }
 
-float__t calculator::evaluate(char* expression, __int64 * piVal)
+float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimval)
 {
   char var_name[16];
   bool operand = true;
@@ -1432,9 +1519,11 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                     sprintf(var_name, "@%d", ++tmp_var_count);
                     add(tsVARIABLE, var_name)->val = v_stack[0];
                    }
+				  if (pimval) *pimval = v_stack[0].imval;
                   if (v_stack[0].tag == tvINT)
                     {
                      if (piVal) *piVal = v_stack[0].ival;
+					 if (pimval) *pimval = 0;
                      if (v_stack[0].sval)
                       {
                        strcpy(sres, v_stack[0].sval);
@@ -1465,7 +1554,14 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               n_args += 1;
               continue;
 
-            case toSEMI:
+			case toSEMI: //todo: complex support
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+              else
               if ((v_stack[v_sp-1].tag == tvINT) &&
                   (v_stack[v_sp-2].tag == tvINT))
                 {
@@ -1514,6 +1610,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                  return qnan;
                 }
               else
+              if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
+				  (v_stack[v_sp-2].tag == tvCOMPLEX)) 
+               {
+                  v_stack[v_sp - 2].fval += v_stack[v_sp - 1].fval;
+				  v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
+               }
+              else 
                 {
                  if (v_stack[v_sp-1].tag == tvPERCENT)
                   {
@@ -1521,10 +1624,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                    float__t right = v_stack[v_sp-1].get();
                    v_stack[v_sp-2].fval = left+(left*right/100.0);
                   }
-                 else v_stack[v_sp-2].fval =
-                    v_stack[v_sp-2].get() + v_stack[v_sp-1].get();
-
-                 v_stack[v_sp-2].tag = tvFLOAT;
+                 else
+                 {
+                     v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get() + v_stack[v_sp - 1].get();
+                     v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
+                 }
+                 if (v_stack[v_sp - 2].imval != 0) v_stack[v_sp - 2].tag = tvCOMPLEX;
+				 else v_stack[v_sp-2].tag = tvFLOAT;
                 }
               v_sp -= 1;
               if (cop == toSETADD)
@@ -1549,6 +1655,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                 v_stack[v_sp-2].ival -= v_stack[v_sp-1].ival;
                }
               else
+              if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
+				  (v_stack[v_sp-2].tag == tvCOMPLEX)) 
+               {
+                  v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].fval;
+				  v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
+               }
+              else 
                {
                 if (v_stack[v_sp-1].tag == tvPERCENT)
                  {
@@ -1556,9 +1669,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                   float__t right = v_stack[v_sp-1].get();
                   v_stack[v_sp-2].fval = left-(left*right/100.0);
                  }
-                else v_stack[v_sp-2].fval =
-                   v_stack[v_sp-2].get() - v_stack[v_sp-1].get();
-                v_stack[v_sp-2].tag = tvFLOAT;
+                else
+                {
+                    v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get() - v_stack[v_sp - 1].get();
+                    v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
+                }
+                if (v_stack[v_sp - 2].imval != 0) v_stack[v_sp - 2].tag = tvCOMPLEX;
+				else v_stack[v_sp-2].tag = tvFLOAT;
                }
               v_sp -= 1;
               if (cop == toSETSUB)
@@ -1583,6 +1700,26 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                 return qnan;
                }
               else
+              if (
+                  ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
+				  ((v_stack[v_sp - 1].imval != 0) ||
+                      (v_stack[v_sp - 2].imval != 0))
+				  ) 
+              {
+                    // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
+                    
+                    long double a = v_stack[v_sp - 2].fval;
+                    long double b = v_stack[v_sp - 2].imval; // первое число: a + bi
+                    long double c = v_stack[v_sp - 1].fval;
+                    long double d = v_stack[v_sp - 1].imval; // второе число: c + di
+ 
+                    v_stack[v_sp - 2].fval = a * c - b * d;
+                    v_stack[v_sp - 2].imval = a * d + b * c;
+					v_stack[v_sp - 2].tag = tvCOMPLEX;
+              }
+              else
+              if (v_stack[v_sp - 2].tag != tvCOMPLEX)
                {
                 if (v_stack[v_sp-1].tag == tvPERCENT)
                  {
@@ -1590,8 +1727,10 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                   float__t right = v_stack[v_sp-1].get();
                   v_stack[v_sp-2].fval = left*(left*right/100.0);
                  }
-                else v_stack[v_sp-2].fval =
-                   v_stack[v_sp-2].get() * v_stack[v_sp-1].get();
+                else
+                {
+                 v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get() * v_stack[v_sp - 1].get();
+                }
                 v_stack[v_sp-2].tag = tvFLOAT;
                }
               v_sp -= 1;
@@ -1611,6 +1750,28 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                 return qnan;
                }
               else
+              if (
+                  ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                   (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
+                  ((v_stack[v_sp - 1].imval != 0) ||
+                   (v_stack[v_sp - 2].imval != 0))
+                 )
+                {
+                    // (a + bi) / (c + di) = [(ac + bd) + (bc - ad)i] / (c^2 + d^2)
+                    long double a = v_stack[v_sp - 2].fval;
+                    long double b = v_stack[v_sp - 2].imval;
+                    long double c = v_stack[v_sp - 1].fval;
+                    long double d = v_stack[v_sp - 1].imval;
+                    long double denom = c * c + d * d;
+                    if (denom == 0.0) {
+                        error(v_stack[v_sp - 2].pos, "Division by zero");
+                        return qnan;
+                    }
+                    v_stack[v_sp - 2].fval = (a * c + b * d) / denom;
+                    v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
+                    v_stack[v_sp - 2].tag = tvCOMPLEX;
+                }
+              else
               if (v_stack[v_sp-1].get() == 0.0)
                {
                 error(v_stack[v_sp-2].pos, "Division by zero");
@@ -1621,6 +1782,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                 v_stack[v_sp-2].ival /= v_stack[v_sp-1].ival;
                }
               else
+			  if (v_stack[v_sp - 2].tag != tvCOMPLEX)
                {
                 if (v_stack[v_sp-1].tag == tvPERCENT)
                  {
@@ -1628,8 +1790,10 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                   float__t right = v_stack[v_sp-1].get();
                   v_stack[v_sp-2].fval = left/(left*right/100.0);
                  }
-                else v_stack[v_sp-2].fval =
-                   v_stack[v_sp-2].get() / v_stack[v_sp-1].get();
+                else
+                {
+                    v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get() / v_stack[v_sp - 1].get();
+                }
                 v_stack[v_sp-2].tag = tvFLOAT;
                }
              v_sp -= 1;
@@ -1640,7 +1804,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
              v_stack[v_sp-1].var = NULL;
             break;
 
-            case toPAR:
+			case toPAR: // parallel resistors 
              if ((v_stack[v_sp-1].tag == tvSTR) ||
                  (v_stack[v_sp-2].tag == tvSTR))
               {
@@ -1660,13 +1824,69 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                float__t right = v_stack[v_sp-1].get();
                v_stack[v_sp-2].fval = 1/(1/left+1/(left*right/100.0));
               }
-             else v_stack[v_sp-2].fval = 1/(1/v_stack[v_sp-1].get()+1/v_stack[v_sp-2].get());
+             else
+             if (
+                 ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))||
+				 ((v_stack[v_sp - 1].imval != 0) ||
+                  (v_stack[v_sp - 2].imval != 0))
+                )
+             {
+                 long double ar = v_stack[v_sp - 2].fval;
+                 long double ai = v_stack[v_sp - 2].imval;
+                 long double br = v_stack[v_sp - 1].fval;
+                 long double bi = v_stack[v_sp - 1].imval;
+
+                 // 1/a
+                 long double a_norm2 = ar * ar + ai * ai;
+                 if (a_norm2 == 0.0) 
+                 {
+                     error(v_stack[v_sp - 2].pos, "Division by zero");
+                     return qnan;
+                 }
+                 long double inv_a_r = ar / a_norm2;
+                 long double inv_a_i = -ai / a_norm2;
+
+                 // 1/b
+                 long double b_norm2 = br * br + bi * bi;
+                 if (b_norm2 == 0.0)
+                 {
+                     error(v_stack[v_sp - 2].pos, "Division by zero");
+                     return qnan;
+                 }
+                 long double inv_b_r = br / b_norm2;
+                 long double inv_b_i = -bi / b_norm2;
+
+                 // sum = 1/a + 1/b
+                 long double sum_r = inv_a_r + inv_b_r;
+                 long double sum_i = inv_a_i + inv_b_i;
+
+                 // 1 / sum
+                 long double sum_norm2 = sum_r * sum_r + sum_i * sum_i;
+                 if (sum_norm2 == 0.0)
+                 {
+                     error(v_stack[v_sp - 2].pos, "Division by zero");
+                     return qnan;
+				 }
+                 v_stack[v_sp - 2].fval = sum_r / sum_norm2;
+                 v_stack[v_sp - 2].imval = -sum_i / sum_norm2;
+                 v_stack[v_sp - 2].tag = tvCOMPLEX;
+			 }
+             else 
+             v_stack[v_sp-2].fval = 1/(1/v_stack[v_sp-1].get()+1/v_stack[v_sp-2].get());
              v_stack[v_sp-2].tag = tvFLOAT;
              v_sp -= 1;
              v_stack[v_sp-1].var = NULL;
             break;
 
             case toPERCENT:
+             if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                 (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+             else
              if ((v_stack[v_sp-1].tag == tvSTR) ||
                  (v_stack[v_sp-2].tag == tvSTR))
                {
@@ -1700,6 +1920,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toMOD:
             case toSETMOD:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+              else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                {
@@ -1759,9 +1986,36 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                   float__t right = v_stack[v_sp-1].get();
                   v_stack[v_sp-2].fval = pow(left, left*right/100.0);
                  }
-                else v_stack[v_sp-2].fval =
-                   pow(v_stack[v_sp-2].get(), v_stack[v_sp-1].get());
-                 v_stack[v_sp-2].tag = tvFLOAT;
+                else
+                if (
+                    ((v_stack[v_sp-2].tag == tvCOMPLEX)||
+					(v_stack[v_sp - 1].tag == tvCOMPLEX)) ||
+					((v_stack[v_sp - 1].imval != 0) ||
+					 (v_stack[v_sp - 2].imval != 0))
+					)
+                { 
+                    long double x1 = v_stack[v_sp - 2].fval;  
+                    long double y1 = v_stack[v_sp - 2].imval; // основание: x1 + i*y1
+                    long double x2 = v_stack[v_sp - 1].fval;
+                    long double y2 = v_stack[v_sp - 1].imval; // степень:   x2 + i*y2
+                    
+                    long double r = std::hypotl(x1, y1);
+                    long double phi = std::atan2(y1, x1);
+                    long double ln_r = std::log(r);
+
+                    long double u = x2 * ln_r - y2 * phi;
+                    long double v = x2 * phi + y2 * ln_r;
+
+                    long double exp_u = std::expl(u);
+                    v_stack[v_sp - 2].fval = exp_u * std::cosl(v);
+                    v_stack[v_sp - 2].imval = exp_u * std::sinl(v);
+                    v_stack[v_sp - 2].tag = tvCOMPLEX;
+                }
+                else
+                {
+                    v_stack[v_sp - 2].fval = pow(v_stack[v_sp - 2].get(), v_stack[v_sp - 1].get());
+                    v_stack[v_sp - 2].tag = tvFLOAT;
+                }
                }
               v_sp -= 1;
               if (cop == toSETPOW)
@@ -1773,6 +2027,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toAND:
             case toSETAND:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                    (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+              else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                {
@@ -1800,6 +2061,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toOR:
             case toSETOR:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                    (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -1827,6 +2095,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toXOR:
             case toSETXOR:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -1854,6 +2129,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toASL:
             case toSETASL:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -1881,6 +2163,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toASR:
             case toSETASR:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+              else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -1908,6 +2197,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
 
             case toLSR:
             case toSETLSR:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -1934,7 +2230,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toEQ:
+			case toEQ: //== 
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -1951,14 +2247,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               else
                 {
                   v_stack[v_sp-2].ival =
-                    v_stack[v_sp-2].get() == v_stack[v_sp-1].get();
+                    (v_stack[v_sp-2].get() == v_stack[v_sp-1].get())&&
+                    (v_stack[v_sp - 2].imval == v_stack[v_sp - 1].imval);
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toNE:
+			case toNE: // !=, <>
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -1975,7 +2272,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               else
                 {
                   v_stack[v_sp-2].ival =
-                    v_stack[v_sp-2].get() != v_stack[v_sp-1].get();
+                    (v_stack[v_sp-2].get() != v_stack[v_sp-1].get()) ||
+					(v_stack[v_sp - 2].imval != v_stack[v_sp - 1].imval);
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
@@ -1983,6 +2281,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toGT:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+			  else
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -2007,6 +2312,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toGE:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+				}
+			  else
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -2031,6 +2343,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toLT:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+				}
+			  else
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -2055,6 +2374,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toLE:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+					return qnan;
+				}
+			  else
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
                   v_stack[v_sp-2].ival =
@@ -2079,6 +2405,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toPREINC:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+              else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2099,7 +2432,14 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toPREDEC:
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
+               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+                }
+               else
+               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
                   error(v_stack[v_sp-2].pos, "Illegal string operation");
@@ -2119,6 +2459,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toPOSTINC:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    return qnan;
+				}
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2143,6 +2490,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toPOSTDEC:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+					return qnan;
+				}
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2167,6 +2521,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toFACT:
+              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                {
+                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+					return qnan;
+				}
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2202,6 +2563,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               break;
 
             case toNOT:
+              if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp-2].tag == tvCOMPLEX))
+                {
+                  error(v_stack[v_sp-2].pos, "Illegal complex operation");
+                  return qnan;
+                }
+			  else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2229,6 +2597,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               else
                 {
                   v_stack[v_sp-1].fval = -v_stack[v_sp-1].fval;
+                  v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
                 }
               // no break
 
@@ -2236,7 +2605,14 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toCOM:
+            case toCOM: //~
+             if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
+                  (v_stack[v_sp-2].tag == tvCOMPLEX))
+                {
+                  error(v_stack[v_sp-2].pos, "Illegal complex operation");
+                  return qnan;
+			    }
+			 else
               if (v_stack[v_sp-1].tag == tvINT)
                 {
                   v_stack[v_sp-1].ival = ~v_stack[v_sp-1].ival;
@@ -2400,6 +2776,38 @@ float__t calculator::evaluate(char* expression, __int64 * piVal)
                       v_stack[v_sp-2].tag = tvINT;
                       v_sp -= 1;
                     break;
+                    case tsCFUNCC1:
+                      if (n_args != 1)
+                        {
+                          error(v_stack[v_sp-n_args-1].pos,
+                                "Function should take one argument");
+                          return qnan;
+                        }
+                      {
+                          long double re = v_stack[v_sp - 1].fval;
+                          long double im = v_stack[v_sp - 1].imval;
+                          long double out_re, out_im;
+                          ((complex_func_t)sym->func)(re, im, out_re, out_im);
+                          v_stack[v_sp - 2].fval = out_re;
+                          v_stack[v_sp - 2].imval = out_im;
+                          v_stack[v_sp - 2].tag = tvCOMPLEX;
+                          v_stack[v_sp-2].tag = tvCOMPLEX;
+                      }
+					  v_sp -= 1;
+					  break;
+                    case tsFFUNCC1:
+                        if (n_args != 1)
+                        {
+                            error(v_stack[v_sp - n_args - 1].pos,
+                                "Function should take one argument");
+                            return qnan;
+                        }
+                        v_stack[v_sp - 2].fval = (*(float__t(*)(float__t, float__t))sym->func)(
+                                               v_stack[v_sp - 1].fval, v_stack[v_sp - 1].imval);
+                        v_stack[v_sp - 2].tag = tvFLOAT;
+                        v_sp -= 1;
+                        break;
+
                     default:
                       error("Invalid expression");
                     }

@@ -1126,8 +1126,9 @@ void WinApiCalc::OnEnterPressed()
             m_pCalculator->syntax(m_options);
             
             int64_t iVal = 0;
-            long double fVal = m_pCalculator->evaluate(exprBuf, &iVal);
-            
+            long double imVal = 0.0;
+            long double fVal = m_pCalculator->evaluate(exprBuf, &iVal, &imVal);
+
             // Check for errors
             char* error = m_pCalculator->error();
             if (error && strlen(error) > 0)
@@ -1137,8 +1138,9 @@ void WinApiCalc::OnEnterPressed()
             
             // Format result as %.16Lg as specified in SOW
             char resultStr[64];
-            sprintf_s(resultStr, "%.16Lg", fVal);
-            
+            if (imVal == 0) sprintf_s(resultStr, "%.16Lg", fVal);
+            else sprintf_s(resultStr, "%.16Lg%+.16Lgi", fVal, imVal);
+
             // Put result in expression field
             SetWindowTextA(m_hExpressionEdit, resultStr);
         }
@@ -1169,8 +1171,9 @@ void WinApiCalc::EvaluateExpression()
 
         // Evaluate expression
         int64_t iVal = 0;
-        long double fVal = m_pCalculator->evaluate(exprBuf, &iVal);
-        
+		long double imVal = 0.0;
+        long double fVal = m_pCalculator->evaluate(exprBuf, &iVal, &imVal);
+
         // Check for calculator errors first
         char* error = m_pCalculator->error();
         if (error && strlen(error) > 0)
@@ -1192,7 +1195,8 @@ void WinApiCalc::EvaluateExpression()
         try {
             // Call format_out
             n = format_out(m_options, scfg, m_binWidth, 
-                          0, fVal, iVal, exprBuf, strings, m_pCalculator);
+                          0, fVal, imVal, iVal, exprBuf, 
+                          strings, m_pCalculator);
             
             // Safety check - ensure n is within bounds
             if (n < 0) n = 0;

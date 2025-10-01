@@ -1010,4 +1010,208 @@ int_t datatime(char *tstr)
     return (int_t)result;
 }
 
+// Синус комплексного числа: sin(z) = sin(x + iy) = sin(x) * cosh(y) + i * cos(x) * sinh(y)
+void SinC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    re = sinl(x) * coshl(y);
+    im = cosl(x) * sinhl(y);
+#else
+    re = sin(x) * cosh(y);
+    im = cos(x) * sinh(y);
+#endif
+}
 
+// Косинус: cos(z) = cos(x) * cosh(y) - i * sin(x) * sinh(y)
+void CosC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    re = cosl(x) * coshl(y);
+    im = -sinl(x) * sinhl(y);
+#else
+    re = cos(x) * cosh(y);
+    im = -sin(x) * sinh(y);
+#endif
+}
+
+// Экспонента: exp(z) = exp(x) * (cos(y) + i * sin(y))
+void ExpC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    long double ex = expl(x);
+    re = ex * cosl(y);
+    im = ex * sinl(y);
+#else
+    double ex = exp(x);
+    re = ex * cos(y);
+    im = ex * sin(y);
+#endif
+}
+
+// Модуль (абсолютное значение): abs(z) = sqrt(x^2 + y^2)
+float__t AbsC(float__t x, float__t y)
+{
+#ifdef _long_double_
+    return hypotl(x, y);
+#else
+    return hypot(x, y);
+#endif
+}
+
+// Тангенс: tan(z) = sin(z) / cos(z)
+void TanC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    float__t sin_re, sin_im, cos_re, cos_im;
+    SinC(x, y, sin_re, sin_im);
+    CosC(x, y, cos_re, cos_im);
+    // (a+bi)/(c+di) = [(ac+bd) + i(bc-ad)] / (c^2 + d^2)
+    float__t denom = cos_re * cos_re + cos_im * cos_im;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    re = (sin_re * cos_re + sin_im * cos_im) / denom;
+    im = (sin_im * cos_re - sin_re * cos_im) / denom;
+}
+
+// Котангенс: cot(z) = 1 / tan(z)
+void CotC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    float__t tan_re, tan_im;
+    TanC(x, y, tan_re, tan_im);
+    float__t denom = tan_re * tan_re + tan_im * tan_im;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    re = tan_re / denom;
+    im = -tan_im / denom;
+}
+
+// Арксинус: arcsin(z) = -i * ln(iz + sqrt(1 - z^2))
+void AsinC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // iz = -y + ix
+    float__t a = 1 - (x * x - y * y);
+    float__t b = -2 * x * y;
+    float__t sqrt_re, sqrt_im;
+    // sqrt(1 - z^2)
+    SqrtC(a, b, sqrt_re, sqrt_im);
+    // iz + sqrt(...)
+    float__t s_re = -y + sqrt_re;
+    float__t s_im = x + sqrt_im;
+    // ln(iz + sqrt(...))
+    float__t ln_re, ln_im;
+    LnC(s_re, s_im, ln_re, ln_im);
+    re = ln_im;
+    im = -ln_re;
+}
+
+// Арккосинус: arccos(z) = -i * ln(z + sqrt(z^2 - 1))
+void AcosC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // z^2 - 1
+    float__t a = x * x - y * y - 1;
+    float__t b = 2 * x * y;
+    float__t sqrt_re, sqrt_im;
+    SqrtC(a, b, sqrt_re, sqrt_im);
+    // z + sqrt(...)
+    float__t s_re = x + sqrt_re;
+    float__t s_im = y + sqrt_im;
+    // ln(z + sqrt(...))
+    float__t ln_re, ln_im;
+    LnC(s_re, s_im, ln_re, ln_im);
+    re = ln_im;
+    im = -ln_re;
+}
+
+// Арктангенс: arctan(z) = (i/2) * [ln(1 - iz) - ln(1 + iz)]
+void AtanC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // 1 - iz = 1 + y - ix
+    float__t a1 = 1 + y;
+    float__t b1 = -x;
+    float__t ln1_re, ln1_im;
+    LnC(a1, b1, ln1_re, ln1_im);
+
+    // 1 + iz = 1 - y + ix
+    float__t a2 = 1 - y;
+    float__t b2 = x;
+    float__t ln2_re, ln2_im;
+    LnC(a2, b2, ln2_re, ln2_im);
+
+    re = 0.5 * (ln1_im - ln2_im);
+    im = 0.5 * (ln2_re - ln1_re);
+}
+
+// Гиперболический синус: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
+void SinhC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    re = sinhl(x) * cosl(y);
+    im = coshl(x) * sinl(y);
+#else
+    re = sinh(x) * cos(y);
+    im = cosh(x) * sin(y);
+#endif
+}
+
+// Гиперболический косинус: cosh(z) = cosh(x) * cos(y) + i * sinh(x) * sin(y)
+void CoshC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    re = coshl(x) * cosl(y);
+    im = sinhl(x) * sinl(y);
+#else
+    re = cosh(x) * cos(y);
+    im = sinh(x) * sin(y);
+#endif
+}
+
+// Гиперболический тангенс: tanh(z) = sinh(z) / cosh(z)
+void TanhC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    float__t sinh_re, sinh_im, cosh_re, cosh_im;
+    SinhC(x, y, sinh_re, sinh_im);
+    CoshC(x, y, cosh_re, cosh_im);
+    float__t denom = cosh_re * cosh_re + cosh_im * cosh_im;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    re = (sinh_re * cosh_re + sinh_im * cosh_im) / denom;
+    im = (sinh_im * cosh_re - sinh_re * cosh_im) / denom;
+}
+
+// Натуральный логарифм: ln(z) = ln|z| + i*arg(z)
+void LnC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    re = 0.5L * logl(x * x + y * y);
+    im = atan2l(y, x);
+#else
+    re = 0.5 * log(x * x + y * y);
+    im = atan2(y, x);
+#endif
+}
+
+// Квадратный корень: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
+void SqrtC(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    long double r = hypotl(x, y);
+    long double phi = atan2l(y, x);
+    r = sqrtl(r);
+    re = r * cosl(phi / 2);
+    im = r * sinl(phi / 2);
+#else
+    double r = hypot(x, y);
+    double phi = atan2(y, x);
+    r = sqrt(r);
+    re = r * cos(phi / 2);
+    im = r * sin(phi / 2);
+#endif
+}

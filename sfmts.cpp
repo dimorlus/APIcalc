@@ -456,8 +456,7 @@ int d2frcstr(char *str, float__t d, int eps_order)
 }
 //---------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------
-int format_out (int Options, int scfg, int binwide, int n, float__t fVal,
+int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float__t imVal,
 				int64_t iVal, char *expr, char strings[20][80], calculator *ccalc)
 {
  if (IsNaN(fVal))
@@ -511,22 +510,47 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal,
  else
   {
    // (WO) Forced float
-   if (Options & FFLOAT)
-	sprintf(strings[n++], "%65.16Lg f", (long double) fVal);
-
+	 if (Options & FFLOAT)
+	 {
+		 if (imVal == 0) sprintf(strings[n++], "%65.16Lg f", (long double)fVal);
+		 else
+		 {
+			 char imstr[80];
+			 sprintf(imstr, "%.16Lg%+.16Lgi", (long double)fVal, (long double)imVal);
+			 sprintf(strings[n++], "%65.64s f", imstr);
+		 }
+	 }
    // (RO) Scientific (6.8k) format found
-   if ((Options & SCF) || (scfg & SCF))
-	{
-	 char scistr[80];
-	 d2scistr(scistr, fVal);
-	 sprintf(strings[n++], "%65.64s S", scistr);
-	}
-
+	 if ((Options & SCF) || (scfg & SCF))
+	 {
+		 char scistr[80];
+		 if (imVal == 0)  d2scistr(scistr, fVal);
+		 else
+		 { 
+			 char *cp = scistr;
+			 cp += d2scistr(scistr, fVal);
+			 if (imVal > 0) *cp++ = '+';
+			 
+			 cp += d2scistr(cp, imVal);
+			 *cp++ = 'i';
+			 *cp = '\0';
+		 }
+		 sprintf(strings[n++], "%65.64s S", scistr);
+	 }
    // (UI) Normalized output
    if (Options & NRM)
 	{
 	 char nrmstr[80];
-	 d2nrmstr(nrmstr, fVal);
+	 if (imVal == 0) d2nrmstr(nrmstr, fVal);
+	 else
+	 {
+		 char *cp = nrmstr;
+		 cp += d2nrmstr(nrmstr, fVal);
+		 if (imVal > 0) *cp++ = '+';
+		 cp += d2nrmstr(cp, imVal);
+		 *cp++ = 'i';
+		 *cp = '\0';
+	 }
 	 sprintf(strings[n++], "%65.64s n", nrmstr);
 	}
 

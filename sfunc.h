@@ -26,6 +26,7 @@ int_t nearly_equal(double a, double b, int ignore_nbits);
 float__t Erfc(float__t x);
 float__t Random(float__t x);
 float__t Atan(float__t x);
+float__t Acot(float__t x);
 float__t Atan2l(float__t x, float__t y);
 float__t Cos(float__t x);
 float__t Cosh(float__t x);
@@ -80,17 +81,32 @@ bool IsNaN(const double fVal);
 bool IsNaNL(const long double ldVal);
 int_t fprn(char *dest, char *sfmt, int args, value* v_stack);
 int_t datatime(char *tstr);
+
+float__t AbsC(float__t x, float__t y);
 void SinC(float__t x, float__t y, float__t& re, float__t& im);
 void CosC(float__t x, float__t y, float__t& re, float__t& im);
-void ExpC(float__t x, float__t y, float__t& re, float__t& im);
-float__t AbsC(float__t x, float__t y);
 void TanC(float__t x, float__t y, float__t& re, float__t& im);
 void CotC(float__t x, float__t y, float__t& re, float__t& im);
+
 void AsinC(float__t x, float__t y, float__t& re, float__t& im);
 void AcosC(float__t x, float__t y, float__t& re, float__t& im);
 void AtanC(float__t x, float__t y, float__t& re, float__t& im);
+void AcotC(float__t x, float__t y, float__t& re, float__t& im);
+
 void SinhC(float__t x, float__t y, float__t& re, float__t& im);
 void CoshC(float__t x, float__t y, float__t& re, float__t& im);
 void TanhC(float__t x, float__t y, float__t& re, float__t& im);
+void CothC(float__t x, float__t y, float__t& re, float__t& im);
+
+void AsinhC(float__t x, float__t y, float__t& re, float__t& im);
+void AcoshC(float__t x, float__t y, float__t& re, float__t& im);
+void AtanhC(float__t x, float__t y, float__t& re, float__t& im);
+void AcothC(float__t x, float__t y, float__t& re, float__t& im);
+
+void ExpC(float__t x, float__t y, float__t& re, float__t& im);
 void LnC(float__t x, float__t y, float__t& re, float__t& im);
 void SqrtC(float__t x, float__t y, float__t& re, float__t& im);
+
+void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, float__t& im);
+void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im);
+

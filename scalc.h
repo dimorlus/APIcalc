@@ -154,8 +154,44 @@ enum t_symbol
   tsIFFUNC3,//int f(float x, float y, int z)
   tsPFUNCn, //int printf(char *format, ...)
   tsSIFUNC1, //int f(char *s)
+  tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
+  tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
   tsNUM
 };
+
+enum v_func
+{
+ vf_abs,
+
+ vf_sin,
+ vf_cos,
+ vf_tan,
+ vf_cot,
+
+ vf_sinh,
+ vf_cosh,
+ vf_tanh,
+ vf_ctnh,
+
+ vf_asin,
+ vf_acos,
+ vf_atan,
+ vf_acot,
+
+ vf_asinh,
+ vf_acosh,
+ vf_atanh,
+ vf_acoth,
+
+ vf_exp,
+ vf_log,
+ vf_sqrt,
+
+ vf_pow,
+ vf_logn,
+
+ vf_num
+ };
 
 class value
 {
@@ -212,6 +248,7 @@ class symbol
 {
   public:
     t_symbol tag;
+    v_func   fidx;
     void*    func;
     value    val;
     char*    name;
@@ -220,6 +257,7 @@ class symbol
  inline symbol()
      {
       tag = tsVARIABLE;
+	  fidx = vf_num;
       func = NULL;
       name = NULL;
       next = NULL;
@@ -253,6 +291,7 @@ class calculator
     inline unsigned string_hash_function(char* p);
     inline unsigned string_hash_function(char first, char* p);
     symbol* add(t_symbol tag, const char* name, void* func = NULL);
+    symbol* add(t_symbol tag, v_func fidx, const char* name, void* func=NULL);
     symbol* find(t_symbol tag, const char* name, void* func = NULL);
     symbol* find(const char* name, void* func = NULL);
     t_operator scan(bool operand, bool percent);

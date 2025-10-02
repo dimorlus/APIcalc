@@ -20,8 +20,9 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
-#define M_PI	3.14159265358979323846
-#define M_E		2.7182818284590452354
+#define M_PI	3.1415926535897932384626433832795
+#define M_PI_2l 1.5707963267948966192313216916398
+#define M_E		2.7182818284590452353602874713527
 
 int_t To_int(int_t val)
 {
@@ -156,6 +157,18 @@ float__t Atan(float__t x)
     return atanl(x);
 #else
     return atan(x);
+#endif
+}
+
+// Арккотангенс: acot(x) = arctan(1/x)
+float__t Acot(float__t x)
+{
+#ifdef _long_double_
+    if (x == 0) return M_PI_2l; // pi/2
+    return atanl(1.0L / x);
+#else
+    if (x == 0) return M_PI_2; // pi/2
+    return atan(1.0 / x);
 #endif
 }
 
@@ -1214,4 +1227,140 @@ void SqrtC(float__t x, float__t y, float__t& re, float__t& im)
     re = r * cos(phi / 2);
     im = r * sin(phi / 2);
 #endif
+}
+// Арккотангенс: acot(z) = arctan(1/z)
+void AcotC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // 1/z = (x - iy) / (x^2 + y^2)
+    float__t denom = x * x + y * y;
+    float__t zx = x / denom;
+    float__t zy = -y / denom;
+    AtanC(zx, zy, re, im);
+}
+
+// Котангенс гиперболический: coth(z) = 1 / tanh(z)
+void CothC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    float__t tanh_re, tanh_im;
+    TanhC(x, y, tanh_re, tanh_im);
+    float__t denom = tanh_re * tanh_re + tanh_im * tanh_im;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    re = tanh_re / denom;
+    im = -tanh_im / denom;
+}
+
+// Арксинус гиперболический: asinh(z) = ln(z + sqrt(z^2 + 1))
+void AsinhC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // z^2 + 1
+    float__t a = x * x - y * y + 1;
+    float__t b = 2 * x * y;
+    float__t sqrt_re, sqrt_im;
+    SqrtC(a, b, sqrt_re, sqrt_im);
+    // z + sqrt(...)
+    float__t s_re = x + sqrt_re;
+    float__t s_im = y + sqrt_im;
+    LnC(s_re, s_im, re, im);
+}
+
+// Арккосинус гиперболический: acosh(z) = ln(z + sqrt(z + 1) * sqrt(z - 1))
+void AcoshC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // sqrt(z + 1)
+    float__t sqrt1_re, sqrt1_im;
+    SqrtC(x + 1, y, sqrt1_re, sqrt1_im);
+    // sqrt(z - 1)
+    float__t sqrt2_re, sqrt2_im;
+    SqrtC(x - 1, y, sqrt2_re, sqrt2_im);
+    // sqrt(z+1) * sqrt(z-1)
+    float__t mul_re = sqrt1_re * sqrt2_re - sqrt1_im * sqrt2_im;
+    float__t mul_im = sqrt1_re * sqrt2_im + sqrt1_im * sqrt2_re;
+    // z + mul
+    float__t s_re = x + mul_re;
+    float__t s_im = y + mul_im;
+    LnC(s_re, s_im, re, im);
+}
+
+// Арктангенс гиперболический: atanh(z) = 0.5 * [ln(1 + z) - ln(1 - z)]
+void AtanhC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // 1 + z
+    float__t a1 = 1 + x;
+    float__t b1 = y;
+    float__t ln1_re, ln1_im;
+    LnC(a1, b1, ln1_re, ln1_im);
+
+    // 1 - z
+    float__t a2 = 1 - x;
+    float__t b2 = -y;
+    float__t ln2_re, ln2_im;
+    LnC(a2, b2, ln2_re, ln2_im);
+
+    re = 0.5 * (ln1_re - ln2_re);
+    im = 0.5 * (ln1_im - ln2_im);
+}
+
+// Арккотангенс гиперболический: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
+void AcothC(float__t x, float__t y, float__t& re, float__t& im)
+{
+    // 1/z = (x - iy) / (x^2 + y^2)
+    float__t denom = x * x + y * y;
+    float__t inv_re = x / denom;
+    float__t inv_im = -y / denom;
+
+    // 1 + 1/z
+    float__t a1 = 1 + inv_re;
+    float__t b1 = inv_im;
+    float__t ln1_re, ln1_im;
+    LnC(a1, b1, ln1_re, ln1_im);
+
+    // 1 - 1/z
+    float__t a2 = 1 - inv_re;
+    float__t b2 = -inv_im;
+    float__t ln2_re, ln2_im;
+    LnC(a2, b2, ln2_re, ln2_im);
+
+    re = 0.5 * (ln1_re - ln2_re);
+    im = 0.5 * (ln1_im - ln2_im);
+}
+
+// Комплексное возведение в степень: PowC(z1, z2) = exp(z2 * ln(z1))
+void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, float__t& im)
+{
+    // ln(z1)
+    float__t ln_re, ln_im;
+    LnC(x1, y1, ln_re, ln_im);
+
+    // z2 * ln(z1)
+    float__t a = x2 * ln_re - y2 * ln_im;
+    float__t b = x2 * ln_im + y2 * ln_re;
+
+    // exp(z2 * ln(z1))
+    ExpC(a, b, re, im);
+}
+
+// Комплексный логарифм по произвольному основанию: LognC(x, y, u, v) = ln(y + iv) / ln(x + iu)
+void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im)
+{
+    // ln(y + iv)
+    float__t ln_num_re, ln_num_im;
+    LnC(u, v, ln_num_re, ln_num_im);
+
+    // ln(x + iy)
+    float__t ln_den_re, ln_den_im;
+    LnC(x, y, ln_den_re, ln_den_im);
+
+    // (a + bi) / (c + di) = [(ac + bd) + i(bc - ad)] / (c^2 + d^2)
+    float__t denom = ln_den_re * ln_den_re + ln_den_im * ln_den_im;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    re = (ln_num_re * ln_den_re + ln_num_im * ln_den_im) / denom;
+    im = (ln_num_im * ln_den_re - ln_num_re * ln_den_im) / denom;
 }

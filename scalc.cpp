@@ -20,8 +20,10 @@
 //#include "sfmts.h"
 #include "sfunc.h"
 
-#define M_PI	3.14159265358979323846
-#define M_E		2.7182818284590452354
+#define M_PI	3.1415926535897932384626433832795
+#define M_PI_2l 1.5707963267948966192313216916398
+#define M_E		2.7182818284590452353602874713527
+#define PHI     1.61803398874989484820
 
 
 #pragma warning(disable : 4996)
@@ -29,6 +31,304 @@
 
 #define _WIN_
 #define INT_FORMAT      "ll"
+
+void vfunc2(value* res, value* arg1, value* arg2, int idx)
+{
+    if (res == NULL || arg1 == NULL || arg2 == NULL) return;
+    if (
+        ((arg1->tag == tvCOMPLEX) || (arg2->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
+        ((arg1->imval != 0) || (arg2->imval != 0) || (res->imval != 0))
+        )
+        {
+            float__t out_re = 0;
+            float__t out_im = 0;
+            float__t re1 = arg1->get();
+            float__t im1 = arg1->imval;
+            float__t re2 = arg2->get();
+            float__t im2 = arg2->imval;
+            switch (idx)
+            {
+            case vf_pow:
+            {
+                PowC(re1, im1, re2, im2, out_re, out_im);
+            }
+            break;
+            case vf_logn:
+            {
+                LognC(re1, im1, re2, im2, out_re, out_im);
+            }
+            break;
+            }
+            res->fval = out_re;
+            res->imval = out_im;
+            res->tag = tvCOMPLEX;
+            res->ival = (int64_t)res->fval;
+       }
+    else
+    {
+		switch (idx)
+		{
+        case vf_pow:
+        {
+            res->fval = Pow(arg1->fval, arg2->fval);
+        }
+        break;
+        case vf_logn:
+        {
+            res->fval = Logn(arg1->fval, arg2->fval);
+        }
+        break;
+        }
+    res->imval = 0;
+    res->tag = tvFLOAT;
+    res->ival = (int64_t)res->fval;
+    }
+}
+
+void vfunc(value* res, value* arg, int idx)
+{
+	if (res == NULL || arg == NULL) return;
+    if (
+        ((arg->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
+        ((arg->imval != 0)) || (res->imval != 0)
+        )
+    {
+        float__t out_re = 0;
+        float__t out_im = 0;
+        float__t re = arg->get();
+        float__t im = arg->imval;
+        switch (idx)
+       {
+        case vf_abs:
+        {
+            res->fval = hypotl(re, im);
+            res->tag = tvFLOAT;
+            res->imval = 0;
+            res->ival = (int64_t)res->fval;
+        }
+        return;
+        //
+        case vf_sin:
+        {
+            SinC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_cos:
+        {
+            CosC(re, im, out_re, out_im);
+        }
+        return;
+        case vf_tan:
+        {
+            TanC(re, im, out_re, out_im);
+        }
+		break;
+        case vf_cot:
+        {
+            CotC(re, im, out_re, out_im);
+		}
+		break;
+        //
+        case vf_sinh:
+        {
+            SinhC(re, im, out_re, out_im);
+		}
+        break;
+        case vf_cosh:
+        {
+            CoshC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_tanh:
+        {
+            TanhC(re, im, out_re, out_im);
+        }
+		break;
+        case vf_ctnh:
+        {
+            CothC(re, im, out_re, out_im);
+		}   
+		break;
+        //
+        case vf_asin:
+        {
+            AsinC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acos:
+        {
+            AcosC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_atan:
+        {
+            AtanC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acot:
+        {
+            AcotC(re, im, out_re, out_im);
+		}
+		break;
+        //
+        case vf_asinh:
+        {
+            AsinhC(re, im, out_re, out_im);
+		}
+		break;
+        case vf_acosh:
+        {
+            AcoshC(re, im, out_re, out_im);
+		}
+		break;
+        case vf_atanh:
+        {
+			AtanhC(re, im, out_re, out_im);
+		}
+		break;
+        case vf_acoth:
+        {
+            AcothC(re, im, out_re, out_im);
+        }
+		break;
+        //
+        case vf_exp:
+        {
+            ExpC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_log:
+        {
+            LnC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_sqrt:
+        {
+			SqrtC(re, im, out_re, out_im);
+        }
+        break;
+     }
+     res->fval = out_re;
+     res->imval = out_im;
+     res->tag = tvCOMPLEX;
+     res->ival = (int64_t)res->fval;
+	}
+    else
+    {
+        switch (idx)
+        {
+            case vf_abs:
+            {
+                res->fval = fabsl(arg->fval);
+            }
+            break;
+            //
+            case vf_sin:
+            {
+                res->fval = Sin(arg->fval);
+            }
+            break;
+            case vf_cos:
+            {
+                res->fval = Cos(arg->fval);
+			}
+            break;
+            case vf_tan:
+            {
+                res->fval = Tan(arg->fval);
+            }
+            break;
+            case vf_cot:
+            {
+				res->fval = Ctg(arg->fval);
+			}
+			break;
+            //
+            case vf_sinh:
+            {
+                res->fval = Sinh(arg->fval);
+			}
+            break;
+            case vf_cosh:
+            {
+                res->fval = Cosh(arg->fval);
+            }
+            break;
+            case vf_tanh:
+            {
+                res->fval = Tanh(arg->fval);
+            }
+            break;
+            case vf_ctnh:
+			{
+				res->fval = Ctanh(arg->fval);
+			}
+			break;
+			//
+            case vf_asin:
+            {
+                res->fval = Asin(arg->fval);
+            }
+            break;
+            case vf_acos:
+            {
+                res->fval = Acos(arg->fval);
+            }
+            break;
+            case vf_atan:
+            {
+				res->fval = Atan(arg->fval);
+            }
+            break;
+            case vf_acot:
+			{   
+				res->fval = Acot(arg->fval);
+			}
+            break;
+			//			
+            case vf_asinh:
+            {
+				res->fval = Arsh(arg->fval);
+			}
+			break;
+            case vf_acosh:
+			{
+				res->fval = Arch(arg->fval);
+			}
+			break;
+			case vf_atanh:
+			{
+				res->fval = Arth(arg->fval);
+			}
+			break;
+			case vf_acoth:
+			{
+				res->fval = Arcth(arg->fval);
+			}
+			break;
+			//
+            case vf_exp:
+            {
+                res->fval = Exp(arg->fval);
+            }
+            break;
+            case vf_log:
+            {
+                res->fval = Log(arg->fval);
+            }
+            break;
+            case vf_sqrt:
+            {
+                res->fval = Sqrt(arg->fval);
+            }
+            break;
+        }
+        res->tag = tvFLOAT;
+        res->imval = 0;
+        res->ival = (int64_t)res->fval;
+    }
+
+}
 
 calculator::calculator(int cfg)
 {
@@ -41,37 +341,60 @@ calculator::calculator(int cfg)
   memset(v_stack, 0, sizeof v_stack);
   //randomize();
 
-  add(tsFFUNC1, "abs", (void*)(float__t(*)(float__t))fabsl);
+  add(tsVFUNC1, vf_abs, "abs", (void*)vfunc);
+
+  add(tsVFUNC1, vf_sin, "sin", (void*)vfunc);
+  add(tsVFUNC1, vf_cos, "cos", (void*)vfunc);
+  add(tsVFUNC1, vf_tan, "tan", (void*)vfunc);
+  add(tsVFUNC1, vf_tan, "tg", (void*)vfunc);
+  add(tsVFUNC1, vf_cot, "cot", (void*)vfunc);
+  add(tsVFUNC1, vf_cot, "ctg", (void*)vfunc);
+
+  add(tsVFUNC1, vf_sinh, "sinh", (void*)vfunc);
+  add(tsVFUNC1, vf_sinh, "sh", (void*)vfunc);
+  add(tsVFUNC1, vf_cosh, "cosh", (void*)vfunc);
+  add(tsVFUNC1, vf_cosh, "ch", (void*)vfunc);
+  add(tsVFUNC1, vf_tanh, "tanh", (void*)vfunc);
+  add(tsVFUNC1, vf_tanh, "th", (void*)vfunc);
+  add(tsVFUNC1, vf_ctnh, "ctanh", (void*)vfunc);
+  add(tsVFUNC1, vf_ctnh, "cth", (void*)vfunc);
+
+  add(tsVFUNC1, vf_asin, "asin", (void*)vfunc);
+  add(tsVFUNC1, vf_asin, "arcsin", (void*)vfunc);
+  add(tsVFUNC1, vf_acos, "acos", (void*)vfunc);
+  add(tsVFUNC1, vf_acos, "arccos", (void*)vfunc);
+  add(tsVFUNC1, vf_atan, "atan", (void*)vfunc);
+  add(tsVFUNC1, vf_atan, "arctg", (void*)vfunc);
+  add(tsVFUNC1, vf_acot, "acot", (void*)vfunc);
+  add(tsVFUNC1, vf_acot, "arcctg", (void*)vfunc);
+
+  add(tsVFUNC1, vf_asinh, "asinh", (void*)vfunc);
+  add(tsVFUNC1, vf_asinh, "arsh", (void*)vfunc);
+  add(tsVFUNC1, vf_acosh, "acosh", (void*)vfunc);
+  add(tsVFUNC1, vf_acosh, "arch", (void*)vfunc);
+  add(tsVFUNC1, vf_atanh, "atanh", (void*)vfunc);
+  add(tsVFUNC1, vf_atanh, "arth", (void*)vfunc);
+  add(tsVFUNC1, vf_acoth, "acoth", (void*)vfunc);
+  add(tsVFUNC1, vf_acoth, "arcth", (void*)vfunc);
+
+  add(tsVFUNC1, vf_exp, "exp", (void*)vfunc);
+  add(tsVFUNC1, vf_log, "log", (void*)vfunc);
+  add(tsVFUNC1, vf_log, "ln", (void*)vfunc);
+  add(tsVFUNC1, vf_sqrt, "sqrt", (void*)vfunc);
+  add(tsVFUNC1, vf_sqrt, "root2", (void*)vfunc);
+
+  add(tsVFUNC2, vf_pow, "pow", (void*)vfunc2);
+  add(tsVFUNC2, vf_logn, "logn", (void*)vfunc2);
+
+
   add(tsFFUNC1, "erf", (void*)(float__t(*)(float__t))Erf);
-  add(tsFFUNC1, "acos", (void*)(float__t(*)(float__t))Acos);
-  add(tsFFUNC1, "asin", (void*)(float__t(*)(float__t))Asin);
-  add(tsFFUNC1, "atan", (void*)(float__t(*)(float__t))Atan);
-  add(tsFFUNC1, "arctg", (void*)(float__t(*)(float__t))Atan);
   add(tsFFUNC2, "atan2", (void*)(float__t(*)(float__t,float__t))Atan2l);
   add(tsFFUNC2, "hypot", (void*)(float__t(*)(float__t,float__t))Hypot);
-  add(tsFFUNC1, "cos", (void*)(float__t(*)(float__t))Cos);
-  add(tsFFUNC1, "cosh", (void*)(float__t(*)(float__t))Cosh);
-  add(tsFFUNC1, "ch", (void*)(float__t(*)(float__t))Cosh);
-  add(tsFFUNC1, "exp", (void*)(float__t(*)(float__t))Exp);
-  add(tsFFUNC1, "log", (void*)(float__t(*)(float__t))Log);
   add(tsFFUNC1, "log10", (void*)(float__t(*)(float__t))Lg);
   add(tsFFUNC1, "np", (void*)(float__t(*)(float__t))NP);
   add(tsFFUNC1, "db", (void*)(float__t(*)(float__t))DB);
   add(tsFFUNC1, "anp", (void*)(float__t(*)(float__t))ANP);
   add(tsFFUNC1, "adb", (void*)(float__t(*)(float__t))ADB);
-  add(tsFFUNC1, "sin", (void*)(float__t(*)(float__t))Sin);
-  add(tsFFUNC1, "sinh", (void*)(float__t(*)(float__t))Sinh);
-  add(tsFFUNC1, "sh", (void*)(float__t(*)(float__t))Sinh);
-  add(tsFFUNC1, "tan", (void*)(float__t(*)(float__t))Tan);
-  add(tsFFUNC1, "tanh", (void*)(float__t(*)(float__t))Tanh);
-  add(tsFFUNC1, "th", (void*)(float__t(*)(float__t))Tanh);
-  add(tsFFUNC1, "sqrt", (void*)(float__t(*)(float__t))Sqrt);
-  add(tsFFUNC1, "ctanh", (void*)(float__t(*)(float__t))Ctanh);
-  add(tsFFUNC1, "cth", (void*)(float__t(*)(float__t))Ctanh);
-  add(tsFFUNC1, "arsh", (void*)(float__t(*)(float__t))Arsh);
-  add(tsFFUNC1, "arch", (void*)(float__t(*)(float__t))Arch);
-  add(tsFFUNC1, "arth", (void*)(float__t(*)(float__t))Arth);
-  add(tsFFUNC1, "arcth", (void*)(float__t(*)(float__t))Arcth);
   add(tsFFUNC1, "float", (void*)To_float);
   add(tsIFUNC1, "int", (void*)To_int);
   add(tsIFUNC2, "gcd", (void*)(int_t(*)(int_t,int_t))Gcd);
@@ -81,18 +404,12 @@ calculator::calculator(int cfg)
   add(tsPFUNCn, "prn", (void*)(int_t(*)(char*, char*, int args, value*))fprn);
   add(tsPFUNCn, "printf", (void*)(int_t(*)(char*, char*, int args, value*))fprn);
   add(tsSIFUNC1, "datatime", (void*)datatime);
-  add(tsFFUNC1, "ln", (void*)(float__t(*)(float__t))Log);
   add(tsFFUNC1, "lg", (void*)(float__t(*)(float__t))Lg);
   add(tsFFUNC1, "exp10", (void*)(float__t(*)(float__t))Exp10);
-  add(tsFFUNC1, "arcsin", (void*)(float__t(*)(float__t))Asin);
-  add(tsFFUNC1, "arccos", (void*)(float__t(*)(float__t))Acos);
   add(tsFFUNC1, "sing", (void*)(float__t(*)(float__t))Sing);
   add(tsFFUNC1, "cosg", (void*)(float__t(*)(float__t))Cosg);
-  add(tsFFUNC1, "tg", (void*)(float__t(*)(float__t))Tan);
-  add(tsFFUNC1, "root2", (void*)(float__t(*)(float__t))Sqrt);
-  add(tsFFUNC2, "pow", (void*)(float__t(*)(float__t,float__t))Pow);
+  //add(tsFFUNC2, "pow", (void*)(float__t(*)(float__t,float__t))Pow);
   add(tsFFUNC1, "tgg", (void*)(float__t(*)(float__t))Tgg);
-  add(tsFFUNC1, "ctg", (void*)(float__t(*)(float__t))Ctg);
   add(tsFFUNC1, "ctgg", (void*)(float__t(*)(float__t))Ctgg);
   add(tsFFUNC1, "frac", (void*)(float__t(*)(float__t))Frac);
   add(tsFFUNC1, "round", (void*)(float__t(*)(float__t))Round);
@@ -102,7 +419,7 @@ calculator::calculator(int cfg)
   add(tsFFUNC2, "max", (void*)(float__t(*)(float__t,float__t))Max);
   add(tsFFUNC1, "log2", (void*)(float__t(*)(float__t))Log2);
   add(tsFFUNC1, "fact", (void*)(float__t(*)(float__t))Factorial);
-  add(tsFFUNC2, "logn", (void*)(float__t(*)(float__t,float__t))Logn);
+  //add(tsFFUNC2, "logn", (void*)(float__t(*)(float__t,float__t))Logn);
   add(tsFFUNC1, "root3", (void*)(float__t(*)(float__t))Root3);
   add(tsFFUNC1, "cbrt", (void*)(float__t(*)(float__t))Root3);
   add(tsFFUNC2, "rootn", (void*)(float__t(*)(float__t,float__t))Rootn);
@@ -119,23 +436,9 @@ calculator::calculator(int cfg)
   add(tsFFUNC3, "cmp", (void*)(float__t(*)(float__t, float__t, float__t))Cmp);
   add(tsFFUNC2, "ee", (void*)(float__t(*)(float__t,float__t))Ee);
 
-  add(tsCFUNCC1, "sinc", (void*)SinC);
-  add(tsCFUNCC1, "cosc", (void*)CosC);
-  add(tsCFUNCC1, "expc", (void*)ExpC);
-  add(tsFFUNCC1, "absc", (void*)(float__t(*)(float__t,float__t))AbsC);
-  add(tsCFUNCC1, "tanc", (void*)TanC);
-  add(tsCFUNCC1, "cotc", (void*)CotC);
-  add(tsCFUNCC1, "asinc", (void*)AsinC);
-  add(tsCFUNCC1, "acosc", (void*)AcosC);
-  add(tsCFUNCC1, "atanc", (void*)AtanC);
-  add(tsCFUNCC1, "sinhc", (void*)SinhC);
-  add(tsCFUNCC1, "coshc", (void*)CoshC);
-  add(tsCFUNCC1, "tanhc", (void*)TanhC);
-  add(tsCFUNCC1, "lnc", (void*)LnC);
-  add(tsCFUNCC1, "sqrtc", (void*)SqrtC);
-
   addfvar("pi", M_PI);
   addfvar("e", M_E);
+  addfvar("phi", PHI);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -293,6 +596,35 @@ unsigned calculator::string_hash_function(char* p)
       h &= ~g;
     }
   return h;
+}
+
+symbol* calculator::add(t_symbol tag, v_func fidx, const char* name, void* func)
+{
+    char* uname = strdup(name);
+
+    unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
+    symbol* sp;
+    for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+    {
+        if (scfg & UPCASE)
+        {
+            if (stricmp(sp->name, uname) == 0) return sp;
+        }
+        else
+        {
+            if (strcmp(sp->name, uname) == 0) return sp;
+        }
+    }
+    sp = new symbol;
+    sp->tag = tag;
+	sp->fidx = fidx;
+    sp->func = func;
+    sp->name = uname;
+    sp->val.tag = tvINT;
+    sp->val.ival = 0;
+    sp->next = hash_table[h];
+    hash_table[h] = sp;
+    return sp;
 }
 
 symbol* calculator::add(t_symbol tag, const char* name, void* func)
@@ -1554,12 +1886,17 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               n_args += 1;
               continue;
 
-			case toSEMI: //todo: complex support
-              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+            case toSEMI: //;
+                if (
+                    ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                     (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
+                    ((v_stack[v_sp - 1].imval != 0) ||
+                     (v_stack[v_sp - 2].imval != 0))
+                    )
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
-                    return qnan;
+                  v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get();
+				  v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
+                  v_stack[v_sp - 2].tag = tvCOMPLEX;
                 }
               else
               if ((v_stack[v_sp-1].tag == tvINT) &&
@@ -1613,7 +1950,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
 				  (v_stack[v_sp-2].tag == tvCOMPLEX)) 
                {
-                  v_stack[v_sp - 2].fval += v_stack[v_sp - 1].fval;
+                  v_stack[v_sp - 2].fval += v_stack[v_sp - 1].get();
 				  v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
                }
               else 
@@ -1658,7 +1995,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
 				  (v_stack[v_sp-2].tag == tvCOMPLEX)) 
                {
-                  v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].fval;
+                  v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].get();
 				  v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
                }
               else 
@@ -1708,10 +2045,10 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 				  ) 
               {
                     // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
-                    
-                    long double a = v_stack[v_sp - 2].fval;
+
+                    long double a = v_stack[v_sp - 2].get();
                     long double b = v_stack[v_sp - 2].imval; // первое число: a + bi
-                    long double c = v_stack[v_sp - 1].fval;
+                    long double c = v_stack[v_sp - 1].get();
                     long double d = v_stack[v_sp - 1].imval; // второе число: c + di
  
                     v_stack[v_sp - 2].fval = a * c - b * d;
@@ -1758,9 +2095,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                  )
                 {
                     // (a + bi) / (c + di) = [(ac + bd) + (bc - ad)i] / (c^2 + d^2)
-                    long double a = v_stack[v_sp - 2].fval;
+                    long double a = v_stack[v_sp - 2].get();
                     long double b = v_stack[v_sp - 2].imval;
-                    long double c = v_stack[v_sp - 1].fval;
+                    long double c = v_stack[v_sp - 1].get();
                     long double d = v_stack[v_sp - 1].imval;
                     long double denom = c * c + d * d;
                     if (denom == 0.0) {
@@ -1832,9 +2169,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   (v_stack[v_sp - 2].imval != 0))
                 )
              {
-                 long double ar = v_stack[v_sp - 2].fval;
+                 long double ar = v_stack[v_sp - 2].get();
                  long double ai = v_stack[v_sp - 2].imval;
-                 long double br = v_stack[v_sp - 1].fval;
+                 long double br = v_stack[v_sp - 1].get();
                  long double bi = v_stack[v_sp - 1].imval;
 
                  // 1/a
@@ -1994,9 +2331,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 					 (v_stack[v_sp - 2].imval != 0))
 					)
                 { 
-                    long double x1 = v_stack[v_sp - 2].fval;  
+                    long double x1 = v_stack[v_sp - 2].get();
                     long double y1 = v_stack[v_sp - 2].imval; // основание: x1 + i*y1
-                    long double x2 = v_stack[v_sp - 1].fval;
+                    long double x2 = v_stack[v_sp - 1].get();
                     long double y2 = v_stack[v_sp - 1].imval; // степень:   x2 + i*y2
                     
                     long double r = std::hypotl(x1, y1);
@@ -2647,6 +2984,26 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   {
                   switch (sym->tag)
                     {
+                    case tsVFUNC1:
+                        if (n_args != 1)
+                        {
+                            error(v_stack[v_sp - n_args - 1].pos,
+                                "Function should take one argument");
+                            return qnan;
+                        }
+                        ((void(*)(value*, value*, int))sym->func)(&v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
+                        v_sp -= 1;
+                      break;
+                    case tsVFUNC2:
+                        if (n_args != 2)
+                        {
+                            error(v_stack[v_sp - n_args - 1].pos,
+                                "Function should take one argument");
+                            return qnan;
+                        }
+                        ((void(*)(value*, value*, value*, int))sym->func)(&v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp-1], sym->fidx);
+                        v_sp -= 2;
+                        break;
                     case tsIFUNC1:
                       if (n_args != 1)
                         {

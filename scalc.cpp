@@ -1858,7 +1858,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                      if (v_stack[0].sval)
                       {
                        strcpy(sres, v_stack[0].sval);
-                       free(v_stack[0].sval);
+                       if (v_stack[0].sval) free(v_stack[0].sval);
                        v_stack[0].sval = NULL;
                       }
                      else sres[0] = '\0';
@@ -1870,7 +1870,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                      if (v_stack[0].sval)
                       {
                        strcpy(sres, v_stack[0].sval);
-                       free(v_stack[0].sval);
+                       if (v_stack[0].sval) free(v_stack[0].sval);
                        v_stack[0].sval = NULL;
                       }
                      else sres[0] = '\0';
@@ -2883,7 +2883,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 
             break;
 
-            case toSET:
+			case toSET: // =, :=
               if ((v_sp < 2) || (v_stack[v_sp-2].var == NULL))
                 {
                   if (v_sp < 2) error("Variabale expected");
@@ -2892,10 +2892,20 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 }
               else
                 {
-                  v_stack[v_sp-2]=v_stack[v_sp-2].var->val=v_stack[v_sp-1];
+                  //v_stack[v_sp - 2] := v_stack[v_sp - 1]
+                  if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
+                  {
+                      v_stack[v_sp - 2].var->val.sval = strdup(v_stack[v_sp - 1].sval);
+					  v_stack[v_sp - 2].sval = strdup(v_stack[v_sp - 1].sval);
+					  v_stack[v_sp - 2].tag = tvSTR;
+                      v_stack[v_sp - 2].var->val.tag = tvSTR;
+                      free(v_stack[v_sp - 1].sval);
+					  v_stack[v_sp - 1].sval = NULL;
+                  }
+                  else v_stack[v_sp-2]=v_stack[v_sp-2].var->val=v_stack[v_sp-1];
                 }
               v_sp -= 1;
-              v_stack[v_sp-1].var = NULL;
+              //v_stack[v_sp-1].var = NULL;
               break;
 
             case toNOT:

@@ -521,7 +521,7 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
 		 }
 	 }
    // (RO) Scientific (6.8k) format found
-	 if ((Options & SCF) || (scfg & SCF))
+	 if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
 	 {
 		 char scistr[80];
 		 if (imVal == 0)  d2scistr(scistr, fVal);

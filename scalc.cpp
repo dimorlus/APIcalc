@@ -39,15 +39,15 @@ void vfunc2(value* res, value* arg1, value* arg2, int idx)
         ((arg1->tag == tvCOMPLEX) || (arg2->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
         ((arg1->imval != 0) || (arg2->imval != 0) || (res->imval != 0))
         )
+    {
+        float__t out_re = 0;
+        float__t out_im = 0;
+        float__t re1 = arg1->get();
+        float__t im1 = arg1->imval;
+        float__t re2 = arg2->get();
+        float__t im2 = arg2->imval;
+        switch (idx)
         {
-            float__t out_re = 0;
-            float__t out_im = 0;
-            float__t re1 = arg1->get();
-            float__t im1 = arg1->imval;
-            float__t re2 = arg2->get();
-            float__t im2 = arg2->imval;
-            switch (idx)
-            {
             case vf_pow:
             {
                 PowC(re1, im1, re2, im2, out_re, out_im);
@@ -58,32 +58,47 @@ void vfunc2(value* res, value* arg1, value* arg2, int idx)
                 LognC(re1, im1, re2, im2, out_re, out_im);
             }
             break;
+            case vf_cplx:
+            {
+                out_re = re1;
+                out_im = re2;
             }
-            res->fval = out_re;
-            res->imval = out_im;
-            res->tag = tvCOMPLEX;
-            res->ival = (int64_t)res->fval;
-       }
+            break;
+        }
+        res->fval = out_re;
+        res->imval = out_im;
+        res->tag = tvCOMPLEX;
+        res->ival = (int64_t)res->fval;
+    }
     else
     {
-		switch (idx)
-		{
-        case vf_pow:
+        switch (idx)
         {
-            res->fval = Pow(arg1->fval, arg2->fval);
+            case vf_pow:
+            {
+                res->fval = Pow(arg1->get(), arg2->get());
+            }
+            break;
+            case vf_logn:
+            {
+                res->fval = Logn(arg1->get(), arg2->get());
+            }
+            break;
+            case vf_cplx:
+            {
+			    res->fval = arg1->get();
+                res->imval = arg2->get();
+                res->tag = tvCOMPLEX;
+                res->ival = (int64_t)res->fval;
+                return;
+            }
         }
-        break;
-        case vf_logn:
-        {
-            res->fval = Logn(arg1->fval, arg2->fval);
-        }
-        break;
-        }
-    res->imval = 0;
-    res->tag = tvFLOAT;
-    res->ival = (int64_t)res->fval;
+        res->imval = 0;
+        res->tag = tvFLOAT;
+        res->ival = (int64_t)res->fval;
     }
 }
+
 
 void vfunc(value* res, value* arg, int idx)
 {
@@ -98,115 +113,127 @@ void vfunc(value* res, value* arg, int idx)
         float__t re = arg->get();
         float__t im = arg->imval;
         switch (idx)
-       {
-        case vf_abs:
         {
-            res->fval = hypotl(re, im);
-            res->tag = tvFLOAT;
-            res->imval = 0;
-            res->ival = (int64_t)res->fval;
-        }
-        return;
-        //
-        case vf_sin:
-        {
-            SinC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_cos:
-        {
-            CosC(re, im, out_re, out_im);
-        }
-        return;
-        case vf_tan:
-        {
-            TanC(re, im, out_re, out_im);
-        }
-		break;
-        case vf_cot:
-        {
-            CotC(re, im, out_re, out_im);
-		}
-		break;
-        //
-        case vf_sinh:
-        {
-            SinhC(re, im, out_re, out_im);
-		}
-        break;
-        case vf_cosh:
-        {
-            CoshC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_tanh:
-        {
-            TanhC(re, im, out_re, out_im);
-        }
-		break;
-        case vf_ctnh:
-        {
-            CothC(re, im, out_re, out_im);
-		}   
-		break;
-        //
-        case vf_asin:
-        {
-            AsinC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_acos:
-        {
-            AcosC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_atan:
-        {
-            AtanC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_acot:
-        {
-            AcotC(re, im, out_re, out_im);
-		}
-		break;
-        //
-        case vf_asinh:
-        {
-            AsinhC(re, im, out_re, out_im);
-		}
-		break;
-        case vf_acosh:
-        {
-            AcoshC(re, im, out_re, out_im);
-		}
-		break;
-        case vf_atanh:
-        {
-			AtanhC(re, im, out_re, out_im);
-		}
-		break;
-        case vf_acoth:
-        {
-            AcothC(re, im, out_re, out_im);
-        }
-		break;
-        //
-        case vf_exp:
-        {
-            ExpC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_log:
-        {
-            LnC(re, im, out_re, out_im);
-        }
-        break;
-        case vf_sqrt:
-        {
-			SqrtC(re, im, out_re, out_im);
-        }
-        break;
+            case vf_abs:
+            {
+                res->fval = hypotl(re, im);
+                res->tag = tvFLOAT;
+                res->imval = 0;
+                res->ival = (int64_t)res->fval;
+            }
+            return;
+            //
+            case vf_sin:
+            {
+                SinC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_cos:
+            {
+                CosC(re, im, out_re, out_im);
+            }
+            return;
+            case vf_tan:
+            {
+                TanC(re, im, out_re, out_im);
+            }
+		    break;
+            case vf_cot:
+            {
+                CotC(re, im, out_re, out_im);
+		    }
+		    break;
+            //
+            case vf_sinh:
+            {
+                SinhC(re, im, out_re, out_im);
+		    }
+            break;
+            case vf_cosh:
+            {
+                CoshC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_tanh:
+            {
+                TanhC(re, im, out_re, out_im);
+            }
+		    break;
+            case vf_ctnh:
+            {
+                CothC(re, im, out_re, out_im);
+		    }   
+		    break;
+            //
+            case vf_asin:
+            {
+                AsinC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_acos:
+            {
+                AcosC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_atan:
+            {
+                AtanC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_acot:
+            {
+                AcotC(re, im, out_re, out_im);
+		    }
+		    break;
+            //
+            case vf_asinh:
+            {
+                AsinhC(re, im, out_re, out_im);
+		    }
+		    break;
+            case vf_acosh:
+            {
+                AcoshC(re, im, out_re, out_im);
+		    }
+		    break;
+            case vf_atanh:
+            {
+			    AtanhC(re, im, out_re, out_im);
+		    }
+		    break;
+            case vf_acoth:
+            {
+                AcothC(re, im, out_re, out_im);
+            }
+		    break;
+            //
+            case vf_exp:
+            {
+                ExpC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_log:
+            {
+                LnC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_sqrt:
+            {
+			    SqrtC(re, im, out_re, out_im);
+            }
+            break;
+            case vf_re:
+            {
+                out_re = re;
+                out_im = 0;
+			}
+            break;
+            case vf_im:
+            {
+                out_re = im;
+                out_im = 0;
+            }
+			break;
      }
      res->fval = out_re;
      res->imval = out_im;
@@ -322,6 +349,16 @@ void vfunc(value* res, value* arg, int idx)
                 res->fval = Sqrt(arg->fval);
             }
             break;
+            case vf_re:
+            {
+                res->fval = arg->fval;
+			}
+            break;
+            case vf_im:
+            {
+                res->fval = 0;
+			}
+			break;
         }
         res->tag = tvFLOAT;
         res->imval = 0;
@@ -386,6 +423,10 @@ calculator::calculator(int cfg)
   add(tsVFUNC2, vf_pow, "pow", (void*)vfunc2);
   add(tsVFUNC2, vf_logn, "logn", (void*)vfunc2);
 
+  add(tsVFUNC2, vf_cplx, "cplx", (void*)vfunc2);
+  add(tsVFUNC1, vf_re, "re", (void*)vfunc);
+  add(tsVFUNC1, vf_im, "im", (void*)vfunc);
+
 
   add(tsFFUNC1, "erf", (void*)(float__t(*)(float__t))Erf);
   add(tsFFUNC2, "atan2", (void*)(float__t(*)(float__t,float__t))Atan2l);
@@ -437,7 +478,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.02);
+  addfvar("version", 2.031);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -2905,7 +2946,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   else v_stack[v_sp-2]=v_stack[v_sp-2].var->val=v_stack[v_sp-1];
                 }
               v_sp -= 1;
-              //v_stack[v_sp-1].var = NULL;
+              v_stack[v_sp-1].var = NULL;
               break;
 
             case toNOT:

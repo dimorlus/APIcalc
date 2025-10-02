@@ -190,6 +190,10 @@ enum v_func
  vf_pow,
  vf_logn,
 
+ vf_re,
+ vf_im,
+ vf_cplx,
+
  vf_num
  };
 

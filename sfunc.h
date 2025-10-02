@@ -22,7 +22,7 @@ int_t Invmod(int_t x, int_t y);
 int_t Not(int_t n);
 int_t Now(int_t n);
 float__t Erf(float__t x);
-int_t nearly_equal(double a, double b, int ignore_nbits);
+
 float__t Erfc(float__t x);
 float__t Random(float__t x);
 float__t Atan(float__t x);

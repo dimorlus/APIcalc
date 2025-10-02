@@ -223,6 +223,7 @@ class value
       if ((tag == tvSTR) && sval) free(sval);
       sval = NULL;
      }
+
     inline float__t get()
     {
       return tag == tvINT ? (float__t)ival : fval;

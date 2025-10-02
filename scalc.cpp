@@ -408,7 +408,6 @@ calculator::calculator(int cfg)
   add(tsFFUNC1, "exp10", (void*)(float__t(*)(float__t))Exp10);
   add(tsFFUNC1, "sing", (void*)(float__t(*)(float__t))Sing);
   add(tsFFUNC1, "cosg", (void*)(float__t(*)(float__t))Cosg);
-  //add(tsFFUNC2, "pow", (void*)(float__t(*)(float__t,float__t))Pow);
   add(tsFFUNC1, "tgg", (void*)(float__t(*)(float__t))Tgg);
   add(tsFFUNC1, "ctgg", (void*)(float__t(*)(float__t))Ctgg);
   add(tsFFUNC1, "frac", (void*)(float__t(*)(float__t))Frac);
@@ -419,7 +418,6 @@ calculator::calculator(int cfg)
   add(tsFFUNC2, "max", (void*)(float__t(*)(float__t,float__t))Max);
   add(tsFFUNC1, "log2", (void*)(float__t(*)(float__t))Log2);
   add(tsFFUNC1, "fact", (void*)(float__t(*)(float__t))Factorial);
-  //add(tsFFUNC2, "logn", (void*)(float__t(*)(float__t,float__t))Logn);
   add(tsFFUNC1, "root3", (void*)(float__t(*)(float__t))Root3);
   add(tsFFUNC1, "cbrt", (void*)(float__t(*)(float__t))Root3);
   add(tsFFUNC2, "rootn", (void*)(float__t(*)(float__t,float__t))Rootn);
@@ -439,6 +437,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
+  addfvar("version", 2.02);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 

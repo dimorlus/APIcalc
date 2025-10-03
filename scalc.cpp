@@ -478,7 +478,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.031);
+  addfvar("version", 2.032);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -538,10 +538,24 @@ int calculator::varlist(char* buf, int bsize, int* maxlen)
             {
               if (sp->tag == tsVARIABLE)
               {
-                int written = snprintf(cp, bsize - (cp - buf), "%-10s = %-.5Lg\r\n", sp->name, (float__t)sp->val.fval);
-                if (written > localMax) localMax = written;
-                cp += written;
-                lineCount++;
+               int written;
+			   if ((sp->val.tag == tvCOMPLEX) || (sp->val.imval != 0))
+                {
+                 written = snprintf(cp, bsize - (cp - buf), "%-10s = %-.5Lg%+.5Lgi\r\n", 
+                     sp->name, (float__t)sp->val.fval, (float__t)sp->val.imval);
+				}
+                else
+                if (sp->val.tag == tvSTR)
+                {
+                 written = snprintf(cp, bsize - (cp - buf), "%-10s = \"%s\"\r\n", sp->name, sp->val.sval ? sp->val.sval : "");
+                }
+                else
+                {
+                 written = snprintf(cp, bsize - (cp - buf), "%-10s = %-.5Lg\r\n", sp->name, (float__t)sp->val.fval);
+                }
+               if (written > localMax) localMax = written;
+               cp += written;
+               lineCount++;
               }
               sp = sp->next;
             } while (sp);
@@ -595,7 +609,7 @@ void calculator::varlist(void (*f)(char*, value*))
 unsigned calculator::string_hash_function(char first, char* p)
 {
     unsigned h = 0, g;
-    // Обрабатываем первый символ
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     h = (h << 4) + first;
 
     if ((g = h & 0xF0000000) != 0)
@@ -604,7 +618,7 @@ unsigned calculator::string_hash_function(char first, char* p)
     }
     h &= ~g;
 
-    // Далее обычная строка
+    // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     while (*p)
     {
         if (scfg & UPCASE)
@@ -2087,9 +2101,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                     // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
 
                     long double a = v_stack[v_sp - 2].get();
-                    long double b = v_stack[v_sp - 2].imval; // первое число: a + bi
+                    long double b = v_stack[v_sp - 2].imval; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: a + bi
                     long double c = v_stack[v_sp - 1].get();
-                    long double d = v_stack[v_sp - 1].imval; // второе число: c + di
+                    long double d = v_stack[v_sp - 1].imval; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: c + di
  
                     v_stack[v_sp - 2].fval = a * c - b * d;
                     v_stack[v_sp - 2].imval = a * d + b * c;
@@ -2372,9 +2386,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 					)
                 { 
                     long double x1 = v_stack[v_sp - 2].get();
-                    long double y1 = v_stack[v_sp - 2].imval; // основание: x1 + i*y1
+                    long double y1 = v_stack[v_sp - 2].imval; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: x1 + i*y1
                     long double x2 = v_stack[v_sp - 1].get();
-                    long double y2 = v_stack[v_sp - 1].imval; // степень:   x2 + i*y2
+                    long double y2 = v_stack[v_sp - 1].imval; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ:   x2 + i*y2
                     
                     long double r = std::hypotl(x1, y1);
                     long double phi = std::atan2(y1, x1);

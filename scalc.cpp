@@ -2946,7 +2946,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   else v_stack[v_sp-2]=v_stack[v_sp-2].var->val=v_stack[v_sp-1];
                 }
               v_sp -= 1;
-              v_stack[v_sp-1].var = NULL;
+              //v_stack[v_sp-1].var = NULL;
               break;
 
             case toNOT:

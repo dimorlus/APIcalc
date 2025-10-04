@@ -208,9 +208,9 @@ BOOL WinApiCalc::InitInstance(HINSTANCE hInstance, int nCmdShow)
     LoadSettings();
     LoadHistory();
 
-    m_hWnd = CreateWindowA("WinApiCalc", "Calc", 
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,  // Убираем WS_THICKFRAME и WS_MAXIMIZEBOX
-        m_windowX, m_windowY, ScaleDPI(WINDOW_MIN_WIDTH), ScaleDPI(WINDOW_MIN_HEIGHT), 
+    m_hWnd = CreateWindowA("WinApiCalc", "Calc",
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+        m_windowX, m_windowY, ScaleDPI(WINDOW_MIN_WIDTH), ScaleDPI(WINDOW_MIN_HEIGHT),
         nullptr, nullptr, hInstance, nullptr);
 
     if (!m_hWnd)
@@ -1066,11 +1066,12 @@ void WinApiCalc::OnSize(int width, int height)
 
 void WinApiCalc::OnMove(int x, int y)
 {
-    // Update stored window position
-    m_windowX = x;
-    m_windowY = y;
-    // Save to registry immediately
-    SaveSettings();
+    RECT rect;
+    if (GetWindowRect(m_hWnd, &rect)) {
+        m_windowX = rect.left;
+        m_windowY = rect.top;
+        SaveSettings();
+    }
 }
 
 void WinApiCalc::OnExpressionChanged()

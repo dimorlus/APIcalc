@@ -759,11 +759,13 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
 	 else sprintf(strings[n++], "%65.64s  ", dtstr);
 	}
 
-   // (RO) Degrees format found
+   // (RO) Degrees format found  * 180.0 / M_PI
    if ((Options & DEG) || (scfg & DEG))
 	{
 	 char dgrstr[80];
-	 dgr2str(dgrstr, fVal);
+	 char* cp = dgrstr;
+	 cp+=dgr2str(dgrstr, fVal);
+	 sprintf(cp, " (%.6Lg`)", (long double)fVal * 180.0 / M_PI);
 	 sprintf(strings[n++], "%65.64s  ", dgrstr);
 	}
 

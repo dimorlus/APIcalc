@@ -1487,8 +1487,8 @@ t_operator calculator::scan(bool operand, bool percent)
              scfg |= CHR;
              ival = *(unsigned char *)(ipos-1);
              v_stack[v_sp].sval = (char *) malloc(STRBUF);
-             v_stack[v_sp].sval[0] = *(ipos-1);
-             v_stack[v_sp].sval[1] = '\0';
+             if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos-1);
+             if (v_stack[v_sp].sval) v_stack[v_sp].sval[1] = '\0';
              ipos++;
             }
           }
@@ -1506,7 +1506,7 @@ t_operator calculator::scan(bool operand, bool percent)
              v_stack[v_sp].tag = tvSTR;
              v_stack[v_sp].ival = 0;
              v_stack[v_sp].sval = (char *)malloc(STRBUF);
-             strcpy(v_stack[v_sp].sval, sbuf);
+             if (v_stack[v_sp].sval) strcpy(v_stack[v_sp].sval, sbuf);
              pos = ipos - buf+1;
              v_stack[v_sp].pos = pos;
              v_stack[v_sp++].var = NULL;
@@ -1596,7 +1596,7 @@ t_operator calculator::scan(bool operand, bool percent)
          v_stack[v_sp].tag = tvSTR;
          v_stack[v_sp].ival = 0;
          v_stack[v_sp].sval = (char *)malloc(STRBUF);
-         strcpy(v_stack[v_sp].sval, sbuf);
+         if (v_stack[v_sp].sval) strcpy(v_stack[v_sp].sval, sbuf);
          pos = ipos - buf+1;
          v_stack[v_sp].pos = pos;
          v_stack[v_sp++].var = NULL;

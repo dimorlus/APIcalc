@@ -2438,6 +2438,7 @@ void WinApiCalc::LoadSettings()
     {
         DWORD dwOptions = (FFLOAT + SCF + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT + DEG + STR + ALL + MNU + FRC + FRI);
         DWORD dwSize = sizeof(dwOptions);
+		dwOptions = 0x0bcf7f37; // Default options if not found
         if (RegQueryValueExA(hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize) == ERROR_SUCCESS)
         {
             m_options = dwOptions;

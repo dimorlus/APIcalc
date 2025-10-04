@@ -266,29 +266,57 @@ int b2scistr(char *str, float__t d)
   }
 }
 //---------------------------------------------------------------------------
-
-int dgr2str(char *str, float__t d)
+int dgr2str(char* str, float__t radians)
 {
- const char cdeg[] = {96, 39, 34}; //` - degrees, ' - minutes, " - seconds
- const float__t mdeg[] = {M_PI/180.0, M_PI/(180.0*60), M_PI/(180.0*60*60)};
- unsigned int pt[6];
- int i, j, k;
- char *pc = str;
+	const char cdeg[] = { 96, 39, 34 }; // ` ' "
+	double degrees = radians * 180.0 / M_PI;
+	int deg = (int)degrees;
+	double min_full = (degrees - deg) * 60.0;
+	int min = (int)min_full;
+	double sec_full = (min_full - min) * 60.0;
+	int sec = (int)(sec_full + 0.5); // Округляем секунды
 
- for(i = 0, j = -1, k = 0; i < 3; i++)
-  {
-    pt[i] = (unsigned int)(d / mdeg[i]);
-    d = fmod(d, mdeg[i]);
-    if ((j == -1) && (pt[i] != 0)) j = i;
-    if ((j != -1) && (pt[i] != 0)) k = i;
-  }
- *str = '\0';
- if (j == -1) str += sprintf(str, "0%c",cdeg[2]);
- else
- for(i = j; i <= k; i++)
-   str += sprintf(str, "%d%c", pt[i], cdeg[i]);
- return str-pc;
+	// Корректируем переполнение секунд и минут
+	if (sec == 60) {
+		sec = 0;
+		min += 1;
+	}
+	if (min == 60) {
+		min = 0;
+		deg += 1;
+	}
+
+	// Формируем строку
+	if (deg != 0)
+		return sprintf(str, "%d%c%d%c%d%c", deg, cdeg[0], min, cdeg[1], sec, cdeg[2]);
+	else if (min != 0)
+		return sprintf(str, "%d%c%d%c", min, cdeg[1], sec, cdeg[2]);
+	else
+		return sprintf(str, "%d%c", sec, cdeg[2]);
 }
+
+//int dgr2str(char *str, float__t d)
+//{
+// const char cdeg[] = {96, 39, 34}; //` - degrees, ' - minutes, " - seconds
+// const float__t mdeg[] = {M_PI/180.0, M_PI/(180.0*60), M_PI/(180.0*60*60)};
+// unsigned int pt[6];
+// int i, j, k;
+// char *pc = str;
+//
+// for(i = 0, j = -1, k = 0; i < 3; i++)
+//  {
+//    pt[i] = (unsigned int)(d / mdeg[i]);
+//    d = fmod(d, mdeg[i]);
+//    if ((j == -1) && (pt[i] != 0)) j = i;
+//    if ((j != -1) && (pt[i] != 0)) k = i;
+//  }
+// *str = '\0';
+// if (j == -1) str += sprintf(str, "0%c",cdeg[2]);
+// else
+// for(i = j; i <= k; i++)
+//   str += sprintf(str, "%d%c", pt[i], cdeg[i]);
+// return str-pc;
+//}
 //---------------------------------------------------------------------------
 
 int chr2str(char *str, unsigned char c)

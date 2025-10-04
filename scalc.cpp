@@ -478,7 +478,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.034);
+  addfvar("version", 2.035);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -606,35 +606,6 @@ void calculator::varlist(void (*f)(char*, value*))
     }
 }
 
-unsigned calculator::string_hash_function(char first, char* p)
-{
-    unsigned h = 0, g;
-    // Начальная инициализация хэш-значения
-    h = (h << 4) + first;
-
-    if ((g = h & 0xF0000000) != 0)
-    {
-        h ^= g >> 24;
-    }
-    h &= ~g;
-
-    // Обработка оставшейся строки
-    while (*p)
-    {
-        if (scfg & UPCASE)
-            h = (h << 4) + tolower(*p++);
-        else
-            h = (h << 4) + *p++;
-
-        if ((g = h & 0xF0000000) != 0)
-        {
-            h ^= g >> 24;
-        }
-        h &= ~g;
-    }
-    return h;
-}
-
 unsigned calculator::string_hash_function(char* p)
 {
   unsigned h = 0, g;
@@ -656,7 +627,7 @@ symbol* calculator::add(t_symbol tag, v_func fidx, const char* name, void* func)
 {
     char* uname = strdup(name);
 
-    unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
+    unsigned h = string_hash_function(uname) % hash_table_size;
     symbol* sp;
     for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -685,7 +656,7 @@ symbol* calculator::add(t_symbol tag, const char* name, void* func)
 {
   char *uname = strdup(name);
 
-  unsigned h = string_hash_function('0'+tag, uname) % hash_table_size;
+  unsigned h = string_hash_function(uname) % hash_table_size;
   symbol* sp;
   for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -709,11 +680,11 @@ symbol* calculator::add(t_symbol tag, const char* name, void* func)
   return sp;
 }
 
-symbol* calculator::find(t_symbol tag, const char* name, void* func)
+symbol* calculator::find(const char* name, void* func)
 {
     char* uname = strdup(name);
 
-    unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
+    unsigned h = string_hash_function(uname) % hash_table_size;
     symbol* sp;
     for (sp = hash_table[h]; sp != NULL; sp = sp->next)
     {
@@ -724,29 +695,6 @@ symbol* calculator::find(t_symbol tag, const char* name, void* func)
         else
         {
           if (strcmp(sp->name, uname) == 0) return sp;
-        }
-    }
-    return nullptr;
-}
-
-symbol* calculator::find(const char* name, void* func)
-{
-    char* uname = strdup(name);
-
-    for (t_symbol tag = tsVARIABLE; tag < tsNUM; tag = (t_symbol)(tag + 1))
-    {
-        unsigned h = string_hash_function('0' + tag, uname) % hash_table_size;
-        symbol* sp;
-        for (sp = hash_table[h]; sp != NULL; sp = sp->next)
-        {
-            if (scfg & UPCASE)
-            {
-                if (stricmp(sp->name, uname) == 0) return sp;
-            }
-            else
-            {
-                if (strcmp(sp->name, uname) == 0) return sp;
-            }
         }
     }
     return nullptr;
@@ -773,27 +721,6 @@ void calculator::addlvar(const char* name, float__t fval, int_t ival)
     sp->val.fval = fval;
     sp->val.ival = ival;    
 }
-
-bool calculator::checkvar(const char* name)
-{
-  char *uname = strdup(name);
-
-  unsigned h = string_hash_function('0'+ tsVARIABLE, uname) % hash_table_size;
-  symbol* sp;
-  for (sp = hash_table[h]; sp != NULL; sp = sp->next)
-    {
-      if (scfg & UPCASE)
-       {
-        if (stricmp(sp->name, uname) == 0) return true;
-       }
-      else
-       {
-        if (strcmp(sp->name, uname) == 0) return true;
-       }
-    }
-  return false;
-}
-
 
 
 int calculator::hscanf(char* str, int_t &ival, int &nn)
@@ -1728,9 +1655,11 @@ t_operator calculator::scan(bool operand, bool percent)
         }
       *np = '\0';
       symbol* sym;
-      if (buf[pos] == '\0') sym = find(tsVARIABLE, name); 
-      else 
-      if (buf[pos] == '(') sym = find(name);
+      //if (buf[pos] == '\0') sym = find(tsVARIABLE, name); 
+      //else 
+      //if (buf[pos] == '(') sym = find(name);
+      //else sym = add(tsVARIABLE, name);
+      if (buf[pos] == '\0') sym = find(name);
       else sym = add(tsVARIABLE, name);
       if (v_sp == max_stack_size)
         {

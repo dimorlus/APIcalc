@@ -1649,8 +1649,9 @@ t_operator calculator::scan(bool operand, bool percent)
        }
       else
        {
-        if (scfg & FFLOAT) {ierr = 0; n = 0;}
-        else ierr = sscanf(buf+pos-1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
+        //if (scfg & FFLOAT) {ierr = 0; n = 0;}
+        //else ierr = sscanf(buf+pos-1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
+        ierr = 0; n = 0;
         ipos = buf+pos-1+n;
        }
       errno = 0;

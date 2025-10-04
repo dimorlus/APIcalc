@@ -2981,11 +2981,11 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               else
               if (v_stack[v_sp-1].tag == tvINT) 
                 {
-                  v_stack[v_sp-1].ival = !v_stack[v_sp-1].ival;
+                  v_stack[v_sp-1].ival = (v_stack[v_sp-1].ival == 0)? 1 : 0;
                 }
               else
                 {
-                  v_stack[v_sp-1].ival = !v_stack[v_sp-1].fval;
+                  v_stack[v_sp-1].ival = (v_stack[v_sp-1].fval == 0.0f)? 1 : 0;
                   v_stack[v_sp-1].tag = tvINT;
                 }
               v_stack[v_sp-1].var = NULL;
@@ -3021,7 +3021,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 }
               else
                 {
-                  v_stack[v_sp-1].ival = ~(int)v_stack[v_sp-1].fval;
+                  v_stack[v_sp-1].ival = ~(uint64_t)v_stack[v_sp-1].fval;
                   v_stack[v_sp-1].tag = tvINT;
                 }
               v_stack[v_sp-1].var = NULL;
@@ -3173,16 +3173,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       strcpy(sres, v_stack[v_sp-n_args-1].sval);
                       if (n_args > 1)
                        {
-                        #ifdef _long_double_
-                        //DBL_MAX
                         v_stack[v_sp-n_args-1].ival = v_stack[v_sp-n_args+1].ival;
                         if (v_stack[v_sp-n_args+1].fval > maxdbl) v_stack[v_sp-n_args-1].fval = qnan;
                         else v_stack[v_sp-n_args-1].fval = v_stack[v_sp-n_args+1].fval;
-                        //v_stack[v_sp-n_args-1].fval = v_stack[v_sp-n_args+1].fval;
-                        #else /*_long_double_*/
-                        v_stack[v_sp-n_args-1].ival = v_stack[v_sp-n_args+1].ival;
-                        //v_stack[v_sp-n_args-1].fval = v_stack[v_sp-n_args+1].fval;
-                        #endif /*_long_double_*/
                        }
                       v_sp -= n_args;
                     break;

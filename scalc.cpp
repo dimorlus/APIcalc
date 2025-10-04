@@ -609,7 +609,7 @@ void calculator::varlist(void (*f)(char*, value*))
 unsigned calculator::string_hash_function(char first, char* p)
 {
     unsigned h = 0, g;
-    // ������������ ������ ������
+    // Начальная инициализация хэш-значения
     h = (h << 4) + first;
 
     if ((g = h & 0xF0000000) != 0)
@@ -618,7 +618,7 @@ unsigned calculator::string_hash_function(char first, char* p)
     }
     h &= ~g;
 
-    // ����� ������� ������
+    // Обработка оставшейся строки
     while (*p)
     {
         if (scfg & UPCASE)
@@ -2386,9 +2386,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 					)
                 { 
                     long double x1 = v_stack[v_sp - 2].get();
-                    long double y1 = v_stack[v_sp - 2].imval; // ���������: x1 + i*y1
+                    long double y1 = v_stack[v_sp - 2].imval; // x1 + i*y1
                     long double x2 = v_stack[v_sp - 1].get();
-                    long double y2 = v_stack[v_sp - 1].imval; // �������:   x2 + i*y2
+                    long double y2 = v_stack[v_sp - 1].imval; // x2 + i*y2
                     
                     long double r = std::hypotl(x1, y1);
                     long double phi = std::atan2(y1, x1);

@@ -491,18 +491,21 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
   {
    if (ccalc->error()[0])
 	{
-	 if (ccalc->errps() < 64)
+	 int ep = ccalc->errps();
+	 if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
+	 if ((ep < 64))
 	  {
 	   char binstr[80];
-	   memset(binstr, '-', sizeof binstr);
-	   binstr[ccalc->errps()] = '^';
-	   binstr[ccalc->errps() + 1] = '\0';
-	   sprintf(strings[n++], "%-64s", binstr);
-	   sprintf(strings[n++], "  %66.66s  ", ccalc->error());
+	   memset(binstr, ' ', sizeof(binstr));
+	   memset(binstr, '-', ep);
+	   binstr[ep] = '^';
+	   binstr[sizeof(binstr) - 1] = '\0';
+	   sprintf(strings[n++], "%64.64s   ", binstr);
+	   sprintf(strings[n++], "%67.67s", ccalc->error());
 	  }
 	 else
 	  {
-	   sprintf(strings[n++], "%66.66s ", ccalc->error());
+	   sprintf(strings[n++], "%67.67s", ccalc->error());
 	  }
 	}
    else

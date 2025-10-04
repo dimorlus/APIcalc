@@ -1131,11 +1131,11 @@ void WinApiCalc::OnEnterPressed()
             long double fVal = m_pCalculator->evaluate(exprBuf, &iVal, &imVal);
 
             // Check for errors
-            //char* error = m_pCalculator->error();
-            //if (error && strlen(error) > 0)
-            //{
-            //    return; // Don't replace on error
-            //}
+            char* error = m_pCalculator->error();
+            if (error && strlen(error) > 0)
+            {
+                return; // Don't replace on error
+            }
             
             // Format result as %.16Lg as specified in SOW
             char resultStr[64];
@@ -1175,16 +1175,7 @@ void WinApiCalc::EvaluateExpression()
 		long double imVal = 0.0;
         long double fVal = m_pCalculator->evaluate(exprBuf, &iVal, &imVal);
 
-        // Check for calculator errors first
-        //char* error = m_pCalculator->error();
-        //if (error && strlen(error) > 0)
-        //{
-        //    SetWindowTextA(m_hResultEdit, error);
-        //    m_resultLines = 1;
-        //    ResizeWindow();
-        //    return;
-        //}
-        
+       
         // Get syntax flags from calculator
         int scfg = m_pCalculator->issyntax();
         

@@ -144,18 +144,18 @@ enum t_operator
 enum t_symbol
 {
   tsVARIABLE,
-  tsIFUNC1, //int f(int x)
-  tsIFUNC2, //int f(int x, int y)
-  tsFFUNC1, //float f(float x)
+  tsIFUNC1,  //int f(int x)
+  tsIFUNC2,  //int f(int x, int y)
+  tsFFUNC1,  //float f(float x)
   tsCFUNCC1, //complex f(complex x)
   tsFFUNCC1, //float f(complex x)
-  tsFFUNC2, //float f(float x, float y)
-  tsFFUNC3,//float f(float x, float y, float z)
-  tsIFFUNC3,//int f(float x, float y, int z)
-  tsPFUNCn, //int printf(char *format, ...)
+  tsFFUNC2,  //float f(float x, float y)
+  tsFFUNC3,  //float f(float x, float y, float z)
+  tsIFFUNC3, //int f(float x, float y, int z)
+  tsPFUNCn,  //int printf(char *format, ...)
   tsSIFUNC1, //int f(char *s)
-  tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
-  tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
+  tsVFUNC1,  // void vfunc(value* res, value* arg, int idx)
+  tsVFUNC2,  // void vfunc(value* res, value* arg1, value* arg2, int idx)
   tsNUM
 };
 
@@ -217,8 +217,8 @@ class value
       tag = tvINT;
       var = NULL;
       ival = 0;
-      fval = 0;
-	  imval = 0;
+      fval = 0.0;
+      imval = 0.0;
       pos = 0;
       sval = NULL;
      }

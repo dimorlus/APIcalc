@@ -1388,11 +1388,11 @@ void vfunc2(value* res, value* arg1, value* arg2, int idx)
     if (res == NULL || arg1 == NULL || arg2 == NULL) return;
     if (
         ((arg1->tag == tvCOMPLEX) || (arg2->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
-        ((arg1->imval != 0) || (arg2->imval != 0) || (res->imval != 0))
+        ((arg1->imval != 0.0) || (arg2->imval != 0.0) || (res->imval != 0.0))
         )
     {
-        float__t out_re = 0;
-        float__t out_im = 0;
+        float__t out_re = 0.0;
+        float__t out_im = 0.0;
         float__t re1 = arg1->get();
         float__t im1 = arg1->imval;
         float__t re2 = arg2->get();
@@ -1466,11 +1466,11 @@ void vfunc(value* res, value* arg, int idx)
     if (res == NULL || arg == NULL) return;
     if (
         ((arg->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
-        ((arg->imval != 0)) || (res->imval != 0)
+        ((arg->imval != 0.0) || (res->imval != 0.0))
         )
     {
-        float__t out_re = 0;
-        float__t out_im = 0;
+        float__t out_re = 0.0;
+        float__t out_im = 0.0;
         float__t re = arg->get();
         float__t im = arg->imval;
         switch (idx)
@@ -1479,7 +1479,7 @@ void vfunc(value* res, value* arg, int idx)
         {
             res->fval = hypotl(re, im);
             res->tag = tvFLOAT;
-            res->imval = 0;
+            res->imval = 0.0;
             res->ival = (int64_t)res->fval;
         }
         return;
@@ -1586,13 +1586,13 @@ void vfunc(value* res, value* arg, int idx)
         case vf_re:
         {
             out_re = re;
-            out_im = 0;
+            out_im = 0.0;
         }
         break;
         case vf_im:
         {
             out_re = im;
-            out_im = 0;
+            out_im = 0.0;
         }
         break;
         }
@@ -1717,12 +1717,12 @@ void vfunc(value* res, value* arg, int idx)
         break;
         case vf_im:
         {
-            res->fval = 0;
+            res->fval = 0.0;
         }
         break;
         }
         res->tag = tvFLOAT;
-        res->imval = 0;
+        res->imval = 0.0;
         res->ival = (int64_t)res->fval;
     }
 

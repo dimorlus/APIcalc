@@ -23,7 +23,7 @@
 #define M_PI	3.1415926535897932384626433832795
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E		2.7182818284590452353602874713527
-#define PHI     1.61803398874989484820
+#define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
 
 
 #pragma warning(disable : 4996)
@@ -195,8 +195,10 @@ calculator::~calculator(void)
     }
   }
 }
+
+
 int calculator::format_out(int Options, int binwide, int n, float__t fVal, float__t imVal,
-    int64_t iVal, char* expr, char strings[20][80])
+                           int64_t iVal, char* expr, char strings[20][80])
 {
     if (IsNaN(fVal))
     {
@@ -935,7 +937,7 @@ void calculator::scientific(char * &fpos, float__t &fval)
        if (*fpos == 'B')
         {
          fpos++;
-	 fval *= 1.180591620717411e+21;  //2**70
+	     fval *= 1.180591620717411e+21;  //2**70
          scfg |= CMP;
         }
        else engineering(1e21, fpos, fval);
@@ -1066,7 +1068,7 @@ void calculator::scientific(char * &fpos, float__t &fval)
 
 void calculator::error(int pos, const char* msg)
 {
-  sprintf(err, "Error: %s at %i\n\n", msg, pos);
+  sprintf(err, "Error: %s at %i", msg, pos);
   errpos = pos;
 }
 
@@ -1525,7 +1527,7 @@ t_operator calculator::scan(bool operand, bool percent)
        }
       else
        {
-        //if (scfg & FFLOAT) {ierr = 0; n = 0;}
+		//if (scfg & FFLOAT) {ierr = 0; n = 0;} //I don't remember how it works and for what it was
         //else ierr = sscanf(buf+pos-1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
         ierr = 0; n = 0;
         ipos = buf+pos-1+n;
@@ -1565,7 +1567,7 @@ t_operator calculator::scan(bool operand, bool percent)
           v_stack[v_sp].tag = tvPERCENT;
          }
         else 
-			if ((*fpos == 'i') || (*fpos == 'j'))
+		if ((*fpos == 'i') || (*fpos == 'j'))
         {
           c_imaginary = *fpos;
           fpos++;
@@ -1820,8 +1822,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 if (
                     ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                      (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
-                    ((v_stack[v_sp - 1].imval != 0) ||
-                     (v_stack[v_sp - 2].imval != 0))
+                    ((v_stack[v_sp - 1].imval != 0.0) ||
+                     (v_stack[v_sp - 2].imval != 0.0))
                     )
                 {
                   v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get();
@@ -1970,8 +1972,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if (
                   ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
-				  ((v_stack[v_sp - 1].imval != 0) ||
-                      (v_stack[v_sp - 2].imval != 0))
+				  ((v_stack[v_sp - 1].imval != 0.0) ||
+                   (v_stack[v_sp - 2].imval != 0.0))
 				  ) 
               {
                     // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
@@ -2020,8 +2022,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if (
                   ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                    (v_stack[v_sp - 2].tag == tvCOMPLEX)) ||
-                  ((v_stack[v_sp - 1].imval != 0) ||
-                   (v_stack[v_sp - 2].imval != 0))
+                  ((v_stack[v_sp - 1].imval != 0.0) ||
+                   (v_stack[v_sp - 2].imval != 0.0))
                  )
                 {
                     // (a + bi) / (c + di) = [(ac + bd) + (bc - ad)i] / (c^2 + d^2)
@@ -2095,8 +2097,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
              if (
                  ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))||
-				 ((v_stack[v_sp - 1].imval != 0) ||
-                  (v_stack[v_sp - 2].imval != 0))
+				 ((v_stack[v_sp - 1].imval != 0.0) ||
+                  (v_stack[v_sp - 2].imval != 0.0))
                 )
              {
                  long double ar = v_stack[v_sp - 2].get();
@@ -2257,8 +2259,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 if (
                     ((v_stack[v_sp-2].tag == tvCOMPLEX)||
 					(v_stack[v_sp - 1].tag == tvCOMPLEX)) ||
-					((v_stack[v_sp - 1].imval != 0) ||
-					 (v_stack[v_sp - 2].imval != 0))
+					((v_stack[v_sp - 1].imval != 0.0) ||
+					 (v_stack[v_sp - 2].imval != 0.0))
 					)
                 { 
                     long double x1 = v_stack[v_sp - 2].get();
@@ -2904,8 +2906,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
              if (
                  ((v_stack[v_sp - 2].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 1].tag == tvCOMPLEX)) ||
-                 ((v_stack[v_sp - 1].imval != 0) ||
-                  (v_stack[v_sp - 2].imval != 0))
+                 ((v_stack[v_sp - 1].imval != 0.0) ||
+                  (v_stack[v_sp - 2].imval != 0.0))
                 )
              {
                  v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;

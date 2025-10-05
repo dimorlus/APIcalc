@@ -108,5 +108,8 @@ void LnC(float__t x, float__t y, float__t& re, float__t& im);
 void SqrtC(float__t x, float__t y, float__t& re, float__t& im);
 
 void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, float__t& im);
+void RootNC(float__t xr, float__t xi, float__t yr, float__t yi, float__t& re, float__t& im);
 void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im);
 
+void vfunc(value* res, value* arg, int idx);
+void vfunc2(value* res, value* arg1, value* arg2, int idx);

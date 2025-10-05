@@ -1343,6 +1343,24 @@ void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, floa
     ExpC(a, b, re, im);
 }
 
+// Извлечение корня y-ной степени из комплексного числа:
+// RootNC(xr, xi, yr, yi, re, im) = (xr + i*xi)^(1/(yr + i*yi))
+void RootNC(float__t xr, float__t xi, float__t yr, float__t yi, float__t& re, float__t& im)
+{
+    // 1/(yr + i*yi)
+    float__t denom = yr * yr + yi * yi;
+    if (denom == 0) {
+        re = std::numeric_limits<float__t>::quiet_NaN();
+        im = std::numeric_limits<float__t>::quiet_NaN();
+        return;
+    }
+    float__t pow_re = yr / denom;
+    float__t pow_im = -yi / denom;
+
+    // (xr + i*xi)^(1/(yr + i*yi)) = PowC(xr, xi, pow_re, pow_im)
+    PowC(xr, xi, pow_re, pow_im, re, im);
+}
+
 // Комплексный логарифм по произвольному основанию: LognC(x, y, u, v) = ln(y + iv) / ln(x + iu)
 void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im)
 {
@@ -1363,4 +1381,349 @@ void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__
     }
     re = (ln_num_re * ln_den_re + ln_num_im * ln_den_im) / denom;
     im = (ln_num_im * ln_den_re - ln_num_re * ln_den_im) / denom;
+}
+
+void vfunc2(value* res, value* arg1, value* arg2, int idx)
+{
+    if (res == NULL || arg1 == NULL || arg2 == NULL) return;
+    if (
+        ((arg1->tag == tvCOMPLEX) || (arg2->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
+        ((arg1->imval != 0) || (arg2->imval != 0) || (res->imval != 0))
+        )
+    {
+        float__t out_re = 0;
+        float__t out_im = 0;
+        float__t re1 = arg1->get();
+        float__t im1 = arg1->imval;
+        float__t re2 = arg2->get();
+        float__t im2 = arg2->imval;
+        switch (idx)
+        {
+        case vf_pow:
+        {
+            PowC(re1, im1, re2, im2, out_re, out_im);
+        }
+        break;
+        case vf_rootn:
+        {
+            RootNC(re1, im1, re2, im2, out_re, out_im);
+		}
+		break;
+        case vf_logn:
+        {
+            LognC(re1, im1, re2, im2, out_re, out_im);
+        }
+        break;
+        case vf_cplx:
+        {
+            out_re = re1;
+            out_im = re2;
+        }
+        break;
+        }
+        res->fval = out_re;
+        res->imval = out_im;
+        res->tag = tvCOMPLEX;
+        res->ival = (int64_t)res->fval;
+    }
+    else
+    {
+        switch (idx)
+        {
+        case vf_pow:
+        {
+            res->fval = Pow(arg1->get(), arg2->get());
+        }
+        break;
+        case vf_rootn:
+        {
+            res->fval = Rootn(arg1->get(), arg2->get());
+		}
+		break;
+        case vf_logn:
+        {
+            res->fval = Logn(arg1->get(), arg2->get());
+        }
+        break;
+        case vf_cplx:
+        {
+            res->fval = arg1->get();
+            res->imval = arg2->get();
+            res->tag = tvCOMPLEX;
+            res->ival = (int64_t)res->fval;
+            return;
+        }
+        }
+        res->imval = 0;
+        res->tag = tvFLOAT;
+        res->ival = (int64_t)res->fval;
+    }
+}
+
+
+void vfunc(value* res, value* arg, int idx)
+{
+    if (res == NULL || arg == NULL) return;
+    if (
+        ((arg->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX)) ||
+        ((arg->imval != 0)) || (res->imval != 0)
+        )
+    {
+        float__t out_re = 0;
+        float__t out_im = 0;
+        float__t re = arg->get();
+        float__t im = arg->imval;
+        switch (idx)
+        {
+        case vf_abs:
+        {
+            res->fval = hypotl(re, im);
+            res->tag = tvFLOAT;
+            res->imval = 0;
+            res->ival = (int64_t)res->fval;
+        }
+        return;
+        //
+        case vf_sin:
+        {
+            SinC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_cos:
+        {
+            CosC(re, im, out_re, out_im);
+        }
+        return;
+        case vf_tan:
+        {
+            TanC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_cot:
+        {
+            CotC(re, im, out_re, out_im);
+        }
+        break;
+        //
+        case vf_sinh:
+        {
+            SinhC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_cosh:
+        {
+            CoshC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_tanh:
+        {
+            TanhC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_ctnh:
+        {
+            CothC(re, im, out_re, out_im);
+        }
+        break;
+        //
+        case vf_asin:
+        {
+            AsinC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acos:
+        {
+            AcosC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_atan:
+        {
+            AtanC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acot:
+        {
+            AcotC(re, im, out_re, out_im);
+        }
+        break;
+        //
+        case vf_asinh:
+        {
+            AsinhC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acosh:
+        {
+            AcoshC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_atanh:
+        {
+            AtanhC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_acoth:
+        {
+            AcothC(re, im, out_re, out_im);
+        }
+        break;
+        //
+        case vf_exp:
+        {
+            ExpC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_log:
+        {
+            LnC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_sqrt:
+        {
+            SqrtC(re, im, out_re, out_im);
+        }
+        break;
+        case vf_re:
+        {
+            out_re = re;
+            out_im = 0;
+        }
+        break;
+        case vf_im:
+        {
+            out_re = im;
+            out_im = 0;
+        }
+        break;
+        }
+        res->fval = out_re;
+        res->imval = out_im;
+        res->tag = tvCOMPLEX;
+        res->ival = (int64_t)res->fval;
+    }
+    else
+    {
+        switch (idx)
+        {
+        case vf_abs:
+        {
+            res->fval = fabsl(arg->fval);
+        }
+        break;
+        //
+        case vf_sin:
+        {
+            res->fval = Sin(arg->fval);
+        }
+        break;
+        case vf_cos:
+        {
+            res->fval = Cos(arg->fval);
+        }
+        break;
+        case vf_tan:
+        {
+            res->fval = Tan(arg->fval);
+        }
+        break;
+        case vf_cot:
+        {
+            res->fval = Ctg(arg->fval);
+        }
+        break;
+        //
+        case vf_sinh:
+        {
+            res->fval = Sinh(arg->fval);
+        }
+        break;
+        case vf_cosh:
+        {
+            res->fval = Cosh(arg->fval);
+        }
+        break;
+        case vf_tanh:
+        {
+            res->fval = Tanh(arg->fval);
+        }
+        break;
+        case vf_ctnh:
+        {
+            res->fval = Ctanh(arg->fval);
+        }
+        break;
+        //
+        case vf_asin:
+        {
+            res->fval = Asin(arg->fval);
+        }
+        break;
+        case vf_acos:
+        {
+            res->fval = Acos(arg->fval);
+        }
+        break;
+        case vf_atan:
+        {
+            res->fval = Atan(arg->fval);
+        }
+        break;
+        case vf_acot:
+        {
+            res->fval = Acot(arg->fval);
+        }
+        break;
+        //			
+        case vf_asinh:
+        {
+            res->fval = Arsh(arg->fval);
+        }
+        break;
+        case vf_acosh:
+        {
+            res->fval = Arch(arg->fval);
+        }
+        break;
+        case vf_atanh:
+        {
+            res->fval = Arth(arg->fval);
+        }
+        break;
+        case vf_acoth:
+        {
+            res->fval = Arcth(arg->fval);
+        }
+        break;
+        //
+        case vf_exp:
+        {
+            res->fval = Exp(arg->fval);
+        }
+        break;
+        case vf_log:
+        {
+            res->fval = Log(arg->fval);
+        }
+        break;
+        case vf_sqrt:
+        {
+            res->fval = Sqrt(arg->fval);
+        }
+        break;
+        case vf_re:
+        {
+            res->fval = arg->fval;
+        }
+        break;
+        case vf_im:
+        {
+            res->fval = 0;
+        }
+        break;
+        }
+        res->tag = tvFLOAT;
+        res->imval = 0;
+        res->ival = (int64_t)res->fval;
+    }
+
 }

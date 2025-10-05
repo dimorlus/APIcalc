@@ -188,6 +188,7 @@ enum v_func
  vf_sqrt,
 
  vf_pow,
+ vf_rootn,
  vf_logn,
 
  vf_re,
@@ -323,12 +324,13 @@ class calculator
     void addlvar(const char* name, float__t fval, int_t ival);
     void addfn(const char* name, void *func) {add(tsFFUNC1, name, func);}
     void addfn2(const char* name, void *func) {add(tsFFUNC2, name, func);}
-    void varlist(void (*f)(char*, float__t));
-    void varlist(void (*f)(char*, value*));
     int varlist(char* buf, int bsize, int* maxlen = nullptr);
     float__t evaluate(char* expr, __int64 *piVal = NULL, float__t *pimval = NULL);
     char *Sres(void) {return sres;};
 	char Ichar(void) { return c_imaginary; };
+    int format_out(int Options, int binwide, int n, float__t fVal, float__t imVal,
+        int64_t iVal, char* expr, char strings[20][80]);
+
     ~calculator(void);
 };
 

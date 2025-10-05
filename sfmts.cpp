@@ -295,28 +295,7 @@ int dgr2str(char* str, float__t radians)
 		return sprintf(str, "%d%c", sec, cdeg[2]);
 }
 
-//int dgr2str(char *str, float__t d)
-//{
-// const char cdeg[] = {96, 39, 34}; //` - degrees, ' - minutes, " - seconds
-// const float__t mdeg[] = {M_PI/180.0, M_PI/(180.0*60), M_PI/(180.0*60*60)};
-// unsigned int pt[6];
-// int i, j, k;
-// char *pc = str;
-//
-// for(i = 0, j = -1, k = 0; i < 3; i++)
-//  {
-//    pt[i] = (unsigned int)(d / mdeg[i]);
-//    d = fmod(d, mdeg[i]);
-//    if ((j == -1) && (pt[i] != 0)) j = i;
-//    if ((j != -1) && (pt[i] != 0)) k = i;
-//  }
-// *str = '\0';
-// if (j == -1) str += sprintf(str, "0%c",cdeg[2]);
-// else
-// for(i = j; i <= k; i++)
-//   str += sprintf(str, "%d%c", pt[i], cdeg[i]);
-// return str-pc;
-//}
+
 //---------------------------------------------------------------------------
 
 int chr2str(char *str, unsigned char c)
@@ -547,7 +526,7 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
 		 else
 		 {
 			 char imstr[80];
-			 sprintf(imstr, "%.16Lg%+.16Lgi", (long double)fVal, (long double)imVal);
+			 sprintf(imstr, "%.16Lg%+.16Lg%c", (long double)fVal, (long double)imVal, ccalc->Ichar());
 			 sprintf(strings[n++], "%65.64s f", imstr);
 		 }
 	 }
@@ -563,7 +542,7 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
 			 if (imVal > 0) *cp++ = '+';
 			 
 			 cp += d2scistr(cp, imVal);
-			 *cp++ = 'i';
+			 *cp++ = ccalc->Ichar();
 			 *cp = '\0';
 		 }
 		 sprintf(strings[n++], "%65.64s S", scistr);
@@ -579,7 +558,7 @@ int format_out (int Options, int scfg, int binwide, int n, float__t fVal, float_
 		 cp += d2nrmstr(nrmstr, fVal);
 		 if (imVal > 0) *cp++ = '+';
 		 cp += d2nrmstr(cp, imVal);
-		 *cp++ = 'i';
+		 *cp++ = ccalc->Ichar();
 		 *cp = '\0';
 	 }
 	 sprintf(strings[n++], "%65.64s n", nrmstr);

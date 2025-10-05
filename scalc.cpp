@@ -376,7 +376,10 @@ calculator::calculator(int cfg)
   sres[0] = '\0';
   memset(hash_table, 0, sizeof hash_table);
   memset(v_stack, 0, sizeof v_stack);
+  c_imaginary = 'i';
   //randomize();
+  srand(static_cast<unsigned int>(time(nullptr)));
+
 
   add(tsVFUNC1, vf_abs, "abs", (void*)vfunc);
 
@@ -478,7 +481,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.035);
+  addfvar("version", 2.036);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -1616,8 +1619,9 @@ t_operator calculator::scan(bool operand, bool percent)
           v_stack[v_sp].tag = tvPERCENT;
          }
         else 
-        if (*fpos == 'i')
+			if ((*fpos == 'i') || (*fpos == 'j'))
         {
+          c_imaginary = *fpos;
           fpos++;
           v_stack[v_sp].tag = tvCOMPLEX;
         }
@@ -1655,10 +1659,6 @@ t_operator calculator::scan(bool operand, bool percent)
         }
       *np = '\0';
       symbol* sym;
-      //if (buf[pos] == '\0') sym = find(tsVARIABLE, name); 
-      //else 
-      //if (buf[pos] == '(') sym = find(name);
-      //else sym = add(tsVARIABLE, name);
       if (buf[pos] == '\0') sym = find(name);
       else sym = add(tsVARIABLE, name);
       if (v_sp == max_stack_size)

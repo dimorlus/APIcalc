@@ -1140,7 +1140,7 @@ void WinApiCalc::OnEnterPressed()
             // Format result as %.16Lg as specified in SOW
             char resultStr[64];
             if (imVal == 0) sprintf_s(resultStr, "%.16Lg", fVal);
-            else sprintf_s(resultStr, "%.16Lg%+.16Lgi", fVal, imVal);
+            else sprintf_s(resultStr, "%.16Lg%+.16Lg%c", fVal, imVal, m_pCalculator->Ichar());
 
             // Put result in expression field
             SetWindowTextA(m_hExpressionEdit, resultStr);

@@ -292,6 +292,7 @@ class calculator
     char  err[256];
     char  sres[STRBUF];
     int   errpos;
+    char c_imaginary;
 
     inline unsigned string_hash_function(char* p);
     symbol* add(t_symbol tag, const char* name, void* func = NULL);
@@ -327,6 +328,7 @@ class calculator
     int varlist(char* buf, int bsize, int* maxlen = nullptr);
     float__t evaluate(char* expr, __int64 *piVal = NULL, float__t *pimval = NULL);
     char *Sres(void) {return sres;};
+	char Ichar(void) { return c_imaginary; };
     ~calculator(void);
 };
 

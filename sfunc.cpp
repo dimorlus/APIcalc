@@ -651,25 +651,32 @@ float__t Ee(float__t x, float__t y) //find standard value
             switch(N)
             {
             case 3:
-                V = E3[nn];
+                if ((nn >= 0) && (nn < sizeof(E3))) V = E3[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 6:
-                V = E6[nn];
+                if ((nn >= 0) && (nn < sizeof(E6))) V = E6[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 12:
-                V = E12[nn];
+                if ((nn >= 0) && (nn < sizeof(E12))) V = E12[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 24:
-                V = E24[nn];
+                if ((nn >= 0) && (nn < sizeof(E24))) V = E24[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 48:
-                V = E48[nn];
+                if ((nn >= 0) && (nn < sizeof(E48))) V = E48[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 96:
-                V = E96[nn];
+                if ((nn >= 0) && (nn < sizeof(E96))) V = E96[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             case 192:
-                V = E192[nn];
+                if ((nn >= 0) && (nn < sizeof(E192))) V = E192[nn];
+                else V = std::numeric_limits<float__t>::quiet_NaN();
                 break;
             default:
                 V = std::numeric_limits<float__t>::quiet_NaN(); // 0.0 / 0.0;
@@ -1483,6 +1490,14 @@ void vfunc(value* res, value* arg, int idx)
             res->ival = (int64_t)res->fval;
         }
         return;
+        case vf_pol:
+        {
+            res->fval = atan2l(im, re); // argument
+			res->imval = 0.0; 
+            res->tag = tvFLOAT;
+			res->ival = (int64_t)res->fval;
+		}
+		return;
         //
         case vf_sin:
         {
@@ -1585,16 +1600,20 @@ void vfunc(value* res, value* arg, int idx)
         break;
         case vf_re:
         {
-            out_re = re;
-            out_im = 0.0;
+            res->fval = re; // argument
+            res->imval = 0.0;
+            res->tag = tvFLOAT;
+            res->ival = (int64_t)res->fval;
         }
-        break;
+        return;
         case vf_im:
         {
-            out_re = im;
-            out_im = 0.0;
+            res->fval = im; // argument
+            res->imval = 0.0;
+            res->tag = tvFLOAT;
+            res->ival = (int64_t)res->fval;
         }
-        break;
+		return;
         }
         res->fval = out_re;
         res->imval = out_im;
@@ -1610,7 +1629,11 @@ void vfunc(value* res, value* arg, int idx)
             res->fval = fabsl(arg->fval);
         }
         break;
-        //
+        case vf_pol:
+        {
+            res->fval = 0.0;
+        }
+        break;
         case vf_sin:
         {
             res->fval = Sin(arg->fval);

@@ -50,6 +50,7 @@ calculator::calculator(int cfg)
 
 
   add(tsVFUNC1, vf_abs, "abs", (void*)vfunc);
+  add(tsVFUNC1, vf_pol, "pol", (void*)vfunc);
 
   add(tsVFUNC1, vf_sin, "sin", (void*)vfunc);
   add(tsVFUNC1, vf_cos, "cos", (void*)vfunc);
@@ -150,7 +151,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.036);
+  addfvar("version", 2.037);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 

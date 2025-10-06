@@ -162,6 +162,7 @@ enum t_symbol
 enum v_func
 {
  vf_abs,
+ vf_pol,
 
  vf_sin,
  vf_cos,

@@ -20,6 +20,8 @@
 #include "sfmts.h"
 #include "sfunc.h"
 
+#include "ver.h"
+
 #define M_PI	3.1415926535897932384626433832795
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E		2.7182818284590452353602874713527
@@ -151,7 +153,7 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
-  addfvar("version", 2.037);
+  addfvar("version", _ver_);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 

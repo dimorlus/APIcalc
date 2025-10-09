@@ -1,11 +1,11 @@
-; -- TesterAll.iss --
+; -- fcalc.iss --
 
 [Setup]
 AppName=fcalc
 AppVerName=fcalc (Scientific formula calculator) 1.0 files
 VersionInfoVersion=1.0.0.0
 AppContact=http://dorlov.no-ip.com
-DefaultDirName={commonpf64}\FC
+DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc
 UninstallDisplayIcon={app}\fcalc.exe
 LicenseFile=fclic.txt
@@ -15,19 +15,27 @@ OutputDir=Setup
 OutputBaseFilename=fcalc_setup
 CreateUninstallRegKey=yes
 PrivilegesRequired=admin
+UsedUserAreasWarning=no
+ArchitecturesAllowed=x86 x64
+ArchitecturesInstallIn64BitMode=x64
 
 [Types]
-Name: "custom"; Description: "custom"; Flags:iscustom
+Name: "custom"; Description: "custom"; Flags: iscustom
 
 [Components]
-; Note: The following line does nothing other than provide a visual cue
-; to the user that the program files are installed no matter what.
 Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: fixed
 
-
 [Files]
-Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}";Components: program; Flags:ignoreversion
-Source: "fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
+; 64-bit version for x64 systems
+Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: Is64BitInstallMode
+; 32-bit version for x86 systems  
+Source: ".\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
+; Help file for both architectures
+Source: "fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
+
+; Visual C++ Redistributables
+Source: ".\Redistr\VC_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: Is64BitInstallMode
+Source: ".\Redistr\VC_redist.x86.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: not Is64BitInstallMode
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist
@@ -36,6 +44,7 @@ Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History1
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History2"; ValueData:"now(tz)"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History3"; ValueData:"opacity(100)"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History4"; ValueData:"menu(0)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History5"; ValueData:"version"; Components:program; Flags: createvalueifdoesntexist
 
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowY"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowX"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist
@@ -45,15 +54,42 @@ Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"HistoryCo
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"FontSize"; ValueData:"$0e"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"BinaryWidth"; ValueData:"$40"; Components:program; Flags: createvalueifdoesntexist
 
-
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"
 
-
 [Icons]
-Name: "{group}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}";Components: program
+Name: "{group}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}"; Components: program
 Name: "{group}\Uninstall"; Filename: "{app}\unins000.exe"
-Name: "{userdesktop}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}";Components: program
+Name: "{userdesktop}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}"; Components: program
 
 [Run]
+; Install VC++ Redistributable silently before main installation
+Filename: "{tmp}\VC_redist.x64.exe"; Parameters: "/quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable (x64)..."; Check: Is64BitInstallMode and VCRedistNeedsInstall; Flags: waituntilterminated
+Filename: "{tmp}\VC_redist.x86.exe"; Parameters: "/quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable (x86)..."; Check: not Is64BitInstallMode and VCRedistNeedsInstall; Flags: waituntilterminated
+
+; Launch application after installation
 Filename: "{app}\fcalc.exe"; Description: "Launch application"; Flags: postinstall nowait skipifsilent unchecked
+
+[Code]
+function VCRedistNeedsInstall: Boolean;
+var
+  Version: String;
+begin
+  // Check VC++ 2015-2022 Redistributable
+  if Is64BitInstallMode then
+  begin
+    Result := not RegQueryStringValue(HKEY_LOCAL_MACHINE, 
+      'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64', 'Version', Version);
+    if Result then
+      Result := not RegQueryStringValue(HKEY_LOCAL_MACHINE,
+        'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Version', Version);
+  end
+  else
+  begin
+    Result := not RegQueryStringValue(HKEY_LOCAL_MACHINE,
+      'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X86', 'Version', Version);
+    if Result then
+      Result := not RegQueryStringValue(HKEY_LOCAL_MACHINE,
+        'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86', 'Version', Version);
+  end;
+end;

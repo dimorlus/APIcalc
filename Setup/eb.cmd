@@ -1,0 +1,1 @@
+"c:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\editbin.exe" /SUBSYSTEM:WINDOWS,6.00 fcalc_setup.exe

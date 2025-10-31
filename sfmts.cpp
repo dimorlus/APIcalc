@@ -20,10 +20,10 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
+#define M_PI	3.1415926535897932384626433832795
+#define M_PI_2l 1.5707963267948966192313216916398
+#define M_E		2.7182818284590452353602874713527
 
-
-#define M_PI	3.14159265358979323846
-#define M_E		2.7182818284590452354
 
 //----------------------------------
 int ones(unsigned char *cp, int from, int to)

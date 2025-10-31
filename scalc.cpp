@@ -324,9 +324,9 @@ int calculator::format_out(int Options, int binwide, int n, float__t fVal, float
         {
             if (Options & AUTO)
             {
-                if ((fVal - iVal) == 0) sprintf(strings[n++], "%65llu u", iVal);
+				if ((fVal - iVal) == 0) sprintf(strings[n++], "%65llu u", iVal); //%llu|%zu
             }
-            else sprintf(strings[n++], "%65llu u", iVal);
+            else sprintf(strings[n++], "%65llu u", iVal); //%llu|%zu
         }
 
         // (UI) Fraction output

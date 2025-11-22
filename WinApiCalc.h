@@ -15,6 +15,7 @@ const int CONTROL_HEIGHT = 25; // Increased from 20 to 25 for proper text render
 const int CONTROL_MARGIN = 0;  // No margins as per requirements
 const int HISTORY_HEIGHT = 100;
 const int MAX_HISTORY = 100;
+const int WM_DELAYED_CLEAR_HISTORY = WM_APP + 100;
 
 // Main application class
 class WinApiCalc
@@ -24,8 +25,7 @@ private:
     HWND m_hWnd;
     HWND m_hExpressionEdit;
     HWND m_hResultEdit;
-    HWND m_hHistoryCombo;
-    HWND m_hHistoryButton;
+    HWND m_hComboBox;
     HMENU m_hMenu;
     
     calculator* m_pCalculator;
@@ -39,10 +39,11 @@ private:
     bool m_uiReady;         // Flag to indicate UI is fully initialized
     int m_windowX;          // Позиция окна X
     int m_windowY;          // Позиция окна Y
+    bool m_isUpdatingHistory; // Flag to suppress notifications during history updates
     
     std::vector<std::string> m_history;
     std::string m_currentExpression;
-    
+
     // UI state
     int m_dpiX;
     int m_dpiY;
@@ -50,12 +51,13 @@ private:
     int m_lastResultClientHeight; // measured client height of result edit control
     int m_resultEditInternalPadding; // cached internal top/bottom padding inside result edit
     int m_resultEditInternalHorzPadding; // cached left+right internal padding inside result edit
+    int m_lastComboHeight; // cached height of the combobox when closed
     
     // UI resources
     HBRUSH m_hWhiteBrush;
     WNDPROC m_originalEditProc;
     WNDPROC m_originalResultEditProc;
-    WNDPROC m_originalListBoxProc;
+    WNDPROC m_originalComboBoxProc;
 
 public:
     WinApiCalc();
@@ -73,7 +75,7 @@ public:
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK EditSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ResultEditSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-    static LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
     // Message handlers
@@ -118,7 +120,8 @@ public:
     void SaveHistory();
     void AddToHistory(const std::string& expression);
     void LoadHistoryItem(int index);
-    void UpdateHistoryCombo();
+    void PopulateHistoryCombo();
+    void ClearHistoryCombo();
     void DeleteSelectedHistoryItem();
     
     // Settings persistence
@@ -146,7 +149,7 @@ public:
     
     // Accessors
     HWND GetWindow() const { return m_hWnd; }
-    HWND GetHistoryCombo() const { return m_hHistoryCombo; }
+    HWND GetHistoryCombo() const { return m_hComboBox; }
     calculator* GetCalculator() const { return m_pCalculator; }
     HMENU GetWindowMenu() const { return m_hMenu; }
     bool IsMenuVisible() const { return m_menuVisible; }

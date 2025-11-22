@@ -61,8 +61,7 @@ WinApiCalc::WinApiCalc()
     , m_hWnd(nullptr)
     , m_hExpressionEdit(nullptr)
     , m_hResultEdit(nullptr)
-    , m_hHistoryCombo(nullptr)
-    , m_hHistoryButton(nullptr)
+    , m_hComboBox(nullptr)
     , m_hMenu(nullptr)
     , m_pCalculator(nullptr)
     , m_options(NRM | FRC)  // Default flags from SOW
@@ -79,7 +78,9 @@ WinApiCalc::WinApiCalc()
     , m_hWhiteBrush(nullptr)
     , m_originalEditProc(nullptr)
     , m_originalResultEditProc(nullptr)
-    , m_originalListBoxProc(nullptr)
+    , m_originalComboBoxProc(nullptr)
+    , m_isUpdatingHistory(false)
+    , m_lastComboHeight(0)
 {
     // Calculator will be created in OnCreate
     m_hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255)); // White background
@@ -273,6 +274,13 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         }
         else if (wParam == VK_ESCAPE)
         {
+            // If dropdown is open, close it and consume the key
+            if (pThis && pThis->m_hComboBox && SendMessage(pThis->m_hComboBox, CB_GETDROPPEDSTATE, 0, 0))
+            {
+                SendMessage(pThis->m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
+                return 0;
+            }
+            
             if (pThis) pThis->OnKeyDown(wParam);
             return 0;
         }
@@ -284,22 +292,26 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
        else if (wParam == VK_DOWN || wParam == VK_UP)
        {
            // Open history on Down/Up when focus is in expression edit.
-           // Down -> select first (newest), Up -> select last (oldest).
-           if (pThis && pThis->m_hHistoryCombo)
+           if (pThis && pThis->m_hComboBox)
            {
-               int count = (int)SendMessageA(pThis->m_hHistoryCombo, LB_GETCOUNT, 0, 0);
-               if (count > 0 && !IsWindowVisible(pThis->m_hHistoryCombo))
+               // If dropdown is not open, show it
+               if (!SendMessage(pThis->m_hComboBox, CB_GETDROPPEDSTATE, 0, 0))
                {
-                   ShowWindow(pThis->m_hHistoryCombo, SW_SHOW);
-                   int sel = (wParam == VK_DOWN) ? 0 : max(0, count - 1);
-                   SendMessageA(pThis->m_hHistoryCombo, LB_SETCURSEL, sel, 0);
-                   SetFocus(pThis->m_hHistoryCombo);
-                   pThis->ResizeWindow();
-                   pThis->UpdateLayout();
+                   SendMessage(pThis->m_hComboBox, CB_SHOWDROPDOWN, TRUE, 0);
                    return 0; // handled
                }
+               // If already open, let the message pass to original proc for navigation
            }
-           // If history already visible or empty, fall through to default handling
+        }
+        else if (wParam == VK_DELETE)
+        {
+            // If dropdown is open, delete selected item
+            if (pThis && pThis->m_hComboBox && SendMessage(pThis->m_hComboBox, CB_GETDROPPEDSTATE, 0, 0))
+            {
+                pThis->DeleteSelectedHistoryItem();
+                return 0; // handled
+            }
+            // Else let it pass (delete character)
         }
         else if (GetKeyState(VK_CONTROL) < 0 && wParam != VK_CONTROL)
         {
@@ -337,19 +349,6 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc(HWND hWnd, UINT message, WPARAM wP
         return 0; // Message handled
     }
     
-    if (message == WM_LBUTTONDOWN && pThis)
-    {
-        // Check if history window is visible and close it
-        if (IsWindowVisible(pThis->m_hHistoryCombo))
-        {
-            ShowWindow(pThis->m_hHistoryCombo, SW_HIDE);
-            ShowWindow(pThis->m_hResultEdit, SW_SHOW);
-            SetFocus(pThis->m_hExpressionEdit);
-            pThis->ResizeWindow(); // Изменяем размер окна при закрытии истории
-            pThis->UpdateLayout();
-        }
-    }
-    
     if (pThis && pThis->m_originalEditProc)
     {
         return CallWindowProcA(pThis->m_originalEditProc, hWnd, message, wParam, lParam);
@@ -362,18 +361,7 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc(HWND hWnd, UINT message, WPA
 {
     WinApiCalc* pThis = (WinApiCalc*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     
-    if (message == WM_LBUTTONDOWN && pThis)
-    {
-        // Check if history window is visible and close it
-        if (IsWindowVisible(pThis->m_hHistoryCombo))
-        {
-            ShowWindow(pThis->m_hHistoryCombo, SW_HIDE);
-            ShowWindow(pThis->m_hResultEdit, SW_SHOW);
-            SetFocus(pThis->m_hExpressionEdit);
-            pThis->UpdateLayout();
-        }
-    }
-    else if (message == WM_KEYDOWN && pThis)
+    if (message == WM_KEYDOWN && pThis)
     {
         if (wParam == VK_F1)
         {
@@ -401,136 +389,26 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc(HWND hWnd, UINT message, WPA
     return DefWindowProcA(hWnd, message, wParam, lParam);
 }
 
-LRESULT CALLBACK WinApiCalc::ListBoxSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WinApiCalc::ComboBoxSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WinApiCalc* pThis = (WinApiCalc*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
-    static POINT lastMousePos = {-1, -1}; // Track last mouse position
-    static bool keyboardInUse = false;    // Track if keyboard was just used
     
     if (message == WM_KEYDOWN && pThis)
     {
-        keyboardInUse = true; // Mark keyboard as just used
-        
         if (wParam == VK_DELETE)
         {
-            pThis->DeleteSelectedHistoryItem();
-            return 0; // Handled
-        }
-        else if (wParam == VK_ESCAPE)
-        {
-            ShowWindow(pThis->m_hHistoryCombo, SW_HIDE);
-            ShowWindow(pThis->m_hResultEdit, SW_SHOW); // Show result field back
-            SetFocus(pThis->m_hExpressionEdit);
-            pThis->ResizeWindow(); // Изменяем размер окна при закрытии истории
-            pThis->UpdateLayout(); // Update layout to properly show result field
-            keyboardInUse = false; // Reset flag
-            lastMousePos = {-1, -1}; // Reset mouse tracking
-            return 0; // Handled
-        }
-        else if (wParam == VK_RETURN)
-        {
-            // Handle Enter key like selection
-            int sel = (int)SendMessage(hWnd, LB_GETCURSEL, 0, 0);
-            if (sel != LB_ERR && sel >= 0 && sel < (int)pThis->m_history.size())
+            // If dropdown is open, delete selected item
+            if (SendMessage(hWnd, CB_GETDROPPEDSTATE, 0, 0))
             {
-                pThis->LoadHistoryItem(sel);
-                ShowWindow(pThis->m_hHistoryCombo, SW_HIDE);
-                ShowWindow(pThis->m_hResultEdit, SW_SHOW); // Show result field back
-                SetFocus(pThis->m_hExpressionEdit);
-                pThis->EvaluateExpression();
-                pThis->ResizeWindow(); // Изменяем размер окна при закрытии истории
-                pThis->UpdateLayout(); // Update layout to properly show result field
-            }
-            keyboardInUse = false; // Reset flag
-            lastMousePos = {-1, -1}; // Reset mouse tracking
-            return 0; // Handled
-        }
-        else if (wParam == VK_UP || wParam == VK_DOWN)
-        {
-            // Let default handler process arrow keys first
-            LRESULT result = 0;
-            if (pThis->m_originalListBoxProc)
-            {
-                result = CallWindowProcA(pThis->m_originalListBoxProc, hWnd, message, wParam, lParam);
-            }
-            else
-            {
-                result = DefWindowProcA(hWnd, message, wParam, lParam);
-            }
-            return result; // Arrow keys have priority over mouse
-        }
-    }
-    else if (message == WM_MOUSEMOVE && pThis)
-    {
-        // Track mouse movement - allow mouse to take control after real movement
-        POINT currentPos = { LOWORD(lParam), HIWORD(lParam) };
-        
-        // If mouse actually moved, allow it to take control
-        if (lastMousePos.x != currentPos.x || lastMousePos.y != currentPos.y)
-        {
-            // If keyboard was used but mouse moved significantly, give control to mouse
-            if (keyboardInUse)
-            {
-                // Check if mouse moved more than just a tiny amount (avoid accidental movements)
-                int deltaX = abs(currentPos.x - lastMousePos.x);
-                int deltaY = abs(currentPos.y - lastMousePos.y);
-                if (deltaX > 2 || deltaY > 2) // More than 2 pixels movement
-                {
-                    keyboardInUse = false; // Mouse takes control
-                }
-            }
-            
-            if (!keyboardInUse)
-            {
-                // VCL-like behavior: mouse hover selects item immediately
-                int itemIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(currentPos.x, currentPos.y));
-                
-                if (HIWORD(itemIndex) == 0) // Valid item (HIWORD is 0 when point is in client area)
-                {
-                    int actualIndex = LOWORD(itemIndex);
-                    if (actualIndex >= 0 && actualIndex < (int)pThis->m_history.size())
-                    {
-                        // Select item under mouse cursor
-                        SendMessage(hWnd, LB_SETCURSEL, actualIndex, 0);
-                    }
-                }
-            }
-            
-            lastMousePos = currentPos; // Always update last position
-        }
-        
-        return 0; // Handled
-    }
-    else if (message == WM_LBUTTONDOWN && pThis)
-    {
-        keyboardInUse = false; // Mouse click always resets keyboard mode
-        
-        // VCL-like behavior: click selects and closes history
-        POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-        int itemIndex = (int)SendMessage(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
-        
-        if (HIWORD(itemIndex) == 0) // Valid item
-        {
-            int actualIndex = LOWORD(itemIndex);
-            if (actualIndex >= 0 && actualIndex < (int)pThis->m_history.size())
-            {
-                // Select and load the item
-                SendMessage(hWnd, LB_SETCURSEL, actualIndex, 0);
-                pThis->LoadHistoryItem(actualIndex);
-                ShowWindow(pThis->m_hHistoryCombo, SW_HIDE);
-                ShowWindow(pThis->m_hResultEdit, SW_SHOW);
-                SetFocus(pThis->m_hExpressionEdit);
-                pThis->EvaluateExpression();
-                pThis->UpdateLayout();
+                pThis->DeleteSelectedHistoryItem();
+                return 0; // Handled
             }
         }
-        lastMousePos = {-1, -1}; // Reset mouse tracking
-        return 0; // Handled
     }
     
-    if (pThis && pThis->m_originalListBoxProc)
+    if (pThis && pThis->m_originalComboBoxProc)
     {
-        return CallWindowProcA(pThis->m_originalListBoxProc, hWnd, message, wParam, lParam);
+        return CallWindowProcA(pThis->m_originalComboBoxProc, hWnd, message, wParam, lParam);
     }
     
     return DefWindowProcA(hWnd, message, wParam, lParam);
@@ -572,14 +450,6 @@ LRESULT CALLBACK WinApiCalc::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         }
         return DefWindowProc(hWnd, message, wParam, lParam);
     case WM_NCLBUTTONDOWN:
-        // Also try to catch non-client clicks
-        if (g_pApp && IsWindowVisible(g_pApp->m_hHistoryCombo))
-        {
-            // Convert screen coordinates to client coordinates
-            POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-            ScreenToClient(hWnd, &pt);
-            g_pApp->OnLButtonDown(pt.x, pt.y);
-        }
         return DefWindowProc(hWnd, message, wParam, lParam);
     case WM_KEYDOWN:
         if (g_pApp)
@@ -656,6 +526,12 @@ LRESULT CALLBACK WinApiCalc::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         }
         PostQuitMessage(0);
         break;
+    case WM_DELAYED_CLEAR_HISTORY:
+        if (g_pApp)
+        {
+            g_pApp->ClearHistoryCombo();
+        }
+        break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -679,29 +555,53 @@ void WinApiCalc::OnCreate()
     // Initialize Common Controls
     INITCOMMONCONTROLSEX icex;
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    icex.dwICC = ICC_WIN95_CLASSES;
+    icex.dwICC = ICC_WIN95_CLASSES | ICC_USEREX_CLASSES;
     InitCommonControlsEx(&icex);
 
-    // Create history button first
-    m_hHistoryButton = CreateWindowExA(
+    // Create ComboBox (replaces Edit + Button + ListBox)
+    // CBS_DROPDOWN allows editing. CBS_AUTOHSCROLL for long expressions.
+    m_hComboBox = CreateWindowExA(
         0,
-        "BUTTON", 
-        ">>",
-        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-        ScaleDPI(WINDOW_MIN_WIDTH - 27), // Moved 2 pixels left and made 2 pixels narrower
-        0,
-        ScaleDPI(23), 
-        ScaleDPI(CONTROL_HEIGHT),
+        "COMBOBOX", 
+        "",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL,
+        0, 0, // Position set in UpdateLayout
+        ScaleDPI(WINDOW_MIN_WIDTH), 
+        ScaleDPI(CONTROL_HEIGHT * 10), // Height includes dropdown
         m_hWnd, 
-        (HMENU)IDC_HISTORY_BUTTON, 
+        (HMENU)IDC_HISTORY_COMBO, 
         m_hInst, 
         nullptr);
 
+    if (!m_hComboBox)
+    {
+        MessageBoxA(m_hWnd, "Failed to create combo box control", "Error", MB_OK);
+        return;
+    }
+
+    // Get internal Edit control from ComboBox
+    COMBOBOXINFO cbi = { sizeof(COMBOBOXINFO) };
+    if (GetComboBoxInfo(m_hComboBox, &cbi))
+    {
+        m_hExpressionEdit = cbi.hwndItem;
+    }
+
+    if (!m_hExpressionEdit)
+    {
+        MessageBoxA(m_hWnd, "Failed to get expression edit control", "Error", MB_OK);
+        return;
+    }
+
+    // Subclass internal expression edit to handle Enter key and other shortcuts
+    m_originalEditProc = (WNDPROC)SetWindowLongPtrA(m_hExpressionEdit, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
+    SetWindowLongPtrA(m_hExpressionEdit, GWLP_USERDATA, (LONG_PTR)this);
+
+    // Subclass ComboBox itself to handle special keys if needed (e.g. Delete in dropdown)
+    m_originalComboBoxProc = (WNDPROC)SetWindowLongPtrA(m_hComboBox, GWLP_WNDPROC, (LONG_PTR)ComboBoxSubclassProc);
+    SetWindowLongPtrA(m_hComboBox, GWLP_USERDATA, (LONG_PTR)this);
+
     // Create result output field (multiline, readonly, white background)
     int resultY = GetControlHeight() + ScaleDPI(5); // Add extra 5px gap
-    char debugMsg[200];
-    sprintf_s(debugMsg, "OnCreate: GetControlHeight()=%d, resultY=%d, ScaleDPI(5)=%d", GetControlHeight(), resultY, ScaleDPI(5));
-    DebugLog(debugMsg);
     
     m_hResultEdit = CreateWindowExA(
         0, // Remove WS_EX_CLIENTEDGE for flat appearance
@@ -723,38 +623,9 @@ void WinApiCalc::OnCreate()
         return;
     }
 
-    // Subclass result edit to handle clicks when history is visible
+    // Subclass result edit
     m_originalResultEditProc = (WNDPROC)SetWindowLongPtrA(m_hResultEdit, GWLP_WNDPROC, (LONG_PTR)ResultEditSubclassProc);
     SetWindowLongPtrA(m_hResultEdit, GWLP_USERDATA, (LONG_PTR)this);
-
-    // Create history as an owned popup so it can extend beyond the main window bounds.
-    // Owner = m_hWnd so it will hide with the main window; WS_EX_TOOLWINDOW avoids taskbar entry.
-    m_hHistoryCombo = CreateWindowExA(
-        WS_EX_TOOLWINDOW,
-        "LISTBOX",
-        "",
-        WS_POPUP | LBS_NOTIFY | WS_VSCROLL | WS_BORDER,
-        0, // initial pos set by UpdateLayout (screen coords)
-        0,
-        ScaleDPI(WINDOW_MIN_WIDTH),
-        ScaleDPI(CONTROL_HEIGHT * 5),
-        m_hWnd, // owner window (keeps it tied to main window)
-        NULL,   // no menu handle for popup windows (do not pass control ID here)
-        m_hInst,
-        nullptr);
-
-    if (!m_hHistoryCombo)
-    {
-        MessageBoxA(m_hWnd, "Failed to create history listbox control", "Error", MB_OK);
-        return;
-    }
-
-    // Ensure the popup is initially hidden (CreateWindowEx with WS_POPUP may still be visible on some platforms)
-    ShowWindow(m_hHistoryCombo, SW_HIDE);
-
-    // Subclass history listbox to handle Del and Esc keys
-    m_originalListBoxProc = (WNDPROC)SetWindowLongPtrA(m_hHistoryCombo, GWLP_WNDPROC, (LONG_PTR)ListBoxSubclassProc);
-    SetWindowLongPtrA(m_hHistoryCombo, GWLP_USERDATA, (LONG_PTR)this);
 
     // Set monospaced font for controls
     HFONT hFont = CreateFontA(
@@ -765,13 +636,14 @@ void WinApiCalc::OnCreate()
     if (hFont)
     {
         SendMessage(m_hResultEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
-        SendMessage(m_hHistoryCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(m_hComboBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessage(m_hExpressionEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
 
     // Get menu handle
     m_hMenu = ::GetMenu(m_hWnd);
     
-    // Apply saved menu visibility (MNU flag): when MNU is set, menu should be hidden
+    // Apply saved menu visibility (MNU flag)
     ::SetMenu(m_hWnd, (m_options & MNU) ? NULL : m_hMenu);
     m_menuVisible = ((m_options & MNU) == 0);
     DrawMenuBar(m_hWnd);
@@ -786,40 +658,6 @@ void WinApiCalc::OnCreate()
     // Set window opacity
     SetWindowOpacity(m_opacity);
     
-    // Create expression input LAST so it draws on top
-    int inputHeight = GetControlHeight();
-    sprintf_s(debugMsg, "OnCreate: Input height=%d (GetControlHeight=%d)", inputHeight, GetControlHeight());
-    DebugLog(debugMsg);
-    
-    m_hExpressionEdit = CreateWindowExA(
-        WS_EX_CLIENTEDGE,
-        "EDIT", 
-        "",
-        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
-        0, 0, // No margins
-        ScaleDPI(WINDOW_MIN_WIDTH - 30), // Leave space for button, no margins
-        inputHeight, // Dynamic height based on font size
-        m_hWnd, 
-        (HMENU)IDC_EXPRESSION_EDIT, 
-        m_hInst, 
-        nullptr);
-
-    if (!m_hExpressionEdit)
-    {
-        MessageBoxA(m_hWnd, "Failed to create expression edit control", "Error", MB_OK);
-        return;
-    }
-
-    // Subclass expression edit to handle Enter key
-    m_originalEditProc = (WNDPROC)SetWindowLongPtrA(m_hExpressionEdit, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
-    SetWindowLongPtrA(m_hExpressionEdit, GWLP_USERDATA, (LONG_PTR)this);
-
-    // Set font for expression edit too
-    if (hFont)
-    {
-        SendMessage(m_hExpressionEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
-    }
-
     // Set focus to expression edit
     SetFocus(m_hExpressionEdit);
     
@@ -830,6 +668,7 @@ void WinApiCalc::OnCreate()
     if (!m_currentExpression.empty())
     {
         SetWindowTextA(m_hExpressionEdit, m_currentExpression.c_str());
+        SetWindowTextA(m_hComboBox, m_currentExpression.c_str()); // Ensure ComboBox also knows
         // Set cursor to end of text without selection
         SendMessage(m_hExpressionEdit, EM_SETSEL, m_currentExpression.length(), m_currentExpression.length());
     }
@@ -837,15 +676,8 @@ void WinApiCalc::OnCreate()
     // Always update title to reflect current expression (even if empty)
     OnExpressionChanged();
     
-    // Populate history combo (already in correct order - latest first)
-    UpdateHistoryCombo();
-    
     // Set fixed window size immediately at creation
     ResizeWindow();
-        
-// Debug logging for history control was removed from OnCreate because yPos/displayLines are
-// only defined inside UpdateLayout(). Detailed logs for UpdateLayout are added in that
-// function where those variables are in scope.
 }
 
 void WinApiCalc::OnCommand(WPARAM wParam)
@@ -996,57 +828,58 @@ void WinApiCalc::OnCommand(WPARAM wParam)
         break;
 
     // Control notifications
-    case IDC_EXPRESSION_EDIT:
-        if (wmEvent == EN_CHANGE)
-        {
-            OnExpressionChanged();
-        }
-        break;
-    case IDC_HISTORY_BUTTON:
-        {
-            // Toggle history combo visibility
-            BOOL isVisible = IsWindowVisible(m_hHistoryCombo);
-            ShowWindow(m_hHistoryCombo, isVisible ? SW_HIDE : SW_SHOW);
-            if (!isVisible)
-            {
-                // Set focus to history listbox and select first item
-                SetFocus(m_hHistoryCombo);
-                if (SendMessage(m_hHistoryCombo, LB_GETCOUNT, 0, 0) > 0)
-                {
-                    SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0); // Select first item
-                }
-                // Hide result field when history is visible
-                //ShowWindow(m_hResultEdit, SW_HIDE);
-            }
-            else
-            {
-                // Show result field when history is hidden
-                ShowWindow(m_hResultEdit, SW_SHOW);
-                SetFocus(m_hExpressionEdit);
-            }
-            ResizeWindow(); // Изменяем размер окна при переключении истории
-            UpdateLayout();
-        }
-        break;
+    // Control notifications
+    // IDC_EXPRESSION_EDIT handler is not used for ComboBox internal edit (ID 1001)
+    // case IDC_EXPRESSION_EDIT:
+    //    if (wmEvent == EN_CHANGE)
+    //    {
+    //        OnExpressionChanged();
+    //    }
+    //    break;
     case IDC_HISTORY_COMBO:
-        if (wmEvent == LBN_SELCHANGE)
+        // {
+        //     char debugMsg[128];
+        //     sprintf_s(debugMsg, "OnCommand: IDC_HISTORY_COMBO, code=%d\n", HIWORD(wParam));
+        //     OutputDebugStringA(debugMsg);
+        // }
+        
+        if (wmEvent == CBN_SELENDOK)
         {
-            // Just handle selection change - don't close history yet
-            // History will close on Enter key or double-click
-        }
-        else if (wmEvent == LBN_DBLCLK)
-        {
-            int sel = (int)SendMessage(m_hHistoryCombo, LB_GETCURSEL, 0, 0);
-            if (sel != LB_ERR && sel >= 0 && sel < (int)m_history.size())
+            // OutputDebugStringA("CBN_SELENDOK received\n");
+            int index = (int)SendMessage(m_hComboBox, CB_GETCURSEL, 0, 0);
+            // char debugMsg[128];
+            // sprintf_s(debugMsg, "CBN_SELENDOK: index=%d\n", index);
+            // OutputDebugStringA(debugMsg);
+            
+            if (index != CB_ERR)
             {
-                LoadHistoryItem(sel);
-                ShowWindow(m_hHistoryCombo, SW_HIDE); // Закрываем историю
-                ShowWindow(m_hResultEdit, SW_SHOW); // Show result field back
-                SetFocus(m_hExpressionEdit); // Возвращаем фокус
-                EvaluateExpression(); // Сразу пересчитываем выражение
-                ResizeWindow(); // Изменяем размер окна при закрытии истории
-                UpdateLayout(); // Update layout to properly show result field
+                LoadHistoryItem(index);
+                // EvaluateExpression(); // LoadHistoryItem now calls OnExpressionChanged which calls EvaluateExpression
             }
+        }
+        else if (wmEvent == CBN_DROPDOWN)
+        {
+            // OutputDebugStringA("CBN_DROPDOWN\n");
+            // Populate history when dropdown opens
+            PopulateHistoryCombo();
+        }
+        else if (wmEvent == CBN_CLOSEUP)
+        {
+            // OutputDebugStringA("CBN_CLOSEUP\n");
+            // Clear history when dropdown closes to prevent autocomplete
+            // Use PostMessage to avoid interfering with selection processing (CBN_SELENDOK/CANCEL)
+            PostMessage(m_hWnd, WM_DELAYED_CLEAR_HISTORY, 0, 0);
+        }
+        else if (wmEvent == CBN_EDITCHANGE)
+        {
+            if (!m_isUpdatingHistory)
+            {
+                OnExpressionChanged();
+            }
+        }
+        else if (wmEvent == CBN_SELCHANGE)
+        {
+             // OutputDebugStringA("CBN_SELCHANGE\n");
         }
         break;
     case ID_CALC_VIEWVARIABLES:
@@ -1058,7 +891,7 @@ void WinApiCalc::OnCommand(WPARAM wParam)
 }
 void WinApiCalc::OnSize(int width, int height) 
 {
-    if (m_hExpressionEdit && m_hResultEdit && m_hHistoryCombo)
+    if (m_hExpressionEdit && m_hResultEdit && m_hComboBox)
     {
         UpdateLayout();
     }
@@ -1082,6 +915,10 @@ void WinApiCalc::OnExpressionChanged()
     m_currentExpression = buffer;
     
     // Update window title with current expression
+    // OutputDebugStringA("OnExpressionChanged: text='");
+    // OutputDebugStringA(m_currentExpression.c_str());
+    // OutputDebugStringA("'\n");
+    
     std::string title;
     if (m_currentExpression.empty())
     {
@@ -1159,6 +996,8 @@ void WinApiCalc::EvaluateExpression()
         SetWindowTextA(m_hResultEdit, "Calculator engine not initialized");
         return;
     }
+    
+    // OutputDebugStringA("EvaluateExpression: starting\n");
     
     try {
         // Prepare expression buffer
@@ -1244,6 +1083,10 @@ void WinApiCalc::EvaluateExpression()
         if (m_resultLines > 20) m_resultLines = 20; // Increased limit for better display
         
         SetWindowTextA(m_hResultEdit, result.c_str());
+        
+        // OutputDebugStringA("EvaluateExpression: result set to '");
+        // OutputDebugStringA(result.c_str());
+        // OutputDebugStringA("'\n");
         
         // Resize window to fit content
         ResizeWindow();
@@ -1367,32 +1210,7 @@ void WinApiCalc::OnKeyDown(WPARAM key)
 
 void WinApiCalc::OnLButtonDown(int x, int y)
 {
-    // Check if history window is visible
-    if (IsWindowVisible(m_hHistoryCombo))
-    {
-        // Get history window rect in client coordinates
-        RECT historyRect;
-        GetWindowRect(m_hHistoryCombo, &historyRect);
-        ScreenToClient(m_hWnd, (POINT*)&historyRect.left);
-        ScreenToClient(m_hWnd, (POINT*)&historyRect.right);
-        
-        // Get history button rect in client coordinates  
-        RECT buttonRect;
-        GetWindowRect(m_hHistoryButton, &buttonRect);
-        ScreenToClient(m_hWnd, (POINT*)&buttonRect.left);
-        ScreenToClient(m_hWnd, (POINT*)&buttonRect.right);
-        
-        POINT clickPoint = {x, y};
-        
-        if (!PtInRect(&historyRect, clickPoint) && !PtInRect(&buttonRect, clickPoint))
-        {
-            // Close history window
-            ShowWindow(m_hHistoryCombo, SW_HIDE);
-            ShowWindow(m_hResultEdit, SW_SHOW);
-            SetFocus(m_hExpressionEdit);
-            UpdateLayout();
-        }
-    }
+    // Standard ComboBox handles closing on outside click automatically.
 }
 
 void WinApiCalc::UpdateMenuChecks()
@@ -1472,7 +1290,7 @@ void WinApiCalc::SetBinaryWidth(int width)
 
 void WinApiCalc::UpdateLayout()
 {
-    DebugLog("=== UpdateLayout() called ===");
+    // DebugLog("=== UpdateLayout() called ===");
     
     RECT clientRect;
     GetClientRect(m_hWnd, &clientRect);
@@ -1480,169 +1298,82 @@ void WinApiCalc::UpdateLayout()
     int width = clientRect.right - clientRect.left;
     int controlWidth = width; // No margins
     
-    // Expression edit (with space for button)
-    if (m_hExpressionEdit)
+    // Position ComboBox (Expression Input)
+    if (m_hComboBox)
     {
-        int inputHeight = GetControlHeight(); // Safe to use always
-        char debugMsg[200];
-        sprintf_s(debugMsg, "UpdateLayout: Expression edit - inputHeight=%d", inputHeight);
-        DebugLog(debugMsg);
+        int inputHeight = GetControlHeight(); // This affects the edit part height usually
+        // For ComboBox, the height parameter includes the dropdown. 
+        // We set it to something large enough for the dropdown.
+        // The edit part height is determined by the font.
         
-        SetWindowPos(m_hExpressionEdit, nullptr,
+        SetWindowPos(m_hComboBox, nullptr,
             0, 0, // No margins
-            controlWidth - ScaleDPI(30), inputHeight,
+            controlWidth, ScaleDPI(CONTROL_HEIGHT * 7), // Width and total height (including dropdown)
             SWP_NOZORDER);
+            
+        // Note: We don't need to position m_hExpressionEdit manually as it is a child of m_hComboBox
     }
     
-    // History button
-    if (m_hHistoryButton)
-    {
-        int buttonHeight = GetControlHeight(); // Safe to use always
-        
-        // Scale button width based on font size when font is ready
-        int buttonWidth = ScaleDPI(23); // Default width
-        if (m_fontSize != 0) {
-            // Scale button width based on font size for better proportions
-            int fontSizeAbs = abs(m_fontSize);
-            buttonWidth = max(ScaleDPI(15), ScaleDPI(23 * fontSizeAbs / 12)); // Scale relative to 12px default
-            if (buttonWidth > ScaleDPI(40)) buttonWidth = ScaleDPI(40); // Max width limit
-        }
-        
-        SetWindowPos(m_hHistoryButton, nullptr,
-            width - buttonWidth - 2, 0, // Adjust position for scaled width
-            buttonWidth, buttonHeight,
-            SWP_NOZORDER);
-    }
-    
-    BOOL historyVisible = IsWindowVisible(m_hHistoryCombo);
-    
-    // Result edit - show only if history is not visible
+    // Result edit
     if (m_hResultEdit)
     {
-        if (!historyVisible)
+        // Position and size result edit
+        // It should be below the ComboBox. 
+        // We need to know the height of the ComboBox edit part. 
+        // GetWindowRect returns the full height including dropdown when open, which pushes result off-screen.
+        // We use the cached closed height if available, or measure it if not dropped.
+        
+        int comboHeight = 0;
+        bool isDropped = (SendMessage(m_hComboBox, CB_GETDROPPEDSTATE, 0, 0) != 0);
+        
+        if (!isDropped)
         {
-            // Position and size result edit (history hidden)
-            int rowHeight = GetControlHeight();
-            int baseFontSize = 16;
-            int currentFontSize = abs(m_fontSize);
-            if (m_fontSize == 0) currentFontSize = baseFontSize;
-            int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize));
-            int yPos = rowHeight + gap;
-            int padding = ScaleDPI(4);
-            int resultHeight = rowHeight * m_resultLines + padding;
-
-            SetWindowPos(m_hResultEdit, nullptr,
-                0, yPos,
-                controlWidth, resultHeight,
-                SWP_NOZORDER | SWP_SHOWWINDOW);
-
-            // Ensure history is hidden when not in use
-            if (IsWindowVisible(m_hHistoryCombo))
-                ShowWindow(m_hHistoryCombo, SW_HIDE);
-
-// (end of not-history-visible branch)
-
-            // Measure and store actual client height of result edit to avoid mismatch
-            RECT wr={0}, cr={0};
-            if (m_hResultEdit) {
-                GetWindowRect(m_hResultEdit, &wr);
-                GetClientRect(m_hResultEdit, &cr);
-                m_lastResultClientHeight = cr.bottom - cr.top;
-                // Compute internal padding = measured client height - (rowHeight * reportedLines)
-                int reportedLinesLocal = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
-                if (reportedLinesLocal <= 0) reportedLinesLocal = m_resultLines;
-                int idealHeight = GetControlHeight() * reportedLinesLocal;
-                m_resultEditInternalPadding = m_lastResultClientHeight - idealHeight;
-                if (m_resultEditInternalPadding < 0) m_resultEditInternalPadding = 0;
-                // horizontal padding = control width - client width
-                int winW = wr.right - wr.left;
-                int cliW = cr.right - cr.left;
-                m_resultEditInternalHorzPadding = max(0, winW - cliW);
-            }
-            // Log the freshly measured client height for debugging
+            RECT comboRect;
+            if (GetWindowRect(m_hComboBox, &comboRect))
             {
-                char mlog[128];
-                sprintf_s(mlog, sizeof(mlog), "UpdateLayout: measured m_lastResultClientHeight=%d", m_lastResultClientHeight);
-                DebugLog(mlog);
+                comboHeight = comboRect.bottom - comboRect.top;
+                if (comboHeight > 0) m_lastComboHeight = comboHeight;
             }
-
-#if ENABLE_DEBUG_LOG
-            // Log result edit metrics: window/client rect and reported line count
-            {
-                RECT wr={0}, cr={0};
-                if (m_hResultEdit) {
-                    GetWindowRect(m_hResultEdit, &wr);
-                    GetClientRect(m_hResultEdit, &cr);
-                }
-                int reportedLines = 0;
-                if (m_hResultEdit) reportedLines = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
-                char rdbg[256];
-                sprintf_s(rdbg, sizeof(rdbg), "UpdateLayout(DEBUG): ResultEdit WindowRect=(%d,%d)-(%d,%d) ClientRect=(%d,%d)-(%d,%d) yPos=%d resultHeight=%d reportedLines=%d m_resultLines=%d", 
-                    wr.left, wr.top, wr.right, wr.bottom, cr.left, cr.top, cr.right, cr.bottom, yPos, resultHeight, reportedLines, m_resultLines);
-                DebugLog(rdbg);
-            }
-#endif
         }
-        else
-        {
-            // Hide result field when history is visible
-            //ShowWindow(m_hResultEdit, SW_HIDE);
-            // Keep result field visible; history popup will be shown on top.
-            // Avoid hiding m_hResultEdit to prevent clearing the client area.
+        
+        // If dropped or measurement failed, use cached height
+        if (comboHeight <= 0) comboHeight = m_lastComboHeight;
+        
+        // Fallback if no cached height yet
+        if (comboHeight <= 0) comboHeight = GetControlHeight() + ScaleDPI(6);
 
+        int resultY = comboHeight + ScaleDPI(1); // Reduced gap from 5 to 1 to account for ComboBox height
+        
+        int rowHeight = GetControlHeight();
+        int padding = ScaleDPI(4);
+        int resultHeight = rowHeight * m_resultLines + padding;
+
+        SetWindowPos(m_hResultEdit, nullptr,
+            0, resultY,
+            controlWidth, resultHeight,
+            SWP_NOZORDER | SWP_SHOWWINDOW);
+
+        // Measure and store actual client height of result edit to avoid mismatch
+        RECT wr={0}, cr={0};
+        if (m_hResultEdit) {
+            GetWindowRect(m_hResultEdit, &wr);
+            GetClientRect(m_hResultEdit, &cr);
+            m_lastResultClientHeight = cr.bottom - cr.top;
+            // Compute internal padding = measured client height - (rowHeight * reportedLines)
+            int reportedLinesLocal = (int)SendMessageA(m_hResultEdit, EM_GETLINECOUNT, 0, 0);
+            if (reportedLinesLocal <= 0) reportedLinesLocal = m_resultLines;
+            int idealHeight = GetControlHeight() * reportedLinesLocal;
+            m_resultEditInternalPadding = m_lastResultClientHeight - idealHeight;
+            if (m_resultEditInternalPadding < 0) m_resultEditInternalPadding = 0;
+            // horizontal padding = control width - client width
+            int winW = wr.right - wr.left;
+            int cliW = cr.right - cr.left;
+            m_resultEditInternalHorzPadding = max(0, winW - cliW);
         }
     }
-    
-    // History listbox - show in place of result field when visible
-    if (m_hHistoryCombo && historyVisible)
-    {
-        // Compute popup size: min 5 visible lines, cap to avoid overly tall popup
-        int rowHeight = GetControlHeight();
-        int baseFontSize = 16;
-        int currentFontSize = abs(m_fontSize);
-        if (m_fontSize == 0) currentFontSize = baseFontSize;
-        int gap = ScaleDPI(max(2, (currentFontSize * 4) / baseFontSize));
-        int yPos = rowHeight + gap;
-
-        const int minVisibleLines = 5;
-        const int maxVisibleLines = 7; // cap for popup height
-        int requestedLines = max(m_resultLines, minVisibleLines);
-        int visibleLines = min(requestedLines, maxVisibleLines);
-        int padding = ScaleDPI(4);
-        int historyHeight = rowHeight * visibleLines + padding;
-
-        // Position the popup in screen coords and show it
-        POINT pt = { 0, yPos };
-        ClientToScreen(m_hWnd, &pt);
-        int popupWidth = controlWidth;
-        SetWindowPos(m_hHistoryCombo, HWND_TOP,
-            pt.x, pt.y,
-            popupWidth, historyHeight,
-            SWP_SHOWWINDOW);
-
-        // Ensure history has focus and selection
-        SetFocus(m_hHistoryCombo);
-        if (SendMessage(m_hHistoryCombo, LB_GETCURSEL, 0, 0) == LB_ERR)
-            SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0);
-    }        
-#if ENABLE_DEBUG_LOG
-        // Log history control metrics for debugging (inside correct scope where yPos/displayLines are defined)
-        {
-            RECT wr={0}, cr={0};
-            if (m_hHistoryCombo) {
-                GetWindowRect(m_hHistoryCombo, &wr);
-                GetClientRect(m_hHistoryCombo, &cr);
-            }
-            int itemCount = 0;
-            if (m_hHistoryCombo) itemCount = (int)SendMessageA(m_hHistoryCombo, LB_GETCOUNT, 0, 0);
-            char hdbg[256];
-            sprintf_s(hdbg, sizeof(hdbg), "UpdateLayout(DEBUG): HistoryCombo WindowRect=(%d,%d)-(%d,%d) ClientRect=(%d,%d)-(%d,%d) yPos=%d historyHeight=%d displayLines=%d itemCount=%d", 
-                wr.left, wr.top, wr.right, wr.bottom, cr.left, cr.top, cr.right, cr.bottom, yPos, historyHeight, displayLines, itemCount);
-            DebugLog(hdbg);
-        }
-#endif
-    
 }
+
+
 
 int WinApiCalc::GetCharWidth()
 {
@@ -1775,13 +1506,7 @@ void WinApiCalc::UpdateFont()
     {
         SendMessage(m_hExpressionEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
         SendMessage(m_hResultEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
-        SendMessage(m_hHistoryCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
-        
-        // Update history button font too
-        if (m_hHistoryButton)
-        {
-            SendMessage(m_hHistoryButton, WM_SETFONT, (WPARAM)hFont, TRUE);
-        }
+        SendMessage(m_hComboBox, WM_SETFONT, (WPARAM)hFont, TRUE);
     }
     
     // Пересчитываем размер окна с новым шрифтом
@@ -2268,7 +1993,7 @@ void WinApiCalc::LoadHistory()
         RegCloseKey(hKey);
     }
     
-    UpdateHistoryCombo();
+
 }
 
 void WinApiCalc::SaveHistory() 
@@ -2325,24 +2050,25 @@ void WinApiCalc::AddToHistory(const std::string& expression)
         }
     }
     
-    // Shift all items by one position (simple array behavior)
+    // Add to vector
     if (m_history.size() < MAX_HISTORY)
+    m_history.insert(m_history.begin(), expression);
+    
+    // Limit history size
+    if (m_history.size() > MAX_HISTORY)
     {
-        // If less than 100 items, just insert at beginning
-        m_history.insert(m_history.begin(), expression);
-    }
-    else
-    {
-        // If 100 items, shift all items: last gets removed, others move by 1
-        for (int i = MAX_HISTORY - 1; i > 0; i--)
-        {
-            m_history[i] = m_history[i-1];
-        }
-        m_history[0] = expression; // Put new item at position 0
+        m_history.pop_back();
     }
     
-    UpdateHistoryCombo();
-    // Убираем SaveHistory() - будем сохранять только при выходе
+    // Update ComboBox - REMOVED
+    // We use populate-on-demand strategy (PopulateHistoryCombo on dropdown).
+    // Adding items here would make PopulateHistoryCombo think the list is already populated (count > 0),
+    // resulting in a list containing only this new item until the next close/clear cycle.
+    // if (m_hComboBox)
+    // {
+    //    SendMessageA(m_hComboBox, CB_INSERTSTRING, 0, (LPARAM)expression.c_str());
+    //    ...
+    // }
 }
 
 void WinApiCalc::LoadHistoryItem(int index) 
@@ -2353,8 +2079,17 @@ void WinApiCalc::LoadHistoryItem(int index)
         return;
     }
     
-    // Direct mapping: listbox index = vector index (0 = newest item)
+    // Direct mapping: combo index = vector index (0 = newest item)
     const std::string& expression = m_history[index];
+    
+    // Update window title with current expression
+    // OutputDebugStringA("LoadHistoryItem: index=");
+    // char idxStr[32];
+    // sprintf_s(idxStr, "%d", index);
+    // OutputDebugStringA(idxStr);
+    // OutputDebugStringA(", expr='");
+    // OutputDebugStringA(expression.c_str());
+    // OutputDebugStringA("'\n");
     
     // Проверяем, что выражение не пустое
     if (expression.empty())
@@ -2363,10 +2098,12 @@ void WinApiCalc::LoadHistoryItem(int index)
     }
     
     // Устанавливаем выражение в поле ввода
+    m_isUpdatingHistory = true;
     SetWindowTextA(m_hExpressionEdit, expression.c_str());
+    m_isUpdatingHistory = false;
     
-    // Обновляем текущее выражение
-    m_currentExpression = expression;
+    // Force update of title and result
+    OnExpressionChanged();
     
     // Set cursor to end of text without selection
     SendMessage(m_hExpressionEdit, EM_SETSEL, expression.length(), expression.length());
@@ -2374,50 +2111,27 @@ void WinApiCalc::LoadHistoryItem(int index)
 
 void WinApiCalc::DeleteSelectedHistoryItem()
 {
-    if (!m_hHistoryCombo) return;
+    if (!m_hComboBox) return;
     
-    int sel = (int)SendMessage(m_hHistoryCombo, LB_GETCURSEL, 0, 0);
-    if (sel != LB_ERR && sel >= 0 && sel < (int)m_history.size())
+    // Get dropped state to know if we are in the list
+    if (SendMessage(m_hComboBox, CB_GETDROPPEDSTATE, 0, 0))
     {
-        // Direct mapping: listbox index = vector index
-        // Remove from vector - this automatically "lifts up" the list
-        m_history.erase(m_history.begin() + sel);
-        
-        // Update listbox completely
-        UpdateHistoryCombo();
-        
-        // If history is empty, close history window
-        if (m_history.empty())
+        int sel = (int)SendMessage(m_hComboBox, CB_GETCURSEL, 0, 0);
+        if (sel != CB_ERR && sel >= 0 && sel < (int)m_history.size())
         {
-            ShowWindow(m_hHistoryCombo, SW_HIDE);
-            ShowWindow(m_hResultEdit, SW_SHOW);
-            SetFocus(m_hExpressionEdit);
-            UpdateLayout();
-            return;
+            // Remove from vector
+            m_history.erase(m_history.begin() + sel);
+            
+            // Remove from ComboBox
+            SendMessage(m_hComboBox, CB_DELETESTRING, sel, 0);
+            
+            // If history is empty, close dropdown
+            if (m_history.empty())
+            {
+                SendMessage(m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
+                return;
+            }
         }
-        
-        // Set selection to same position if possible, otherwise select previous item
-        int newSel = sel;
-        if (newSel >= (int)m_history.size() && !m_history.empty())
-        {
-            newSel = (int)m_history.size() - 1; // Select last item
-        }
-        
-        // Set selection in listbox
-        if (newSel >= 0 && newSel < (int)m_history.size())
-        {
-            SendMessage(m_hHistoryCombo, LB_SETCURSEL, newSel, 0);
-        }
-        else if (!m_history.empty())
-        {
-            // If calculation above failed, just select first item
-            SendMessage(m_hHistoryCombo, LB_SETCURSEL, 0, 0);
-        }
-        
-        // Ensure focus stays on history listbox
-        SetFocus(m_hHistoryCombo);
-        
-        // Убираем SaveHistory() - будем сохранять только при выходе
     }
 }
 
@@ -2513,19 +2227,67 @@ void WinApiCalc::Initialize(HWND hwnd)
     UpdateLayout();
 }
 
-void WinApiCalc::UpdateHistoryCombo()
+void WinApiCalc::PopulateHistoryCombo()
 {
-    if (!m_hHistoryCombo) return;
+    if (!m_hComboBox) return;
     
-    // Clear listbox
-    SendMessageA(m_hHistoryCombo, LB_RESETCONTENT, 0, 0);
+    // If already populated, do nothing
+    if (SendMessage(m_hComboBox, CB_GETCOUNT, 0, 0) > 0)
+    {
+        return;
+    }
     
-    // Add history items in direct order: vector[0] = newest = shows first in listbox
-    // Since vector is already ordered with newest at index 0, just add them sequentially
+    m_isUpdatingHistory = true;
+    
+    // char debugMsg[256];
+    // sprintf_s(debugMsg, "PopulateHistoryCombo: populating %zu items\n", m_history.size());
+    // OutputDebugStringA(debugMsg);
+    
+    // Add history items
     for (size_t i = 0; i < m_history.size(); ++i)
     {
-        SendMessageA(m_hHistoryCombo, LB_ADDSTRING, 0, (LPARAM)m_history[i].c_str());
+        SendMessageA(m_hComboBox, CB_ADDSTRING, 0, (LPARAM)m_history[i].c_str());
     }
+    
+    m_isUpdatingHistory = false;
+}
+
+void WinApiCalc::ClearHistoryCombo()
+{
+    if (!m_hComboBox) return;
+    
+    m_isUpdatingHistory = true;
+    
+    // Save current text and selection
+    char buffer[2048];
+    GetWindowTextA(m_hComboBox, buffer, sizeof(buffer)); // Use ComboBox handle for robustness
+    
+    // OutputDebugStringA("ClearHistoryCombo: captured text='");
+    // OutputDebugStringA(buffer);
+    // OutputDebugStringA("'\n");
+    
+    DWORD dwStart = 0, dwEnd = 0;
+    if (m_hExpressionEdit)
+    {
+        SendMessage(m_hExpressionEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    }
+    
+    // Clear combo (this will clear the edit text too)
+    SendMessageA(m_hComboBox, CB_RESETCONTENT, 0, 0);
+    
+    // Restore text and selection
+    SetWindowTextA(m_hComboBox, buffer); // Use ComboBox handle
+    if (m_hExpressionEdit)
+    {
+        SendMessage(m_hExpressionEdit, EM_SETSEL, dwStart, dwEnd);
+    }
+    
+    m_isUpdatingHistory = false;
+    
+    // Force layout update and repaint to ensure result is visible
+    ResizeWindow();
+    InvalidateRect(m_hWnd, nullptr, TRUE);
+    UpdateWindow(m_hWnd);
 }
 
 void WinApiCalc::ResizeWindow() 
@@ -2557,14 +2319,8 @@ void WinApiCalc::ResizeWindow()
     int inputHeight = rowHeight; // Use safe GetControlHeight
     
     // Проверяем, показывается ли история - для истории нужно минимум 5 строк
-    BOOL historyVisible = m_hHistoryCombo && IsWindowVisible(m_hHistoryCombo);
-    int displayLines;
-    
-    if (historyVisible) {
-        displayLines = max(m_resultLines, 5); // Минимум 5 строк для истории
-    } else {
-        displayLines = m_resultLines;
-    }
+    // With ComboBox, the dropdown floats, so we don't need to reserve space in the window.
+    int displayLines = m_resultLines;
     
     int resultHeight = rowHeight * displayLines;
     
@@ -2654,11 +2410,6 @@ void WinApiCalc::ResizeWindow()
 
     int clientHeight = inputHeight + gap + computedResultClientHeight;
     
-    char debugMsg[200];
-    sprintf_s(debugMsg, "ResizeWindow: inputHeight=%d, gap=%d, resultHeight=%d, padding=%d, total=%d", 
-              inputHeight, gap, resultHeight, padding, clientHeight);
-    DebugLog(debugMsg);
-    // Detailed debug: log computed parameters and menu state
 #if ENABLE_DEBUG_LOG
     {
         char dbg2[512];

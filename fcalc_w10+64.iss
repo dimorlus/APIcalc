@@ -1,11 +1,10 @@
 ; -- TesterAll.iss --
-
 [Setup]
 AppName=fcalc
 AppVerName=fcalc (Scientific formula calculator) 1.0 files
 VersionInfoVersion=1.0.0.0
 AppContact=http://dorlov.no-ip.com
-DefaultDirName={commonpf64}\FC
+DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc
 UninstallDisplayIcon={app}\fcalc.exe
 LicenseFile=fclic.txt
@@ -15,6 +14,9 @@ OutputDir=Setup
 OutputBaseFilename=fcalc_w10+64_setup
 CreateUninstallRegKey=yes
 PrivilegesRequired=admin
+UsedUserAreasWarning=no
+ArchitecturesAllowed=x86 x64
+ArchitecturesInstallIn64BitMode=x64
 
 [Types]
 Name: "custom"; Description: "custom"; Flags:iscustom

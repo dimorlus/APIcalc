@@ -1,5 +1,7 @@
 # WinAPI Calculator
 
+[Русская версия / Russian version](README_RU.md)
+
 A scientific calculator application built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, and advanced mathematical functions.
 
 ## Features
@@ -14,6 +16,7 @@ A scientific calculator application built using pure Win32 API without MFC depen
 - **Configurable Binary Width**: Choose binary display width from 8 to 64 bits
 - **Variables Dialog**: View and manage calculation variables
 - **Customizable Options**: Case sensitivity, forced float mode, ESC minimization, opacity control
+- **Implicit Multiplication**: Optionally omit multiplication operator in common cases
 
 ## Supported Functions
 
@@ -80,7 +83,44 @@ sin(pi/2)
 sqrt(16) + log(100)
 2^3 * e
 (5 + 3) / (2 - 1)
+
+# With Implicit Multiplication enabled:
+2sin(pi/2)          # Same as 2 * sin(pi/2) = 2
+3(4+5)              # Same as 3 * (4+5) = 27
+(1+2)(3+4)          # Same as (1+2) * (3+4) = 21
+2PI                 # Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
+3E                  # Same as 3 * E ≈ 8.15 (uppercase E to avoid exponent notation)
 ```
+
+### Implicit Multiplication
+
+When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*` operator in these common cases:
+
+1. **Number before function**: `2sin(x)` → `2 * sin(x)`
+2. **Number before parenthesis**: `3(4+5)` → `3 * (4+5)`
+3. **Parenthesis after parenthesis**: `(1+2)(3+4)` → `(1+2) * (3+4)`
+4. **Number before variable/constant**: `2PI` → `2 * PI` (uppercase recommended)
+
+**Important notes about scientific suffixes and imaginary unit:**
+
+- This feature is **disabled by default** — enable it via **Calc → Implicit multiplication** menu.
+- **Scientific suffixes have highest priority**: Single-letter suffixes (k, M, G, m, u, n, **p**, f, a, etc.) are recognized first if followed by space, operator, or end of expression.
+  - `3k` → `3×10³` = 3000 (kilo)
+  - `3p` → `3×10⁻¹²` = 3e-12 (pico)
+  - `3p+5` → `3×10⁻¹² + 5` (pico suffix applies)
+  
+- **Lowercase `i` and `j` are reserved for imaginary unit**: They are recognized **after** scientific suffixes.
+  - `5i` → `0+5i` (imaginary number, not `5 * i` variable)
+  - `5j` → `0+5j` (alternative imaginary unit notation)
+  - `3pi` → `0+3e-12i` (interpreted as 3 pico + imaginary unit `i`)
+  
+- **Use uppercase for variables to avoid conflicts**:
+  - `3PI` → `3 * PI` ≈ 9.42 (implicit multiplication with PI constant)
+  - `3pI` → `3 * pI` (also works: `p` followed by uppercase `I` avoids pico suffix)
+  - `5I` → `5 * I` (uppercase `I` as variable, not imaginary unit)
+  - `2E` → `2 * E` ≈ 5.44 (uppercase `E` as constant, not exponent notation)
+
+**Recommended naming convention**: Use **UPPERCASE** for constants/variables to avoid conflicts with scientific suffixes and imaginary unit (e.g., `PI`, `E`, `PHI`, `X`, `Y`, `Z`).
 
 ## Keyboard Shortcuts
 
@@ -93,14 +133,16 @@ sqrt(16) + log(100)
 
 ### Calc
 
-- Pas style: Toggle pascal-style syntax
-- Case sensitive: Toggle case sensitivity
-- Forced float: Force floating-point results
+- **Pas style**: Toggle Pascal-like syntax (use `^` for power, `:=` for assignment)
+- **Case sensitive**: Toggle case sensitivity for variables/functions
+- **Forced float**: Force all results to floating-point format
+- **Implicit multiplication**: Allow omitting `*` operator (e.g., `2sin(x)`, `3PI`)
+- **ESC minimized**: Minimize window on ESC key
+- **Always on top**: Keep calculator window on top of other windows
+- **Opacity**: Adjust window transparency
 - Format submenu: Select output format
 - Binary width submenu: Select binary display width (8, 16, 24, 32, 48, 64 bits)
 - View variables: Open variables dialog
-- ESC minimized: Minimize on ESC key
-- Opacity: Adjust window opacity
 - Exit: Close application
 
 ### Edit

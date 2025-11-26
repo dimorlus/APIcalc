@@ -47,6 +47,7 @@ BEGIN
         MENUITEM "Pas style",                   ID_CALC_PASSTYLE
         MENUITEM "Case sensetive",              ID_CALC_CASESENSETIVE
         MENUITEM "Forced float",                ID_CALC_FORCEDFLOAT
+		MENUITEM "Implicit multiplication",     ID_CALC_IMPLICITMUL
         POPUP "&Format..."
         BEGIN
             MENUITEM "Scientific",              ID_FORMAT_SCIENTIFIC

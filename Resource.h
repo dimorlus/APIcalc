@@ -29,7 +29,7 @@
 #define ID_CALC_VIEWVARIABLES           306
 // New Calc menu items
 #define ID_CALC_ALWAYSONTOP             307
-
+#define ID_CALC_IMPLICITMUL             308  // New ID for Implicit Multiplication
 
 // Format submenu
 #define ID_FORMAT_SCIENTIFIC            310

@@ -51,6 +51,7 @@
 #define AUTO    (1<<26) // (UI) Auto output
 #define AUT     (1<<26) // (UI) Auto output
 #define TOP     (1<<27) // (UI) Always on top
+#define IMUL	(1<<28) // (WO) Implicit multiplication
 #define STRBUF  256     // bufer size for string operations
 
 #define _WCHAR_         // L'c' and 'c'W input format allow
@@ -103,6 +104,7 @@ typedef union
         int fri:1;
         int aut:1;
 		int top:1;
+		int imul:1;
     };
 } toptions;
 #pragma pack(pop)
@@ -286,7 +288,7 @@ class calculator
     value v_stack[max_stack_size];
     symbol* hash_table[hash_table_size];
     int   v_sp;
-    int   o_stack[max_stack_size];
+    t_operator o_stack[max_stack_size];
     int   o_sp;
     char* buf;
     int   pos;

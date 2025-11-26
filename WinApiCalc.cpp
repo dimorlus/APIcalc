@@ -697,6 +697,9 @@ void WinApiCalc::OnCommand(WPARAM wParam)
     case ID_CALC_FORCEDFLOAT:
         ToggleOption(FFLOAT);
         break;
+    case ID_CALC_IMPLICITMUL:
+        ToggleOption(IMUL);
+        break;
     case ID_CALC_ESCMINIMIZED:
         ToggleOption(MIN);
         break;
@@ -1221,6 +1224,7 @@ void WinApiCalc::UpdateMenuChecks()
     CheckMenuItem(m_hMenu, ID_CALC_PASSTYLE, (m_options & PAS) ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(m_hMenu, ID_CALC_CASESENSETIVE, (m_options & UPCASE) ? MF_UNCHECKED : MF_CHECKED);  // Инверсия: UPCASE=case insensitive
     CheckMenuItem(m_hMenu, ID_CALC_FORCEDFLOAT, (m_options & FFLOAT) ? MF_CHECKED : MF_UNCHECKED);
+	CheckMenuItem(m_hMenu, ID_CALC_IMPLICITMUL, (m_options & IMUL) ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(m_hMenu, ID_CALC_ESCMINIMIZED, (m_options & MIN) ? MF_CHECKED : MF_UNCHECKED);
     CheckMenuItem(m_hMenu, ID_CALC_ALWAYSONTOP, (m_options & TOP) ? MF_CHECKED : MF_UNCHECKED);
     // Menu visibility is controlled via the pseudo-function menu(0) -> MenuFunction()

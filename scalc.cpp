@@ -1494,8 +1494,9 @@ t_operator calculator::scan(bool operand, bool percent)
      {
       int_t ival = 0;
       float__t fval = 0;
+      float__t sfval = 0;
       int ierr = 0, ferr;
-      char *ipos, *fpos;
+      char *ipos, *fpos, *sfpos;
       int n = 0;
 
       if (buf[pos-1] == '\\')
@@ -1536,7 +1537,8 @@ t_operator calculator::scan(bool operand, bool percent)
         ipos = buf+pos-1+n;
        }
       errno = 0;
-      fval = strtod(buf+pos-1, &fpos);
+      sfval = fval = strtod(buf+pos-1, &fpos);
+      sfpos = fpos;
 
       //` - degrees, ' - minutes, " - seconds
       if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI)==0)&&(*fpos == '\"')))
@@ -1544,7 +1546,10 @@ t_operator calculator::scan(bool operand, bool percent)
       else
       if (*fpos == ':') fval = tstrtod(buf+pos-1, &fpos);
       else
-      if (scfg & SCI+FRI) scientific(fpos, fval);
+      if (scfg & SCI+FRI) 
+      {
+          scientific(fpos, fval);
+      }
       ferr = errno;
       if (ierr && ferr)
        {
@@ -1576,8 +1581,16 @@ t_operator calculator::scan(bool operand, bool percent)
           fpos++;
           v_stack[v_sp].tag = tvCOMPLEX;
         }
-        else v_stack[v_sp].tag = tvFLOAT;
-
+        else
+        {
+            if (*fpos && (isalnum(*fpos & 0x7f) || *fpos == '@' ||
+                *fpos == '_' || *fpos == '?'))
+            {
+                fpos = sfpos;
+                fval = sfval;
+            }
+            v_stack[v_sp].tag = tvFLOAT;
+        }
         if (v_stack[v_sp].tag == tvCOMPLEX)
         {
             v_stack[v_sp].imval = fval;
@@ -1698,6 +1711,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
   const double mindbl = *(double*)&i64mindbl;
   //const float__t qnan = 0.0/0.0;
   constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN();
+  t_operator saved_oper = toBEGIN;
 
   buf = expression;
   v_sp = 0;
@@ -1711,11 +1725,21 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
     {
      next_token:
       int op_pos = pos;
-      int oper = scan(operand, percent);
+      t_operator oper;
+      if (saved_oper != toBEGIN)
+      {
+          oper = saved_oper;
+          saved_oper = toBEGIN;
+      }
+      else
+      {
+          oper = scan(operand, percent);
+      }
       if (oper == toERROR)
        {
         return qnan;
        }
+      loper:
       switch(oper)
        {
         case toMUL:
@@ -1734,12 +1758,32 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
        }
       if (!operand)
        {
-        if (!BINARY(oper) && oper != toEND && oper != toPOSTINC
-            && oper != toPOSTDEC && oper != toRPAR && oper != toFACT)
-         {
-          error(op_pos, "operator expected");
-          return qnan;
-         }
+          if (!BINARY(oper) && oper != toEND && oper != toPOSTINC
+              && oper != toPOSTDEC && oper != toRPAR && oper != toFACT)
+          {
+             if (scfg & IMUL)
+              {
+                  // Implicit multiplication: cases like 2sin(x), 3(4+5), (1+2)(3+4)
+                  // Allow only if next token is: FUNC, LPAR, or OPERAND (not after scientific suffix)
+                  if (oper == toFUNC || oper == toLPAR || oper == toOPERAND)
+                  {
+                      saved_oper = oper;
+                      oper = toMUL;
+                      goto loper;
+                  }
+                  else
+                  {
+                      error(op_pos, "operator expected");
+                      return qnan;
+                  }
+
+              }
+              else
+              {
+                  error(op_pos, "operator expected");
+                  return qnan;
+			  }
+          }
         if (oper != toPOSTINC && oper != toPOSTDEC && oper != toRPAR
             && oper != toFACT)
          {
@@ -1761,9 +1805,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
          }
        }
       n_args = 1;
-      while (lpr[o_stack[o_sp-1]] >= rpr[oper])
+      while (o_sp && (lpr[o_stack[o_sp-1]] >= rpr[oper]))
         {
-          int cop = o_stack[--o_sp];
+          t_operator cop = o_stack[--o_sp];
           if (BINARY(cop) && (v_sp < 2))
            {
             error("Unexpected end of expression");

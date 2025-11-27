@@ -1810,7 +1810,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
       while (o_sp && (lpr[o_stack[o_sp-1]] >= rpr[oper]))
         {
           t_operator cop = o_stack[--o_sp];
-          if (BINARY(cop) && (v_sp < 2))
+          if ((UNARY(cop) && (v_sp < 1)) || (BINARY(cop) && (v_sp < 2)))
            {
             error("Unexpected end of expression");
             return qnan;
@@ -2480,7 +2480,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toASR:
-            case toSETASR:
+			case toSETASR: // >>
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2514,7 +2514,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toLSR:
-            case toSETLSR:
+			case toSETLSR: //  logical shift right
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2576,8 +2576,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 			case toNE: // !=, <>
               if (v_stack[v_sp-1].tag == tvINT && v_stack[v_sp-2].tag == tvINT)
                 {
-                  v_stack[v_sp-2].ival =
-                    v_stack[v_sp-2].ival != v_stack[v_sp-1].ival;
+                  v_stack[v_sp-2].ival = v_stack[v_sp-2].ival != v_stack[v_sp-1].ival;
                 }
               else
               if (v_stack[v_sp-1].tag == tvSTR && v_stack[v_sp-2].tag == tvSTR)
@@ -2629,7 +2628,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toGE:
+			case toGE: //>=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2723,19 +2722,17 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toPREINC://++v
-              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+              if (v_stack[v_sp - 1].tag == tvCOMPLEX)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
-                    return qnan;
-                }
-              else
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
-                {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+				  error(v_stack[v_sp - 1].pos, "Illegal complex operation");        
                   return qnan;
                 }
+              else
+              if (v_stack[v_sp-1].tag == tvSTR)
+               {
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
+                  return qnan;
+               }
               else
               if (v_stack[v_sp-1].tag == tvINT)
                 {
@@ -2750,17 +2747,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toPREDEC://--v
-               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
+               if (v_stack[v_sp - 1].tag == tvCOMPLEX)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal complex operation");
                     return qnan;
                 }
                else
-               if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
+               if (v_stack[v_sp-1].tag == tvSTR)
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
               else
@@ -2777,17 +2772,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toPOSTINC://v++
-              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+              if (v_stack[v_sp - 1].tag == tvCOMPLEX)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal complex operation");
                     return qnan;
 				}
 			  else
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
+              if (v_stack[v_sp-1].tag == tvSTR)
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
               else
@@ -2808,17 +2801,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toPOSTDEC://v--
-              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+              if (v_stack[v_sp - 1].tag == tvCOMPLEX)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal complex operation");
 					return qnan;
 				}
 			  else
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
+              if (v_stack[v_sp-1].tag == tvSTR) 
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
               else
@@ -2839,17 +2830,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toFACT:// n!
-              if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 2].tag == tvCOMPLEX))
+              if (v_stack[v_sp - 1].tag == tvCOMPLEX)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal complex operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal complex operation");
 					return qnan;
 				}
 			  else
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
+              if (v_stack[v_sp-1].tag == tvSTR)
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
               else
@@ -2891,17 +2880,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               break;
 
             case toNOT: //!
-              if ((v_stack[v_sp-1].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp-2].tag == tvCOMPLEX))
+              if (v_stack[v_sp-1].tag == tvCOMPLEX) 
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal complex operation");
+                  error(v_stack[v_sp-1].pos, "Illegal complex operation");
                   return qnan;
                 }
 			  else
-              if ((v_stack[v_sp-1].tag == tvSTR) ||
-                  (v_stack[v_sp-2].tag == tvSTR))
+              if (v_stack[v_sp-1].tag == tvSTR)
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
               else
@@ -2920,7 +2907,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
             case toMINUS://-v
               if ((v_stack[v_sp-1].tag == tvSTR))
                 {
-                  error(v_stack[v_sp-2].pos, "Illegal string operation");
+                  error(v_stack[v_sp-1].pos, "Illegal string operation");
                   return qnan;
                 }
 			  else
@@ -2938,25 +2925,22 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
 			case toPLUS: //+v
                 if ((v_stack[v_sp - 1].tag == tvSTR))
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal string operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal string operation");
                     return qnan;
                 }
                 else v_stack[v_sp-1].var = NULL;
               break;
 
             case toCOM: //~
-             if ((v_stack[v_sp - 1].tag == tvSTR) ||
-                 (v_stack[v_sp - 2].tag == tvSTR))
+              if (v_stack[v_sp - 1].tag == tvSTR)
                 {
-                    error(v_stack[v_sp - 2].pos, "Illegal string operation");
+                    error(v_stack[v_sp - 1].pos, "Illegal string operation");
                     return qnan;
                 }
              else
              if (
-                 ((v_stack[v_sp - 2].tag == tvCOMPLEX) ||
-                  (v_stack[v_sp - 1].tag == tvCOMPLEX)) ||
-                 ((v_stack[v_sp - 1].imval != 0.0) ||
-                  (v_stack[v_sp - 2].imval != 0.0))
+                 (v_stack[v_sp - 1].tag == tvCOMPLEX) ||
+                 (v_stack[v_sp - 1].imval != 0.0)
                 )
              {
                  v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;

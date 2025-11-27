@@ -142,6 +142,7 @@ enum t_operator
 };
 
 #define BINARY(opd) (opd >= toPOW)
+#define UNARY(opd) ((opd >= toPOSTINC) && (opd <= toCOM))
 
 enum t_symbol
 {

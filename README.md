@@ -1,6 +1,6 @@
 # WinAPI Calculator
 
-[Русская версия / Russian version](README_RU.md)
+[Русская версия / Russian version](Readme_ru.md)
 
 A scientific calculator application built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, and advanced mathematical functions.
 

@@ -465,6 +465,17 @@ float__t Round(float__t x)
     return (float__t)((int)(x+0.5));
 }
 
+float__t Ceil(float__t x)
+{
+    return (float__t)((int)(x + 1));
+}
+
+float__t Floor(float__t x)
+{
+    return (float__t)((int)(x));
+}
+
+
 float__t Frac(float__t x)
 {
     float__t d;

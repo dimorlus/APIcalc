@@ -1117,6 +1117,9 @@ void WinApiCalc::OnDestroy()
         char buffer[2048];
         GetWindowTextA(m_hExpressionEdit, buffer, sizeof(buffer));
         m_currentExpression = buffer;
+        
+        // Save last expression to history as requested
+        AddToHistory(m_currentExpression);
     }
     
     SaveSettings();
@@ -1150,6 +1153,7 @@ void WinApiCalc::WrapExpressionWith(const char* prefix, const char* suffix)
 void WinApiCalc::OnKeyDown(WPARAM key) 
 {
     bool ctrlPressed = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+    bool shiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
     
     // Отладочное сообщение
     if (key == 'R' && ctrlPressed)
@@ -1191,6 +1195,29 @@ void WinApiCalc::OnKeyDown(WPARAM key)
         case VK_OEM_6: // Ctrl+] - (...)  
             WrapExpressionWith("(", ")");
             break;
+        case 'N': // Ctrl+N - Clear input
+            SetWindowTextA(m_hExpressionEdit, "");
+            SetWindowTextA(m_hComboBox, "");
+            OnExpressionChanged();
+            break;
+        case VK_ADD:
+        case VK_OEM_PLUS: // Ctrl+Shift++ - Increase opacity
+            if (shiftPressed)
+            {
+                int newOpacity = m_opacity + 26; // ~10% step
+                if (newOpacity > 255) newOpacity = 255;
+                SetWindowOpacity(newOpacity);
+            }
+            break;
+        case VK_SUBTRACT:
+        case VK_OEM_MINUS: // Ctrl+Shift+- - Decrease opacity
+            if (shiftPressed)
+            {
+                int newOpacity = m_opacity - 26; // ~10% step
+                if (newOpacity < 25) newOpacity = 25; // Min ~10%
+                SetWindowOpacity(newOpacity);
+            }
+            break;
         }
     }
     else if (key == VK_RETURN)
@@ -1221,7 +1248,9 @@ void WinApiCalc::UpdateMenuChecks()
     if (!m_hMenu) return;
 
     // Update checkable menu items
-    CheckMenuItem(m_hMenu, ID_CALC_PASSTYLE, (m_options & PAS) ? MF_CHECKED : MF_UNCHECKED);
+    // Toggle text for Pas/C style instead of checkmark
+    ModifyMenuA(m_hMenu, ID_CALC_PASSTYLE, MF_BYCOMMAND | MF_STRING, ID_CALC_PASSTYLE, (m_options & PAS) ? "Pas style" : "C style");
+    
     CheckMenuItem(m_hMenu, ID_CALC_CASESENSETIVE, (m_options & UPCASE) ? MF_UNCHECKED : MF_CHECKED);  // Инверсия: UPCASE=case insensitive
     CheckMenuItem(m_hMenu, ID_CALC_FORCEDFLOAT, (m_options & FFLOAT) ? MF_CHECKED : MF_UNCHECKED);
 	CheckMenuItem(m_hMenu, ID_CALC_IMPLICITMUL, (m_options & IMUL) ? MF_CHECKED : MF_UNCHECKED);
@@ -2496,6 +2525,8 @@ void WinApiCalc::ShowHelp()
         "Ctrl+S - Wrap with ()^2\n"
         "Ctrl+I - Wrap with 1/()\n"
         "Ctrl+[ or Ctrl+] - Wrap with ()\n"
+        "Ctrl+N - Clear input\n"
+        "Ctrl+Shift++/- - Adjust opacity\n"
         "Enter - Evaluate expression\n"
         "Esc - Minimize (if enabled)",
         "Calculator Help", MB_OK | MB_ICONINFORMATION);

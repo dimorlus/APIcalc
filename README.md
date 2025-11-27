@@ -8,7 +8,7 @@ A scientific calculator application built using pure Win32 API without MFC depen
 
 - **Scientific Calculator**: Support for trigonometric functions, logarithms, exponentials, and more
 - **Expression Parser**: Advanced mathematical expression evaluation with proper operator precedence
-- **History Dropdown**: Keep track of previous calculations with easy access through dropdown menu
+- **History Dropdown**: Keep track of previous calculations with easy access through dropdown menu (auto-saves on exit)
 - **DPI Awareness**: Automatic scaling for high-DPI displays
 - **CHM Help Support**: F1 help integration for external help files
 - **Standard Windows Interface**: Native menus, keyboard shortcuts, and clipboard integration
@@ -89,7 +89,7 @@ sqrt(16) + log(100)
 3(4+5)              # Same as 3 * (4+5) = 27
 (1+2)(3+4)          # Same as (1+2) * (3+4) = 21
 2PI                 # Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
-3E                  # Same as 3 * E ≈ 8.15 (uppercase E to avoid exponent notation)
+3e                  # Same as 3 * e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
 ```
 
 ### Implicit Multiplication
@@ -118,13 +118,16 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
   - `3PI` → `3 * PI` ≈ 9.42 (implicit multiplication with PI constant)
   - `3pI` → `3 * pI` (also works: `p` followed by uppercase `I` avoids pico suffix)
   - `5I` → `5 * I` (uppercase `I` as variable, not imaginary unit)
-  - `2E` → `2 * E` ≈ 5.44 (uppercase `E` as constant, not exponent notation)
+  - `2e` → `2 * e` ≈ 5.44 (uppercase `E` as constant, not exponent notation)
+  - `2E` → `22e+18` (exa)
 
 **Recommended naming convention**: Use **UPPERCASE** for constants/variables to avoid conflicts with scientific suffixes and imaginary unit (e.g., `PI`, `E`, `PHI`, `X`, `Y`, `Z`).
 
 ## Keyboard Shortcuts
 
-- **Ctrl+N**: New calculation (clear expression)
+- **Ctrl+N**: Clear input field
+- **Ctrl+Shift++**: Increase window opacity
+- **Ctrl+Shift+-**: Decrease window opacity
 - **Ctrl+C**: Copy result to clipboard
 - **Ctrl+V**: Paste from clipboard to expression
 - **F1**: Show help contents
@@ -133,7 +136,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 
 ### Calc
 
-- **Pas style**: Toggle Pascal-like syntax (use `^` for power, `:=` for assignment)
+- **Pas style / C style**: Toggle between Pascal-like syntax (use `^` for power, `:=` for assignment) and C-like syntax
 - **Case sensitive**: Toggle case sensitivity for variables/functions
 - **Forced float**: Force all results to floating-point format
 - **Implicit multiplication**: Allow omitting `*` operator (e.g., `2sin(x)`, `3PI`)
@@ -182,7 +185,7 @@ The application uses a clean separation of concerns:
 
 ## Help File Integration
 
-Place your CHM help file as `help.chm` in the same directory as the executable to enable F1 help functionality.
+Place your CHM help file as `fcalc.chm` in the same directory as the executable to enable F1 help functionality.
 
 ## License
 

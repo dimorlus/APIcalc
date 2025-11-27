@@ -128,6 +128,8 @@ calculator::calculator(int cfg)
   add(tsFFUNC1, "ctgg", (void*)(float__t(*)(float__t))Ctgg);
   add(tsFFUNC1, "frac", (void*)(float__t(*)(float__t))Frac);
   add(tsFFUNC1, "round", (void*)(float__t(*)(float__t))Round);
+  add(tsFFUNC1, "ceil", (void*)(float__t(*)(float__t))Ceil);
+  add(tsFFUNC1, "floor", (void*)(float__t(*)(float__t))Floor);
   add(tsIFUNC1, "not", (void*)Not);
   add(tsIFUNC1, "now", (void*)Now);
   add(tsFFUNC2, "min", (void*)(float__t(*)(float__t,float__t))Min);

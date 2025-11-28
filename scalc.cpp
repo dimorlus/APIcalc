@@ -1077,6 +1077,25 @@ void calculator::error(int pos, const char* msg)
   errpos = pos;
 }
 
+
+static void SafeFree(value& v)
+{
+    if (v.tag == tvSTR && v.sval)
+    {
+        free(v.sval);
+        v.sval = NULL;
+    }
+}
+
+static void DeepCopy(value& dest, const value& src)
+{
+    dest = src;
+    if (src.tag == tvSTR && src.sval)
+    {
+        dest.sval = strdup(src.sval);
+    }
+}
+
 t_operator calculator::scan(bool operand, bool percent)
 {
   char name[max_expression_length], *np;
@@ -1470,7 +1489,7 @@ t_operator calculator::scan(bool operand, bool percent)
        char sbuf[STRBUF];
        int sidx = 0;
        ipos = buf+pos;
-       while (*ipos && (*ipos != '"') && (sidx < STRBUF))
+       while (*ipos && (*ipos != '"') && (sidx < STRBUF - 1))
         sbuf[sidx++] = *ipos++;
        sbuf[sidx] = '\0';
        if (*ipos == '"')
@@ -1634,7 +1653,7 @@ t_operator calculator::scan(bool operand, bool percent)
         }
       if (sym)
         {
-          v_stack[v_sp] = sym->val;
+          DeepCopy(v_stack[v_sp], sym->val);
           v_stack[v_sp].pos = pos;
           v_stack[v_sp++].var = sym;
           return (sym->tag == tsVARIABLE) ? toOPERAND : toFUNC;
@@ -1695,10 +1714,11 @@ bool calculator::assign()
    return false;
   }
  else
-  {
-   v.var->val = v;
-   return true;
-  }
+   {
+    SafeFree(v.var->val);
+    DeepCopy(v.var->val, v);
+    return true;
+   }
 }
 
 float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimval)
@@ -1889,8 +1909,9 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if ((v_stack[v_sp-1].tag == tvSTR) &&
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
-                 strcpy(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval);
-                }
+                  SafeFree(v_stack[v_sp-2]);
+                  DeepCopy(v_stack[v_sp-2], v_stack[v_sp-1]);
+                 }
               else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
@@ -1907,8 +1928,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toADD:
-            case toSETADD:
+            case toADD://+
+            case toSETADD://+=
               if ((v_stack[v_sp-1].tag == tvINT) &&
                   (v_stack[v_sp-2].tag == tvINT))
                 {
@@ -1918,8 +1939,20 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               if ((v_stack[v_sp-1].tag == tvSTR) &&
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
-                 strcat(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval);
-                }
+                  if (strlen(v_stack[v_sp-2].sval) + strlen(v_stack[v_sp-1].sval) < STRBUF)
+                   {
+                    char* new_s = (char*)malloc(STRBUF);
+                    strcpy(new_s, v_stack[v_sp-2].sval);
+                    strcat(new_s, v_stack[v_sp-1].sval);
+                    SafeFree(v_stack[v_sp-2]);
+                    v_stack[v_sp-2].sval = new_s;
+                   }
+                  else
+                   {
+                    error(v_stack[v_sp-2].pos, "String buffer overflow");
+                    return qnan;
+                   }
+                 }
               else
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
@@ -1955,11 +1988,12 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                {
                 if (!assign()) return qnan;
                }
+              SafeFree(v_stack[v_sp]);
               v_stack[v_sp-1].var = NULL;
               break;
 
             case toSUB:
-            case toSETSUB:
+            case toSETSUB://-=
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                {
@@ -2003,8 +2037,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toMUL:
-            case toSETMUL:
+			case toMUL://*
+			case toSETMUL://*=
               if ((v_stack[v_sp-1].tag == tvINT) &&
                   (v_stack[v_sp-2].tag == tvINT))
                {
@@ -2059,8 +2093,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toDIV:
-            case toSETDIV:
+			case toDIV:///
+			case toSETDIV:// /=
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                {
@@ -2122,7 +2156,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
              v_stack[v_sp-1].var = NULL;
             break;
 
-			case toPAR: // parallel resistors 
+			case toPAR: // // parallel resistors 
              if ((v_stack[v_sp-1].tag == tvSTR) ||
                  (v_stack[v_sp-2].tag == tvSTR))
               {
@@ -2236,8 +2270,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
              v_stack[v_sp-1].var = NULL;
             break;
 
-            case toMOD:
-            case toSETMOD:
+			case toMOD://%
+			case toSETMOD://%=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2281,8 +2315,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toPOW:
-            case toSETPOW:
+			case toPOW://** ^
+			case toSETPOW://*= ^=
               if ((v_stack[v_sp-1].tag == tvSTR) ||
                   (v_stack[v_sp-2].tag == tvSTR))
                 {
@@ -2343,8 +2377,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toAND:
-            case toSETAND:
+			case toAND:// &
+			case toSETAND:// &=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                     (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2377,8 +2411,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toOR:
-            case toSETOR:
+			case toOR:// |
+			case toSETOR:// |=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                     (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2411,8 +2445,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toXOR:
-            case toSETXOR:
+			case toXOR:// ^
+			case toSETXOR:// ^=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2445,8 +2479,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toASL:
-            case toSETASL:
+			case toASL:// <<
+			case toSETASL:// <<=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2479,8 +2513,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toASR:
-			case toSETASR: // >>
+			case toASR:// >>
+			case toSETASR:// >>=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2513,8 +2547,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toLSR:
-			case toSETLSR: //  logical shift right
+			case toLSR:// >>> (logical shift right)
+			case toSETLSR:// >>>=
               if ((v_stack[v_sp - 1].tag == tvCOMPLEX) ||
                   (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 {
@@ -2559,8 +2593,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 {
                   v_stack[v_sp-2].ival = (strcmp(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval) == 0);
                   v_stack[v_sp-2].tag = tvINT;
-                  free(v_stack[v_sp-2].sval);
-                  v_stack[v_sp-2].sval = NULL;
+                  SafeFree(v_stack[v_sp-2]);
                 }
               else
                 {
@@ -2570,6 +2603,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
+              SafeFree(v_stack[v_sp-1]);
               v_stack[v_sp-1].var = NULL;
               break;
 
@@ -2583,8 +2617,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 {
                   v_stack[v_sp-2].ival = (strcmp(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval) != 0);
                   v_stack[v_sp-2].tag = tvINT;
-                  free(v_stack[v_sp-2].sval);
-                  v_stack[v_sp-2].sval = NULL;
+                  SafeFree(v_stack[v_sp-2]);
                 }
               else
                 {
@@ -2594,6 +2627,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
+              SafeFree(v_stack[v_sp-1]);
               v_stack[v_sp-1].var = NULL;
               break;
 
@@ -2615,8 +2649,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 {
                   v_stack[v_sp-2].ival = (strcmp(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval) > 0);
                   v_stack[v_sp-2].tag = tvINT;
-                  free(v_stack[v_sp-2].sval);
-                  v_stack[v_sp-2].sval = NULL;
+                  SafeFree(v_stack[v_sp-2]);
                 }
               else
                 {
@@ -2625,6 +2658,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
+              SafeFree(v_stack[v_sp-1]);
               v_stack[v_sp-1].var = NULL;
               break;
 
@@ -2646,8 +2680,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 {
                   v_stack[v_sp-2].ival = (strcmp(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval) >= 0);
                   v_stack[v_sp-2].tag = tvINT;
-                  free(v_stack[v_sp-2].sval);
-                  v_stack[v_sp-2].sval = NULL;
+                  SafeFree(v_stack[v_sp-2]);
                 }
               else
                 {
@@ -2656,6 +2689,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
+              SafeFree(v_stack[v_sp-1]);
               v_stack[v_sp-1].var = NULL;
               break;
 
@@ -2677,8 +2711,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                 {
                   v_stack[v_sp-2].ival = (strcmp(v_stack[v_sp-2].sval, v_stack[v_sp-1].sval) < 0);
                   v_stack[v_sp-2].tag = tvINT;
-                  free(v_stack[v_sp-2].sval);
-                  v_stack[v_sp-2].sval = NULL;
+                  SafeFree(v_stack[v_sp-2]);
                 }
               else
                 {
@@ -2687,6 +2720,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   v_stack[v_sp-2].tag = tvINT;
                 }
               v_sp -= 1;
+              SafeFree(v_stack[v_sp-1]);
               v_stack[v_sp-1].var = NULL;
               break;
 
@@ -2866,12 +2900,12 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   //v_stack[v_sp - 2] := v_stack[v_sp - 1]
                   if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
                   {
-                      v_stack[v_sp - 2].var->val.sval = strdup(v_stack[v_sp - 1].sval);
-					  v_stack[v_sp - 2].sval = strdup(v_stack[v_sp - 1].sval);
-					  v_stack[v_sp - 2].tag = tvSTR;
-                      v_stack[v_sp - 2].var->val.tag = tvSTR;
-                      free(v_stack[v_sp - 1].sval);
-					  v_stack[v_sp - 1].sval = NULL;
+                      SafeFree(v_stack[v_sp - 2].var->val);
+                      DeepCopy(v_stack[v_sp - 2].var->val, v_stack[v_sp - 1]);
+                      SafeFree(v_stack[v_sp - 2]);
+                      DeepCopy(v_stack[v_sp - 2], v_stack[v_sp - 1]);
+                      v_stack[v_sp - 2].tag = tvSTR;
+                      SafeFree(v_stack[v_sp - 1]);
                   }
                   else v_stack[v_sp-2]=v_stack[v_sp-2].var->val=v_stack[v_sp-1];
                 }
@@ -2959,15 +2993,15 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
               v_stack[v_sp-1].var = NULL;
               break;
 
-            case toRPAR:
+            case toRPAR://  
               error("mismatched ')'");
               return qnan;
 
-            case toFUNC:
+			case toFUNC://function without '('
               error("'(' expected");
               return qnan;
 
-            case toLPAR:
+			case toLPAR://)
               if (oper != toRPAR)
                 {
                   error("')' expected");
@@ -3001,7 +3035,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                         ((void(*)(value*, value*, value*, int))sym->func)(&v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp-1], sym->fidx);
                         v_sp -= 2;
                         break;
-                    case tsIFUNC1:
+                    case tsIFUNC1:// f(x)
                       if (n_args != 1)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3014,7 +3048,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 1;
                       break;
 
-                    case tsIFUNC2:
+					case tsIFUNC2:// f(x,y)
                       if (n_args != 2)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3028,7 +3062,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 2;
                       break;
 
-                    case tsIFFUNC3:
+					case tsIFFUNC3:// f(double, double, int)
                       if (n_args != 3)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3042,7 +3076,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 3;
                     break;
 
-                    case tsFFUNC1:
+					case tsFFUNC1:// f(x)
                       if (n_args != 1)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3055,7 +3089,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 1;
                       break;
 
-                    case tsFFUNC2:
+					case tsFFUNC2:// f(x,y)
                       if (n_args != 2)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3069,7 +3103,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 2;
                       break;
 
-                    case tsFFUNC3:
+					case tsFFUNC3:// f(x,y,z)    
                       if (n_args != 3)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3087,7 +3121,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_sp -= 3;
                     break;
 
-                    case tsPFUNCn:
+					case tsPFUNCn:// f(str, ...)
                       if (n_args < 1)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3111,7 +3145,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                        }
                       v_sp -= n_args;
                     break;
-                    case tsSIFUNC1:
+					case tsSIFUNC1:// f(str)
                       if (n_args != 1)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3123,7 +3157,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       v_stack[v_sp-2].tag = tvINT;
                       v_sp -= 1;
                     break;
-                    case tsCFUNCC1:
+					case tsCFUNCC1:// f(x + i y)
                       if (n_args != 1)
                         {
                           error(v_stack[v_sp-n_args-1].pos,
@@ -3142,7 +3176,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       }
 					  v_sp -= 1;
 					  break;
-                    case tsFFUNCC1:
+					case tsFFUNCC1:// f(x + i y)
                         if (n_args != 1)
                         {
                             error(v_stack[v_sp - n_args - 1].pos,
@@ -3159,7 +3193,12 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                       error("Invalid expression");
                     }
                   }
-                  v_stack[v_sp-1].var = NULL;
+                  if (cop == toSETADD)
+                {
+                 if (!assign()) return qnan;
+                }
+               SafeFree(v_stack[v_sp-1]);
+               v_stack[v_sp-1].var = NULL;
                   o_sp -= 1;
                   n_args = 1;
                 }

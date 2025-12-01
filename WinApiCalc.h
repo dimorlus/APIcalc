@@ -40,6 +40,7 @@ private:
     int m_windowX;          // Позиция окна X
     int m_windowY;          // Позиция окна Y
     bool m_isUpdatingHistory; // Flag to suppress notifications during history updates
+    bool m_isWine;          // Flag indicating if running under Wine
     
     std::vector<std::string> m_history;
     std::string m_currentExpression;
@@ -141,6 +142,7 @@ public:
     int CalculateCurrentResultWidth(); // Измерение ширины текущего результата
     void UpdateFont();
     int MeasureTextHeightForWidth(const std::string &text, int width);
+    bool IsWine() const { return m_isWine; }
 
     // Utility
     void ShowHelp();

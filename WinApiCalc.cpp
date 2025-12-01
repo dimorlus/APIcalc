@@ -6,6 +6,9 @@
 #include <fstream>
 #include <ctime>
 
+
+#define WINE_W 5 // Under Wine we need to add some extra width to accommodate font rendering differences
+
 // Debug logging macro - can be enabled/disabled
 #define ENABLE_DEBUG_LOG 0
 
@@ -64,14 +67,14 @@ WinApiCalc::WinApiCalc()
     , m_hComboBox(nullptr)
     , m_hMenu(nullptr)
     , m_pCalculator(nullptr)
-    , m_options(NRM | FRC)  // Default flags from SOW
+    , m_options(0)
     , m_binWidth(64)
-    , m_fontSize(-12)  // Default font size in pixels (negative value) - font(12)
-    , m_opacity(255)    // Полностью непрозрачное по умолчанию
+    , m_fontSize(-12)
+    , m_opacity(255)
     , m_menuVisible(true)
-    , m_uiReady(false)      // UI not ready until fully initialized
-    , m_windowX(100)        // Дефолтная позиция X
-    , m_windowY(100)        // Дефолтная позиция Y
+    , m_uiReady(false)
+    , m_windowX(100)
+    , m_windowY(100)
     , m_dpiX(96)
     , m_dpiY(96)
     , m_resultLines(1)
@@ -81,7 +84,17 @@ WinApiCalc::WinApiCalc()
     , m_originalComboBoxProc(nullptr)
     , m_isUpdatingHistory(false)
     , m_lastComboHeight(0)
+    , m_isWine(false)
 {
+    // Detect Wine
+    HMODULE hNTDLL = GetModuleHandleA("ntdll.dll");
+    if (hNTDLL)
+    {
+        if (GetProcAddress(hNTDLL, "wine_get_version"))
+        {
+            m_isWine = true;
+        }
+    }
     // Calculator will be created in OnCreate
     m_hWhiteBrush = CreateSolidBrush(RGB(255, 255, 255)); // White background
     
@@ -607,7 +620,7 @@ void WinApiCalc::OnCreate()
         0, // Remove WS_EX_CLIENTEDGE for flat appearance
         "EDIT", 
         "",
-        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_RIGHT | WS_BORDER,
+        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_RIGHT | WS_BORDER | WS_HSCROLL,
         0, // No margins 
         resultY, // Position after input field using dynamic height + gap
         ScaleDPI(WINDOW_MIN_WIDTH), // Full width, no margins
@@ -992,6 +1005,8 @@ void WinApiCalc::OnEnterPressed()
     }
 }
 
+
+
 void WinApiCalc::EvaluateExpression()
 {
     if (!m_pCalculator)
@@ -1046,19 +1061,28 @@ void WinApiCalc::EvaluateExpression()
         // Build result text
         std::string result;
         int lineCount = 0;
+
         for (int i = 0; i < n && i < 20; i++)
         {
             if (strings[i][0] != '\0') // Skip empty strings
             {
+                // Trim leading spaces to prevent wrapping in Wine
+                char* start = strings[i];
+                while (*start == ' ') start++;
+                
                 // Check string length to prevent buffer overflow issues
-                size_t len = strnlen(strings[i], 79); // Max 79 chars per string
+                size_t len = strnlen(start, 79); // Max 79 chars per string
+                
+                // Truncate to 64 chars to prevent wrapping in Wine (binary strings can be long)
+                // if (len > 64) len = 64;
+                
                 if (len > 0)
                 {
                     if (!result.empty())
                         result += "\r\n";
                         
                     // Safely append string with length limit
-                    result.append(strings[i], len);
+                    result.append(start, len);
                     lineCount++;
                     
                     // Prevent result from becoming too large
@@ -1587,7 +1611,9 @@ int WinApiCalc::CalculateContentBasedWidth()
     // + внутренние отступы Edit контрола (примерно 6-8 пикселей с каждой стороны)
     
     // Base calculation with 6% margin for measurement inaccuracies
+    // Increased base padding for Wine compatibility
     int baseWidth = maxPixelWidth + (maxPixelWidth * 6 / 100) + 50;
+    if (m_isWine) baseWidth += WINE_W;
     
     // Add scaling factor for large fonts to prevent text wrapping
     if (m_fontSize < 0 && m_fontSize <= -20) // Large pixel fonts
@@ -1663,7 +1689,9 @@ int WinApiCalc::CalculateCurrentResultWidth()
     // + внутренние отступы Edit контрола (примерно 6-8 пикселей с каждой стороны)
     
     // For large fonts, add proportional margin like in CalculateOptimalWidth
-    int baseWidth = maxPixelWidth + 25 - 16; // Basic calculation: button minus internal padding
+    // Increased padding for Wine compatibility (was + 25 - 16)
+    int baseWidth = maxPixelWidth + 25 - 16;
+    if (m_isWine) baseWidth += WINE_W;
     
     // Add scaling factor for large fonts to prevent text wrapping
     if (m_fontSize < 0 && m_fontSize <= -20) // Large pixel fonts

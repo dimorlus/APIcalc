@@ -67,14 +67,14 @@ WinApiCalc::WinApiCalc()
     , m_hComboBox(nullptr)
     , m_hMenu(nullptr)
     , m_pCalculator(nullptr)
-    , m_options(0)
+    , m_options(NRM | FRC)  // Default flags from SOW
     , m_binWidth(64)
-    , m_fontSize(-12)
-    , m_opacity(255)
+    , m_fontSize(-12)  // Default font size in pixels (negative value) - font(12)
+    , m_opacity(255)    // Полностью непрозрачное по умолчанию
     , m_menuVisible(true)
-    , m_uiReady(false)
-    , m_windowX(100)
-    , m_windowY(100)
+    , m_uiReady(false)      // UI not ready until fully initialized
+    , m_windowX(100)        // Дефолтная позиция X
+    , m_windowY(100)        // Дефолтная позиция Y
     , m_dpiX(96)
     , m_dpiY(96)
     , m_resultLines(1)
@@ -620,7 +620,7 @@ void WinApiCalc::OnCreate()
         0, // Remove WS_EX_CLIENTEDGE for flat appearance
         "EDIT", 
         "",
-        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_RIGHT | WS_BORDER | WS_HSCROLL,
+        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE | ES_AUTOVSCROLL | ES_RIGHT | WS_BORDER,
         0, // No margins 
         resultY, // Position after input field using dynamic height + gap
         ScaleDPI(WINDOW_MIN_WIDTH), // Full width, no margins
@@ -1005,8 +1005,6 @@ void WinApiCalc::OnEnterPressed()
     }
 }
 
-
-
 void WinApiCalc::EvaluateExpression()
 {
     if (!m_pCalculator)
@@ -1061,28 +1059,19 @@ void WinApiCalc::EvaluateExpression()
         // Build result text
         std::string result;
         int lineCount = 0;
-
         for (int i = 0; i < n && i < 20; i++)
         {
             if (strings[i][0] != '\0') // Skip empty strings
             {
-                // Trim leading spaces to prevent wrapping in Wine
-                char* start = strings[i];
-                while (*start == ' ') start++;
-                
                 // Check string length to prevent buffer overflow issues
-                size_t len = strnlen(start, 79); // Max 79 chars per string
-                
-                // Truncate to 64 chars to prevent wrapping in Wine (binary strings can be long)
-                // if (len > 64) len = 64;
-                
+                size_t len = strnlen(strings[i], 79); // Max 79 chars per string
                 if (len > 0)
                 {
                     if (!result.empty())
                         result += "\r\n";
                         
                     // Safely append string with length limit
-                    result.append(start, len);
+                    result.append(strings[i], len);
                     lineCount++;
                     
                     // Prevent result from becoming too large

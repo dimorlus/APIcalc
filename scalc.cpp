@@ -1734,6 +1734,8 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
   //const float__t qnan = 0.0/0.0;
   constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN();
   t_operator saved_oper = toBEGIN;
+  value saved_val;
+  bool has_saved_val = false;
 
   buf = expression;
   v_sp = 0;
@@ -1748,6 +1750,11 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
      next_token:
       int op_pos = pos;
       t_operator oper;
+      if (has_saved_val)
+      {
+          v_stack[v_sp++] = saved_val;
+          has_saved_val = false;
+      }
       if (saved_oper != toBEGIN)
       {
           oper = saved_oper;
@@ -1790,6 +1797,11 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                   if (oper == toFUNC || oper == toLPAR || oper == toOPERAND)
                   {
                       saved_oper = oper;
+                      if (oper != toLPAR && v_sp > 0)
+                      {
+                          saved_val = v_stack[--v_sp];
+                          has_saved_val = true;
+                      }
                       oper = toMUL;
                       goto loper;
                   }
@@ -3194,11 +3206,11 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                     }
                   }
                   if (cop == toSETADD)
-                {
-                 if (!assign()) return qnan;
-                }
-               SafeFree(v_stack[v_sp-1]);
-               v_stack[v_sp-1].var = NULL;
+                    {
+                     if (!assign()) return qnan;
+                    }
+                  SafeFree(v_stack[v_sp-1]);
+                  v_stack[v_sp-1].var = NULL;
                   o_sp -= 1;
                   n_args = 1;
                 }

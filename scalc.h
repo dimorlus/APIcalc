@@ -299,6 +299,12 @@ class calculator
     int   errpos;
     char c_imaginary;
 
+    bool expr;
+	float__t result_fval;
+    int64_t result_ival;
+	float__t result_imval;
+    
+
     inline unsigned string_hash_function(char* p);
     symbol* add(t_symbol tag, const char* name, void* func = NULL);
     symbol* add(t_symbol tag, v_func fidx, const char* name, void* func=NULL);
@@ -334,7 +340,7 @@ class calculator
 	char Ichar(void) { return c_imaginary; };
     int format_out(int Options, int binwide, int n, float__t fVal, float__t imVal,
         int64_t iVal, char* expr, char strings[20][80]);
-
+    int print(char* str, int Options, int binwide, float__t fVal, float__t imVal, int64_t iVal, int* size = nullptr);
     ~calculator(void);
 };
 

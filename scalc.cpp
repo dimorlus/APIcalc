@@ -210,6 +210,7 @@ int calculator::format_out(int Options, int binwide, int n, float__t fVal, float
         if (error()[0])
         {
             int ep = errps();
+			if (ep < 0) ep = 0;
             if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
             if ((ep < 64))
             {
@@ -517,6 +518,327 @@ int calculator::format_out(int Options, int binwide, int n, float__t fVal, float
     }
 
     return n++;
+}
+//---------------------------------------------------------------------------
+
+int calculator::print(char *str, int Options, int binwide, float__t fVal, float__t imVal, int64_t iVal, int* size)
+{
+	int n = 0;
+	int bsize = 0;
+    if (IsNaN(fVal))
+    {
+        if (error()[0])
+        {
+            int ep = errps();
+            if (ep < 0) ep = 0;
+            if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
+            if ((ep < 64))
+            {
+                char binstr[80];
+                memset(binstr, ' ', sizeof(binstr));
+                memset(binstr, '-', ep);
+                binstr[ep] = '^';
+                binstr[sizeof(binstr) - 1] = '\0';
+                bsize+=sprintf(str, "%64.64s   \r\n", binstr); n++;
+				bsize+=sprintf(str, "%67.67s\r\n", error()); n++;
+            }
+            else
+            {
+                bsize+=sprintf(str, "%67.67s\r\n", error()); n++;
+            }
+        }
+        else
+        {
+            if (expr) bsize += sprintf(str, "%66.66s \r\n", "NaN");
+			else bsize += sprintf(str, "%66.66s \r\n", " ");
+            n++;
+
+            // (RO) String format found
+            if ((Options & STR) || (scfg & STR))
+            {
+                if (Options & AUTO)
+                {
+                    if (Sres()[0])
+                    {
+                        char strcstr[80];
+                        sprintf(strcstr, "'%s'", Sres());
+                        if (strcstr[0]) { bsize += sprintf(str, "%65.64s\r\n", strcstr); n++;}
+                    }
+                }
+                else
+                {
+                    if (Sres()[0])
+                    {
+                        char strcstr[80];
+                        sprintf(strcstr, "'%s'", Sres());
+                        bsize += sprintf(str, "%65.64s\r\n", strcstr); n++;
+                    }
+                    else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++;}
+                }
+            }
+        }
+    }
+    else
+    {
+        // (WO) Forced float
+        if (Options & FFLOAT)
+        {
+            if (imVal == 0) { bsize += sprintf(str, "%65.16Lg f\r\n", (long double)fVal); n++;}
+            else
+            {
+                char imstr[80];
+                sprintf(imstr, "%.16Lg%+.16Lg%c", (long double)fVal, (long double)imVal, Ichar());
+                bsize += sprintf(str, "%65.64s f\r\n", imstr); n++;
+            }
+        }
+        // (RO) Scientific (6.8k) format found
+        if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
+        {
+            char scistr[80];
+            if (imVal == 0)  d2scistr(scistr, fVal);
+            else
+            {
+                char* cp = scistr;
+                cp += d2scistr(scistr, fVal);
+                if (imVal > 0) *cp++ = '+';
+
+                cp += d2scistr(cp, imVal);
+                *cp++ = Ichar();
+                *cp = '\0';
+            }
+            bsize += sprintf(str, "%65.64s S\r\n", scistr); n++;
+        }
+        // (UI) Normalized output
+        if (Options & NRM)
+        {
+            char nrmstr[80];
+            if (imVal == 0) d2nrmstr(nrmstr, fVal);
+            else
+            {
+                char* cp = nrmstr;
+                cp += d2nrmstr(nrmstr, fVal);
+                if (imVal > 0) *cp++ = '+';
+                cp += d2nrmstr(cp, imVal);
+                *cp++ = Ichar();
+                *cp = '\0';
+            }
+            bsize += sprintf(str, "%65.64s n\r\n", nrmstr); n++;
+        }
+
+        // (RO) Computing format found
+        if ((Options & CMP) || (scfg & CMP))
+        {
+            char bscistr[80];
+            b2scistr(bscistr, fVal);
+            bsize += sprintf(str, "%65.64s c\r\n", bscistr); n++;
+        }
+
+        // (UI) Integer output
+        if (Options & IGR)
+        {
+            if (Options & AUTO)
+            {
+				if ((fVal - iVal) == 0) bsize += sprintf(str, "%65lld i\r\n", iVal); n++;
+            }
+            else { bsize += sprintf(str, "%65lld i\r\n", iVal); n++;}
+        }
+
+        // (UI) Unsigned output
+        if (Options & UNS)
+        {
+            if (Options & AUTO)
+            {
+                if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65llu u\r\n", iVal); n++;} //%llu|%zu
+            }
+            else { bsize += sprintf(str, "%65llu u\r\n", iVal); n++;} //%llu|%zu
+        }
+
+        // (UI) Fraction output
+        if (Options & FRC)
+        {
+            char frcstr[80];
+            int num, denum;
+            double val;
+            if (fVal > 0) val = fVal;
+            else val = -fVal;
+            double intpart = floor(val);
+            if (intpart < 1e15)
+            {
+                if (intpart > 0)
+                {
+                    fraction(val - intpart, 0.001, num, denum);
+                    if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
+                    else sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
+                }
+                else
+                {
+                    fraction(val, 0.001, num, denum);
+                    if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
+                    else sprintf(frcstr, "-%d/%d", num, denum);
+                }
+				if (denum) { bsize += sprintf(str, "%65.64s F\r\n", frcstr); n++; }
+            }
+        }
+
+        // (UI) Fraction inch output
+        if (Options & FRI)
+        {
+            char frcstr[80];
+            int num, denum;
+            double val;
+            if (fVal > 0) val = fVal;
+            else val = -fVal;
+            val /= 25.4e-3;
+            double intpart = floor(val);
+            if (intpart < 1e15)
+            {
+                if (intpart > 0)
+                {
+                    fraction(val - intpart, 0.001, num, denum);
+                    if (num && denum)
+                    {
+                        if (fVal > 0) sprintf(frcstr, "%.0f+%d/%d", intpart, num, denum);
+                        else sprintf(frcstr, "-%.0f-%d/%d", intpart, num, denum);
+                    }
+                    else
+                    {
+                        sprintf(frcstr, "%.0f", intpart);
+                    }
+                }
+                else
+                {
+                    fraction(val, 0.001, num, denum);
+                    if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
+                    else sprintf(frcstr, "-%d/%d", num, denum);
+                }
+                bsize += sprintf(str, "%65.64s \"\r\n", frcstr); n++;
+            }
+        }
+
+        // (RO) Hex format found
+        if ((Options & HEX) || (scfg & HEX))
+        {
+            char binfstr[16];
+            sprintf(binfstr, "%%64.%illxh  \r\n", binwide / 4);
+            if (Options & AUTO)
+            {
+                if ((fVal - iVal) == 0) { bsize += sprintf(str, binfstr, iVal); n++; }
+            }
+			else { sprintf(str, binfstr, iVal); n++; }
+        }
+
+        // (RO) Octal format found
+        if ((Options & OCT) || (scfg & OCT))
+        {
+            char binfstr[16];
+            sprintf(binfstr, "%%64.%illoo  \r\n", binwide / 3);
+            if (Options & AUTO)
+            {
+                if ((fVal - iVal) == 0) { bsize += sprintf(str, binfstr, iVal); n++; }
+            }
+            else { bsize += sprintf(str, binfstr, iVal); n++; }
+        }
+
+        // (RO) Binary format found
+        if ((Options & fBIN) || (scfg & fBIN))
+        {
+            char binfstr[16];
+            char binstr[80];
+            sprintf(binfstr, "%%%ib", binwide);
+            b2str(binstr, binfstr, iVal);
+            if (Options & AUTO)
+            {
+				if ((fVal - iVal) == 0) { sprintf(str, "%64.64sb  \r\n", binstr); n++; }
+            }
+			else { bsize += sprintf(str, "%64.64sb  \r\n", binstr); n++; }
+        }
+
+        // (RO) Char format found
+        if ((Options & CHR) || (scfg & CHR))
+        {
+            char chrstr[80];
+            chr2str(chrstr, iVal);
+            if (Options & AUTO)
+            {
+				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%64.64s c\r\n", chrstr); n++; }
+            }
+			else { bsize += sprintf(str, "%64.64s c\r\n", chrstr); n++; }
+        }
+
+        // (RO) WChar format found
+        if ((Options & WCH) || (scfg & WCH))
+        {
+            char wchrstr[80];
+            int i = iVal & 0xffff;
+            wchr2str(wchrstr, i);
+            if (Options & AUTO)
+            {
+				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%64.64s c\r\n", wchrstr); n++; }
+            }
+			else { sprintf(str, "%64.64s c\r\n", wchrstr); n++; }
+        }
+
+        // (RO) Date time format found
+        if ((Options & DAT) || (scfg & DAT))
+        {
+            char dtstr[80];
+            t2str(dtstr, iVal);
+            if (Options & AUTO)
+            {
+				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65.64s \r\n", dtstr); n++; }
+            }
+			else { sprintf(str, "%65.64s \r\n", dtstr); n++; }
+        }
+
+        // (RO) Unix time
+        if ((Options & UTM) || (scfg & UTM))
+        {
+            char dtstr[80];
+            nx_time2str(dtstr, iVal);
+            if (Options & AUTO)
+            {
+                if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65.64s  \r\n", dtstr); n++; }
+            }
+            else { bsize += sprintf(str, "%65.64s  \r\n", dtstr); n++; }
+        }
+
+        // (RO) Degrees format found  * 180.0 / M_PI
+        if ((Options & DEG) || (scfg & DEG))
+        {
+            char dgrstr[80];
+            char* cp = dgrstr;
+            cp += dgr2str(dgrstr, fVal);
+            sprintf(cp, " (%.6Lg`)", (long double)fVal * 180.0 / M_PI);
+            bsize += sprintf(str, "%65.64s  \r\n", dgrstr); n++;
+        }
+
+        // (RO) String format found
+        if ((Options & STR) || (scfg & STR))
+        {
+            if (Options & AUTO)
+            {
+                if (sres[0])
+                {
+                    char strcstr[80];
+                    sprintf(strcstr, "'%s'", sres);
+                    if (strcstr[0]) { bsize += sprintf(str, "%65.64s S\r\n", strcstr); n++;}
+                }
+				else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++; }
+            }
+            else
+            {
+                if (sres[0])
+                {
+                    char strcstr[80];
+                    sprintf(strcstr, "'%s'", sres);
+                    bsize += sprintf(str, "%65.64s S\r\n", strcstr); n++;
+                }
+                else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++; }
+            }
+        }
+    }
+	if (size) *size = bsize;
+    return n;
 }
 //---------------------------------------------------------------------------
 
@@ -1635,7 +1957,7 @@ t_operator calculator::scan(bool operand, bool percent)
       while (isalnum(buf[pos]&0x7f) || buf[pos] == '@' ||
              buf[pos] == '_' || buf[pos] == '?')
         {
-          *np++ = buf[pos++];
+          *np++ = buf[pos++] & 0x7f;
         }
       if (np == buf)
         {
@@ -1643,9 +1965,12 @@ t_operator calculator::scan(bool operand, bool percent)
           return toERROR;
         }
       *np = '\0';
-      symbol* sym;
-      if (buf[pos] == '\0') sym = find(name);
-      else sym = add(tsVARIABLE, name);
+      symbol* sym=NULL;
+      if (name[0])
+      {
+          if (buf[pos] == '\0') sym = find(name);
+          else sym = add(tsVARIABLE, name);
+      }
       if (v_sp == max_stack_size)
         {
           error("stack overflow");
@@ -1721,7 +2046,7 @@ bool calculator::assign()
    }
 }
 
-float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimval)
+float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval)
 {
   char var_name[16];
   bool operand = true;
@@ -1737,6 +2062,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
   value saved_val;
   bool has_saved_val = false;
 
+  expr = (expression && expression[0]);
   buf = expression;
   v_sp = 0;
   o_sp = 0;
@@ -1864,9 +2190,13 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                     sprintf(var_name, "@%d", ++tmp_var_count);
                     add(tsVARIABLE, var_name)->val = v_stack[0];
                    }
+				  result_fval = v_stack[0].get();
+				  result_imval = v_stack[0].imval;
+
 				  if (pimval) *pimval = v_stack[0].imval;
                   if (v_stack[0].tag == tvINT)
                     {
+					 result_ival = v_stack[0].ival;
                      if (piVal) *piVal = v_stack[0].ival;
 					 if (pimval) *pimval = 0;
                      if (v_stack[0].sval)
@@ -1880,6 +2210,7 @@ float__t calculator::evaluate(char* expression, __int64 * piVal, float__t* pimva
                     }
                   else
                     {
+					 result_ival = (__int64)v_stack[0].fval;
                      if (piVal) *piVal = (__int64)v_stack[0].fval;
                      if (v_stack[0].sval)
                       {

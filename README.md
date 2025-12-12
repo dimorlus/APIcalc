@@ -2,9 +2,19 @@
 
 [Русская версия / Russian version](Readme_ru.md)
 
-A scientific calculator application built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, and advanced mathematical functions.
+A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, and complex numbers.
+
+## Two Versions Available
+
+### 📊 GUI Version (WinApiCalc / fcalc.exe)
+Windows desktop application with native interface, history dropdown, and real-time calculation.
+
+### 💻 CLI Version (ccalc.exe)
+Command-line calculator for scripts, automation, and terminal use.
 
 ## Features
+
+### GUI Version (WinApiCalc)
 
 - **Scientific Calculator**: Support for trigonometric functions, logarithms, exponentials, and more
 - **Expression Parser**: Advanced mathematical expression evaluation with proper operator precedence
@@ -17,6 +27,41 @@ A scientific calculator application built using pure Win32 API without MFC depen
 - **Variables Dialog**: View and manage calculation variables
 - **Customizable Options**: Case sensitivity, forced float mode, ESC minimization, opacity control
 - **Implicit Multiplication**: Optionally omit multiplication operator in common cases
+
+### CLI Version (ccalc)
+
+- **Command-line interface**: Perfect for scripts and automation
+- **Same calculation engine**: Identical mathematical capabilities as GUI version
+- **Multiple output formats**: Supports all format options via command-line flags
+- **Configuration file support**: Load default options from `ccalc.cfg`
+- **Batch processing**: Process expressions from scripts or command line
+- **Built-in help system**: Access help via `ccalc "help(n)"` command
+
+#### CLI Usage
+
+```bash
+# Basic calculations (always use quotes!)
+ccalc "2+2"
+ccalc "sqrt(3^2+4^2)"
+ccalc "sin(pi/4)"
+
+# With options
+ccalc "0xFF + 0b1010" /HEX+ /BIN+
+ccalc "2k5" /SCI+              # 2500 with scientific notation
+ccalc "2+3i" /NRM+              # Complex numbers
+
+# Show help
+ccalc "help(0)"                 # Overview
+ccalc "help(1)"                 # Functions
+ccalc "help(4)"                 # Constants (including physical constants)
+ccalc "help(7)"                 # Options
+
+# Configuration file (ccalc.cfg)
+# Place in same directory as ccalc.exe
+/SCI+ /IMUL+ /BW=64
+```
+
+**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
 
 ## Supported Functions
 
@@ -45,6 +90,51 @@ A scientific calculator application built using pure Win32 API without MFC depen
 - **pi**: 3.14159265358979323846
 - **e**: 2.71828182845904523536
 - **phi**: 1.61803398874989484820 (Golden ratio)
+
+#### Physical Constants (CODATA 2018)
+
+**Fundamental:**
+- **c0**: Speed of light in vacuum (299792458 m/s)
+- **hp**: Planck constant (6.62607015e-34 J·s)
+- **hb**: Reduced Planck constant ℏ (1.054571817e-34 J·s)
+- **gn**: Gravitational constant (6.67430e-11 m³/(kg·s²))
+- **na**: Avogadro constant (6.02214076e23 mol⁻¹)
+- **kb**: Boltzmann constant (1.380649e-23 J/K)
+- **rg**: Universal gas constant (8.314462618 J/(mol·K))
+
+**Electromagnetic:**
+- **e0**: Electric constant (8.8541878128e-12 F/m)
+- **u0**: Magnetic constant (1.25663706212e-6 H/m)
+- **z0**: Impedance of vacuum (376.730313668 Ω)
+
+**Particle:**
+- **qe**: Elementary charge (1.602176634e-19 C)
+- **me**: Electron mass (9.1093837015e-31 kg)
+- **mp**: Proton mass (1.67262192369e-27 kg)
+- **mn**: Neutron mass (1.67492749804e-27 kg)
+- **rel**: Classical electron radius (2.8179403262e-15 m)
+- **a0**: Bohr radius (5.29177210903e-11 m)
+
+**Astronomical:**
+- **au**: Astronomical unit (1.495978707e11 m)
+- **ly**: Light year (9.4607304725808e15 m)
+- **pc**: Parsec (3.0856775814914e16 m)
+
+**Additional:**
+- **ry**: Rydberg constant (10973731.568160 m⁻¹)
+- **sb**: Stefan-Boltzmann constant (5.670374419e-8 W/(m²·K⁴))
+
+**Integer Limits:**
+- **max32**, **maxint**: Maximum signed 32-bit (2147483647)
+- **maxu32**, **maxuint**: Maximum unsigned 32-bit (4294967295)
+- **max64**, **maxlong**: Maximum signed 64-bit
+- **maxu64**, **maxulong**: Maximum unsigned 64-bit
+
+**System:**
+- **version**: Calculator version
+- **timezone**: System timezone offset (hours)
+- **daylight**: Daylight saving time flag
+- **tz**: Current timezone with DST
 
 ## Output Formats
 
@@ -170,6 +260,22 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 - Windows SDK 10.0 or later
 - C++17 standard
 
+### Building GUI Version (WinApiCalc)
+
+1. Open `WinApiCalc.sln` in Visual Studio
+2. Select configuration (Debug/Release) and platform (x86/x64)
+3. Build solution (F7)
+4. Executable will be in `x64/Release/fcalc.exe` or similar
+
+### Building CLI Version (ccalc)
+
+1. Open `ccalc.vcxproj` in Visual Studio
+2. Select configuration and platform
+3. Build project
+4. Executable will be in configured output directory
+
+Both projects share the same calculation engine (`scalc.cpp`, `sfmts.cpp`, `sfunc.cpp`).
+
 ## Dependencies
 
 - comctl32.lib (Windows Common Controls)
@@ -179,9 +285,35 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 
 The application uses a clean separation of concerns:
 
-- **WinApiCalc**: Main application window and UI management
-- **Calculator**: Mathematical expression parser and evaluator
-- **Resources**: Menus, dialogs, and accelerators
+- **Common calculation engine** (shared by both GUI and CLI):
+  - **scalc.cpp/h**: Mathematical expression parser and evaluator
+  - **sfmts.cpp/h**: Number format conversion and output
+  - **sfunc.cpp/h**: Mathematical functions implementation
+
+- **GUI version** (WinApiCalc):
+  - **WinApiCalc.cpp/h**: Main application window and UI management
+  - **Resources**: Menus, dialogs, and accelerators
+
+- **CLI version** (ccalc):
+  - **ccalc.cpp/h**: Command-line interface and argument parsing
+  - **help.cpp**: Built-in help system
+
+## Project Structure
+
+```
+APICalc/
+├── scalc.cpp/h          # Calculation engine (shared)
+├── sfmts.cpp/h          # Format handling (shared)
+├── sfunc.cpp/h          # Math functions (shared)
+├── WinApiCalc.cpp/h     # GUI application
+├── WinApiCalc.rc        # GUI resources
+├── ccalc/               # CLI version
+│   ├── ccalc.cpp/h      # CLI main
+│   ├── help.cpp         # Help system
+│   └── ccalc.cfg        # Configuration file
+├── fcalc.chm            # Help file
+└── README.md            # This file
+```
 
 ## Help File Integration
 

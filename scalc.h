@@ -52,6 +52,8 @@
 #define AUT     (1<<26) // (UI) Auto output
 #define TOP     (1<<27) // (UI) Always on top
 #define IMUL	(1<<28) // (WO) Implicit multiplication
+#define OPT	    (1<<29) // (UI) Print options 
+
 #define STRBUF  256     // bufer size for string operations
 
 #define _WCHAR_         // L'c' and 'c'W input format allow

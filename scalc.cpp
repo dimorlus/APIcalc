@@ -155,6 +155,39 @@ calculator::calculator(int cfg)
   addfvar("pi", M_PI);
   addfvar("e", M_E);
   addfvar("phi", PHI);
+
+  // Physical constants (CODATA 2018)
+  // Fundamental constants
+  addfvar("c0", 299792458.0);              // Speed of light in vacuum (m/s)
+  addfvar("hp", 6.62607015e-34);           // Planck constant (J·s)
+  addfvar("hb", 1.054571817e-34);          // Reduced Planck constant ℏ (J·s)
+  addfvar("gn", 6.67430e-11);              // Gravitational constant (m³/(kg·s²))
+  addfvar("na", 6.02214076e23);            // Avogadro constant (mol⁻¹)
+  addfvar("kb", 1.380649e-23);             // Boltzmann constant (J/K)
+  addfvar("rg", 8.314462618);              // Universal gas constant (J/(mol·K))
+  
+  // Electromagnetic constants
+  addfvar("e0", 8.8541878128e-12);         // Electric constant, vacuum permittivity (F/m)
+  addfvar("u0", 1.25663706212e-6);         // Magnetic constant, vacuum permeability (H/m)
+  addfvar("z0", 376.730313668);            // Characteristic impedance of vacuum (Ω)
+  
+  // Particle constants
+  addfvar("qe", 1.602176634e-19);          // Elementary charge (C)
+  addfvar("me", 9.1093837015e-31);         // Electron mass (kg)
+  addfvar("mp", 1.67262192369e-27);        // Proton mass (kg)
+  addfvar("mn", 1.67492749804e-27);        // Neutron mass (kg)
+  addfvar("rel", 2.8179403262e-15);        // Classical electron radius (m)
+  addfvar("a0", 5.29177210903e-11);        // Bohr radius (m)
+  
+  // Astronomical constants
+  addfvar("au", 1.495978707e11);           // Astronomical unit (m)
+  addfvar("ly", 9.4607304725808e15);       // Light year (m)
+  addfvar("pc", 3.0856775814914e16);       // Parsec (m)
+  
+  // Additional constants
+  addfvar("ry", 10973731.568160);          // Rydberg constant (m⁻¹)
+  addfvar("sb", 5.670374419e-8);           // Stefan-Boltzmann constant (W/(m²·K⁴))
+
   addfvar("version", _ver_);
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
@@ -539,18 +572,21 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                 memset(binstr, '-', ep);
                 binstr[ep] = '^';
                 binstr[sizeof(binstr) - 1] = '\0';
-                bsize+=sprintf(str, "%64.64s   \r\n", binstr); n++;
-				bsize+=sprintf(str, "%67.67s\r\n", error()); n++;
+                bsize+=sprintf(str + bsize, "%64.64s   \r\n", binstr); n++;
+				bsize+=sprintf(str + bsize, "%67.67s\r\n", error()); n++;
             }
             else
             {
-                bsize+=sprintf(str, "%67.67s\r\n", error()); n++;
+                bsize+=sprintf(str + bsize, "%67.67s\r\n", error()); n++;
             }
         }
         else
         {
-            if (expr) bsize += sprintf(str, "%66.66s \r\n", "NaN");
-			else bsize += sprintf(str, "%66.66s \r\n", " ");
+            binwide = 8 * (binwide / 8);
+			if (binwide < 8) binwide = 8;
+			if (binwide > 64) binwide = 64;
+            if (expr) bsize += sprintf(str + bsize, "%66.66s \r\n", "NaN");
+			else bsize += sprintf(str + bsize, "%66.66s \r\n", " ");
             n++;
 
             // (RO) String format found
@@ -562,7 +598,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                     {
                         char strcstr[80];
                         sprintf(strcstr, "'%s'", Sres());
-                        if (strcstr[0]) { bsize += sprintf(str, "%65.64s\r\n", strcstr); n++;}
+                        if (strcstr[0]) { bsize += sprintf(str + bsize, "%65.64s\r\n", strcstr); n++;}
                     }
                 }
                 else
@@ -571,9 +607,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                     {
                         char strcstr[80];
                         sprintf(strcstr, "'%s'", Sres());
-                        bsize += sprintf(str, "%65.64s\r\n", strcstr); n++;
+                        bsize += sprintf(str + bsize, "%65.64s\r\n", strcstr); n++;
                     }
-                    else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++;}
+                    else { bsize += sprintf(str + bsize, "%65.64s S\r\n", "''"); n++;}
                 }
             }
         }
@@ -583,12 +619,12 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
         // (WO) Forced float
         if (Options & FFLOAT)
         {
-            if (imVal == 0) { bsize += sprintf(str, "%65.16Lg f\r\n", (long double)fVal); n++;}
+            if (imVal == 0) { bsize += sprintf(str + bsize, "%65.16Lg f\r\n", (long double)fVal); n++;}
             else
             {
                 char imstr[80];
                 sprintf(imstr, "%.16Lg%+.16Lg%c", (long double)fVal, (long double)imVal, Ichar());
-                bsize += sprintf(str, "%65.64s f\r\n", imstr); n++;
+                bsize += sprintf(str + bsize, "%65.64s f\r\n", imstr); n++;
             }
         }
         // (RO) Scientific (6.8k) format found
@@ -606,7 +642,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                 *cp++ = Ichar();
                 *cp = '\0';
             }
-            bsize += sprintf(str, "%65.64s S\r\n", scistr); n++;
+            bsize += sprintf(str + bsize, "%65.64s S\r\n", scistr); n++;
         }
         // (UI) Normalized output
         if (Options & NRM)
@@ -622,7 +658,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                 *cp++ = Ichar();
                 *cp = '\0';
             }
-            bsize += sprintf(str, "%65.64s n\r\n", nrmstr); n++;
+            bsize += sprintf(str + bsize, "%65.64s n\r\n", nrmstr); n++;
         }
 
         // (RO) Computing format found
@@ -630,7 +666,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
         {
             char bscistr[80];
             b2scistr(bscistr, fVal);
-            bsize += sprintf(str, "%65.64s c\r\n", bscistr); n++;
+            bsize += sprintf(str + bsize, "%65.64s c\r\n", bscistr); n++;
         }
 
         // (UI) Integer output
@@ -638,9 +674,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
         {
             if (Options & AUTO)
             {
-				if ((fVal - iVal) == 0) bsize += sprintf(str, "%65lld i\r\n", iVal); n++;
+				if ((fVal - iVal) == 0) bsize += sprintf(str + bsize, "%65lld i\r\n", iVal); n++;
             }
-            else { bsize += sprintf(str, "%65lld i\r\n", iVal); n++;}
+            else { bsize += sprintf(str + bsize, "%65lld i\r\n", iVal); n++;}
         }
 
         // (UI) Unsigned output
@@ -648,9 +684,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
         {
             if (Options & AUTO)
             {
-                if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65llu u\r\n", iVal); n++;} //%llu|%zu
+                if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%65llu u\r\n", iVal); n++;} //%llu|%zu
             }
-            else { bsize += sprintf(str, "%65llu u\r\n", iVal); n++;} //%llu|%zu
+            else { bsize += sprintf(str + bsize, "%65llu u\r\n", iVal); n++;} //%llu|%zu
         }
 
         // (UI) Fraction output
@@ -676,7 +712,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                     if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
                     else sprintf(frcstr, "-%d/%d", num, denum);
                 }
-				if (denum) { bsize += sprintf(str, "%65.64s F\r\n", frcstr); n++; }
+				if (denum) { bsize += sprintf(str + bsize, "%65.64s F\r\n", frcstr); n++; }
             }
         }
 
@@ -711,7 +747,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                     if (fVal > 0) sprintf(frcstr, "%d/%d", num, denum);
                     else sprintf(frcstr, "-%d/%d", num, denum);
                 }
-                bsize += sprintf(str, "%65.64s \"\r\n", frcstr); n++;
+                bsize += sprintf(str + bsize, "%65.64s \"\r\n", frcstr); n++;
             }
         }
 
@@ -722,9 +758,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             sprintf(binfstr, "%%64.%illxh  \r\n", binwide / 4);
             if (Options & AUTO)
             {
-                if ((fVal - iVal) == 0) { bsize += sprintf(str, binfstr, iVal); n++; }
+                if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, binfstr, iVal); n++; }
             }
-			else { sprintf(str, binfstr, iVal); n++; }
+			else { bsize += sprintf(str + bsize, binfstr, iVal); n++; }
         }
 
         // (RO) Octal format found
@@ -734,9 +770,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             sprintf(binfstr, "%%64.%illoo  \r\n", binwide / 3);
             if (Options & AUTO)
             {
-                if ((fVal - iVal) == 0) { bsize += sprintf(str, binfstr, iVal); n++; }
+                if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, binfstr, iVal); n++; }
             }
-            else { bsize += sprintf(str, binfstr, iVal); n++; }
+            else { bsize += sprintf(str + bsize, binfstr, iVal); n++; }
         }
 
         // (RO) Binary format found
@@ -748,9 +784,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             b2str(binstr, binfstr, iVal);
             if (Options & AUTO)
             {
-				if ((fVal - iVal) == 0) { sprintf(str, "%64.64sb  \r\n", binstr); n++; }
+				if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%64.64sb  \r\n", binstr); n++; }
             }
-			else { bsize += sprintf(str, "%64.64sb  \r\n", binstr); n++; }
+			else { bsize += sprintf(str + bsize, "%64.64sb  \r\n", binstr); n++; }
         }
 
         // (RO) Char format found
@@ -760,9 +796,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             chr2str(chrstr, iVal);
             if (Options & AUTO)
             {
-				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%64.64s c\r\n", chrstr); n++; }
+				if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%64.64s  c\r\n", chrstr); n++; }
             }
-			else { bsize += sprintf(str, "%64.64s c\r\n", chrstr); n++; }
+			else { bsize += sprintf(str + bsize, "%64.64s  c\r\n", chrstr); n++; }
         }
 
         // (RO) WChar format found
@@ -773,9 +809,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             wchr2str(wchrstr, i);
             if (Options & AUTO)
             {
-				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%64.64s c\r\n", wchrstr); n++; }
+				if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%64.64s  c\r\n", wchrstr); n++; }
             }
-			else { sprintf(str, "%64.64s c\r\n", wchrstr); n++; }
+			else { bsize += sprintf(str + bsize, "%64.64s  c\r\n", wchrstr); n++; }
         }
 
         // (RO) Date time format found
@@ -785,9 +821,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             t2str(dtstr, iVal);
             if (Options & AUTO)
             {
-				if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65.64s \r\n", dtstr); n++; }
+				if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%65.64s \r\n", dtstr); n++; }
             }
-			else { sprintf(str, "%65.64s \r\n", dtstr); n++; }
+			else { bsize += sprintf(str + bsize, "%65.64s \r\n", dtstr); n++; }
         }
 
         // (RO) Unix time
@@ -797,9 +833,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             nx_time2str(dtstr, iVal);
             if (Options & AUTO)
             {
-                if ((fVal - iVal) == 0) { bsize += sprintf(str, "%65.64s  \r\n", dtstr); n++; }
+                if ((fVal - iVal) == 0) { bsize += sprintf(str + bsize, "%65.64s  \r\n", dtstr); n++; }
             }
-            else { bsize += sprintf(str, "%65.64s  \r\n", dtstr); n++; }
+            else { bsize += sprintf(str + bsize, "%65.64s  \r\n", dtstr); n++; }
         }
 
         // (RO) Degrees format found  * 180.0 / M_PI
@@ -809,7 +845,7 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
             char* cp = dgrstr;
             cp += dgr2str(dgrstr, fVal);
             sprintf(cp, " (%.6Lg`)", (long double)fVal * 180.0 / M_PI);
-            bsize += sprintf(str, "%65.64s  \r\n", dgrstr); n++;
+            bsize += sprintf(str + bsize, "%65.64s  \r\n", dgrstr); n++;
         }
 
         // (RO) String format found
@@ -821,9 +857,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                 {
                     char strcstr[80];
                     sprintf(strcstr, "'%s'", sres);
-                    if (strcstr[0]) { bsize += sprintf(str, "%65.64s S\r\n", strcstr); n++;}
+                    if (strcstr[0]) { bsize += sprintf(str + bsize, "%65.64s S\r\n", strcstr); n++;}
                 }
-				else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++; }
+				else { bsize += sprintf(str + bsize, "%65.64s S\r\n", "''"); n++; }
             }
             else
             {
@@ -831,9 +867,9 @@ int calculator::print(char *str, int Options, int binwide, float__t fVal, float_
                 {
                     char strcstr[80];
                     sprintf(strcstr, "'%s'", sres);
-                    bsize += sprintf(str, "%65.64s S\r\n", strcstr); n++;
+                    bsize += sprintf(str + bsize, "%65.64s S\r\n", strcstr); n++;
                 }
-                else { bsize += sprintf(str, "%65.64s S\r\n", "''"); n++; }
+                else { bsize += sprintf(str + bsize, "%65.64s S\r\n", "''"); n++; }
             }
         }
     }

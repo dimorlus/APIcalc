@@ -1,0 +1,109 @@
+=== PHYSICAL CONSTANTS FOR CALCULATOR ===
+
+This file contains proposed two-letter physical constants to avoid conflicts with SI prefixes.
+
+FUNDAMENTAL CONSTANTS:
+======================
+c0 - Speed of light in vacuum
+     Value: 299792458 m/s
+     Description: The speed of electromagnetic radiation in vacuum
+
+hp - Planck constant
+     Value: 6.62607015e-34 J·s
+     Description: Fundamental constant relating energy to frequency
+
+hb - Reduced Planck constant (ℏ = h/2π)
+     Value: 1.054571817e-34 J·s
+     Description: Planck constant divided by 2π, commonly used in quantum mechanics
+
+gn - Gravitational constant (Newton's constant)
+     Value: 6.67430e-11 m³/(kg·s²)
+     Description: Constant of proportionality in Newton's law of universal gravitation
+
+na - Avogadro constant
+     Value: 6.02214076e23 mol⁻¹
+     Description: Number of constituent particles per mole
+
+kb - Boltzmann constant
+     Value: 1.380649e-23 J/K
+     Description: Relates average kinetic energy of particles to temperature
+
+rg - Universal gas constant
+     Value: 8.314462618 J/(mol·K)
+     Description: Product of Boltzmann constant and Avogadro constant
+
+
+ELECTROMAGNETIC CONSTANTS:
+===========================
+e0 - Electric constant (vacuum permittivity)
+     Value: 8.8541878128e-12 F/m
+     Description: Permittivity of free space
+
+u0 - Magnetic constant (vacuum permeability)
+     Value: 1.25663706212e-6 H/m
+     Description: Permeability of free space
+
+z0 - Characteristic impedance of vacuum
+     Value: 376.730313668 Ω
+     Description: Wave impedance of electromagnetic waves in vacuum
+
+
+PARTICLE CONSTANTS:
+===================
+qe - Elementary charge
+     Value: 1.602176634e-19 C
+     Description: Electric charge of a proton (magnitude)
+
+me - Electron mass
+     Value: 9.1093837015e-31 kg
+     Description: Rest mass of an electron
+
+mp - Proton mass
+     Value: 1.67262192369e-27 kg
+     Description: Rest mass of a proton
+
+mn - Neutron mass
+     Value: 1.67492749804e-27 kg
+     Description: Rest mass of a neutron
+
+re - Classical electron radius
+     Value: 2.8179403262e-15 m
+     Description: Characteristic length scale for electron scattering
+
+a0 - Bohr radius
+     Value: 5.29177210903e-11 m
+     Description: Most probable distance between nucleus and electron in hydrogen ground state
+
+
+ASTRONOMICAL CONSTANTS:
+========================
+au - Astronomical unit
+     Value: 1.495978707e11 m
+     Description: Mean distance from Earth to Sun
+
+ly - Light year
+     Value: 9.4607304725808e15 m
+     Description: Distance light travels in one Julian year
+
+pc - Parsec
+     Value: 3.0856775814914e16 m
+     Description: Parallax of one arcsecond, astronomical distance unit
+
+
+ADDITIONAL CONSTANTS:
+=====================
+ry - Rydberg constant
+     Value: 10973731.568160 m⁻¹
+     Description: Spectroscopic constant for atomic spectra
+
+sb - Stefan-Boltzmann constant
+     Value: 5.670374419e-8 W/(m²·K⁴)
+     Description: Constant relating black body radiation to temperature
+
+
+NOTES:
+======
+- All constants use two-letter names to avoid conflicts with SI prefixes
+- Constants are lowercase to distinguish from units
+- Values are from CODATA 2018 recommended values
+- Will respect /UPCASE+ option for case-insensitive matching

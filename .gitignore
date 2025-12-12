@@ -72,3 +72,9 @@ Reports/*
 .vs/
 WinApiCalc/
 x64/Debug/
+ccalc/bin/x64/Debug/
+# Keep release executable
+!ccalc/bin/x64/Release/ccalc.exe
+!ccalc/bin/Win32/Release/ccalc.exe
+!x64/Release/fcalc.exe
+!Release/fcalc.exe

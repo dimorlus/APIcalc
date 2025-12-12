@@ -29,7 +29,9 @@ Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: 
 
 [Files]
 Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}";Components: program; Flags:ignoreversion
+Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: "fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
+Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: program; Flags: ignoreversion
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist

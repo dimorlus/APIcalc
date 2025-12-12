@@ -28,10 +28,13 @@ Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: 
 [Files]
 ; 64-bit version for x64 systems
 Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: Is64BitInstallMode
 ; 32-bit version for x86 systems  
 Source: ".\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: ".\ccalc\bin\Win32\Release\ccalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
 ; Help file for both architectures
 Source: "fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
+Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: program; Flags: ignoreversion
 
 ; Visual C++ Redistributables
 Source: ".\Redistr\VC_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: Is64BitInstallMode

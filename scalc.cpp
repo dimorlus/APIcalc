@@ -1016,21 +1016,24 @@ symbol* calculator::find(const char* name, void* func)
 
 void calculator::addfvar(const char* name, float__t val)
 {
- symbol* sp = add(tsVARIABLE, name);
+ //symbol* sp = add(tsVARIABLE, name);
+ symbol* sp = add(tsCONSTANT, name);
  sp->val.tag = tvFLOAT;
  sp->val.fval = val;
 }
 
 void calculator::addivar(const char* name, int_t val)
 {
-    symbol* sp = add(tsVARIABLE, name);
+    //symbol* sp = add(tsVARIABLE, name);
+    symbol* sp = add(tsCONSTANT, name);
     sp->val.tag = tvINT;
     sp->val.ival = val;
 }
 
 void calculator::addlvar(const char* name, float__t fval, int_t ival)
 {
-    symbol* sp = add(tsVARIABLE, name);
+    //symbol* sp = add(tsVARIABLE, name);
+    symbol* sp = add(tsCONSTANT, name);
     sp->val.tag = tvINT;
     sp->val.fval = fval;
     sp->val.ival = ival;    
@@ -2017,7 +2020,7 @@ t_operator calculator::scan(bool operand, bool percent)
           DeepCopy(v_stack[v_sp], sym->val);
           v_stack[v_sp].pos = pos;
           v_stack[v_sp++].var = sym;
-          return (sym->tag == tsVARIABLE) ? toOPERAND : toFUNC;
+          return (sym->tag == tsVARIABLE||sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
         }
       else return toOPERAND;
     }
@@ -2076,6 +2079,11 @@ bool calculator::assign()
   }
  else
    {
+    if (v.var->tag == tsCONSTANT)
+     {
+      error(v.pos, "assignment to constant");
+      return false;
+	 }
     SafeFree(v.var->val);
     DeepCopy(v.var->val, v);
     return true;
@@ -3276,6 +3284,11 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                 }
               else
                 {
+                  if (v_stack[v_sp - 2].var->tag == tsCONSTANT)
+                  {
+                      error(v_stack[v_sp - 2].pos, "assignment to constant");
+                      return qnan;
+                  }
                   //v_stack[v_sp - 2] := v_stack[v_sp - 1]
                   if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
                   {

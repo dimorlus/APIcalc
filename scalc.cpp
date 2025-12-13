@@ -2268,6 +2268,7 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                 }
               else
               if (v_sp != 0) error("Unexpected end of expression");
+              error("Unexpected end of expression");
               return qnan;
 
             case toCOMMA:

@@ -25,13 +25,14 @@ Name: "custom"; Description: "custom"; Flags:iscustom
 ; Note: The following line does nothing other than provide a visual cue
 ; to the user that the program files are installed no matter what.
 Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: fixed
+Name: "ccalc"; Description:"CLI Calculator "; Types: custom
 
 
 [Files]
 Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}";Components: program; Flags:ignoreversion
-Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}";Components: program; Flags:ignoreversion
+Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}";Components: ccalc; Flags:ignoreversion
 Source: "fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
-Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: program; Flags: ignoreversion
+Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist
@@ -40,6 +41,7 @@ Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History1
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History2"; ValueData:"now(tz)"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History3"; ValueData:"opacity(100)"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History4"; ValueData:"menu(0)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History5"; ValueData:"version"; Components:program; Flags: createvalueifdoesntexist
 
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowY"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowX"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist
@@ -49,10 +51,8 @@ Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"HistoryCo
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"FontSize"; ValueData:"$0e"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"BinaryWidth"; ValueData:"$40"; Components:program; Flags: createvalueifdoesntexist
 
-
 [UninstallDelete]
 Type: dirifempty; Name: "{app}"
-
 
 [Icons]
 Name: "{group}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}";Components: program

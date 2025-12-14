@@ -25,14 +25,16 @@ Name: "custom"; Description: "custom"; Flags: iscustom
 
 [Components]
 Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: fixed
+Name: "ccalc"; Description:"CLI Calculator "; Types: custom
+
 
 [Files]
 ; 32-bit version for x86 systems  
 Source: ".\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
-Source: ".\ccalc\bin\Win32\Release\ccalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: ".\ccalc\bin\Win32\Release\ccalc.exe"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion; Check: not Is64BitInstallMode
 ; Help file for both architectures
 Source: "fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
-Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: program; Flags: ignoreversion
+Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion
 
 ; Visual C++ Redistributables
 Source: ".\Redistr\VC_redist.x86.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: not Is64BitInstallMode

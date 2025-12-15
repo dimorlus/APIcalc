@@ -58,6 +58,7 @@ static long double BinwideFunction(long double x);
 static long double HomeFunction(long double x);
 static long double FontFunction(long double x);
 static long double VarsFunction(long double x);
+static long double ColorFunction(long double x);
 
 WinApiCalc::WinApiCalc()
     : m_hInst(nullptr)
@@ -83,7 +84,7 @@ WinApiCalc::WinApiCalc()
     , m_originalResultEditProc(nullptr)
     , m_originalComboBoxProc(nullptr)
     , m_isUpdatingHistory(false)
-    , m_lastComboHeight(0)
+    , m_suppressInteractive(true) // Default to supressed until InitInstance finishes
     , m_isWine(false)
 {
     // Detect Wine
@@ -241,6 +242,9 @@ BOOL WinApiCalc::InitInstance(HINSTANCE hInstance, int nCmdShow)
     
     // Mark UI as fully ready for pseudo-functions
     m_uiReady = true;
+    
+    // Enable interactive features (like color popup) after initial load
+    m_suppressInteractive = false;
 
     return TRUE;
 }
@@ -563,6 +567,7 @@ void WinApiCalc::OnCreate()
     m_pCalculator->addfn("binwide", (void*)(float__t(*)(float__t))BinwideFunction);
     m_pCalculator->addfn("font", (void*)(float__t(*)(float__t))FontFunction);
     m_pCalculator->addfn("vars", (void*)(float__t(*)(float__t))VarsFunction);
+    m_pCalculator->addfn("color", (void*)(float__t(*)(float__t))ColorFunction);
     m_pCalculator->addfn("home", (void*)(float__t(*)(float__t))HomeFunction);
 
     // Initialize Common Controls
@@ -2804,4 +2809,202 @@ int WinApiCalc::MeasureTextHeightForWidth(const std::string &text, int width)
 
     // Add a tiny inset so text doesn't touch bottom edge
     return height + ScaleDPI(2);
+}
+
+static long double ColorFunction(long double x)
+{
+    if (g_pCalcInstance && !g_pCalcInstance->IsInteractiveSuppressed())
+    {
+        // Must run on main thread UI if possible, but here we are called from calc engine
+        // which runs on main thread in this app architecture.
+        WinApiCalc::ShowColorWindow((uint32_t)x);
+    }
+    return x;
+}
+
+void WinApiCalc::ShowColorWindow(uint32_t color)
+{
+    const char* pClassName = "WinApiCalcColorWindow";
+    
+    // Register class if not exists
+    WNDCLASSEXA wc = {0};
+    if (!GetClassInfoExA(GetModuleHandle(NULL), pClassName, &wc))
+    {
+        wc.cbSize = sizeof(WNDCLASSEX);
+        wc.style = CS_HREDRAW | CS_VREDRAW;
+        wc.lpfnWndProc = WinApiCalc::ColorWndProc;
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = 0;
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground = NULL; // We will paint it ourselves
+        wc.lpszMenuName = NULL;
+        wc.lpszClassName = pClassName;
+        wc.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+        
+        RegisterClassExA(&wc);
+    }
+    
+    HWND hMainWnd = g_pApp ? g_pApp->GetMainWindow() : NULL;
+    
+    // Default position
+    int x = 100;
+    int y = 100;
+
+    // Position at top-left of main app window if available
+    if (hMainWnd && IsWindow(hMainWnd))
+    {
+        RECT rc;
+        if (GetWindowRect(hMainWnd, &rc))
+        {
+            x = rc.left;
+            y = rc.top;
+        }
+    }
+    else
+    {
+        // Fallback to cursor if no main window (unlikely)
+        POINT pt;
+        if (GetCursorPos(&pt)) {
+            x = pt.x; y = pt.y;
+        }
+    }
+    
+    int size = 75; // Reduced size (was 150)
+
+    // Save current focus to restore later
+    HWND hFocus = GetFocus();
+    
+    // Save current selection to restore later
+    DWORD dwStart = 0, dwEnd = 0;
+    if (g_pApp && g_pApp->m_hExpressionEdit)
+    {
+        SendMessage(g_pApp->m_hExpressionEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+    }
+
+    // Create window
+    HWND hColorWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+        pClassName,
+        "Color",
+        WS_POPUP | WS_VISIBLE | WS_BORDER,
+        x, y, size, size,
+        hMainWnd,
+        NULL,
+        GetModuleHandle(NULL),
+        (LPVOID)(uintptr_t)color // Pass color as user data
+    );
+    
+    if (hColorWnd)
+    {
+        // Set color as user data
+        SetWindowLongPtrA(hColorWnd, GWLP_USERDATA, (LONG_PTR)color);
+        
+        // Ensure focus is on the color window so it receives keyboard messages
+        SetFocus(hColorWnd);
+        
+        // Capture mouse to detect clicks outside
+        SetCapture(hColorWnd);
+
+        // Disable main window for modality
+        if (hMainWnd && IsWindow(hMainWnd))
+            EnableWindow(hMainWnd, FALSE);
+
+        // Handle messages until window is closed
+        MSG msg;
+        BOOL bRet;
+
+        // Modal message loop
+        while (IsWindow(hColorWnd))
+        {
+            bRet = GetMessage(&msg, NULL, 0, 0);
+            
+            if (bRet == 0) // WM_QUIT
+            {
+                // Repost WM_QUIT to be handled by main loop after we exit
+                PostQuitMessage((int)msg.wParam);
+                break;
+            }
+            else if (bRet == -1) // Error
+            {
+                break; 
+            }
+            else
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+
+        // Re-enable main window
+        if (hMainWnd && IsWindow(hMainWnd))
+        {
+            EnableWindow(hMainWnd, TRUE);
+            if (hFocus && IsWindow(hFocus))
+            {
+                SetFocus(hFocus); // Restore original focus
+            }
+            else
+            {
+                SetFocus(hMainWnd);
+            }
+            
+            // Restore selection
+            if (g_pApp && g_pApp->m_hExpressionEdit)
+            {
+                SendMessage(g_pApp->m_hExpressionEdit, EM_SETSEL, dwStart, dwEnd);
+            }
+        }
+    }
+}
+
+LRESULT CALLBACK WinApiCalc::ColorWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
+            
+            uint32_t color = (uint32_t)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
+            // Color is 0xRRGGBB, but RGB macro expects r,g,b. 
+            // 0xRRGGBB -> R=(v>>16)&0xFF, G=(v>>8)&0xFF, B=v&0xFF
+            
+            int r = (color >> 16) & 0xFF;
+            int g = (color >> 8) & 0xFF;
+            int b = color & 0xFF;
+            
+            HBRUSH hBrush = CreateSolidBrush(RGB(r, g, b));
+            FillRect(hdc, &ps.rcPaint, hBrush);
+            DeleteObject(hBrush);
+            
+            EndPaint(hWnd, &ps);
+        }
+        break;
+        
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+        ReleaseCapture();
+        DestroyWindow(hWnd);
+        break;
+        
+    case WM_KEYDOWN:
+        // Any key closes the window
+        ReleaseCapture();
+        DestroyWindow(hWnd);
+        // Return 0 to indicate we handled the message
+        return 0;
+        
+    case WM_CLOSE:
+        ReleaseCapture();
+        DestroyWindow(hWnd);
+        break;
+        
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
 }

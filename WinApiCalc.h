@@ -40,6 +40,7 @@ private:
     int m_windowX;          // Позиция окна X
     int m_windowY;          // Позиция окна Y
     bool m_isUpdatingHistory; // Flag to suppress notifications during history updates
+    bool m_suppressInteractive; // Flag to suppress interactive features (like color popup) during startup
     bool m_isWine;          // Flag indicating if running under Wine
     
     std::vector<std::string> m_history;
@@ -77,7 +78,11 @@ public:
     static LRESULT CALLBACK EditSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ResultEditSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ComboBoxSubclassProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ColorWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
     static INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+
+    // Color window
+    static void ShowColorWindow(uint32_t color);
 
     // Message handlers
     void OnCreate();
@@ -159,4 +164,5 @@ public:
     // Toggle MNU option and persist
     void SetMenuVisibilityOption(bool visible);
     bool IsUIReady() const { return m_uiReady; }
+    bool IsInteractiveSuppressed() const { return m_suppressInteractive; }
 };

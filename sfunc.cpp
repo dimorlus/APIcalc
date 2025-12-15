@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include <cstdint>
 #include <ctime>  
 #include <stdint.h>
@@ -160,7 +160,7 @@ float__t Atan(float__t x)
 #endif
 }
 
-// ������������: acot(x) = arctan(1/x)
+// Арккотангенс: acot(x) = arctan(1/x)
 float__t Acot(float__t x)
 {
 #ifdef _long_double_
@@ -1041,7 +1041,277 @@ int_t datatime(char *tstr)
     return (int_t)result;
 }
 
-// ����� ������������ �����: sin(z) = sin(x + iy) = sin(x) * cosh(y) + i * cos(x) * sinh(y)
+
+const char* wavelength_info(float__t wavelength_m) {
+    // wavelength_m - длина волны в метрах
+
+    if (wavelength_m > 1000) {
+        return "VLF radio waves (3-30 kHz)";
+    }
+    else if (wavelength_m > 100) {
+        return "LF radio waves (30-300 kHz)";
+    }
+    else if (wavelength_m > 10) {
+        return "MF radio waves (300-3000 kHz, AM broadcast)";
+    }
+    else if (wavelength_m > 1) {
+        return "HF radio waves (3-30 MHz, shortwave)";
+    }
+    else if (wavelength_m > 0.1) {
+        return "VHF radio waves (30-300 MHz, FM/TV)";
+    }
+    else if (wavelength_m > 0.01) {
+        return "UHF radio waves (300-3000 MHz)";
+    }
+    else if (wavelength_m > 0.03) {
+        return "L-band microwaves (1-2 GHz, GPS)";
+    }
+    else if (wavelength_m > 0.015) {
+        return "S-band microwaves (2-4 GHz, WiFi/weather radar)";
+    }
+    else if (wavelength_m > 0.0075) {
+        return "C-band microwaves (4-8 GHz, satellite)";
+    }
+    else if (wavelength_m > 0.00375) {
+        return "X-band microwaves (8-12 GHz, radar)";
+    }
+    else if (wavelength_m > 0.0024) {
+        return "Ku-band microwaves (12-18 GHz, satellite TV)";
+    }
+    else if (wavelength_m > 0.0015) {
+        return "K-band microwaves (18-27 GHz, speed radar)";
+    }
+    else if (wavelength_m > 0.001) {
+        return "Ka-band microwaves (27-40 GHz)";
+    }
+    else if (wavelength_m > 1e-4) {
+        return "EHF/mmWave (30-300 GHz, 5G)";
+    }
+    else if (wavelength_m > 5e-5) {
+        return "Far infrared (FIR, 50-1000 um)";
+    }
+    else if (wavelength_m > 3e-6) {
+        return "Long-wave infrared (LWIR, 8-15 um, thermal)";
+    }
+    else if (wavelength_m > 1.4e-6) {
+        return "Mid-wave infrared (MWIR, 3-8 um)";
+    }
+    else if (wavelength_m > 7.8e-7) {
+        return "Short-wave infrared (SWIR, 1.4-3 um)";
+    }
+    else if (wavelength_m > 6.2e-7) {
+        return "Near infrared (NIR, 0.78-1.4 um) / Red (780-620 nm)";
+    }
+    else if (wavelength_m > 5.97e-7) {
+        return "Orange visible light (620-597 nm)";
+    }
+    else if (wavelength_m > 5.77e-7) {
+        return "Yellow visible light (597-577 nm)";
+    }
+    else if (wavelength_m > 4.92e-7) {
+        return "Green visible light (577-492 nm)";
+    }
+    else if (wavelength_m > 4.55e-7) {
+        return "Blue visible light (492-455 nm)";
+    }
+    else if (wavelength_m > 3.8e-7) {
+        return "Violet visible light (455-380 nm)";
+    }
+    else if (wavelength_m > 3.15e-7) {
+        return "UVA ultraviolet (380-315 nm, tanning/black light)";
+    }
+    else if (wavelength_m > 2.8e-7) {
+        return "UVB ultraviolet (315-280 nm, sunburn)";
+    }
+    else if (wavelength_m > 1e-8) {
+        return "UVC ultraviolet (280-100 nm, germicidal)";
+    }
+    else if (wavelength_m > 1e-11) {
+        return "X-ray radiation (0.01-10 nm, medical imaging)";
+    }
+    else {
+        return "Gamma ray radiation (<0.01 nm, nuclear)";
+    }
+}
+
+//Функция:
+//
+//Принимает длину волны в метрах
+//Возвращает RGB цвет в формате 0xRRGGBB(uint32_t)
+//За пределами видимого спектра(380 - 780 нм) возвращает черный(0x000000)
+//Использует аппроксимацию спектральных цветов
+//Применяет коррекцию интенсивности на краях(глаз менее чувствителен к фиолетовому и темно - красному)
+//Применяет гамма - коррекцию для более реалистичного отображения
+//
+//Примеры использования :
+//
+//650 нм(красный) : wavelength_to_rgb(650e-9) → примерно 0xFF0000
+//550 нм(зеленый) : wavelength_to_rgb(550e-9) → примерно 0x00FF00
+//450 нм(синий) : wavelength_to_rgb(450e-9) → примерно 0x0000FF
+
+uint32_t wavelength_to_rgb(float__t wavelength_m) {
+    // Конвертируем в нанометры для удобства
+    double wavelength_nm = wavelength_m * 1e9;
+
+    // Видимый диапазон: примерно 380-780 нм
+    if (wavelength_nm < 380 || wavelength_nm > 780) {
+        return 0x000000; // Черный за пределами видимого спектра
+    }
+
+    double red = 0, green = 0, blue = 0;
+
+    // Аппроксимация спектральных цветов
+    if (wavelength_nm >= 380 && wavelength_nm < 440) {
+        // Фиолетовый -> Синий
+        red = -(wavelength_nm - 440) / (440 - 380);
+        green = 0.0;
+        blue = 1.0;
+    }
+    else if (wavelength_nm >= 440 && wavelength_nm < 490) {
+        // Синий -> Голубой
+        red = 0.0;
+        green = (wavelength_nm - 440) / (490 - 440);
+        blue = 1.0;
+    }
+    else if (wavelength_nm >= 490 && wavelength_nm < 510) {
+        // Голубой -> Зеленый
+        red = 0.0;
+        green = 1.0;
+        blue = -(wavelength_nm - 510) / (510 - 490);
+    }
+    else if (wavelength_nm >= 510 && wavelength_nm < 580) {
+        // Зеленый -> Желтый
+        red = (wavelength_nm - 510) / (580 - 510);
+        green = 1.0;
+        blue = 0.0;
+    }
+    else if (wavelength_nm >= 580 && wavelength_nm < 645) {
+        // Желтый -> Оранжевый -> Красный
+        red = 1.0;
+        green = -(wavelength_nm - 645) / (645 - 580);
+        blue = 0.0;
+    }
+    else if (wavelength_nm >= 645 && wavelength_nm <= 780) {
+        // Красный
+        red = 1.0;
+        green = 0.0;
+        blue = 0.0;
+    }
+
+    // Коррекция интенсивности на краях спектра (глаз менее чувствителен)
+    double factor = 1.0;
+    if (wavelength_nm >= 380 && wavelength_nm < 420) {
+        factor = 0.3 + 0.7 * (wavelength_nm - 380) / (420 - 380);
+    }
+    else if (wavelength_nm >= 700 && wavelength_nm <= 780) {
+        factor = 0.3 + 0.7 * (780 - wavelength_nm) / (780 - 700);
+    }
+
+    red *= factor;
+    green *= factor;
+    blue *= factor;
+
+    // Гамма-коррекция (приближает к восприятию глаза)
+    double gamma = 0.8;
+    red = pow(red, gamma);
+    green = pow(green, gamma);
+    blue = pow(blue, gamma);
+
+    // Конвертируем в 8-битные компоненты и упаковываем в uint32_t
+    /*uint8_t r = (uint8_t)(red * 255);
+    uint8_t g = (uint8_t)(green * 255);
+    uint8_t b = (uint8_t)(blue * 255);*/
+
+    uint32_t result = (uint32_t)(blue * 255) + 256 * (uint32_t)(green * 255) + 65536 * (uint32_t)(red * 255);
+	return result;
+
+}
+
+//Функция использует алгоритм аппроксимации излучения черного тела по закону Планка :
+//
+//Принимает температуру в Кельвинах
+//Возвращает RGB цвет в формате 0xRRGGBB
+//Для температур ниже 1000K возвращает черный
+//
+//Примеры температур :
+//
+//1000K : Красно - оранжевое свечение(лава)
+//1850K : Свеча(~0xFF8E13)
+//2700K : Лампа накаливания(теплый желтый)
+//3400K : Галогенная лампа
+//5500K : Дневной свет(белый)
+//6500K : Холодный белый(студийный свет)
+//9000K : Голубоватый оттенок
+//15000 - 40000K : Синее небо
+//
+//Формулы основаны на эмпирической аппроксимации Танна Хелстейна для преобразования цветовой температуры черного тела в RGB.
+
+uint32_t temperature_to_rgb(float__t temp_kelvin) {
+    // Температура должна быть в разумных пределах (800-40000 K)
+    // Draper point is ~798K (visible glow starts)
+    if (temp_kelvin < 780) {
+        return 0x000000; // Черный для слишком низких температур
+    }
+
+    double temp = temp_kelvin / 100.0;
+    double red, green, blue;
+
+    // Красный канал
+    if (temp <= 66) {
+        red = 255;
+    }
+    else {
+        red = temp - 60;
+        red = 329.698727446 * pow(red, -0.1332047592);
+        if (red < 0) red = 0;
+        if (red > 255) red = 255;
+    }
+
+    // Зеленый канал
+    if (temp <= 66) {
+        green = temp;
+        green = 99.4708025861 * log(green) - 161.1195681661;
+        if (green < 0) green = 0;
+        if (green > 255) green = 255;
+    }
+    else {
+        green = temp - 60;
+        green = 288.1221695283 * pow(green, -0.0755148492);
+        if (green < 0) green = 0;
+        if (green > 255) green = 255;
+    }
+
+    // Синий канал
+    if (temp >= 66) {
+        blue = 255;
+    }
+    else if (temp <= 19) {
+        blue = 0;
+    }
+    else {
+        blue = temp - 10;
+        blue = 138.5177312231 * log(blue) - 305.0447927307;
+        if (blue < 0) blue = 0;
+        if (blue > 255) blue = 255;
+    }
+
+    
+    // Димминг для диапазона 800K - 1000K, чтобы цвет появлялся плавно
+    if (temp_kelvin < 1000) {
+        double dimming = (temp_kelvin - 800.0) / 200.0;
+        if (dimming < 0) dimming = 0;
+        if (dimming > 1) dimming = 1;
+        
+        red *= dimming;
+        green *= dimming;
+        blue *= dimming;
+    }
+    
+    return (uint32_t)(blue) + 256 * (uint32_t)(green) + 65536 * (uint32_t)(red);
+       
+}
+
+// Синус комплексного числа: sin(z) = sin(x + iy) = sin(x) * cosh(y) + i * cos(x) * sinh(y)
 void SinC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1053,7 +1323,7 @@ void SinC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// �������: cos(z) = cos(x) * cosh(y) - i * sin(x) * sinh(y)
+// Косинус: cos(z) = cos(x) * cosh(y) - i * sin(x) * sinh(y)
 void CosC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1065,7 +1335,7 @@ void CosC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// ����������: exp(z) = exp(x) * (cos(y) + i * sin(y))
+// Экспонента: exp(z) = exp(x) * (cos(y) + i * sin(y))
 void ExpC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1079,7 +1349,7 @@ void ExpC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// ������ (���������� ��������): abs(z) = sqrt(x^2 + y^2)
+// Модуль (абсолютное значение): abs(z) = sqrt(x^2 + y^2)
 float__t AbsC(float__t x, float__t y)
 {
 #ifdef _long_double_
@@ -1089,7 +1359,7 @@ float__t AbsC(float__t x, float__t y)
 #endif
 }
 
-// �������: tan(z) = sin(z) / cos(z)
+// Тангенс: tan(z) = sin(z) / cos(z)
 void TanC(float__t x, float__t y, float__t& re, float__t& im)
 {
     float__t sin_re, sin_im, cos_re, cos_im;
@@ -1106,7 +1376,7 @@ void TanC(float__t x, float__t y, float__t& re, float__t& im)
     im = (sin_im * cos_re - sin_re * cos_im) / denom;
 }
 
-// ���������: cot(z) = 1 / tan(z)
+// Котангенс: cot(z) = 1 / tan(z)
 void CotC(float__t x, float__t y, float__t& re, float__t& im)
 {
     float__t tan_re, tan_im;
@@ -1121,7 +1391,7 @@ void CotC(float__t x, float__t y, float__t& re, float__t& im)
     im = -tan_im / denom;
 }
 
-// ��������: arcsin(z) = -i * ln(iz + sqrt(1 - z^2))
+// Арксинус: arcsin(z) = -i * ln(iz + sqrt(1 - z^2))
 void AsinC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // iz = -y + ix
@@ -1140,7 +1410,7 @@ void AsinC(float__t x, float__t y, float__t& re, float__t& im)
     im = -ln_re;
 }
 
-// ����������: arccos(z) = -i * ln(z + sqrt(z^2 - 1))
+// Арккосинус: arccos(z) = -i * ln(z + sqrt(z^2 - 1))
 void AcosC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // z^2 - 1
@@ -1158,7 +1428,7 @@ void AcosC(float__t x, float__t y, float__t& re, float__t& im)
     im = -ln_re;
 }
 
-// ����������: arctan(z) = (i/2) * [ln(1 - iz) - ln(1 + iz)]
+// Арктангенс: arctan(z) = (i/2) * [ln(1 - iz) - ln(1 + iz)]
 void AtanC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // 1 - iz = 1 + y - ix
@@ -1177,7 +1447,7 @@ void AtanC(float__t x, float__t y, float__t& re, float__t& im)
     im = 0.5 * (ln2_re - ln1_re);
 }
 
-// ��������������� �����: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
+// Гиперболический синус: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
 void SinhC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1189,7 +1459,7 @@ void SinhC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// ��������������� �������: cosh(z) = cosh(x) * cos(y) + i * sinh(x) * sin(y)
+// Гиперболический косинус: cosh(z) = cosh(x) * cos(y) + i * sinh(x) * sin(y)
 void CoshC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1201,7 +1471,7 @@ void CoshC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// ��������������� �������: tanh(z) = sinh(z) / cosh(z)
+// Гиперболический тангенс: tanh(z) = sinh(z) / cosh(z)
 void TanhC(float__t x, float__t y, float__t& re, float__t& im)
 {
     float__t sinh_re, sinh_im, cosh_re, cosh_im;
@@ -1217,7 +1487,7 @@ void TanhC(float__t x, float__t y, float__t& re, float__t& im)
     im = (sinh_im * cosh_re - sinh_re * cosh_im) / denom;
 }
 
-// ����������� ��������: ln(z) = ln|z| + i*arg(z)
+// Натуральный логарифм: ln(z) = ln|z| + i*arg(z)
 void LnC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1229,7 +1499,7 @@ void LnC(float__t x, float__t y, float__t& re, float__t& im)
 #endif
 }
 
-// ���������� ������: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
+// Квадратный корень: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
 void SqrtC(float__t x, float__t y, float__t& re, float__t& im)
 {
 #ifdef _long_double_
@@ -1246,7 +1516,7 @@ void SqrtC(float__t x, float__t y, float__t& re, float__t& im)
     im = r * sin(phi / 2);
 #endif
 }
-// ������������: acot(z) = arctan(1/z)
+// Арккотангенс: acot(z) = arctan(1/z)
 void AcotC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // 1/z = (x - iy) / (x^2 + y^2)
@@ -1256,7 +1526,7 @@ void AcotC(float__t x, float__t y, float__t& re, float__t& im)
     AtanC(zx, zy, re, im);
 }
 
-// ��������� ���������������: coth(z) = 1 / tanh(z)
+// Котангенс гиперболический: coth(z) = 1 / tanh(z)
 void CothC(float__t x, float__t y, float__t& re, float__t& im)
 {
     float__t tanh_re, tanh_im;
@@ -1271,7 +1541,7 @@ void CothC(float__t x, float__t y, float__t& re, float__t& im)
     im = -tanh_im / denom;
 }
 
-// �������� ���������������: asinh(z) = ln(z + sqrt(z^2 + 1))
+// Арксинус гиперболический: asinh(z) = ln(z + sqrt(z^2 + 1))
 void AsinhC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // z^2 + 1
@@ -1285,7 +1555,7 @@ void AsinhC(float__t x, float__t y, float__t& re, float__t& im)
     LnC(s_re, s_im, re, im);
 }
 
-// ���������� ���������������: acosh(z) = ln(z + sqrt(z + 1) * sqrt(z - 1))
+// Арккосинус гиперболический: acosh(z) = ln(z + sqrt(z + 1) * sqrt(z - 1))
 void AcoshC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // sqrt(z + 1)
@@ -1303,7 +1573,7 @@ void AcoshC(float__t x, float__t y, float__t& re, float__t& im)
     LnC(s_re, s_im, re, im);
 }
 
-// ���������� ���������������: atanh(z) = 0.5 * [ln(1 + z) - ln(1 - z)]
+// Арктангенс гиперболический: atanh(z) = 0.5 * [ln(1 + z) - ln(1 - z)]
 void AtanhC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // 1 + z
@@ -1322,7 +1592,7 @@ void AtanhC(float__t x, float__t y, float__t& re, float__t& im)
     im = 0.5 * (ln1_im - ln2_im);
 }
 
-// ������������ ���������������: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
+// Арккотангенс гиперболический: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
 void AcothC(float__t x, float__t y, float__t& re, float__t& im)
 {
     // 1/z = (x - iy) / (x^2 + y^2)
@@ -1346,7 +1616,7 @@ void AcothC(float__t x, float__t y, float__t& re, float__t& im)
     im = 0.5 * (ln1_im - ln2_im);
 }
 
-// ����������� ���������� � �������: PowC(z1, z2) = exp(z2 * ln(z1))
+// Комплексное возведение в степень: PowC(z1, z2) = exp(z2 * ln(z1))
 void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, float__t& im)
 {
     // ln(z1)
@@ -1361,7 +1631,7 @@ void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, floa
     ExpC(a, b, re, im);
 }
 
-// ���������� ����� y-��� ������� �� ������������ �����:
+// Извлечение корня y-ной степени из комплексного числа:
 // RootNC(xr, xi, yr, yi, re, im) = (xr + i*xi)^(1/(yr + i*yi))
 void RootNC(float__t xr, float__t xi, float__t yr, float__t yi, float__t& re, float__t& im)
 {
@@ -1379,7 +1649,7 @@ void RootNC(float__t xr, float__t xi, float__t yr, float__t yi, float__t& re, fl
     PowC(xr, xi, pow_re, pow_im, re, im);
 }
 
-// ����������� �������� �� ������������� ���������: LognC(x, y, u, v) = ln(y + iv) / ln(x + iu)
+// Комплексный логарифм по произвольному основанию: LognC(x, y, u, v) = ln(y + iv) / ln(x + iu)
 void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im)
 {
     // ln(y + iv)

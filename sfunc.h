@@ -84,6 +84,10 @@ bool IsNaNL(const long double ldVal);
 int_t fprn(char *dest, char *sfmt, int args, value* v_stack);
 int_t datatime(char *tstr);
 
+const char* wavelength_info(float__t wavelength_m);
+uint32_t wavelength_to_rgb(float__t wavelength_m);
+uint32_t temperature_to_rgb(float__t temp_kelvin);
+
 float__t AbsC(float__t x, float__t y);
 void SinC(float__t x, float__t y, float__t& re, float__t& im);
 void CosC(float__t x, float__t y, float__t& re, float__t& im);

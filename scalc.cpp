@@ -3457,7 +3457,7 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                             const char* resStr = (*(const char* (*)(float__t))sym->func)(v_stack[v_sp - 1].get());
                             strncpy(sres, resStr ? resStr : "", STRBUF - 1);
                             sres[STRBUF - 1] = '\0';
-
+                            if (sres[0]) scfg |= STR;
                             SafeFree(v_stack[v_sp - n_args - 1]);
                             v_stack[v_sp - n_args - 1].sval = strdup(sres);
                             v_stack[v_sp - n_args - 1].ival = 0;

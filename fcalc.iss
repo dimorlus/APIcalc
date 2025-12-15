@@ -99,22 +99,6 @@ begin
   end;
 end;
 
-const
-  HWND_BROADCAST = $ffff;
-  WM_SETTINGCHANGE = $001A;
-  SMTO_ABORTIFHUNG = 2;
-
-// Notify system about environment changes
-procedure RefreshEnvironment;
-var
-  S: string;
-  MsgResult: DWORD;
-begin
-  S := 'Environment';
-  SendTextMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
-    PAnsiChar(S), SMTO_ABORTIFHUNG, 5000, MsgResult);
-end;
-
 // Add directory to PATH if not already present
 procedure AddDirToPath(const DirPath: String);
 var
@@ -151,7 +135,6 @@ begin
       if RegWriteStringValue(RegKey, 'Environment', 'Path', Path) then
       begin
         Log('Successfully added to PATH: ' + DirPath);
-        RefreshEnvironment;
       end
       else
         Log('Failed to write PATH to registry');
@@ -165,7 +148,6 @@ begin
     if RegWriteStringValue(RegKey, 'Environment', 'Path', DirPath) then
     begin
       Log('Created new PATH with: ' + DirPath);
-      RefreshEnvironment;
     end
     else
       Log('Failed to create PATH in registry');
@@ -228,7 +210,6 @@ begin
       if RegWriteStringValue(RegKey, 'Environment', 'Path', NewPath) then
       begin
         Log('Successfully removed from PATH: ' + DirPath);
-        RefreshEnvironment;
       end
       else
         Log('Failed to write PATH to registry');

@@ -100,7 +100,6 @@ begin
       if RegWriteStringValue(RegKey, 'Environment', 'Path', Path) then
       begin
         Log('Successfully added to PATH: ' + DirPath);
-        RefreshEnvironment;
       end
       else
         Log('Failed to write PATH to registry');
@@ -114,7 +113,6 @@ begin
     if RegWriteStringValue(RegKey, 'Environment', 'Path', DirPath) then
     begin
       Log('Created new PATH with: ' + DirPath);
-      RefreshEnvironment;
     end
     else
       Log('Failed to create PATH in registry');
@@ -177,7 +175,6 @@ begin
       if RegWriteStringValue(RegKey, 'Environment', 'Path', NewPath) then
       begin
         Log('Successfully removed from PATH: ' + DirPath);
-        RefreshEnvironment;
       end
       else
         Log('Failed to write PATH to registry');

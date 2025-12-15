@@ -6,6 +6,20 @@
 #include <fstream>
 #include <ctime>
 
+//To debug memory leaks in VS2022 :
+//
+//Enable CRT Debugging : Add this to your main or WinMain(I see it's already in 
+// WinApiCalc.cpp's InitInstance or similar usually, but confirm) :
+//#define _CRTDBG_MAP_ALLOC
+//#include <stdlib.h>
+//#include <crtdbg.h>
+//// At the very start of the program:
+//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//Run in Debug Mode : Press F5.
+//View Output : When the program exits, check the Output window(Debug pane).
+//If you see "Detected memory leaks!" followed by a dump, you have leaks.
+//Double - click the file / line numbers(if present) to jump to the allocation source.
+//With my changes, SafeFree handles the cleanup before you blindly overwrite sval, so it should be clean.
 
 #define WINE_W 5 // Under Wine we need to add some extra width to accommodate font rendering differences
 

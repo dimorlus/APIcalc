@@ -46,6 +46,11 @@ private:
     std::vector<std::string> m_history;
     std::string m_currentExpression;
 
+    // Deferred color state
+    uint32_t m_pendingColor;
+    bool m_hasPendingColor;
+    bool m_isColorWindowOpen;
+
     // UI state
     int m_dpiX;
     int m_dpiY;
@@ -83,6 +88,8 @@ public:
 
     // Color window
     static void ShowColorWindow(uint32_t color);
+    void SetPendingColor(uint32_t color);
+    void ProcessPendingColor();
 
     // Message handlers
     void OnCreate();

@@ -100,6 +100,9 @@ WinApiCalc::WinApiCalc()
     , m_isUpdatingHistory(false)
     , m_suppressInteractive(true) // Default to supressed until InitInstance finishes
     , m_isWine(false)
+    , m_pendingColor(0)
+    , m_hasPendingColor(false)
+    , m_isColorWindowOpen(false)
 {
     // Detect Wine
     HMODULE hNTDLL = GetModuleHandleA("ntdll.dll");
@@ -558,7 +561,7 @@ LRESULT CALLBACK WinApiCalc::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         PostQuitMessage(0);
         break;
     case WM_DELAYED_CLEAR_HISTORY:
-        if (g_pApp)
+        if (g_pApp && !g_pApp->m_isColorWindowOpen)
         {
             g_pApp->ClearHistoryCombo();
         }
@@ -903,7 +906,11 @@ void WinApiCalc::OnCommand(WPARAM wParam)
             // OutputDebugStringA("CBN_CLOSEUP\n");
             // Clear history when dropdown closes to prevent autocomplete
             // Use PostMessage to avoid interfering with selection processing (CBN_SELENDOK/CANCEL)
-            PostMessage(m_hWnd, WM_DELAYED_CLEAR_HISTORY, 0, 0);
+            // But skip this if ColorWindow is causing the closeup (via EnableWindow(FALSE))
+            if (!m_isColorWindowOpen)
+            {
+                PostMessage(m_hWnd, WM_DELAYED_CLEAR_HISTORY, 0, 0);
+            }
         }
         else if (wmEvent == CBN_EDITCHANGE)
         {
@@ -1045,6 +1052,7 @@ void WinApiCalc::EvaluateExpression()
         m_pCalculator->syntax(m_options);
 
         // Evaluate expression
+        m_hasPendingColor = false;
         int64_t iVal = 0;
 		long double imVal = 0.0;
         long double fVal = m_pCalculator->evaluate(exprBuf, &iVal, &imVal);
@@ -1125,6 +1133,9 @@ void WinApiCalc::EvaluateExpression()
         
         // Resize window to fit content
         ResizeWindow();
+        
+        // Show deferred color window if requested
+        ProcessPendingColor();
     }
     catch (...)
     {
@@ -2175,7 +2186,8 @@ void WinApiCalc::LoadHistoryItem(int index)
     OnExpressionChanged();
     
     // Set cursor to end of text without selection
-    SendMessage(m_hExpressionEdit, EM_SETSEL, expression.length(), expression.length());
+    // Set cursor to end of text without selection using PostMessage to ensure it happens after any other processing
+    PostMessage(m_hExpressionEdit, EM_SETSEL, expression.length(), expression.length());
 }
 
 void WinApiCalc::DeleteSelectedHistoryItem()
@@ -2829,11 +2841,25 @@ static long double ColorFunction(long double x)
 {
     if (g_pCalcInstance && !g_pCalcInstance->IsInteractiveSuppressed())
     {
-        // Must run on main thread UI if possible, but here we are called from calc engine
-        // which runs on main thread in this app architecture.
-        WinApiCalc::ShowColorWindow((uint32_t)x);
+        // Defer color showing until recalculation is complete
+        g_pCalcInstance->SetPendingColor((uint32_t)x);
     }
     return x;
+}
+
+void WinApiCalc::SetPendingColor(uint32_t color)
+{
+    m_pendingColor = color;
+    m_hasPendingColor = true;
+}
+
+void WinApiCalc::ProcessPendingColor()
+{
+    if (m_hasPendingColor)
+    {
+        ShowColorWindow(m_pendingColor);
+        m_hasPendingColor = false;
+    }
 }
 
 void WinApiCalc::ShowColorWindow(uint32_t color)
@@ -2896,6 +2922,8 @@ void WinApiCalc::ShowColorWindow(uint32_t color)
     {
         SendMessage(g_pApp->m_hExpressionEdit, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
     }
+    
+
 
     // Create window
     HWND hColorWnd = CreateWindowExA(
@@ -2923,7 +2951,10 @@ void WinApiCalc::ShowColorWindow(uint32_t color)
 
         // Disable main window for modality
         if (hMainWnd && IsWindow(hMainWnd))
+        {
             EnableWindow(hMainWnd, FALSE);
+            if (g_pApp) g_pApp->m_isColorWindowOpen = true; // Set flag to prevent handling side-effects like CBN_CLOSEUP
+        }
 
         // Handle messages until window is closed
         MSG msg;
@@ -2950,6 +2981,8 @@ void WinApiCalc::ShowColorWindow(uint32_t color)
                 DispatchMessage(&msg);
             }
         }
+        
+        if (g_pApp) g_pApp->m_isColorWindowOpen = false; // Clear flag
 
         // Re-enable main window
         if (hMainWnd && IsWindow(hMainWnd))

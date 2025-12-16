@@ -40,6 +40,8 @@
 calculator::calculator(int cfg)
 {
   errpos = 0;
+  pos = 0;
+  expr = false;
   tmp_var_count = 0;
   err[0] = '\0';
   scfg = cfg;
@@ -2117,6 +2119,9 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
   o_sp = 0;
   pos = 0;
   err[0] = '\0';
+
+  if (!expr) return qnan;
+
   o_stack[o_sp++] = toBEGIN;
 
   memset(sres, 0, STRBUF);

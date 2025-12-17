@@ -195,7 +195,16 @@ calculator::calculator(int cfg)
   addfvar("ry", 10973731.568160);          // Rydberg constant (m⁻¹)
   addfvar("sb", 5.670374419e-8);           // Stefan-Boltzmann constant (W/(m²·K⁴))
 
-  addfvar("version", _ver_);
+  //Rainbow colors
+  addfvar("red", 685e-9);
+  addfvar("orange", 605e-9);
+  addfvar("yellow", 580e-9);
+  addfvar("green", 532e-9);
+  addfvar("blue", 472e-9);
+  addfvar("indigo", 435e-9);
+  addfvar("violet", 400e-9);
+
+  //Integer Limits:
   addlvar("max32", 2147483647.0, 0x7fffffff); 
   addlvar("maxint", 2147483647.0, 0x7fffffff); 
   addlvar("maxu32", 4294967295.0, 0xffffffff); 
@@ -204,7 +213,8 @@ calculator::calculator(int cfg)
   addlvar("maxlong", 9223372036854775807.0, 0x7fffffffffffffffull);
   addlvar("maxu64", 18446744073709551615.0, 0xffffffffffffffffull);
   addlvar("maxulong", 18446744073709551615.0, 0xffffffffffffffffull);
- 
+
+  //System
   // Get system timezone information
   TIME_ZONE_INFORMATION tzi;
   DWORD tzResult = GetTimeZoneInformation(&tzi);
@@ -216,6 +226,8 @@ calculator::calculator(int cfg)
   addlvar("timezone", tzHours, (int)tzHours);
   addlvar("daylight", (float__t)daylight, daylight);
   addlvar("tz", currentTz, (int)currentTz);
+  addfvar("version", _ver_);
+
 }
 
 calculator::~calculator(void)

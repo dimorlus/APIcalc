@@ -3466,7 +3466,7 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                     case tsSFUNCF1: //char* f(float x)
                         if (n_args != 1)
                         {
-                            error(v_stack[v_sp - n_args - 1].pos,
+                            error(v_stack[v_sp - 2].pos,
                                 "Function should take one argument");
                             return qnan;
                         }
@@ -3475,10 +3475,11 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                             strncpy(sres, resStr ? resStr : "", STRBUF - 1);
                             sres[STRBUF - 1] = '\0';
                             if (sres[0]) scfg |= STR;
-                            SafeFree(v_stack[v_sp - n_args - 1]);
-                            v_stack[v_sp - n_args - 1].sval = strdup(sres);
-                            v_stack[v_sp - n_args - 1].ival = 0;
-                            v_stack[v_sp - n_args - 1].tag = tvINT;// tvSTR;
+                            SafeFree(v_stack[v_sp - 2]);
+                            v_stack[v_sp - 2].sval = strdup(sres);
+                            v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get();
+                            v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
+                            v_stack[v_sp - 2].tag = tvFLOAT; // tvINT;// tvSTR;
                         }
                         v_sp -= 1;
                         break;
@@ -3577,7 +3578,6 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                           return qnan;
                         }
 
-
                       (*(int_t(*)(char*, char*, int, value*))sym->func) //call prn(...)
 						      (sres, //put result string in sres first
                               v_stack[v_sp - n_args].get_str(),
@@ -3593,14 +3593,6 @@ float__t calculator::evaluate(char* expression, __int64* piVal, float__t* pimval
                         v_stack[v_sp-n_args-1].ival = v_stack[v_sp-n_args+1].ival;
                         if (v_stack[v_sp-n_args+1].fval > maxdbl) v_stack[v_sp-n_args-1].fval = qnan;
                         else v_stack[v_sp-n_args-1].fval = v_stack[v_sp-n_args+1].fval;
-                        //// Fix: Update the tag to match the copied value type
-                        //v_stack[v_sp-n_args-1].tag = v_stack[v_sp-n_args+1].tag;
-                        //// Avoid freeing the string pointer we just overwrote (it was malloc'd but we overwrote the pointer)
-                        //// Actually, wait. We allocated sval at line 3554.
-                        //// If we overwrite it with ival/fval, we LEAK the memory and confusing SafeFree later.
-                        //// We must free it BEFORE overwriting if we are switching type.
-                        //free(v_stack[v_sp-n_args-1].sval); 
-                        //v_stack[v_sp-n_args-1].sval = NULL;
                        }
                       v_sp -= n_args;
                     break;

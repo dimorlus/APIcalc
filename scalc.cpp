@@ -189,6 +189,11 @@ calculator::calculator (int cfg)
  addfvar ("sb", 5.670374419e-8);  // Stefan-Boltzmann constant (W/(m²·K⁴))
 
  // Rainbow colors
+ addfvar ("fir", 316e-6);
+ addfvar ("lwir", 11.5e-6);
+ addfvar ("mwir", 5.5e-6);
+ addfvar ("swir", 2.2e-6);
+ addfvar ("nir", 1.09e-6);
  addfvar ("red", 685e-9);
  addfvar ("orange", 605e-9);
  addfvar ("yellow", 580e-9);
@@ -196,6 +201,9 @@ calculator::calculator (int cfg)
  addfvar ("blue", 472e-9);
  addfvar ("indigo", 435e-9);
  addfvar ("violet", 400e-9);
+ addfvar ("uva", 348e-9);
+ addfvar ("uvb", 298e-9);
+ addfvar ("uvc", 190e-9);
 
  // Integer Limits:
  addlvar ("max32", 2147483647.0, 0x7fffffff);
@@ -2165,7 +2173,7 @@ t_operator calculator::scan (bool operand, bool percent)
       error ("bad numeric constant");
       return toERROR;
      }
-    if ((ierr && ferr) || (*fpos == '.'))
+    if (ierr && ferr)
      {
       error ("bad numeric constant");
       return toERROR;
@@ -2236,10 +2244,8 @@ t_operator calculator::scan (bool operand, bool percent)
    symbol *sym = NULL;
    if (name[0])
     {
-     if (buf[pos] == '\0')
-      sym = find (name);
-     else
-      sym = add (tsVARIABLE, name);
+     if (buf[pos] == '\0') sym = find (name);
+     else sym = add (tsVARIABLE, name);
     }
    if (v_sp == max_stack_size)
     {

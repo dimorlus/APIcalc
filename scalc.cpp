@@ -31,6 +31,7 @@
 
 #define _WIN_
 #define INT_FORMAT "ll"
+#define _ENABLE_PREIMAGINARY_
 
 calculator::calculator (int cfg)
 {
@@ -228,6 +229,7 @@ calculator::calculator (int cfg)
  addlvar ("daylight", (float__t)daylight, daylight);
  addlvar ("tz", currentTz, (int)currentTz);
  addfvar ("version", _ver_);
+ addim ();
 }
 
 calculator::~calculator (void)
@@ -1191,15 +1193,27 @@ symbol *calculator::find (const char *name, void *func)
 
 void calculator::addfvar (const char *name, float__t val)
 {
- // symbol* sp = add(tsVARIABLE, name);
  symbol *sp   = add (tsCONSTANT, name);
  sp->val.tag  = tvFLOAT;
  sp->val.fval = val;
 }
 
+void calculator::addim ()
+{
+#ifdef _ENABLE_PREIMAGINARY_
+ symbol *sp = add(tsCONSTANT, "i");
+ sp->val.tag       = tvCOMPLEX;
+ sp->val.fval      = 0;
+ sp->val.imval     = 1;
+ sp                = add (tsCONSTANT, "j");
+ sp->val.tag       = tvCOMPLEX;
+ sp->val.fval      = 0;
+ sp->val.imval     = 1;
+#endif // _ENABLE_PREIMAGINARY_
+}
+
 void calculator::addivar (const char *name, int_t val)
 {
- // symbol* sp = add(tsVARIABLE, name);
  symbol *sp   = add (tsCONSTANT, name);
  sp->val.tag  = tvINT;
  sp->val.ival = val;
@@ -2098,6 +2112,44 @@ t_operator calculator::scan (bool operand, bool percent)
       return toERROR;
      }
    }
+#ifdef _ENABLE_PREIMAGINARY_
+ case 'i': 
+ case 'j':
+   {
+    char *fpos;
+    if (buf[pos] && (isdigit (buf[pos] & 0x7f) || buf[pos] == '.'))
+     {
+      float__t fval = strtod (buf + pos, &fpos);
+      if (scfg & SCI + FRI)
+       {
+        scientific (fpos, fval);
+       }
+      int ferr = errno;
+      if ((ferr) && (*fpos == '.'))
+       {
+        pos = fpos - buf + 1;
+        error ("bad numeric constant");
+        return toERROR;
+       }
+      if (v_sp == max_stack_size)
+       {
+        error ("stack overflow");
+        return toERROR;
+       }
+
+      c_imaginary         = buf[pos - 1];
+      v_stack[v_sp].tag   = tvCOMPLEX;
+      v_stack[v_sp].imval = fval;
+      v_stack[v_sp].fval  = 0;
+      v_stack[v_sp].pos   = pos;
+      v_stack[v_sp++].var = NULL;
+      pos                 = fpos - buf;
+      return toOPERAND;
+     }
+    else
+     goto def;
+   }
+#endif /*_ENABLE_PREIMAGINARY_*/
   case '.':
   case '0':
   case '1':
@@ -2325,6 +2377,27 @@ bool calculator::assign ()
   }
 }
 
+void calculator::clear_v_stack ()
+{
+ // Очистка стека перед использованием
+ for (int i = 0; i < max_stack_size; ++i)
+  {
+   if (v_stack[i].tag == tvSTR && v_stack[i].sval)
+    {
+     free (v_stack[i].sval);
+    }
+   
+   v_stack[i].tag   = tvINT;
+   v_stack[i].sval  = nullptr;
+   v_stack[i].var   = nullptr;
+   v_stack[i].pos   = 0;
+   v_stack[i].ival  = 0;
+   v_stack[i].fval  = 0.0;
+   v_stack[i].imval = 0.0;
+  }
+ v_sp = 0;
+}
+
 float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
 {
  char var_name[16];
@@ -2347,6 +2420,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  o_sp   = 0;
  pos    = 0;
  err[0] = '\0';
+ clear_v_stack ();
 
  if (!expr) return qnan;
 
@@ -2471,8 +2545,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            add (tsVARIABLE, var_name)->val = v_stack[0];
           }
          result_fval = v_stack[0].get ();
+         result_imval = v_stack[0].imval;
+         result_ival  = v_stack[0].ival;
+         if (piVal) *piVal = v_stack[0].ival;
          if (pimval) *pimval = v_stack[0].imval;
-         if (v_stack[0].tag == tvINT)
+         if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == 0.0))
           {
            result_ival = v_stack[0].ival;
            if (piVal) *piVal = v_stack[0].ival;
@@ -2498,7 +2575,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
             }
            else
             sres[0] = '\0';
-           return v_stack[0].fval;
+           v_stack[0].imval = 0.0;
+           v_stack[0].fval  = 0.0;
+           v_stack[0].ival  = 0;
+           v_stack[0].tag   = tvINT;
+           return result_fval;
+           
           }
         }
        else if (v_sp != 0)

@@ -347,7 +347,9 @@ class calculator
  float__t tstrtod (char *s, char **endptr);
  void engineering (float__t mul, char *&fpos, float__t &fval);
  void scientific (char *&fpos, float__t &fval);
-
+ void clear_v_stack ();
+ void addim (void);
+ 
  public:
  calculator (int cfg = PAS + SCI + UPCASE);
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT) { scfg = cfg; }

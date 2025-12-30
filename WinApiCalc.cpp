@@ -1061,7 +1061,8 @@ void WinApiCalc::EvaluateExpression ()
    try
     {
      // Call format_out
-     n = m_pCalculator->format_out (m_options, m_binWidth, 0, fVal, imVal, iVal, exprBuf, strings);
+     //n = m_pCalculator->format_out (m_options, m_binWidth, 0, fVal, imVal, iVal, exprBuf, strings);
+     n = m_pCalculator->format_out (m_options, m_binWidth, strings);
      // Safety check - ensure n is within bounds
      if (n < 0) n = 0;
      if (n > 20) n = 20;

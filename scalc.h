@@ -267,7 +267,7 @@ class value
 
  inline ~value ()
  {
-  if ((tag == tvSTR) && sval) free (sval);
+  if (sval) free (sval);
   sval = NULL;
  }
 
@@ -314,20 +314,19 @@ class calculator
  int scfg;
  value v_stack[max_stack_size];
  symbol *hash_table[hash_table_size];
- int v_sp;
  t_operator o_stack[max_stack_size];
+ int v_sp;
  int o_sp;
  char *buf;
  int pos;
  int tmp_var_count;
- char err[256];
- char sres[STRBUF];
+ char err[80];
  int errpos;
  char c_imaginary;
-
  bool expr;
- float__t result_fval;
+ char sres[STRBUF];
  int64_t result_ival;
+ float__t result_fval;
  float__t result_imval;
 
  inline unsigned string_hash_function (char *p);
@@ -356,6 +355,9 @@ class calculator
  inline int issyntax (void) { return scfg; }
  inline char *error (void) { return err; }
  inline int errps (void) { return errpos; };
+ inline char *Sres (void) { return sres; };
+ inline char Ichar (void) { return c_imaginary; };
+ 
  void addfvar (const char *name, float__t val);
  void addivar (const char *name, int_t val);
  void addlvar (const char *name, float__t fval, int_t ival);
@@ -363,12 +365,10 @@ class calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); }
  int varlist (char *buf, int bsize, int *maxlen = nullptr);
  float__t evaluate (char *expr, __int64 *piVal = NULL, float__t *pimval = NULL);
- char *Sres (void) { return sres; };
- char Ichar (void) { return c_imaginary; };
- int format_out (int Options, int binwide, int n, float__t fVal, float__t imVal, int64_t iVal,
-                 char *expr, char strings[20][80]);
- int print (char *str, int Options, int binwide, float__t fVal, float__t imVal, int64_t iVal,
-            int *size = nullptr);
+
+ int format_out (int Options, int binwide, char strings[20][80]);
+ int print (char *str, int Options, int binwide, int *size = nullptr);
+
  ~calculator (void);
 };
 

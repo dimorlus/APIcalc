@@ -255,14 +255,15 @@ calculator::~calculator (void)
   }
 }
 
-int calculator::format_out (int Options, int binwide, int n, float__t fVal, float__t imVal,
-                            int64_t iVal, char *expr, char strings[20][80])
+//---------------------------------------------------------------------------
+int calculator::format_out (int Options, int binwide, char strings[20][80])
 {
- if (IsNaN (fVal))
+ int n = 0;
+ if (IsNaN (result_fval))
   {
-   if (error ()[0])
+   if (err[0])
     {
-     int ep = errps ();
+     int ep = errpos;
      if (ep < 0) ep = 0;
      if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
      if ((ep < 64))
@@ -273,16 +274,16 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
        binstr[ep]                  = '^';
        binstr[sizeof (binstr) - 1] = '\0';
        sprintf (strings[n++], "%64.64s   ", binstr);
-       sprintf (strings[n++], "%67.67s", error ());
+       sprintf (strings[n++], "%67.67s", err);
       }
      else
       {
-       sprintf (strings[n++], "%67.67s", error ());
+       sprintf (strings[n++], "%67.67s", err);
       }
     }
    else
     {
-     if (expr[0])
+     if (expr)
       sprintf (strings[n++], "%66.66s ", "NaN");
      else
       sprintf (strings[n++], "%66.66s ", " ");
@@ -292,19 +293,19 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
       {
        if (Options & AUTO)
         {
-         if (Sres ()[0])
+         if (sres[0])
           {
            char strcstr[80];
-           sprintf (strcstr, "'%s'", Sres ());
+           sprintf (strcstr, "'%s'", sres);
            if (strcstr[0]) sprintf (strings[n++], "%65.64s", strcstr);
           }
         }
        else
         {
-         if (Sres ()[0])
+         if (sres[0])
           {
            char strcstr[80];
-           sprintf (strcstr, "'%s'", Sres ());
+           sprintf (strcstr, "'%s'", sres);
            sprintf (strings[n++], "%65.64s", strcstr);
           }
          else
@@ -318,12 +319,13 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    // (WO) Forced float
    if (Options & FFLOAT)
     {
-     if (imVal == 0)
-      sprintf (strings[n++], "%65.16Lg f", (long double)fVal);
+     if (result_imval == 0)
+      sprintf (strings[n++], "%65.16Lg f", (long double)result_fval);
      else
       {
        char imstr[80];
-       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)fVal, (long double)imVal, Ichar ());
+       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
+                c_imaginary);
        sprintf (strings[n++], "%65.64s f", imstr);
       }
     }
@@ -331,16 +333,16 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
     {
      char scistr[80];
-     if (imVal == 0)
-      d2scistr (scistr, fVal);
+     if (result_imval == 0)
+      d2scistr (scistr, result_fval);
      else
       {
        char *cp = scistr;
-       cp += d2scistr (scistr, fVal);
-       if (imVal > 0) *cp++ = '+';
+       cp += d2scistr (scistr, result_fval);
+       if (result_imval > 0) *cp++ = '+';
 
-       cp += d2scistr (cp, imVal);
-       *cp++ = Ichar ();
+       cp += d2scistr (cp, result_imval);
+       *cp++ = c_imaginary;
        *cp   = '\0';
       }
      sprintf (strings[n++], "%65.64s S", scistr);
@@ -349,15 +351,15 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if (Options & NRM)
     {
      char nrmstr[80];
-     if (imVal == 0)
-      d2nrmstr (nrmstr, fVal);
+     if (result_imval == 0)
+      d2nrmstr (nrmstr, result_fval);
      else
       {
        char *cp = nrmstr;
-       cp += d2nrmstr (nrmstr, fVal);
-       if (imVal > 0) *cp++ = '+';
-       cp += d2nrmstr (cp, imVal);
-       *cp++ = Ichar ();
+       cp += d2nrmstr (nrmstr, result_fval);
+       if (result_imval > 0) *cp++ = '+';
+       cp += d2nrmstr (cp, result_imval);
+       *cp++ = c_imaginary;
        *cp   = '\0';
       }
      sprintf (strings[n++], "%65.64s n", nrmstr);
@@ -367,7 +369,7 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & CMP) || (scfg & CMP))
     {
      char bscistr[80];
-     b2scistr (bscistr, fVal);
+     b2scistr (bscistr, result_fval);
      sprintf (strings[n++], "%65.64s c", bscistr);
     }
 
@@ -376,10 +378,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
     {
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%65lld i", iVal);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65lld i", result_ival);
       }
      else
-      sprintf (strings[n++], "%65lld i", iVal);
+      sprintf (strings[n++], "%65lld i", result_ival);
     }
 
    // (UI) Unsigned output
@@ -387,10 +389,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
     {
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%65llu u", iVal); //%llu|%zu
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65llu u", result_ival); //%llu|%zu
       }
      else
-      sprintf (strings[n++], "%65llu u", iVal); //%llu|%zu
+      sprintf (strings[n++], "%65llu u", result_ival); //%llu|%zu
     }
 
    // (UI) Fraction output
@@ -399,17 +401,17 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
      char frcstr[80];
      int num, denum;
      double val;
-     if (fVal > 0)
-      val = fVal;
+     if (result_fval > 0)
+      val = result_fval;
      else
-      val = -fVal;
+      val = -result_fval;
      double intpart = floor (val);
      if (intpart < 1e15)
       {
        if (intpart > 0)
         {
          fraction (val - intpart, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
          else
           sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
@@ -417,7 +419,7 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
        else
         {
          fraction (val, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%d/%d", num, denum);
          else
           sprintf (frcstr, "-%d/%d", num, denum);
@@ -432,10 +434,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
      char frcstr[80];
      int num, denum;
      double val;
-     if (fVal > 0)
-      val = fVal;
+     if (result_fval > 0)
+      val = result_fval;
      else
-      val = -fVal;
+      val = -result_fval;
      val /= 25.4e-3;
      double intpart = floor (val);
      if (intpart < 1e15)
@@ -445,7 +447,7 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
          fraction (val - intpart, 0.001, num, denum);
          if (num && denum)
           {
-           if (fVal > 0)
+           if (result_fval > 0)
             sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
            else
             sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
@@ -458,7 +460,7 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
        else
         {
          fraction (val, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%d/%d", num, denum);
          else
           sprintf (frcstr, "-%d/%d", num, denum);
@@ -474,10 +476,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
      sprintf (binfstr, "%%64.%illxh  ", binwide / 4);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], binfstr, iVal);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], binfstr, result_ival);
       }
      else
-      sprintf (strings[n++], binfstr, iVal);
+      sprintf (strings[n++], binfstr, result_ival);
     }
 
    // (RO) Octal format found
@@ -487,10 +489,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
      sprintf (binfstr, "%%64.%illoo  ", binwide / 3);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], binfstr, iVal);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], binfstr, result_ival);
       }
      else
-      sprintf (strings[n++], binfstr, iVal);
+      sprintf (strings[n++], binfstr, result_ival);
     }
 
    // (RO) Binary format found
@@ -499,10 +501,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
      char binfstr[16];
      char binstr[80];
      sprintf (binfstr, "%%%ib", binwide);
-     b2str (binstr, binfstr, iVal);
+     b2str (binstr, binfstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%64.64sb  ", binstr);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64sb  ", binstr);
       }
      else
       sprintf (strings[n++], "%64.64sb  ", binstr);
@@ -512,10 +514,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & CHR) || (scfg & CHR))
     {
      char chrstr[80];
-     chr2str (chrstr, iVal);
+     chr2str (chrstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%64.64s c", chrstr);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64s c", chrstr);
       }
      else
       sprintf (strings[n++], "%64.64s c", chrstr);
@@ -525,11 +527,11 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & WCH) || (scfg & WCH))
     {
      char wchrstr[80];
-     int i = iVal & 0xffff;
+     int i = result_ival & 0xffff;
      wchr2str (wchrstr, i);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%64.64s c", wchrstr);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64s c", wchrstr);
       }
      else
       sprintf (strings[n++], "%64.64s c", wchrstr);
@@ -539,10 +541,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & DAT) || (scfg & DAT))
     {
      char dtstr[80];
-     t2str (dtstr, iVal);
+     t2str (dtstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%65.64s ", dtstr);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65.64s ", dtstr);
       }
      else
       sprintf (strings[n++], "%65.64s ", dtstr);
@@ -552,10 +554,10 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
    if ((Options & UTM) || (scfg & UTM))
     {
      char dtstr[80];
-     nx_time2str (dtstr, iVal);
+     nx_time2str (dtstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) sprintf (strings[n++], "%65.64s  ", dtstr);
+       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65.64s  ", dtstr);
       }
      else
       sprintf (strings[n++], "%65.64s  ", dtstr);
@@ -566,8 +568,8 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += dgr2str (dgrstr, fVal);
-     sprintf (cp, " (%.6Lg`)", (long double)fVal * 180.0 / M_PI);
+     cp += dgr2str (dgrstr, result_fval);
+     sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
      sprintf (strings[n++], "%65.64s  ", dgrstr);
     }
 
@@ -603,16 +605,15 @@ int calculator::format_out (int Options, int binwide, int n, float__t fVal, floa
 }
 //---------------------------------------------------------------------------
 
-int calculator::print (char *str, int Options, int binwide, float__t fVal, float__t imVal,
-                       int64_t iVal, int *size)
+int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
  int bsize = 0;
- if (IsNaN (fVal))
+ if (IsNaN (result_fval))
   {
-   if (error ()[0])
+   if (err[0])
     {
-     int ep = errps ();
+     int ep = errpos;
      if (ep < 0) ep = 0;
      if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
      if ((ep < 64))
@@ -624,12 +625,12 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
        binstr[sizeof (binstr) - 1] = '\0';
        bsize += sprintf (str + bsize, "%64.64s   \r\n", binstr);
        n++;
-       bsize += sprintf (str + bsize, "%67.67s\r\n", error ());
+       bsize += sprintf (str + bsize, "%67.67s\r\n", err);
        n++;
       }
      else
       {
-       bsize += sprintf (str + bsize, "%67.67s\r\n", error ());
+       bsize += sprintf (str + bsize, "%67.67s\r\n", err);
        n++;
       }
     }
@@ -649,10 +650,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
       {
        if (Options & AUTO)
         {
-         if (Sres ()[0])
+         if (sres[0])
           {
            char strcstr[80];
-           sprintf (strcstr, "'%s'", Sres ());
+           sprintf (strcstr, "'%s'", sres);
            if (strcstr[0])
             {
              bsize += sprintf (str + bsize, "%65.64s\r\n", strcstr);
@@ -662,10 +663,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
         }
        else
         {
-         if (Sres ()[0])
+         if (sres[0])
           {
            char strcstr[80];
-           sprintf (strcstr, "'%s'", Sres ());
+           sprintf (strcstr, "'%s'", sres);
            bsize += sprintf (str + bsize, "%65.64s\r\n", strcstr);
            n++;
           }
@@ -683,15 +684,16 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    // (WO) Forced float
    if (Options & FFLOAT)
     {
-     if (imVal == 0)
+     if (result_imval == 0)
       {
-       bsize += sprintf (str + bsize, "%65.16Lg f\r\n", (long double)fVal);
+       bsize += sprintf (str + bsize, "%65.16Lg f\r\n", (long double)result_fval);
        n++;
       }
      else
       {
        char imstr[80];
-       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)fVal, (long double)imVal, Ichar ());
+       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
+                c_imaginary);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -700,16 +702,16 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
     {
      char scistr[80];
-     if (imVal == 0)
-      d2scistr (scistr, fVal);
+     if (result_imval == 0)
+      d2scistr (scistr, result_fval);
      else
       {
        char *cp = scistr;
-       cp += d2scistr (scistr, fVal);
-       if (imVal > 0) *cp++ = '+';
+       cp += d2scistr (scistr, result_fval);
+       if (result_imval > 0) *cp++ = '+';
 
-       cp += d2scistr (cp, imVal);
-       *cp++ = Ichar ();
+       cp += d2scistr (cp, result_imval);
+       *cp++ = c_imaginary;
        *cp   = '\0';
       }
      bsize += sprintf (str + bsize, "%65.64s S\r\n", scistr);
@@ -719,15 +721,15 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if (Options & NRM)
     {
      char nrmstr[80];
-     if (imVal == 0)
-      d2nrmstr (nrmstr, fVal);
+     if (result_imval == 0)
+      d2nrmstr (nrmstr, result_fval);
      else
       {
        char *cp = nrmstr;
-       cp += d2nrmstr (nrmstr, fVal);
-       if (imVal > 0) *cp++ = '+';
-       cp += d2nrmstr (cp, imVal);
-       *cp++ = Ichar ();
+       cp += d2nrmstr (nrmstr, result_fval);
+       if (result_imval > 0) *cp++ = '+';
+       cp += d2nrmstr (cp, result_imval);
+       *cp++ = c_imaginary;
        *cp   = '\0';
       }
      bsize += sprintf (str + bsize, "%65.64s n\r\n", nrmstr);
@@ -738,7 +740,7 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & CMP) || (scfg & CMP))
     {
      char bscistr[80];
-     b2scistr (bscistr, fVal);
+     b2scistr (bscistr, result_fval);
      bsize += sprintf (str + bsize, "%65.64s c\r\n", bscistr);
      n++;
     }
@@ -748,12 +750,12 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
     {
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0) bsize += sprintf (str + bsize, "%65lld i\r\n", iVal);
+       if ((result_fval - result_ival) == 0) bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
        n++;
       }
      else
       {
-       bsize += sprintf (str + bsize, "%65lld i\r\n", iVal);
+       bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
        n++;
       }
     }
@@ -763,15 +765,15 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
     {
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
-         bsize += sprintf (str + bsize, "%65llu u\r\n", iVal);
+         bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);
          n++;
         } //%llu|%zu
       }
      else
       {
-       bsize += sprintf (str + bsize, "%65llu u\r\n", iVal);
+       bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);
        n++;
       } //%llu|%zu
     }
@@ -782,17 +784,17 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
      char frcstr[80];
      int num, denum;
      double val;
-     if (fVal > 0)
-      val = fVal;
+     if (result_fval > 0)
+      val = result_fval;
      else
-      val = -fVal;
+      val = -result_fval;
      double intpart = floor (val);
      if (intpart < 1e15)
       {
        if (intpart > 0)
         {
          fraction (val - intpart, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
          else
           sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
@@ -800,7 +802,7 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
        else
         {
          fraction (val, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%d/%d", num, denum);
          else
           sprintf (frcstr, "-%d/%d", num, denum);
@@ -819,10 +821,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
      char frcstr[80];
      int num, denum;
      double val;
-     if (fVal > 0)
-      val = fVal;
+     if (result_fval > 0)
+      val = result_fval;
      else
-      val = -fVal;
+      val = -result_fval;
      val /= 25.4e-3;
      double intpart = floor (val);
      if (intpart < 1e15)
@@ -832,7 +834,7 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
          fraction (val - intpart, 0.001, num, denum);
          if (num && denum)
           {
-           if (fVal > 0)
+           if (result_fval > 0)
             sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
            else
             sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
@@ -845,7 +847,7 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
        else
         {
          fraction (val, 0.001, num, denum);
-         if (fVal > 0)
+         if (result_fval > 0)
           sprintf (frcstr, "%d/%d", num, denum);
          else
           sprintf (frcstr, "-%d/%d", num, denum);
@@ -862,15 +864,15 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
      sprintf (binfstr, "%%64.%illxh  \r\n", binwide / 4);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
-         bsize += sprintf (str + bsize, binfstr, iVal);
+         bsize += sprintf (str + bsize, binfstr, result_ival);
          n++;
         }
       }
      else
       {
-       bsize += sprintf (str + bsize, binfstr, iVal);
+       bsize += sprintf (str + bsize, binfstr, result_ival);
        n++;
       }
     }
@@ -882,15 +884,15 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
      sprintf (binfstr, "%%64.%illoo  \r\n", binwide / 3);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
-         bsize += sprintf (str + bsize, binfstr, iVal);
+         bsize += sprintf (str + bsize, binfstr, result_ival);
          n++;
         }
       }
      else
       {
-       bsize += sprintf (str + bsize, binfstr, iVal);
+       bsize += sprintf (str + bsize, binfstr, result_ival);
        n++;
       }
     }
@@ -901,10 +903,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
      char binfstr[16];
      char binstr[80];
      sprintf (binfstr, "%%%ib", binwide);
-     b2str (binstr, binfstr, iVal);
+     b2str (binstr, binfstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
          bsize += sprintf (str + bsize, "%64.64sb  \r\n", binstr);
          n++;
@@ -921,10 +923,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & CHR) || (scfg & CHR))
     {
      char chrstr[80];
-     chr2str (chrstr, iVal);
+     chr2str (chrstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
          bsize += sprintf (str + bsize, "%64.64s  c\r\n", chrstr);
          n++;
@@ -941,11 +943,11 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & WCH) || (scfg & WCH))
     {
      char wchrstr[80];
-     int i = iVal & 0xffff;
+     int i = result_ival & 0xffff;
      wchr2str (wchrstr, i);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
          bsize += sprintf (str + bsize, "%64.64s  c\r\n", wchrstr);
          n++;
@@ -962,10 +964,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & DAT) || (scfg & DAT))
     {
      char dtstr[80];
-     t2str (dtstr, iVal);
+     t2str (dtstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
          bsize += sprintf (str + bsize, "%65.64s \r\n", dtstr);
          n++;
@@ -982,10 +984,10 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
    if ((Options & UTM) || (scfg & UTM))
     {
      char dtstr[80];
-     nx_time2str (dtstr, iVal);
+     nx_time2str (dtstr, result_ival);
      if (Options & AUTO)
       {
-       if ((fVal - iVal) == 0)
+       if ((result_fval - result_ival) == 0)
         {
          bsize += sprintf (str + bsize, "%65.64s  \r\n", dtstr);
          n++;
@@ -1003,8 +1005,8 @@ int calculator::print (char *str, int Options, int binwide, float__t fVal, float
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += dgr2str (dgrstr, fVal);
-     sprintf (cp, " (%.6Lg`)", (long double)fVal * 180.0 / M_PI);
+     cp += dgr2str (dgrstr, result_fval);
+     sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
      bsize += sprintf (str + bsize, "%65.64s  \r\n", dgrstr);
      n++;
     }
@@ -2382,11 +2384,7 @@ void calculator::clear_v_stack ()
  // Очистка стека перед использованием
  for (int i = 0; i < max_stack_size; ++i)
   {
-   if (v_stack[i].tag == tvSTR && v_stack[i].sval)
-    {
-     free (v_stack[i].sval);
-    }
-   
+   if (v_stack[i].sval) free (v_stack[i].sval);
    v_stack[i].tag   = tvINT;
    v_stack[i].sval  = nullptr;
    v_stack[i].var   = nullptr;
@@ -2420,6 +2418,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  o_sp   = 0;
  pos    = 0;
  err[0] = '\0';
+ result_fval  = qnan;
+ result_imval = 0.0;
+ result_ival = 0;   
  clear_v_stack ();
 
  if (!expr) return qnan;
@@ -2448,6 +2449,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     }
    if (oper == toERROR)
     {
+     result_fval = qnan;
      return qnan;
     }
   loper:
@@ -2490,12 +2492,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          else
           {
            error (op_pos, "operator expected");
+           result_fval = qnan;  
            return qnan;
           }
         }
        else
         {
          error (op_pos, "operator expected");
+         result_fval = qnan;
          return qnan;
         }
       }
@@ -2515,6 +2519,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
      if (BINARY (oper) || oper == toRPAR)
       {
        error (op_pos, "operand expected");
+       result_fval = qnan;
        return qnan;
       }
     }
@@ -2525,6 +2530,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
      if ((UNARY (cop) && (v_sp < 1)) || (BINARY (cop) && (v_sp < 2)))
       {
        error ("Unexpected end of expression");
+       result_fval = qnan;
        return qnan;
       }
 
@@ -2534,6 +2540,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (oper == toRPAR)
         {
          error ("Unmatched ')'");
+         result_fval = qnan;
          return qnan;
         }
        if (oper != toEND) error ("Unexpected end of input");
@@ -2586,6 +2593,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if (v_sp != 0)
         error ("Unexpected end of expression");
        error ("Unexpected end of expression");
+       result_fval = qnan;
        return qnan;
 
       case toCOMMA:
@@ -2612,6 +2620,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;   
          return qnan;
         }
        else
@@ -2642,12 +2651,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          else
           {
            error (v_stack[v_sp - 2].pos, "String buffer overflow");
+           result_fval = qnan;
            return qnan;
           }
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
@@ -2676,7 +2687,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETADD)
         {
-         if (!assign ()) return qnan;
+         if (!assign ())
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        SafeFree (v_stack[v_sp]);
        v_stack[v_sp - 1].var = NULL;
@@ -2687,6 +2702,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
@@ -2719,7 +2735,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETSUB)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -2733,6 +2753,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
@@ -2766,7 +2787,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETMUL)
         {
-         if (!assign ()) return qnan;
+         if (!assign ())
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -2776,6 +2801,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
@@ -2790,6 +2816,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if (denom == 0.0)
           {
            error (v_stack[v_sp - 2].pos, "Division by zero");
+           result_fval = qnan;
            return qnan;
           }
          v_stack[v_sp - 2].fval  = (a * c + b * d) / denom;
@@ -2799,6 +2826,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if (v_stack[v_sp - 1].get () == 0.0)
         {
          error (v_stack[v_sp - 2].pos, "Division by zero");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -2822,7 +2850,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETDIV)
         {
-         if (!assign ()) return qnan;
+         if (!assign ())
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -2831,11 +2863,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
         {
          error (v_stack[v_sp - 2].pos, "Division by zero");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].tag == tvPERCENT)
@@ -2857,6 +2891,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if (a_norm2 == 0.0)
           {
            error (v_stack[v_sp - 2].pos, "Division by zero");
+           result_fval = qnan;
            return qnan;
           }
          long double inv_a_r = ar / a_norm2;
@@ -2867,6 +2902,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if (b_norm2 == 0.0)
           {
            error (v_stack[v_sp - 2].pos, "Division by zero");
+           result_fval = qnan;
            return qnan;
           }
          long double inv_b_r = br / b_norm2;
@@ -2881,6 +2917,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if (sum_norm2 == 0.0)
           {
            error (v_stack[v_sp - 2].pos, "Division by zero");
+           result_fval = qnan;
            return qnan;
           }
          v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
@@ -2898,16 +2935,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
         {
          error (v_stack[v_sp - 2].pos, "Division by zero");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].tag == tvPERCENT)
@@ -2933,16 +2973,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].get () == 0.0)
         {
          error (v_stack[v_sp - 2].pos, "Division by zero");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -2964,7 +3007,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETMOD)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -2974,6 +3021,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3018,7 +3066,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETPOW)
         {
-         if (!assign ()) return qnan;
+         if (!assign ())
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3028,11 +3080,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3047,7 +3101,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETAND)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3057,11 +3115,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3076,7 +3136,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETOR)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3086,11 +3150,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3105,8 +3171,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETXOR)
         {
-         if (!assign ()) return qnan;
-        }
+         if (!assign ())
+          {
+           result_fval = qnan;
+           return qnan;
+          }
+         }
        v_stack[v_sp - 1].var = NULL;
        break;
 
@@ -3115,11 +3185,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3134,7 +3206,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETASL)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3144,11 +3220,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3163,7 +3241,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETASR)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3173,11 +3255,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3193,7 +3277,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETLSR)
         {
-         if (!assign ()) return qnan;
+         if (!assign ()) 
+          {
+           result_fval = qnan;
+           return qnan;
+          }
         }
        v_stack[v_sp - 1].var = NULL;
        break;
@@ -3246,6 +3334,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3272,6 +3361,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3298,6 +3388,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3324,6 +3415,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -3350,11 +3442,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT)
@@ -3365,7 +3459,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].fval += 1;
         }
-       if (!assign ()) return qnan;
+       if (!assign ())
+        {
+         result_fval = qnan;
+         return qnan;
+        }
        v_stack[v_sp - 1].var = NULL;
        break;
 
@@ -3373,11 +3471,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT)
@@ -3388,7 +3488,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].fval -= 1;
         }
-       if (!assign ()) return qnan;
+       if (!assign ()) 
+        {
+         result_fval = qnan;
+         return qnan;
+        }
        v_stack[v_sp - 1].var = NULL;
        break;
 
@@ -3396,16 +3500,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].var == NULL)
         {
          error (v_stack[v_sp - 1].pos, "Varaibale expected");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].var->val.tag == tvINT)
@@ -3423,16 +3530,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].var == NULL)
         {
          error (v_stack[v_sp - 1].pos, "Varaibale expected");
+         result_fval = qnan;
          return qnan;
         }
        if (v_stack[v_sp - 1].var->val.tag == tvINT)
@@ -3450,11 +3560,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT)
@@ -3476,6 +3588,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           error ("Variabale expected");
          else
           error (v_stack[v_sp - 2].pos, "Variabale expected");
+         result_fval = qnan;
          return qnan;
         }
        else
@@ -3483,6 +3596,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if (v_stack[v_sp - 2].var->tag == tsCONSTANT)
           {
            error (v_stack[v_sp - 2].pos, "assignment to constant");
+           result_fval = qnan;
            return qnan;
           }
          // v_stack[v_sp - 2] := v_stack[v_sp - 1]
@@ -3506,11 +3620,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT)
@@ -3529,6 +3645,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR))
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if (v_stack[v_sp - 1].tag == tvINT)
@@ -3546,6 +3663,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvSTR))
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else
@@ -3556,6 +3674,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
+         result_fval = qnan;
          return qnan;
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 1].imval != 0.0))
@@ -3577,16 +3696,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
       case toRPAR: //
        error ("mismatched ')'");
+       result_fval = qnan;
        return qnan;
 
       case toFUNC: // function without '('
        error ("'(' expected");
+       result_fval = qnan;
        return qnan;
 
       case toLPAR: //)
        if (oper != toRPAR)
         {
          error ("')' expected");
+         result_fval = qnan;
          return qnan;
         }
 
@@ -3601,6 +3723,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
@@ -3612,6 +3735,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              ((void (*) (value *, value *, value *, int))sym->func) (
@@ -3623,6 +3747,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 2].ival = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
@@ -3634,6 +3759,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - 2].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              {
@@ -3655,6 +3781,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 2].ival
@@ -3667,6 +3794,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
@@ -3679,6 +3807,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 3)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 4].ival = (*(int_t (*) (double, double, int_t))sym->func) (
@@ -3692,6 +3821,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 2].fval
@@ -3704,6 +3834,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
@@ -3716,6 +3847,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 3)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
+               result_fval = qnan;
                return qnan;
               }
 
@@ -3731,6 +3863,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args < 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one or more arguments");
+               result_fval = qnan;
                return qnan;
               }
 
@@ -3758,6 +3891,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 2].ival
@@ -3769,6 +3903,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              {
@@ -3788,6 +3923,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
                return qnan;
               }
              v_stack[v_sp - 2].fval = (*(float__t (*) (float__t, float__t))sym->func) (
@@ -3802,7 +3938,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           }
          if (cop == toSETADD)
           {
-           if (!assign ()) return qnan;
+           if (!assign ())
+            {
+             result_fval = qnan;
+             return qnan;
+            }
           }
          SafeFree (v_stack[v_sp - 1]);
          v_stack[v_sp - 1].var = NULL;
@@ -3812,6 +3952,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if (n_args != 1)
         {
          error ("Function call expected");
+         result_fval = qnan;
          return qnan;
         }
        goto next_token;
@@ -3822,6 +3963,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
    if (o_sp == max_stack_size)
     {
      error ("operator stack overflow");
+     result_fval = qnan;
      return qnan;
     }
    o_stack[o_sp++] = oper;

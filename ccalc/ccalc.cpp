@@ -411,8 +411,9 @@ int main ()
  // int64_t iVal, int* size)
 
  char result_str[1600];
- calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width,
-             result, imVal, iVal);
+ //calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width,
+ //            result, imVal, iVal);
+ calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width);
 
  if (config.get_options ().calc_flags & OPT)
   print_options (config.get_options ().calc_flags, config.get_options ().binary_width);

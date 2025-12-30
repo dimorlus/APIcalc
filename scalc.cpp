@@ -333,15 +333,17 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
    if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
     {
      char scistr[80];
-     if (result_imval == 0)
-      d2scistr (scistr, result_fval);
+     if (result_imval == 0) d2scistr (scistr, result_fval);
      else
       {
        char *cp = scistr;
-       cp += d2scistr (scistr, result_fval);
-       if (result_imval > 0) *cp++ = '+';
+       float__t imval = result_imval;
+       float__t fval  = result_fval;
+       normz (fval, imval);
+       cp += d2scistr (scistr, fval);
+       if (imval >= 0) *cp++ = '+';
 
-       cp += d2scistr (cp, result_imval);
+       cp += d2scistr (cp, imval);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }
@@ -351,14 +353,16 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
    if (Options & NRM)
     {
      char nrmstr[80];
-     if (result_imval == 0)
-      d2nrmstr (nrmstr, result_fval);
+     if (result_imval == 0) d2nrmstr (nrmstr, result_fval);
      else
       {
        char *cp = nrmstr;
-       cp += d2nrmstr (nrmstr, result_fval);
-       if (result_imval > 0) *cp++ = '+';
-       cp += d2nrmstr (cp, result_imval);
+       float__t imval = result_imval;
+       float__t fval  = result_fval;
+       normz (fval, imval);
+       cp += d2nrmstr (nrmstr, fval);
+       if (imval >= 0) *cp++ = '+';
+       cp += d2nrmstr (cp, imval);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }
@@ -707,10 +711,14 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      else
       {
        char *cp = scistr;
-       cp += d2scistr (scistr, result_fval);
-       if (result_imval > 0) *cp++ = '+';
+       float__t imval = result_imval;
+       float__t fval  = result_fval;
+       normz (fval, imval);
 
-       cp += d2scistr (cp, result_imval);
+       cp += d2scistr (scistr, fval);
+       if (imval >= 0) *cp++ = '+';
+
+       cp += d2scistr (cp, imval);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }
@@ -721,14 +729,18 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    if (Options & NRM)
     {
      char nrmstr[80];
-     if (result_imval == 0)
-      d2nrmstr (nrmstr, result_fval);
+     float__t imval = result_imval;
+     float__t fval  = result_fval;
+     normz (fval, imval);
+
+     if (imval == 0)
+      d2nrmstr (nrmstr, fval);
      else
       {
        char *cp = nrmstr;
-       cp += d2nrmstr (nrmstr, result_fval);
-       if (result_imval > 0) *cp++ = '+';
-       cp += d2nrmstr (cp, result_imval);
+       cp += d2nrmstr (nrmstr, fval);
+       if (imval >= 0) *cp++ = '+';
+       cp += d2nrmstr (cp, imval);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }

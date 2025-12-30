@@ -218,7 +218,188 @@ int d2scistr (char *str, float__t d)
   }
 }
 //---------------------------------------------------------------------------
+int range (float__t d)
+{
+ int rng = 0;
 
+ if (isNan (d)) return 0;
+ while (d >= 1000)
+  {
+   rng++;
+   d /= 1000;
+   if (rng > 308) break;
+  }
+ while (d < 1)
+  {
+   rng--;
+   d *= 1000;
+   if (rng < -308) break;
+  }
+ return rng;
+ }
+//---------------------------------------------------------------------------
+//int normz(float__t& re, float__t& im)
+//{
+// int rng    = 0;
+// float__t d = sqrt (re * re + im * im);
+// if (isNan (d)) return 0;
+// while (d >= 1000)
+//  {
+//   rng++;
+//   d /= 1000;
+//   re /= 1000;
+//   im /= 1000;
+//   if (rng > 308) break;
+//  }
+// while (d < 1)
+//  {
+//   rng--;
+//   d *= 1000;
+//   re *= 1000;
+//   im *= 1000;
+//   if (rng < -308) break;
+//  }
+//
+//}
+
+int normz (float__t &re, float__t &im)
+{
+ int rng    = 0;
+ float__t d = sqrt (re * re + im * im);
+ if (isNan (d)) return 0;
+ if (d == 0) return 0;
+
+ // Приводим модуль к диапазону [1, 1000) для инженерного формата
+ while (d >= 1000.0)
+  {
+   d /= 1000.0;
+   re /= 1000.0;
+   im /= 1000.0;
+   rng++;
+   if (rng > 308) break;
+  }
+ while (d > 0 && d < 1.0)
+  {
+   d *= 1000.0;
+   re *= 1000.0;
+   im *= 1000.0;
+   rng--;
+   if (rng < -308) break;
+  }
+
+ // Округляем каждую компоненту до 3 значащих цифр
+ // Приводим к диапазону [100, 1000), округляем, возвращаем обратно
+ if (re != 0)
+  {
+   float__t abs_re = fabs (re);
+   int order       = 0;
+   
+   while (abs_re >= 1000.0)
+    {
+     abs_re /= 10.0;
+     order++;
+    }
+   while (abs_re < 100.0)
+    {
+     abs_re *= 10.0;
+     order--;
+    }
+   
+   abs_re = round (abs_re);
+   
+   while (order > 0)
+    {
+     abs_re *= 10.0;
+     order--;
+    }
+   while (order < 0)
+    {
+     abs_re /= 10.0;
+     order++;
+    }
+   
+   re = (re < 0) ? -abs_re : abs_re;
+  }
+
+ if (im != 0)
+  {
+   float__t abs_im = fabs (im);
+   int order       = 0;
+   
+   while (abs_im >= 1000.0)
+    {
+     abs_im /= 10.0;
+     order++;
+    }
+   while (abs_im < 100.0)
+    {
+     abs_im *= 10.0;
+     order--;
+    }
+   
+   abs_im = round (abs_im);
+   
+   while (order > 0)
+    {
+     abs_im *= 10.0;
+     order--;
+    }
+   while (order < 0)
+    {
+     abs_im /= 10.0;
+     order++;
+    }
+   
+   im = (im < 0) ? -abs_im : abs_im;
+  }
+
+ // Пересчитываем модуль после округления
+ d = sqrt (re * re + im * im);
+
+ // Зануляем компоненты на 3 порядка меньше модуля
+ if (fabs (re) < d / 1000.0) re = 0;
+ if (fabs (im) < d / 1000.0) im = 0;
+
+ // Возвращаем масштаб обратно
+ for (int i = 0; i < abs (rng); i++)
+  {
+   if (rng > 0)
+    {
+     re *= 1000.0;
+     im *= 1000.0;
+    }
+   else if (rng < 0)
+    {
+     re /= 1000.0;
+     im /= 1000.0;
+    }
+  }
+
+ return rng;
+}
+//---------------------------------------------------------------------------
+ int rangez (float__t re, float__t im)
+ {
+ int rng = 0;
+
+ float__t d = sqrt (re * re + im * im);
+ if (isNan (d)) return 0;
+ while (d >= 1000)
+  {
+   rng++;
+   d /= 1000;
+   if (rng > 308) break;
+  }
+ while (d < 1)
+  {
+   rng--;
+   d *= 1000;
+   if (rng < -308) break;
+  }
+ return rng;
+}
+
+//---------------------------------------------------------------------------
 int d2nrmstr (char *str, float__t d)
 {
  if (isNan (d))

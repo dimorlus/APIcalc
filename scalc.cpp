@@ -156,6 +156,10 @@ calculator::calculator (int cfg)
  addfvar ("pi", M_PI);
  addfvar ("e", M_E);
  addfvar ("phi", PHI);
+ addfvar ("tau", 2.0 * M_PI);
+ addfvar ("turn", 2.0 * M_PI);
+ addfvar ("gon", M_PI / 200.0);
+ addfvar ("deg", M_PI / 180.0);
 
  // Physical constants (CODATA 2018)
  // Fundamental constants
@@ -573,7 +577,10 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      char dgrstr[80];
      char *cp = dgrstr;
      cp += dgr2str (dgrstr, result_fval);
-     sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
+
      sprintf (strings[n++], "%65.64s  ", dgrstr);
     }
 
@@ -1018,7 +1025,10 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      char dgrstr[80];
      char *cp = dgrstr;
      cp += dgr2str (dgrstr, result_fval);
-     sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
+
      bsize += sprintf (str + bsize, "%65.64s  \r\n", dgrstr);
      n++;
     }

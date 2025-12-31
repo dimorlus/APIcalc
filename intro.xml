@@ -1070,7 +1070,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td colspan="2" style="vertical-align:top; width:468px; height:18px; background-color:#ffffff;">
-          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Constants:</text></para>
+          <para style="text-align:center;"><link displaytype="text" defaultstyle="true" type="topiclink" href="Introduction" anchor="const" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Constants</link><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">:</text></para>
         </td>
         <td style="width:117px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Char</text></para>
@@ -1152,7 +1152,7 @@
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Special:</text></para>
         </td>
         <td style="width:117px;">
-          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Scientific</text></para>
+          <para><link displaytype="text" defaultstyle="true" type="topiclink" href="Introduction" anchor="range" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Scientific</link></para>
         </td>
         <td style="width:163px;">
           <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1.8M</text></para>
@@ -1257,7 +1257,7 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Complex</text></para>
         </td>
         <td style="width:163px;">
-          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3+4i</text></para>
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3+4i, 3+j4, j4+3</text></para>
         </td>
         <td colspan="2" style="width:253px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3+4i</text></para>
@@ -1268,7 +1268,7 @@
     <para><table rowcount="20" colcount="12" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:2px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#808080; border-style:solid; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="12" style="vertical-align:top; width:796px; height:19px;">
-          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Range postfix:</text></para>
+          <para style="text-align:center;"><anchor id="range" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;"></anchor><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Range postfix:</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1860,10 +1860,10 @@
       </tr>
     </table></para>
     <para></para>
-    <para><table styleclass="Default" rowcount="46" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
+    <para><table styleclass="Default" rowcount="67" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
         <td colspan="3" style="width:1041px;">
-          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
+          <para styleclass="Normal" style="text-align:center;"><anchor id="const" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;"></anchor><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1895,6 +1895,50 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">tau</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">6.283185307179586</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">2π</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">turn</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">6.283185307179586</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">2π</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gon</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.01570796326794897</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">π/200</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">deg</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.0174532925199433</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">π/180</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">e</text></para>
         </td>
         <td style="width:212px;">
@@ -1902,6 +1946,17 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Euler&apos;s number</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">i, j</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0+1i</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">√-1</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2184,6 +2239,134 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Stefan-Boltzmann constant (W/(m²·K⁴)) Constant relating black body radiation to temperature</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Rainbow Colors:</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Wavelengths (in nanometers, nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">fir</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">316e-6</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> Far infrared (FIR, 100-1000 um)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">lwir</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">11.5e-6</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> Long-wave IR (LWIR, 8-15 um, thermal)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mwir</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">5.5e-6</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> Mid-wave IR (MWIR, 3-8 um, night vision)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">swir</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">2.2e-6</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> Short-wave IR (SWIR, 1.4-3 um, fiber)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">nir</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">1.09e-6</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> Near IR (NIR, 0.78-1.4 um, remote)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">red</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">685e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~620–750 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">orange</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">605e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~590–620 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">yellow</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">580e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~570–590 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">green</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">532e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~495–570 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">blue</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">472e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~450–495 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">indigo</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">435e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (Often grouped with blue/violet, ~420-450 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">violet</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">400e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> (~380–450 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">uva</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">348e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> UVA ultraviolet (315-380 nm, tanning)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">uvb</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">298e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> UVB ultraviolet (280-315 nm)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:left;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">uvc</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">190e-9</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> UVC ultraviolet (100-280 nm, germicidal)</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

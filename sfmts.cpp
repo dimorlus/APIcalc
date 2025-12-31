@@ -503,6 +503,8 @@ int dgr2str (char *str, float__t radians)
  double sec_full   = (min_full - min) * 60.0;
  int sec           = (int)(sec_full + 0.5); // Округляем секунды
 
+ if (fabs (degrees) > 36000)
+  return sprintf (str, "--%c--%c--%c", cdeg[0], cdeg[1], cdeg[2]);
  // Корректируем переполнение секунд и минут
  if (sec == 60)
   {

@@ -1,6 +1,6 @@
 #ifndef VER_H_
 #define VER_H_
 
-#define _ver_   2.074
+#define _ver_   2.072
 #endif /* VER_H_ */
 

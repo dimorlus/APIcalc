@@ -1860,7 +1860,7 @@
       </tr>
     </table></para>
     <para></para>
-    <para><table styleclass="Default" rowcount="108" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
+    <para><table styleclass="Default" rowcount="139" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
         <td colspan="3" style="width:1041px;">
           <para styleclass="Normal" style="text-align:center;"><anchor id="const" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;"></anchor><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
@@ -1980,7 +1980,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Distance:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2087,7 +2086,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Mass:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2139,7 +2137,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Volume:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2246,7 +2243,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Energy:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2283,11 +2279,131 @@
         </td>
       </tr>
       <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">wh</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3600</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Watt hour (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">kwh</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3600000</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Kilowatt hour (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mwh</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3600000000</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Megawatt hour (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gtnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">4184</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Gram of TNT (Joules)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ttnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">4184000000</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Tonne of TNT (Joules)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ktnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">4184000000000</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Kiloton of TNT (Joules)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mtnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">4184000000000000</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Megaton of TNT (Joules)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ev</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1.602176634e-19</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Electronvolt (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">kev</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1.602176634e-16</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Kiloelectronvolt (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mev</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1.602176634e-13</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Megaelectronvolt (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gev</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1.602176634e-10</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Gigaelectronvolt (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
         <td colspan="2" style="width:212px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Power:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2317,7 +2433,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Pressure:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2358,7 +2473,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Velocity:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2392,6 +2506,215 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Nautical miles per hour to meters per second</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Time:</text></para>
+        </td>
+        <td style="width:776px;">
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">hour</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3600</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Hour in seconds</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">hr</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3600</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Hour in seconds</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">60</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Minute in seconds</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Magnetic:</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">tl</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic flux density (or magnetic induction) Tesla - Base SI </text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">wb</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic flux Weber - Base SI</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gs</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.0001</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic flux density (or magnetic induction) Gauss to Tesla</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mw</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1e-08</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic flux Maxwell to Weber</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">oe</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.007957747154594767</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic field strength (H) Oersted to A/m</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gb</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.7957747154594768</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetomotive force (MMF) Gilbert to Ampere-turn</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="2" style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Radiation:</text></para>
+        </td>
+        <td style="width:776px;">
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">gy</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Gray (J/kg) - Base SI</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">rad</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.01</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Rad (absorbed dose)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">sv</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Sievert (Equivalent dose) - Base SI</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">rem</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.01</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Roentgen Equivalent Man (0.01 Sv)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">rn</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.00877</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Roentgen (approx in air)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mrn</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.00000877</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Milli-roentgen</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">urn</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">8.77e-09</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Micro-roentgen</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ngnt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.031572</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Not great, not terrible (3.6 R)</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

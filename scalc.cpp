@@ -185,22 +185,54 @@ calculator::calculator (int cfg)
  addfvar ("lt", 0.001);               // liters (m³)
  addfvar ("ml", 0.000001);            // milliliters (m³)
 
- addfvar ("cal", 4.184); // Calorie (J)
- addfvar ("kcal", 4184.0); // Kilocalorie (J)
+ addfvar ("cal", 4.184);          // Calorie (J)
+ addfvar ("kcal", 4184.0);        // Kilocalorie (J)
+ addfvar ("btu", 1055.05585262);  // British thermal unit (J)
+ addfvar ("wh", 3600.0);          // Watt hour (J)
+ addfvar ("kwh", 3600000.0);      // Kilowatt hour (J)
+ addfvar ("mwh", 3600000000.0);   // Megawatt hour (J)
+ addfvar ("gtnt", 4184);          // Gram of TNT (Joules)
+ addfvar ("ttnt", 4.184e9);       // Tonne of TNT (Joules)
+ addfvar ("ktnt", 4.184e12);      // Kiloton of TNT (Joules)
+ addfvar ("mtnt", 4.184e15);      // Megaton of TNT (Joules)
+ addfvar ("ev", 1.602176634e-19); // Electronvolt (J)
+ addfvar ("kev", 1.602176634e-16); // Kiloelectronvolt (J)
+ addfvar ("mev", 1.602176634e-13); // Megaelectronvolt (J)
+ addfvar ("gev", 1.602176634e-10); // Gigaelectronvolt (J)
+
+
  addfvar ("hps", 745.69987158227022); // Horsepower (W)
  addfvar ("bhp", 745.69987158227022); // Brake horsepower (W) 
  addfvar ("atm", 101325.0);          // Standard atmosphere (Pa)
  addfvar ("bar", 100000.0);          // Bar (Pa)
  addfvar ("psi", 6894.757293168361); // Pound-force per
                                      // square inch (Pa)
- addfvar ("btu", 1055.05585262);     // British thermal unit (J)
 
  addfvar ("kmh", 0.277777778); // Kilometers per hour to meters per second
  addfvar ("mph", 0.44704);     // Miles per hour to meters per second   
  addfvar ("knot", 0.514444444); // Nautical miles per hour to meters per second
 
+ addfvar ("hour", 3600);        //Hour in seconds
+ addfvar ("hr", 3600);          // Hour in seconds
+ addfvar ("mnt", 60);           // Minute in seconds
 
+ // Radiation units
+ addfvar ("gy", 1.0);           // Gray (J/kg) - Base SI
+ addfvar ("rad", 0.01);         // Rad (absorbed dose)
+ addfvar ("sv", 1.0);           // Sievert (Equivalent dose) - Base SI
+ addfvar ("rem", 0.01);         // Roentgen Equivalent Man (0.01 Sv)
+ addfvar ("rn", 0.00877);       // Roentgen (approx in air)
+ addfvar ("mrn", 0.00000877);   // Milli-roentgen
+ addfvar ("urn", 0.00000000877); // Micro-roentgen
+ addfvar ("ngnt", 3.6 * 0.00877); // Not great, not terrible (3.6 R)
 
+ // Magnetic units
+ addfvar ("tl", 1.0);  // Magnetic flux density (or magnetic induction) Tesla - Base SI 
+ addfvar ("wb", 1.0);  // Magnetic flux Weber - Base SI
+ addfvar ("gs", 1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
+ addfvar ("mw", 1e-8); // Magnetic flux Maxwell to Weber
+ addfvar ("oe", (1000.0 / (4.0 * M_PI)) * 1e-4); // Magnetic field strength (H) Oersted to A/m
+ addfvar ("gb", (10.0 / (4.0 * M_PI)));           // Magnetomotive force (MMF) Gilbert to Ampere-turn
 
 
  // Physical constants (CODATA 2018)
@@ -212,7 +244,7 @@ calculator::calculator (int cfg)
  addfvar ("na", 6.02214076e23);   // Avogadro constant (mol⁻¹)
  addfvar ("kb", 1.380649e-23);    // Boltzmann constant (J/K)
  addfvar ("rg", 8.314462618);     // Universal gas constant (J/(mol·K))
-
+ 
  // Electromagnetic constants
  addfvar ("e0", 8.8541878128e-12); // Electric constant, vacuum permittivity (F/m)
  addfvar ("u0", 1.25663706212e-6); // Magnetic constant, vacuum permeability (H/m)
@@ -1536,11 +1568,12 @@ float__t calculator::tstrtod (char *s, char **endptr)
 {
  const float__t dms[] = { (60.0 * 60.0 * 60.0 * 24.0 * 365.25 * 100.0),
                           (60.0 * 60.0 * 24.0 * 365.25),
+                          (60.0 * 60.0 * 24.0 * 7),
                           (60.0 * 60.0 * 24.0),
                           (60.0 * 60.0),
                           60.0,
                           1.0 };
- const char cdt[]     = { 'c', 'y', 'd', 'h', 'm', 's' };
+ const char cdt[]     = { 'c', 'y', 'w', 'd', 'h', 'm', 's' };
  float__t res         = 0;
  float__t d;
  char *end = s;

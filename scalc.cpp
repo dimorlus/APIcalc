@@ -175,6 +175,9 @@ calculator::calculator (int cfg)
  addfvar ("oz", 0.028349523125); // Ounce (kg)
  addfvar ("st", 6.35029318);      // Stone (kg)
  addfvar ("gr", 0.001);          // Gram (kg)
+ addfvar ("kg", 1.0);          // Kilogram (kg)
+
+
  addfvar ("gal", 0.003785411784); // US Gallon (m³)
  addfvar ("qt", 0.000946352946);  // US Quart (m³)
  addfvar ("pt", 0.000473176473);  // US Pint (m³)
@@ -184,6 +187,7 @@ calculator::calculator (int cfg)
  addfvar ("tsp", 4.92892159375e-6);   // US Teaspoon (m³)
  addfvar ("lt", 0.001);               // liters (m³)
  addfvar ("ml", 0.000001);            // milliliters (m³)
+ addfvar ("cc", 0.000001);            // milliliters (m³)
 
  addfvar ("cal", 4.184);          // Calorie (J)
  addfvar ("kcal", 4184.0);        // Kilocalorie (J)

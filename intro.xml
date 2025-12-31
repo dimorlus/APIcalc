@@ -1860,7 +1860,7 @@
       </tr>
     </table></para>
     <para></para>
-    <para><table styleclass="Default" rowcount="139" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
+    <para><table styleclass="Default" rowcount="141" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
         <td colspan="3" style="width:1041px;">
           <para styleclass="Normal" style="text-align:center;"><anchor id="const" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;"></anchor><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
@@ -2090,6 +2090,17 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">kg</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Kilogram (kg)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">lb</text></para>
         </td>
         <td style="width:212px;">
@@ -2230,6 +2241,17 @@
       <tr style="vertical-align:top">
         <td style="width:50px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ml</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1e-06</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">milliliters (m³)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">cc</text></para>
         </td>
         <td style="width:212px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1e-06</text></para>
@@ -2553,7 +2575,6 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Magnetic:</text></para>
         </td>
         <td style="width:776px;">
-          <para styleclass="Normal"></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

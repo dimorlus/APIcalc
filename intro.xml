@@ -1860,7 +1860,7 @@
       </tr>
     </table></para>
     <para></para>
-    <para><table styleclass="Default" rowcount="141" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
+    <para><table styleclass="Default" rowcount="148" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
         <td colspan="3" style="width:1041px;">
           <para styleclass="Normal" style="text-align:center;"><anchor id="const" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;"></anchor><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
@@ -2079,6 +2079,17 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Nautical mile (m)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">ptt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.0003527777777777778</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Printing point DTP 0.3528mm</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -2626,7 +2637,7 @@
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">oe</text></para>
         </td>
         <td style="width:212px;">
-          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">0.007957747154594767</text></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">79.57747154594767</text></para>
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Magnetic field strength (H) Oersted to A/m</text></para>
@@ -2828,6 +2839,61 @@
         </td>
       </tr>
       <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">sf</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">5.670374419e-08</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Stefan-Boltzmann constant (W/(m²·K⁴))</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">rs</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">8.314462618</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Ideal gas constant kb*Na (J/(mol·K))</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">nae</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">2.1798723611035e-18</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Rydberg energy (J)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">mu</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true"> 1.6605390666e-27</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Atomic mass constant (kg)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">stdt</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">273.15</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Standard temperature 0°C (K)</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
         <td colspan="2" style="width:212px;">
           <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Electromagnetic:</text></para>
         </td>
@@ -2978,6 +3044,17 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Parsec (m) Parallax of one arcsecond, astronomical distance unit</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:50px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">g0</text></para>
+        </td>
+        <td style="width:212px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">9.80665</text></para>
+        </td>
+        <td style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Standard gravity (m/s²)</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">

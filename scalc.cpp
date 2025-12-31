@@ -162,6 +162,7 @@ calculator::calculator (int cfg)
  addfvar ("deg", M_PI / 180.0);
 
  // Other imperial constants
+ // Distance and length
  addfvar ("inch", 0.0254); // Inch (m)
  addfvar ("mil", 0.0000254); // 1/1000Inch (m)
  addfvar ("ft", 0.3048);   // Foot (m)
@@ -170,14 +171,17 @@ calculator::calculator (int cfg)
  addfvar ("yard", 0.9144);   // Yard (m)
  addfvar ("mi", 1609.344); // Mile (m)
  addfvar ("mile", 1609.344);   // Mile (m)
- addfvar ("nmi", 1852.0);    // Nautical mile 
+ addfvar ("nmi", 1852.0);    // Nautical mile
+ addfvar ("ptt", 0.0254 / 72); // Point (m)
+
+ // Mass 
  addfvar ("lb", 0.45359237); // Pound (kg)
  addfvar ("oz", 0.028349523125); // Ounce (kg)
  addfvar ("st", 6.35029318);      // Stone (kg)
  addfvar ("gr", 0.001);          // Gram (kg)
  addfvar ("kg", 1.0);          // Kilogram (kg)
 
-
+// Volume
  addfvar ("gal", 0.003785411784); // US Gallon (m³)
  addfvar ("qt", 0.000946352946);  // US Quart (m³)
  addfvar ("pt", 0.000473176473);  // US Pint (m³)
@@ -189,6 +193,7 @@ calculator::calculator (int cfg)
  addfvar ("ml", 0.000001);            // milliliters (m³)
  addfvar ("cc", 0.000001);            // milliliters (m³)
 
+ // Energy
  addfvar ("cal", 4.184);          // Calorie (J)
  addfvar ("kcal", 4184.0);        // Kilocalorie (J)
  addfvar ("btu", 1055.05585262);  // British thermal unit (J)
@@ -204,18 +209,21 @@ calculator::calculator (int cfg)
  addfvar ("mev", 1.602176634e-13); // Megaelectronvolt (J)
  addfvar ("gev", 1.602176634e-10); // Gigaelectronvolt (J)
 
-
+ // Power
  addfvar ("hps", 745.69987158227022); // Horsepower (W)
  addfvar ("bhp", 745.69987158227022); // Brake horsepower (W) 
+ 
+ // Pressure
  addfvar ("atm", 101325.0);          // Standard atmosphere (Pa)
  addfvar ("bar", 100000.0);          // Bar (Pa)
  addfvar ("psi", 6894.757293168361); // Pound-force per
                                      // square inch (Pa)
-
+ // Speed
  addfvar ("kmh", 0.277777778); // Kilometers per hour to meters per second
  addfvar ("mph", 0.44704);     // Miles per hour to meters per second   
  addfvar ("knot", 0.514444444); // Nautical miles per hour to meters per second
 
+ // Time
  addfvar ("hour", 3600);        //Hour in seconds
  addfvar ("hr", 3600);          // Hour in seconds
  addfvar ("mnt", 60);           // Minute in seconds
@@ -235,8 +243,8 @@ calculator::calculator (int cfg)
  addfvar ("wb", 1.0);  // Magnetic flux Weber - Base SI
  addfvar ("gs", 1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
  addfvar ("mw", 1e-8); // Magnetic flux Maxwell to Weber
- addfvar ("oe", (1000.0 / (4.0 * M_PI)) * 1e-4); // Magnetic field strength (H) Oersted to A/m
- addfvar ("gb", (10.0 / (4.0 * M_PI)));           // Magnetomotive force (MMF) Gilbert to Ampere-turn
+ addfvar ("oe", (1000.0 / (4.0 * M_PI))); // Magnetic field strength (H) Oersted to A/m
+ addfvar ("gb", (10.0 / (4.0 * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
 
 
  // Physical constants (CODATA 2018)
@@ -248,6 +256,12 @@ calculator::calculator (int cfg)
  addfvar ("na", 6.02214076e23);   // Avogadro constant (mol⁻¹)
  addfvar ("kb", 1.380649e-23);    // Boltzmann constant (J/K)
  addfvar ("rg", 8.314462618);     // Universal gas constant (J/(mol·K))
+ addfvar ("sf", 5.670374419e-8);  // Stefan-Boltzmann constant (W/(m²·K⁴))
+ addfvar ("rs", 8.314462618);     // Ideal gas constant kb*Na (J/(mol·K))
+ addfvar ("nae", 2.1798723611035e-18); // Rydberg energy (J)
+ addfvar ("mu", 1.66053906660e-27);    // Atomic mass constant (kg)
+
+ addfvar ("stdt", 273.15);        // Standard temperature (K)
  
  // Electromagnetic constants
  addfvar ("e0", 8.8541878128e-12); // Electric constant, vacuum permittivity (F/m)
@@ -266,6 +280,7 @@ calculator::calculator (int cfg)
  addfvar ("au", 1.495978707e11);     // Astronomical unit (m)
  addfvar ("ly", 9.4607304725808e15); // Light year (m)
  addfvar ("pc", 3.0856775814914e16); // Parsec (m)
+ addfvar ("g0", 9.80665);            // Standard gravity (m/s²)
 
  // Additional constants
  addfvar ("ry", 10973731.568160); // Rydberg constant (m⁻¹)

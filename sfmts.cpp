@@ -238,31 +238,19 @@ int range (float__t d)
  return rng;
  }
 //---------------------------------------------------------------------------
-//int normz(float__t& re, float__t& im)
-//{
-// int rng    = 0;
-// float__t d = sqrt (re * re + im * im);
-// if (isNan (d)) return 0;
-// while (d >= 1000)
-//  {
-//   rng++;
-//   d /= 1000;
-//   re /= 1000;
-//   im /= 1000;
-//   if (rng > 308) break;
-//  }
-// while (d < 1)
-//  {
-//   rng--;
-//   d *= 1000;
-//   re *= 1000;
-//   im *= 1000;
-//   if (rng < -308) break;
-//  }
-//
-//}
 
 int normz (float__t &re, float__t &im)
+ {
+  float__t d = sqrt (re * re + im * im);
+  if (isNan (d)) return 0;
+  if (d == 0) return 0;
+  if (re != 0 && (d / fabs(re) > 1000.0)) re = 0.0;
+  if (im != 0 && (d / fabs(im) > 1000.0)) im = 0.0;
+  return 1;
+ }
+
+#ifdef _UNUSED_CODE
+int normz1 (float__t &re, float__t &im)
 {
  int rng    = 0;
  float__t d = sqrt (re * re + im * im);
@@ -377,7 +365,9 @@ int normz (float__t &re, float__t &im)
 
  return rng;
 }
-//---------------------------------------------------------------------------
+#endif //_UNUSED_CODE
+
+ //---------------------------------------------------------------------------
  int rangez (float__t re, float__t im)
  {
  int rng = 0;

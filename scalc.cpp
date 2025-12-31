@@ -161,6 +161,48 @@ calculator::calculator (int cfg)
  addfvar ("gon", M_PI / 200.0);
  addfvar ("deg", M_PI / 180.0);
 
+ // Other imperial constants
+ addfvar ("inch", 0.0254); // Inch (m)
+ addfvar ("mil", 0.0000254); // 1/1000Inch (m)
+ addfvar ("ft", 0.3048);   // Foot (m)
+ addfvar ("yd", 0.9144);   // Yard (m)
+ addfvar ("foot", 0.3048);   // Foot (m)
+ addfvar ("yard", 0.9144);   // Yard (m)
+ addfvar ("mi", 1609.344); // Mile (m)
+ addfvar ("mile", 1609.344);   // Mile (m)
+ addfvar ("nmi", 1852.0);    // Nautical mile 
+ addfvar ("lb", 0.45359237); // Pound (kg)
+ addfvar ("oz", 0.028349523125); // Ounce (kg)
+ addfvar ("st", 6.35029318);      // Stone (kg)
+ addfvar ("gr", 0.001);          // Gram (kg)
+ addfvar ("gal", 0.003785411784); // US Gallon (m³)
+ addfvar ("qt", 0.000946352946);  // US Quart (m³)
+ addfvar ("pt", 0.000473176473);  // US Pint (m³)
+ addfvar ("cup", 0.0002365882365); // US Cup (m³)
+ addfvar ("floz", 2.95735295625e-5); // US Fluid Ounce (m³)
+ addfvar ("tbsp", 1.478676478125e-5); // US Tablespoon (m³) 
+ addfvar ("tsp", 4.92892159375e-6);   // US Teaspoon (m³)
+ addfvar ("lt", 0.001);               // liters (m³)
+ addfvar ("ml", 0.000001);            // milliliters (m³)
+
+ addfvar ("cal", 4.184); // Calorie (J)
+ addfvar ("kcal", 4184.0); // Kilocalorie (J)
+ addfvar ("hps", 745.69987158227022); // Horsepower (W)
+ addfvar ("bhp", 745.69987158227022); // Brake horsepower (W) 
+ addfvar ("atm", 101325.0);          // Standard atmosphere (Pa)
+ addfvar ("bar", 100000.0);          // Bar (Pa)
+ addfvar ("psi", 6894.757293168361); // Pound-force per
+                                     // square inch (Pa)
+ addfvar ("btu", 1055.05585262);     // British thermal unit (J)
+
+ addfvar ("kmh", 0.277777778); // Kilometers per hour to meters per second
+ addfvar ("mph", 0.44704);     // Miles per hour to meters per second   
+ addfvar ("knot", 0.514444444); // Nautical miles per hour to meters per second
+
+
+
+
+
  // Physical constants (CODATA 2018)
  // Fundamental constants
  addfvar ("c0", 299792458.0);     // Speed of light in vacuum (m/s)

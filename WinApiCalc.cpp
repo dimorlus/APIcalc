@@ -602,6 +602,49 @@ void WinApiCalc::OnCreate ()
    return;
   }
 
+ // Load user consts from consts.txt
+ char exePath[MAX_PATH];
+ std::string constLoadError;
+ if (GetModuleFileNameA (NULL, exePath, MAX_PATH))
+  {
+   char *lastSlash = strrchr (exePath, '\\');
+   if (lastSlash)
+    {
+     *(lastSlash + 1) = '\0'; // Truncate to directory
+     strcat_s (exePath, "consts.txt");
+
+     FILE *f = nullptr;
+     if (fopen_s (&f, exePath, "r") == 0 && f)
+      {
+       char line[1024];
+       while (fgets (line, sizeof (line), f))
+        {
+         // Skip empty or comment lines (simple check)
+         bool hasContent = false;
+         for (char *p = line; *p; ++p)
+          {
+           if (!isspace ((unsigned char)*p))
+            {
+             hasContent = true;
+             break;
+            }
+          }
+         if (!hasContent) continue;
+
+         // Evaluate line
+         float__t result = m_pCalculator->evaluate (line);
+         if (isnan (result))
+          {
+           // Error
+           constLoadError = m_pCalculator->error ();
+           break;
+          }
+        }
+       fclose (f);
+      }
+    }
+  }
+
  // Get internal Edit control from ComboBox
  COMBOBOXINFO cbi = { sizeof (COMBOBOXINFO) };
  if (GetComboBoxInfo (m_hComboBox, &cbi))
@@ -700,6 +743,11 @@ void WinApiCalc::OnCreate ()
 
  // Set fixed window size immediately at creation
  ResizeWindow ();
+
+ if (!constLoadError.empty ())
+  {
+   SetWindowTextA (m_hResultEdit, constLoadError.c_str ());
+  }
 }
 
 void WinApiCalc::OnCommand (WPARAM wParam)

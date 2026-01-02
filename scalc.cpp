@@ -369,6 +369,13 @@ calculator::~calculator (void)
 int calculator::format_out (int Options, int binwide, char strings[20][80])
 {
  int n = 0;
+
+ if (!expr)
+  {
+   sprintf (strings[n++], "%66.66s ", " ");
+   return n;
+  }
+
  if (IsNaN (result_fval))
   {
    if (err[0])
@@ -726,6 +733,14 @@ int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
  int bsize = 0;
+ if (!expr)
+  {
+   bsize += sprintf (str + bsize, "%66.66s \r\n", " ");
+   if (size) *size = bsize;
+   n++;
+   return n;
+  }
+
  if (IsNaN (result_fval))
   {
    if (err[0])
@@ -2746,10 +2761,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           }
         }
        else if (v_sp != 0)
+       {
         error ("Unexpected end of expression");
-       error ("Unexpected end of expression");
-       result_fval = qnan;
-       return qnan;
+        result_fval = qnan;
+        return qnan;
+       }
+       else
+       {
+         //error ("Empty expression");
+        expr        = false;
+        result_fval = 0;
+        return 0;
+       }
+       //error ("Unexpected end of expression");
+       //result_fval = qnan;
+       //return qnan;
 
       case toCOMMA:
        n_args += 1;

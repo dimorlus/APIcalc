@@ -194,6 +194,7 @@ enum t_symbol
  tsFFUNC3,  // float f(float x, float y, float z)
  tsIFFUNC3, // int f(float x, float y, int z)
  tsPFUNCn,  // int printf(char *format, ...)
+ tsSFUNCF2,  // float const(char *name, float value)
  tsSIFUNC1, // int f(char *s)
  tsVFUNC1,  // void vfunc(value* res, value* arg, int idx)
  tsVFUNC2,  // void vfunc(value* res, value* arg1, value* arg2, int idx)
@@ -329,10 +330,10 @@ class calculator
  float__t result_fval;
  float__t result_imval;
 
- inline unsigned string_hash_function (char *p);
+ inline unsigned string_hash_function (const char *p);
  symbol *add (t_symbol tag, const char *name, void *func = NULL);
  symbol *add (t_symbol tag, v_func fidx, const char *name, void *func = NULL);
- symbol *find (const char *name, void *func = NULL);
+ symbol *find (const char *name);
  t_operator scan (bool operand, bool percent);
  void error (int pos, const char *msg);
  inline void error (const char *msg) { error (pos - 1, msg); }
@@ -357,7 +358,10 @@ class calculator
  inline int errps (void) { return errpos; };
  inline char *Sres (void) { return sres; };
  inline char Ichar (void) { return c_imaginary; };
- 
+
+ float__t AddConst (const char *name, float__t val);
+ float__t AddVar (const char *name, float__t val);
+ void addfconst (const char *name, float__t val);
  void addfvar (const char *name, float__t val);
  void addivar (const char *name, int_t val);
  void addlvar (const char *name, float__t fval, int_t ival);

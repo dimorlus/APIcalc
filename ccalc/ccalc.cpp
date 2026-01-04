@@ -7,6 +7,7 @@
 #include <string>
 #include "../scalc.h"
 
+char errMsg[512] = { 0 };
 
 int32_t scan_opt (char *str, int32_t initial_opts, int *binwide);
 
@@ -300,6 +301,57 @@ float__t fhelp (float__t x)
  return x;
 }
 
+void load_user_constants (calculator &calc)
+{// Load user consts from consts.txt
+ char exePath[MAX_PATH];
+ int lineNum      = 0;
+
+ if (GetModuleFileNameA (NULL, exePath, MAX_PATH))
+  {
+   char *lastSlash = strrchr (exePath, '\\');
+   if (lastSlash)
+    {
+     *(lastSlash + 1) = '\0'; // Truncate to directory
+     strcat_s (exePath, "consts.txt");
+
+     FILE *f = nullptr;
+     if (fopen_s (&f, exePath, "r") == 0 && f)
+      {
+       char line[1024];
+       while (fgets (line, sizeof (line), f))
+        {
+         lineNum++;
+         // Skip empty or comment lines (simple check)
+         bool hasContent = false;
+         for (char *p = line; *p; ++p)
+          {
+           if (!isspace ((unsigned char)*p))
+            {
+             hasContent = true;
+             break;
+            }
+          }
+         if (!hasContent) continue;
+
+         // Evaluate line
+         float__t result = calc.evaluate (line);
+         if (isnan (result))
+          {
+           // Error
+           char msg[128];
+           snprintf (msg, sizeof (msg), "Error in consts.txt line: %d", lineNum);
+           snprintf (errMsg, sizeof (errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", msg, line,
+                     calc.error ());
+           break;
+          }
+        }
+       fclose (f);
+      }
+    }
+  }
+}
+
+
 int main ()
 {
  // Получаем исходную командную строку
@@ -347,6 +399,7 @@ int main ()
 
  config.load_config (config_path);
 
+
  // Копируем в изменяемый буфер
  char expression[max_expression_length];
  strncpy_s (expression, sizeof (expression), cmdline, _TRUNCATE);
@@ -391,24 +444,17 @@ int main ()
 
  calc.addfn ("help", (void *)(float__t (*) (float__t))fhelp);
 
+ load_user_constants (calc);
+ if (errMsg[0] != '\0')
+  {
+   std::cerr << errMsg << std::endl;
+   return 1;
+  }
+
  // Вычисляем
  __int64 iVal    = 0;
  float__t imVal  = 0;
  float__t result = calc.evaluate (expression, &iVal, &imVal);
-
- // Проверяем ошибки
- /*   if (calc.error()[0] != '\0')
-    {
-        std::cerr << "Error: " << calc.error();
-        if (calc.errps() >= 0)
-            std::cerr << " at position " << calc.errps();
-        std::cerr << std::endl;
-        return 1;
-    }
- */
- // Выводим результат
- // int calculator::print(char* str, int Options, int binwide, float__t fVal, float__t imVal,
- // int64_t iVal, int* size)
 
  char result_str[1600];
  //calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width,

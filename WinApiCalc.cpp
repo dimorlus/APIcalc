@@ -604,7 +604,9 @@ void WinApiCalc::OnCreate ()
 
  // Load user consts from consts.txt
  char exePath[MAX_PATH];
- std::string constLoadError;
+ char errMsg[512] = {0};
+ int lineNum      = 0;
+
  if (GetModuleFileNameA (NULL, exePath, MAX_PATH))
   {
    char *lastSlash = strrchr (exePath, '\\');
@@ -619,6 +621,7 @@ void WinApiCalc::OnCreate ()
        char line[1024];
        while (fgets (line, sizeof (line), f))
         {
+         lineNum++;
          // Skip empty or comment lines (simple check)
          bool hasContent = false;
          for (char *p = line; *p; ++p)
@@ -636,7 +639,10 @@ void WinApiCalc::OnCreate ()
          if (isnan (result))
           {
            // Error
-           constLoadError = m_pCalculator->error ();
+           char msg[128];
+           snprintf(msg, sizeof(msg), "Error in consts.txt line: %d", lineNum); 
+           snprintf(errMsg, sizeof(errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", 
+                    msg, line, m_pCalculator->error());
            break;
           }
         }
@@ -744,9 +750,9 @@ void WinApiCalc::OnCreate ()
  // Set fixed window size immediately at creation
  ResizeWindow ();
 
- if (!constLoadError.empty ())
+ if (errMsg[0])
   {
-   SetWindowTextA (m_hResultEdit, constLoadError.c_str ());
+   SetWindowTextA (m_hResultEdit, errMsg);
   }
 }
 
@@ -1109,7 +1115,6 @@ void WinApiCalc::EvaluateExpression ()
    try
     {
      // Call format_out
-     //n = m_pCalculator->format_out (m_options, m_binWidth, 0, fVal, imVal, iVal, exprBuf, strings);
      n = m_pCalculator->format_out (m_options, m_binWidth, strings);
      // Safety check - ensure n is within bounds
      if (n < 0) n = 0;

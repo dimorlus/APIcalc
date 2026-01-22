@@ -607,7 +607,7 @@ void WinApiCalc::OnCreate ()
  char errMsg[512] = {0};
  int lineNum      = 0;
 
- if (GetModuleFileNameA (NULL, exePath, MAX_PATH))
+ if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
   {
    char *lastSlash = strrchr (exePath, '\\');
    if (lastSlash)
@@ -714,7 +714,7 @@ void WinApiCalc::OnCreate ()
  m_hMenu = ::GetMenu (m_hWnd);
 
  // Apply saved menu visibility (MNU flag)
- ::SetMenu (m_hWnd, (m_options & MNU) ? NULL : m_hMenu);
+ ::SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
  m_menuVisible = ((m_options & MNU) == 0);
  DrawMenuBar (m_hWnd);
 
@@ -841,6 +841,9 @@ void WinApiCalc::OnCommand (WPARAM wParam)
   case ID_FORMAT_DEGREESE:
    ToggleOption (DEG);
    break;
+  case ID_FORMAT_FRH:
+   ToggleOption (FRH);
+   break;
   case ID_FORMAT_STRING:
    ToggleOption (STR);
    break;
@@ -853,7 +856,7 @@ void WinApiCalc::OnCommand (WPARAM wParam)
   case ID_FORMAT_ALL:
    // Set all format options (not toggle)
    m_options |= (SCI | NRM | FRC | CMP | IGR | UNS | HEX | OCT | FBIN | CHR | WCH | DAT | UTM | DEG
-                 | STR | FRI | AUT);
+                 | STR | FRI | AUT | FRH);
    UpdateMenuChecks ();
    EvaluateExpression ();
    break;
@@ -1364,6 +1367,7 @@ void WinApiCalc::UpdateMenuChecks ()
  CheckMenuItem (m_hMenu, ID_FORMAT_DATETIME, (m_options & DAT) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_UNIXTIME, (m_options & UTM) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_DEGREESE, (m_options & DEG) ? MF_CHECKED : MF_UNCHECKED);
+ CheckMenuItem (m_hMenu, ID_FORMAT_FRH, (m_options & FRH) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_STRING, (m_options & STR) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_INCH, (m_options & FRI) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_AUTO, (m_options & AUT) ? MF_CHECKED : MF_UNCHECKED);
@@ -2171,7 +2175,7 @@ void WinApiCalc::SaveHistory ()
   {
    SetWindowPos (m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE);
-   SetMenu (m_hWnd, (m_options & MNU) ? NULL : m_hMenu);
+   SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
    DrawMenuBar (m_hWnd);
   }
 }
@@ -2904,12 +2908,12 @@ void WinApiCalc::SetMenuVisibilityOption (bool visible)
  else
   {
    m_options |= MNU; // set MNU -> menu hidden
-   SetMenu (m_hWnd, NULL);
+   SetMenu (m_hWnd, nullptr);
    m_menuVisible = false;
   }
  DrawMenuBar (m_hWnd);
  // Force immediate non-client recalculation so ResizeWindow uses correct metrics
- SetWindowPos (m_hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+ SetWindowPos (m_hWnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
  // After the non-client area changed, force layout update so we can measure the
  // result control's client height (m_lastResultClientHeight) before resizing.
  // This addresses a timing mismatch where ResizeWindow() computed sizes
@@ -2990,25 +2994,25 @@ void WinApiCalc::ShowColorWindow (uint32_t color)
 
  // Register class if not exists
  WNDCLASSEXA wc = { 0 };
- if (!GetClassInfoExA (GetModuleHandle (NULL), pClassName, &wc))
+ if (!GetClassInfoExA (GetModuleHandle (nullptr), pClassName, &wc))
   {
    wc.cbSize        = sizeof (WNDCLASSEX);
    wc.style         = CS_HREDRAW | CS_VREDRAW;
    wc.lpfnWndProc   = WinApiCalc::ColorWndProc;
    wc.cbClsExtra    = 0;
    wc.cbWndExtra    = 0;
-   wc.hInstance     = GetModuleHandle (NULL);
-   wc.hIcon         = LoadIcon (NULL, IDI_APPLICATION);
-   wc.hCursor       = LoadCursor (NULL, IDC_ARROW);
-   wc.hbrBackground = NULL; // We will paint it ourselves
-   wc.lpszMenuName  = NULL;
+   wc.hInstance     = GetModuleHandle (nullptr);
+   wc.hIcon         = LoadIcon (nullptr, IDI_APPLICATION);
+   wc.hCursor       = LoadCursor (nullptr, IDC_ARROW);
+   wc.hbrBackground = nullptr; // We will paint it ourselves
+   wc.lpszMenuName  = nullptr;
    wc.lpszClassName = pClassName;
-   wc.hIconSm       = LoadIcon (NULL, IDI_APPLICATION);
+   wc.hIconSm       = LoadIcon (nullptr, IDI_APPLICATION);
 
    RegisterClassExA (&wc);
   }
 
- HWND hMainWnd = g_pApp ? g_pApp->GetMainWindow () : NULL;
+ HWND hMainWnd = g_pApp ? g_pApp->GetMainWindow () : nullptr;
 
  // Default position
  int x = 100;
@@ -3050,7 +3054,7 @@ void WinApiCalc::ShowColorWindow (uint32_t color)
  // Create window
  HWND hColorWnd = CreateWindowExA (WS_EX_TOPMOST | WS_EX_TOOLWINDOW, pClassName, "Color",
                                    WS_POPUP | WS_VISIBLE | WS_BORDER, x, y, size, size, hMainWnd,
-                                   NULL, GetModuleHandle (NULL),
+                                   nullptr, GetModuleHandle (nullptr),
                                    (LPVOID)(uintptr_t)color // Pass color as user data
  );
 
@@ -3081,7 +3085,7 @@ void WinApiCalc::ShowColorWindow (uint32_t color)
    // Modal message loop
    while (IsWindow (hColorWnd))
     {
-     bRet = GetMessage (&msg, NULL, 0, 0);
+     bRet = GetMessage (&msg, nullptr, 0, 0);
 
      if (bRet == 0) // WM_QUIT
       {

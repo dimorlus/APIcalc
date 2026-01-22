@@ -53,6 +53,8 @@
 #define TOP  (1 << 27) // (UI) Always on top
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define OPT  (1 << 29) // (UI) Print options
+#define FRH  (1 << 30) // (UI) Farenheit input/output
+
 
 #define STRBUF 256 // bufer size for string operations
 
@@ -258,18 +260,18 @@ class value
  inline value ()
  {
   tag   = tvINT;
-  var   = NULL;
+  var   = nullptr;
   ival  = 0;
   fval  = 0.0;
   imval = 0.0;
   pos   = 0;
-  sval  = NULL;
+  sval  = nullptr;
  }
 
  inline ~value ()
  {
   if (sval) free (sval);
-  sval = NULL;
+  sval = nullptr;
  }
 
  inline float__t get () { return tag == tvINT ? (float__t)ival : fval; }
@@ -278,7 +280,7 @@ class value
 
  inline int_t get_int () { return tag == tvINT ? ival : (int_t)fval; }
 
- inline char *get_str () { return tag == tvSTR ? sval : NULL; }
+ inline char *get_str () { return tag == tvSTR ? sval : nullptr; }
 };
 
 class symbol
@@ -295,9 +297,9 @@ class symbol
  {
   tag  = tsVARIABLE;
   fidx = vf_num;
-  func = NULL;
-  name = NULL;
-  next = NULL;
+  func = nullptr;
+  name = nullptr;
+  next = nullptr;
  }
 };
 
@@ -331,8 +333,8 @@ class calculator
  float__t result_imval;
 
  inline unsigned string_hash_function (const char *p);
- symbol *add (t_symbol tag, const char *name, void *func = NULL);
- symbol *add (t_symbol tag, v_func fidx, const char *name, void *func = NULL);
+ symbol *add (t_symbol tag, const char *name, void *func = nullptr);
+ symbol *add (t_symbol tag, v_func fidx, const char *name, void *func = nullptr);
  symbol *find (const char *name);
  t_operator scan (bool operand, bool percent);
  void error (int pos, const char *msg);
@@ -368,7 +370,7 @@ class calculator
  void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); }
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); }
  int varlist (char *buf, int bsize, int *maxlen = nullptr);
- float__t evaluate (char *expr, __int64 *piVal = NULL, float__t *pimval = NULL);
+ float__t evaluate (char *expr, __int64 *piVal = nullptr, float__t *pimval = nullptr);
 
  int format_out (int Options, int binwide, char strings[20][80]);
  int print (char *str, int Options, int binwide, int *size = nullptr);

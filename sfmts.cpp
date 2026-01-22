@@ -96,7 +96,7 @@ int b2str (char *str, const char *fmt, uint64_t b)
  char c;
  bool flag      = false;
  unsigned int j = 0;
- char *ws       = NULL;
+ char *ws       = nullptr;
  unsigned int wide;
  unsigned int i, w = 0;
  uint64_t mask;
@@ -410,7 +410,7 @@ int wchr2str (char *str, int i)
  if (i == '\t')
   cbuf[0] = ' ', cbuf[1] = '\0';
  else
-  WideCharToMultiByte (CP_OEMCP, 0, wbuf, -1, (LPSTR)cbuf, 4, NULL, NULL);
+  WideCharToMultiByte (CP_OEMCP, 0, wbuf, -1, (LPSTR)cbuf, 4, nullptr, nullptr);
  return sprintf (str, "'%s'W", cbuf);
 #else  /*_WIN_*/
  *str = '\0';

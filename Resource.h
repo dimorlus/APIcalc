@@ -50,6 +50,7 @@
 #define ID_FORMAT_INCH                  325
 #define ID_FORMAT_ALL                   326
 #define ID_FORMAT_AUTO                  327
+#define ID_FORMAT_FRH                   328
 
 // Binary width submenu
 #define ID_BINARYWIDTH_PARENT           329

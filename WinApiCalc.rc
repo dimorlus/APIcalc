@@ -64,6 +64,7 @@ BEGIN
             MENUITEM "Date time",               ID_FORMAT_DATETIME
             MENUITEM "Unix time",               ID_FORMAT_UNIXTIME
             MENUITEM "Degreese",                ID_FORMAT_DEGREESE
+            MENUITEM "Temperature",             ID_FORMAT_FRH
             MENUITEM "String",                  ID_FORMAT_STRING
             MENUITEM "Inch",                    ID_FORMAT_INCH
             MENUITEM "All",                     ID_FORMAT_ALL

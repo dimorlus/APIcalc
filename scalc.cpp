@@ -349,16 +349,16 @@ calculator::~calculator (void)
 
  for (int i = 0; i < hash_table_size; i++)
   {
-   if ((sp = hash_table[i]) != NULL)
+   if ((sp = hash_table[i]) != nullptr)
     {
      do
       {
        nsp = sp->next;
        free (sp->name);
-       sp->name = NULL;
+       sp->name = nullptr;
        delete sp;
        sp            = nsp;
-       hash_table[i] = NULL;
+       hash_table[i] = nullptr;
       }
      while (nsp);
     }
@@ -695,6 +695,16 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
 
      sprintf (strings[n++], "%65.64s  ", dgrstr);
+    }
+
+   // (UI) Temperature format 
+   if (((Options & FRH) || (scfg & FRH)) && (result_fval > -273.15))
+    {
+     char frhstr[80];
+     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
+              (long double)result_fval, (long double)(result_fval * 9.0 / 5.0 + 32.0));
+
+     sprintf (strings[n++], "%65.64s  ", frhstr);
     }
 
    // (RO) String format found
@@ -1154,6 +1164,18 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      n++;
     }
 
+   // (UI) Temperature format
+   if (((Options & FRH) || (scfg & FRH)) && (result_fval > -273.15))
+    {
+     char frhstr[80];
+     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
+              (long double)result_fval, (long double)(result_fval * 9.0 / 5.0 + 32.0));
+
+     bsize += sprintf (str + bsize, "%65.64s  \r\n", frhstr);
+     n++;
+    }
+
+
    // (RO) String format found
    if ((Options & STR) || (scfg & STR))
     {
@@ -1205,7 +1227,7 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
  int localMax  = 0;
  for (int i = 0; i < hash_table_size; i++)
   {
-   if ((sp = hash_table[i]) != NULL)
+   if ((sp = hash_table[i]) != nullptr)
     {
      do
       {
@@ -1265,7 +1287,7 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
 
  unsigned h = string_hash_function (uname) % hash_table_size;
  symbol *sp;
- for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+ for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
     {
@@ -1294,7 +1316,7 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
 
  unsigned h = string_hash_function (uname) % hash_table_size;
  symbol *sp;
- for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+ for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
     {
@@ -1337,7 +1359,7 @@ symbol *calculator::find (const char *name)
 {
  unsigned h = string_hash_function (name) % hash_table_size;
  symbol *sp;
- for (sp = hash_table[h]; sp != NULL; sp = sp->next)
+ for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
     {
@@ -1863,7 +1885,7 @@ static void SafeFree (value &v)
  if (v.tag == tvSTR && v.sval)
   {
    free (v.sval);
-   v.sval = NULL;
+   v.sval = nullptr;
   }
 }
 
@@ -2100,7 +2122,7 @@ t_operator calculator::scan (bool operand, bool percent)
        v_stack[v_sp].fval  = fval;
        pos                 = fpos - buf;
        v_stack[v_sp].pos   = pos;
-       v_stack[v_sp++].var = NULL;
+       v_stack[v_sp++].var = nullptr;
        return toOPERAND;
       }
      else
@@ -2186,7 +2208,7 @@ t_operator calculator::scan (bool operand, bool percent)
           if (v_stack[v_sp].sval) strcpy (v_stack[v_sp].sval, sbuf);
           pos                 = ipos - buf + 1;
           v_stack[v_sp].pos   = pos;
-          v_stack[v_sp++].var = NULL;
+          v_stack[v_sp++].var = nullptr;
           return toOPERAND;
          }
         else
@@ -2200,7 +2222,7 @@ t_operator calculator::scan (bool operand, bool percent)
     v_stack[v_sp].ival  = ival;
     pos                 = ipos - buf;
     v_stack[v_sp].pos   = pos;
-    v_stack[v_sp++].var = NULL;
+    v_stack[v_sp++].var = nullptr;
     return toOPERAND;
    }
 #ifdef _WCHAR_
@@ -2251,7 +2273,7 @@ t_operator calculator::scan (bool operand, bool percent)
       v_stack[v_sp].ival  = ival;
       pos                 = ipos - buf;
       v_stack[v_sp].pos   = pos;
-      v_stack[v_sp++].var = NULL;
+      v_stack[v_sp++].var = nullptr;
       return toOPERAND;
      }
     goto def;
@@ -2275,7 +2297,7 @@ t_operator calculator::scan (bool operand, bool percent)
       if (v_stack[v_sp].sval) strcpy (v_stack[v_sp].sval, sbuf);
       pos                 = ipos - buf + 1;
       v_stack[v_sp].pos   = pos;
-      v_stack[v_sp++].var = NULL;
+      v_stack[v_sp++].var = nullptr;
       return toOPERAND;
      }
     else
@@ -2314,7 +2336,7 @@ t_operator calculator::scan (bool operand, bool percent)
       v_stack[v_sp].imval = fval;
       v_stack[v_sp].fval  = 0;
       v_stack[v_sp].pos   = pos;
-      v_stack[v_sp++].var = NULL;
+      v_stack[v_sp++].var = nullptr;
       pos                 = fpos - buf;
       return toOPERAND;
      }
@@ -2426,6 +2448,14 @@ t_operator calculator::scan (bool operand, bool percent)
         fpos++;
         v_stack[v_sp].tag = tvCOMPLEX;
        }
+      else if ((scfg & FRH) && (*fpos == 'F'))
+       {
+        fpos++;
+        fval = (fval - 32.0) * 5.0 / 9.0;
+        v_stack[v_sp].tag   = tvFLOAT;
+        v_stack[v_sp].fval  = fval;
+        v_stack[v_sp].imval = 0;
+       }
       else
        {
         if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
@@ -2448,7 +2478,7 @@ t_operator calculator::scan (bool operand, bool percent)
       pos = fpos - buf;
      }
     v_stack[v_sp].pos   = pos;
-    v_stack[v_sp++].var = NULL;
+    v_stack[v_sp++].var = nullptr;
     return toOPERAND;
    }
   default:
@@ -2465,7 +2495,7 @@ t_operator calculator::scan (bool operand, bool percent)
      return toERROR;
     }
    *np         = '\0';
-   symbol *sym = NULL;
+   symbol *sym = nullptr;
    if (name[0])
     {
      if (buf[pos] == '\0') sym = find (name);
@@ -2531,7 +2561,7 @@ static int rpr[toTERMINALS] = {
 bool calculator::assign ()
 {
  value &v = v_stack[v_sp - 1];
- if (v.var == NULL)
+ if (v.var == nullptr)
   {
    error (v.pos, "variable expected");
    return false;
@@ -2735,7 +2765,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
             {
              strcpy (sres, v_stack[0].sval);
              if (v_stack[0].sval) free (v_stack[0].sval);
-             v_stack[0].sval = NULL;
+             v_stack[0].sval = nullptr;
             }
            // else sres[0] = '\0';
            return v_stack[0].ival;
@@ -2748,7 +2778,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
             {
              strcpy (sres, v_stack[0].sval);
              if (v_stack[0].sval) free (v_stack[0].sval);
-             v_stack[0].sval = NULL;
+             v_stack[0].sval = nullptr;
             }
            else
             sres[0] = '\0';
@@ -2810,7 +2840,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 2].tag  = tvFLOAT;
         }
        v_sp -= 1;
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toADD:    //+
@@ -2875,7 +2905,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           }
         }
        SafeFree (v_stack[v_sp]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toSUB:
@@ -2922,7 +2952,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toMUL:    //*
@@ -2974,7 +3004,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toDIV:    ///
@@ -3037,7 +3067,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPAR: // // parallel resistors
@@ -3109,7 +3139,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         v_stack[v_sp - 2].fval = 1 / (1 / v_stack[v_sp - 1].get () + 1 / v_stack[v_sp - 2].get ());
        v_stack[v_sp - 2].tag = tvFLOAT;
        v_sp -= 1;
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPERCENT:
@@ -3146,7 +3176,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_stack[v_sp - 2].tag = tvFLOAT;
        v_sp -= 1;
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toMOD:    //%
@@ -3194,7 +3224,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPOW:    //** ^
@@ -3253,7 +3283,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toAND:    // &
@@ -3288,7 +3318,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toOR:    // |
@@ -3323,7 +3353,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toXOR:    // ^
@@ -3358,7 +3388,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
          }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toASL:    // <<
@@ -3393,7 +3423,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toASR:    // >>
@@ -3428,7 +3458,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toLSR:    // >>> (logical shift right)
@@ -3464,7 +3494,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toEQ: //==
@@ -3486,7 +3516,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_sp -= 1;
        SafeFree (v_stack[v_sp - 1]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toNE: // !=, <>
@@ -3508,7 +3538,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_sp -= 1;
        SafeFree (v_stack[v_sp - 1]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toGT: //>
@@ -3535,7 +3565,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_sp -= 1;
        SafeFree (v_stack[v_sp - 1]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toGE: //>=
@@ -3562,7 +3592,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_sp -= 1;
        SafeFree (v_stack[v_sp - 1]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toLT: //<
@@ -3589,7 +3619,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        v_sp -= 1;
        SafeFree (v_stack[v_sp - 1]);
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toLE: //<=
@@ -3608,7 +3638,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) <= 0);
          v_stack[v_sp - 2].tag  = tvINT;
          free (v_stack[v_sp - 2].sval);
-         v_stack[v_sp - 2].sval = NULL;
+         v_stack[v_sp - 2].sval = nullptr;
         }
        else
         {
@@ -3616,7 +3646,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 2].tag  = tvINT;
         }
        v_sp -= 1;
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPREINC: //++v
@@ -3645,7 +3675,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPREDEC: //--v
@@ -3674,7 +3704,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPOSTINC: // v++
@@ -3690,7 +3720,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       else if (v_stack[v_sp - 1].var == NULL)
+       else if (v_stack[v_sp - 1].var == nullptr)
         {
          error (v_stack[v_sp - 1].pos, "Varaibale expected");
          result_fval = qnan;
@@ -3704,7 +3734,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].var->val.fval += 1;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toPOSTDEC: // v--
@@ -3720,7 +3750,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       else if (v_stack[v_sp - 1].var == NULL)
+       else if (v_stack[v_sp - 1].var == nullptr)
         {
          error (v_stack[v_sp - 1].pos, "Varaibale expected");
          result_fval = qnan;
@@ -3734,7 +3764,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].var->val.fval -= 1;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toFACT: // n!
@@ -3758,12 +3788,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].fval = (float__t)Factorial ((float__t)v_stack[v_sp - 1].fval);
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
 
        break;
 
       case toSET: // =, :=
-       if ((v_sp < 2) || (v_stack[v_sp - 2].var == NULL))
+       if ((v_sp < 2) || (v_stack[v_sp - 2].var == nullptr))
         {
          if (v_sp < 2)
           error ("Variabale expected");
@@ -3794,7 +3824,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
         }
        v_sp -= 1;
-       // v_stack[v_sp-1].var = NULL;
+       // v_stack[v_sp-1].var = nullptr;
        break;
 
       case toNOT: //!
@@ -3819,7 +3849,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 1].ival = (v_stack[v_sp - 1].fval == 0.0f) ? 1 : 0;
          v_stack[v_sp - 1].tag  = tvINT;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toMINUS: //-v
@@ -3848,7 +3878,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          return qnan;
         }
        else
-        v_stack[v_sp - 1].var = NULL;
+        v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toCOM: //~
@@ -3872,7 +3902,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 1].ival = ~(uint64_t)v_stack[v_sp - 1].fval;
          v_stack[v_sp - 1].tag  = tvINT;
         }
-       v_stack[v_sp - 1].var = NULL;
+       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toRPAR: //
@@ -4141,7 +4171,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
             }
           }
          SafeFree (v_stack[v_sp - 1]);
-         v_stack[v_sp - 1].var = NULL;
+         v_stack[v_sp - 1].var = nullptr;
          o_sp -= 1;
          n_args = 1;
         }

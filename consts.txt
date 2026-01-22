@@ -1,6 +1,7 @@
 ;; --- Density (kg/m3) ---
 const("ro_cu", 8930);; Copper
 const("ro_al", 2700);; Aluminium
+const("ro_mg", 1738);; Magnesium
 const("ro_fe", 7874);; Iron
 const("ro_ag", 10490);; Silver
 const("ro_au", 19300);; Gold
@@ -24,6 +25,7 @@ const("re_ag", 1.59e-8);; Silver
 const("re_cu", 1.68e-8);; Copper
 const("re_au", 2.44e-8);; Gold
 const("re_al", 2.65e-8);; Aluminium
+const("re_mg", 4.4e-8);; Magnesium
 const("re_w", 5.6e-8);; Tungsten
 const("re_zn", 5.9e-8);; Zinc
 const("re_ni", 6.99e-8);; Nickel

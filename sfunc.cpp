@@ -57,7 +57,7 @@ char *to_bin (int nval, char *pbuf, int nbufsize)
  int bcnt;
  int nlen = sizeof (int) * 8 + sizeof (int);
 
- if (pbuf != NULL && nbufsize > nlen)
+ if (pbuf != nullptr && nbufsize > nlen)
   {
    pbuf[nlen]     = '\0';
    pbuf[nlen - 1] = 'b';
@@ -115,7 +115,7 @@ int_t Not (int_t n)
 
 int_t Now (int_t n)
 {
- return (int_t)time (NULL) + n * 60 * 60;
+ return (int_t)time (nullptr) + n * 60 * 60;
 }
 
 float__t Erf (float__t x)
@@ -1850,7 +1850,7 @@ void LognC (float__t x, float__t y, float__t u, float__t v, float__t &re, float_
 
 void vfunc2 (value *res, value *arg1, value *arg2, int idx)
 {
- if (res == NULL || arg1 == NULL || arg2 == NULL) return;
+ if (res == nullptr || arg1 == nullptr || arg2 == nullptr) return;
  if (((arg1->tag == tvCOMPLEX) || (arg2->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX))
      || ((arg1->imval != 0.0) || (arg2->imval != 0.0) || (res->imval != 0.0)))
   {
@@ -1925,7 +1925,7 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
 
 void vfunc (value *res, value *arg, int idx)
 {
- if (res == NULL || arg == NULL) return;
+ if (res == nullptr || arg == nullptr) return;
  if (((arg->tag == tvCOMPLEX) || (res->tag == tvCOMPLEX))
      || ((arg->imval != 0.0) || (res->imval != 0.0)))
   {

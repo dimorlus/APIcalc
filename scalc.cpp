@@ -145,6 +145,7 @@ calculator::calculator (int cfg)
  add (tsFFUNC2, "max", (void *)(float__t (*) (float__t, float__t))Max);
  add (tsFFUNC1, "log2", (void *)(float__t (*) (float__t))Log2);
  add (tsFFUNC1, "fact", (void *)(float__t (*) (float__t))Factorial);
+ add (tsFFUNC1, "frh", (void *)(float__t (*) (float__t))Farenheit);
  add (tsFFUNC1, "root3", (void *)(float__t (*) (float__t))Root3);
  add (tsFFUNC1, "cbrt", (void *)(float__t (*) (float__t))Root3);
  // add(tsFFUNC2, "rootn", (void*)(float__t(*)(float__t,float__t))Rootn);
@@ -689,7 +690,8 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += dgr2str (dgrstr, result_fval);
+     cp += sprintf (cp, "%.6Lg rad|", (long double)result_fval);
+     cp += dgr2str (cp, result_fval);
      cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
      cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
      cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
@@ -1155,7 +1157,8 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += dgr2str (dgrstr, result_fval);
+     cp += sprintf (cp, "%.6Lg rad|", (long double)result_fval);
+     cp += dgr2str (cp, result_fval);
      cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
      cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
      cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
@@ -2363,7 +2366,13 @@ t_operator calculator::scan (bool operand, bool percent)
     float__t sfval = 0;
     int ierr       = 0, ferr;
     char *ipos, *fpos, *sfpos;
+    char sign = '\0';
     int n = 0;
+
+    if (pos > 1)
+     {
+       sign = buf[pos - 2];
+     }
 
     if (buf[pos - 1] == '\\')
      {
@@ -2451,7 +2460,8 @@ t_operator calculator::scan (bool operand, bool percent)
       else if ((scfg & FRH) && (*fpos == 'F'))
        {
         fpos++;
-        fval = (fval - 32.0) * 5.0 / 9.0;
+        if (sign == '-') fval = -(-fval - 32.0) * 5.0 / 9.0;
+        else  fval = (fval - 32.0) * 5.0 / 9.0;
         v_stack[v_sp].tag   = tvFLOAT;
         v_stack[v_sp].fval  = fval;
         v_stack[v_sp].imval = 0;

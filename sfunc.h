@@ -77,7 +77,8 @@ float__t Aawg(float__t x); //mm to AWG
 float__t Ee(float__t x, float__t y); //find standard value
 float__t Max(float__t x, float__t y);
 float__t Factorial(float__t x);
-float__t Cmp(float__t x, float__t y, float__t prec);
+float__t Farenheit (float__t x);
+float__t Cmp (float__t x, float__t y, float__t prec);
 float__t Vout(float__t Vref, float__t Rh, float__t Rl);
 bool IsNaN(const double fVal);
 bool IsNaNL(const long double ldVal);

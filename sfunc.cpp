@@ -786,6 +786,11 @@ float__t Factorial (float__t x)
  return res;
 }
 
+float__t Farenheit (float__t x)
+{
+ return (x - 32.0) * 5.0 / 9.0;
+}
+
 float__t Cmp (float__t x, float__t y, float__t prec)
 {
  float__t rel_diff = fabs (x - y) / (x > y ? x : y);

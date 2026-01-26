@@ -2366,13 +2366,11 @@ t_operator calculator::scan (bool operand, bool percent)
     float__t sfval = 0;
     int ierr       = 0, ferr;
     char *ipos, *fpos, *sfpos;
-    char sign = '\0';
     int n = 0;
+    //char sign = '\0';
 
-    if (pos > 1)
-     sign = buf[pos - 2];
-    else
-     sign = '\0';
+    //if (pos > 1) sign = buf[pos - 2];
+    //else sign = '\0';
      
 
     if (buf[pos - 1] == '\\')
@@ -2411,7 +2409,7 @@ t_operator calculator::scan (bool operand, bool percent)
      }
     errno = 0;
     sfval = fval = strtod (buf + pos - 1, &fpos);
-    sfpos        = fpos;
+    sfpos = fpos;
 
     //` - degrees, ' - minutes, " - seconds
     if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
@@ -2419,14 +2417,12 @@ t_operator calculator::scan (bool operand, bool percent)
     else if (*fpos == ':')
      fval = tstrtod (buf + pos - 1, &fpos);
     else if (scfg & SCI + FRI)
-     {
-      scientific (fpos, fval);
-     }
+     scientific (fpos, fval);
     if ((scfg & FRH) && (*fpos == 'F'))
       {
        fpos++;
-       if (sign == '-') fval = -(-fval - 32.0) * 5.0 / 9.0;
-       else  fval = (fval - 32.0) * 5.0 / 9.0;
+       if ((o_sp > 0) && (o_stack[o_sp-1]==toMINUS)) fval = -(-fval - 32.0) * 5.0 / 9.0;
+       else fval = (fval - 32.0) * 5.0 / 9.0;
       }
     ferr = errno;
     if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\'))) 
@@ -2449,7 +2445,7 @@ t_operator calculator::scan (bool operand, bool percent)
      {
       v_stack[v_sp].tag  = tvINT;
       v_stack[v_sp].ival = ival;
-      pos                = ipos - buf;
+      pos = ipos - buf;
      }
     else
      {
@@ -2502,7 +2498,7 @@ t_operator calculator::scan (bool operand, bool percent)
      error ("Bad character");
      return toERROR;
     }
-   *np         = '\0';
+   *np = '\0';
    symbol *sym = nullptr;
    if (name[0])
     {

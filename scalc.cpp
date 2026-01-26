@@ -2370,9 +2370,10 @@ t_operator calculator::scan (bool operand, bool percent)
     int n = 0;
 
     if (pos > 1)
-     {
-       sign = buf[pos - 2];
-     }
+     sign = buf[pos - 2];
+    else
+     sign = '\0';
+     
 
     if (buf[pos - 1] == '\\')
      {
@@ -2421,6 +2422,12 @@ t_operator calculator::scan (bool operand, bool percent)
      {
       scientific (fpos, fval);
      }
+    if ((scfg & FRH) && (*fpos == 'F'))
+      {
+       fpos++;
+       if (sign == '-') fval = -(-fval - 32.0) * 5.0 / 9.0;
+       else  fval = (fval - 32.0) * 5.0 / 9.0;
+      }
     ferr = errno;
     if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\'))) 
      {
@@ -2456,15 +2463,6 @@ t_operator calculator::scan (bool operand, bool percent)
         c_imaginary = *fpos;
         fpos++;
         v_stack[v_sp].tag = tvCOMPLEX;
-       }
-      else if ((scfg & FRH) && (*fpos == 'F'))
-       {
-        fpos++;
-        if (sign == '-') fval = -(-fval - 32.0) * 5.0 / 9.0;
-        else  fval = (fval - 32.0) * 5.0 / 9.0;
-        v_stack[v_sp].tag   = tvFLOAT;
-        v_stack[v_sp].fval  = fval;
-        v_stack[v_sp].imval = 0;
        }
       else
        {

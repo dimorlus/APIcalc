@@ -407,7 +407,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
       sprintf (strings[n++], "%66.66s ", " ");
 
      // (RO) String format found
-     if ((Options & STR) || (scfg & STR))
+     if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
       {
        if (Options & AUTO)
         {
@@ -442,8 +442,16 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      else
       {
        char imstr[80];
-       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
+       char cphi[20];
+       float__t phi = atan2l (result_imval, result_fval);
+       float__t r  = hypotl (result_fval, result_imval);
+       dgr2str (cphi, phi);
+       sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi, 
+                (long double)result_fval, (long double)result_imval,
                 c_imaginary);
+
+       //sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
+       //         c_imaginary);
        sprintf (strings[n++], "%65.64s f", imstr);
       }
     }
@@ -454,11 +462,18 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      if (result_imval == 0) d2scistr (scistr, result_fval);
      else
       {
+       char cphi[20];
+       char cr[20];
        char *cp = scistr;
        float__t imval = result_imval;
        float__t fval  = result_fval;
+       float__t phi   = atan2l (imval, fval);
+       float__t r     = hypotl (fval, imval);
+       d2scistr (cr, r);
+       dgr2str (cphi, phi);
+       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
        normz (fval, imval);
-       cp += d2scistr (scistr, fval);
+       cp += d2scistr (cp, fval);
        if (imval >= 0) *cp++ = '+';
 
        cp += d2scistr (cp, imval);
@@ -474,11 +489,18 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      if (result_imval == 0) d2nrmstr (nrmstr, result_fval);
      else
       {
+       char cphi[20];
+       char cr[20];
        char *cp = nrmstr;
        float__t imval = result_imval;
        float__t fval  = result_fval;
+       float__t phi   = atan2l (imval, fval);
+       float__t r     = hypotl (fval, imval);
+       d2nrmstr (cr, r);
+       dgr2str (cphi, phi);
+       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
        normz (fval, imval);
-       cp += d2nrmstr (nrmstr, fval);
+       cp += d2nrmstr (cp, fval);
        if (imval >= 0) *cp++ = '+';
        cp += d2nrmstr (cp, imval);
        *cp++ = c_imaginary;
@@ -488,7 +510,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Computing format found
-   if ((Options & CMP) || (scfg & CMP))
+   if (((Options & CMP) || (scfg & CMP)) && (result_imval == 0))
     {
      char bscistr[80];
      b2scistr (bscistr, result_fval);
@@ -496,7 +518,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Integer output
-   if (Options & IGR)
+   if ((Options & IGR) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -507,7 +529,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Unsigned output
-   if (Options & UNS)
+   if ((Options & UNS) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -518,7 +540,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Fraction output
-   if (Options & FRC)
+   if ((Options & FRC) && (result_imval == 0))
     {
      char frcstr[80];
      int num, denum;
@@ -551,7 +573,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Fraction inch output
-   if (Options & FRI)
+   if ((Options & FRI) && (result_imval == 0))
     {
      char frcstr[80];
      int num, denum;
@@ -592,7 +614,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Hex format found
-   if ((Options & HEX) || (scfg & HEX))
+   if (((Options & HEX) || (scfg & HEX)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  ", binwide / 4);
@@ -605,7 +627,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Octal format found
-   if ((Options & OCT) || (scfg & OCT))
+   if (((Options & OCT) || (scfg & OCT)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  ", binwide / 3);
@@ -618,7 +640,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Binary format found
-   if ((Options & fBIN) || (scfg & fBIN))
+   if (((Options & fBIN) || (scfg & fBIN)) && (result_imval == 0))
     {
      char binfstr[16];
      char binstr[80];
@@ -633,7 +655,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Char format found
-   if ((Options & CHR) || (scfg & CHR))
+   if (((Options & CHR) || (scfg & CHR)) && (result_imval == 0))
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
@@ -646,7 +668,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) WChar format found
-   if ((Options & WCH) || (scfg & WCH))
+   if (((Options & WCH) || (scfg & WCH)) && (result_imval == 0))
     {
      char wchrstr[80];
      int i = result_ival & 0xffff;
@@ -660,7 +682,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Date time format found
-   if ((Options & DAT) || (scfg & DAT))
+   if (((Options & DAT) || (scfg & DAT)) && (result_imval == 0))
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
@@ -673,7 +695,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Unix time
-   if ((Options & UTM) || (scfg & UTM))
+   if (((Options & UTM) || (scfg & UTM)) && (result_imval == 0))
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
@@ -686,7 +708,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
-   if ((Options & DEG) || (scfg & DEG))
+   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0))
     {
      char dgrstr[80];
      char *cp = dgrstr;
@@ -700,7 +722,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Temperature format 
-   if (((Options & FRH) || (scfg & FRH)) && (result_fval > -273.15))
+   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && (result_fval > -273.15))
     {
      char frhstr[80];
      sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
@@ -710,7 +732,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) String format found
-   if ((Options & STR) || (scfg & STR))
+   if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -790,7 +812,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      n++;
 
      // (RO) String format found
-     if ((Options & STR) || (scfg & STR))
+     if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
       {
        if (Options & AUTO)
         {
@@ -836,8 +858,15 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      else
       {
        char imstr[80];
-       sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
-                c_imaginary);
+       char cphi[20];
+       float__t phi = atan2l (result_imval, result_fval);
+       float__t r   = hypotl (result_fval, result_imval);
+       dgr2str (cphi, phi);
+       sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi,
+                (long double)result_fval, (long double)result_imval, c_imaginary);
+
+       //sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
+       //         c_imaginary);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -850,12 +879,18 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       d2scistr (scistr, result_fval);
      else
       {
-       char *cp = scistr;
+       char cphi[20];
+       char cr[20];
+       char *cp       = scistr;
        float__t imval = result_imval;
        float__t fval  = result_fval;
+       float__t phi   = atan2l (imval, fval);
+       float__t r     = hypotl (fval, imval);
+       d2scistr (cr, r);
+       dgr2str (cphi, phi);
+       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
        normz (fval, imval);
-
-       cp += d2scistr (scistr, fval);
+       cp += d2scistr (cp, fval);
        if (imval >= 0) *cp++ = '+';
 
        cp += d2scistr (cp, imval);
@@ -877,8 +912,18 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       d2nrmstr (nrmstr, fval);
      else
       {
-       char *cp = nrmstr;
-       cp += d2nrmstr (nrmstr, fval);
+       char cphi[20];
+       char cr[20];
+       char *cp       = nrmstr;
+       float__t imval = result_imval;
+       float__t fval  = result_fval;
+       float__t phi   = atan2l (imval, fval);
+       float__t r     = hypotl (fval, imval);
+       d2nrmstr (cr, r);
+       dgr2str (cphi, phi);
+       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
+       normz (fval, imval);
+       cp += d2nrmstr (cp, fval);
        if (imval >= 0) *cp++ = '+';
        cp += d2nrmstr (cp, imval);
        *cp++ = c_imaginary;
@@ -889,7 +934,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Computing format found
-   if ((Options & CMP) || (scfg & CMP))
+   if (((Options & CMP) || (scfg & CMP)) && (result_imval == 0))
     {
      char bscistr[80];
      b2scistr (bscistr, result_fval);
@@ -898,7 +943,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Integer output
-   if (Options & IGR)
+   if ((Options & IGR) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -913,7 +958,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Unsigned output
-   if (Options & UNS)
+   if ((Options & UNS) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -931,7 +976,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Fraction output
-   if (Options & FRC)
+   if ((Options & FRC) && (result_imval == 0))
     {
      char frcstr[80];
      int num, denum;
@@ -968,7 +1013,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Fraction inch output
-   if (Options & FRI)
+   if ((Options & FRI) && (result_imval == 0))
     {
      char frcstr[80];
      int num, denum;
@@ -1010,7 +1055,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Hex format found
-   if ((Options & HEX) || (scfg & HEX))
+   if (((Options & HEX) || (scfg & HEX)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  \r\n", binwide / 4);
@@ -1030,7 +1075,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Octal format found
-   if ((Options & OCT) || (scfg & OCT))
+   if (((Options & OCT) || (scfg & OCT)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  \r\n", binwide / 3);
@@ -1050,7 +1095,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Binary format found
-   if ((Options & fBIN) || (scfg & fBIN))
+   if (((Options & fBIN) || (scfg & fBIN)) && (result_imval == 0))
     {
      char binfstr[16];
      char binstr[80];
@@ -1072,7 +1117,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Char format found
-   if ((Options & CHR) || (scfg & CHR))
+   if (((Options & CHR) || (scfg & CHR)) && (result_imval == 0))
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
@@ -1092,7 +1137,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) WChar format found
-   if ((Options & WCH) || (scfg & WCH))
+   if (((Options & WCH) || (scfg & WCH)) && (result_imval == 0))
     {
      char wchrstr[80];
      int i = result_ival & 0xffff;
@@ -1113,7 +1158,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Date time format found
-   if ((Options & DAT) || (scfg & DAT))
+   if (((Options & DAT) || (scfg & DAT)) && (result_imval == 0))
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
@@ -1133,7 +1178,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Unix time
-   if ((Options & UTM) || (scfg & UTM))
+   if (((Options & UTM) || (scfg & UTM)) && (result_imval == 0))
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
@@ -1153,7 +1198,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
-   if ((Options & DEG) || (scfg & DEG))
+   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0))
     {
      char dgrstr[80];
      char *cp = dgrstr;
@@ -1168,7 +1213,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Temperature format
-   if (((Options & FRH) || (scfg & FRH)) && (result_fval > -273.15))
+   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && (result_fval > -273.15))
     {
      char frhstr[80];
      sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
@@ -1180,7 +1225,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
 
 
    // (RO) String format found
-   if ((Options & STR) || (scfg & STR))
+   if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
     {
      if (Options & AUTO)
       {
@@ -2418,7 +2463,7 @@ t_operator calculator::scan (bool operand, bool percent)
      fval = tstrtod (buf + pos - 1, &fpos);
     else if (scfg & SCI + FRI)
      scientific (fpos, fval);
-    if ((scfg & FRH) && (*fpos == 'F'))
+    if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
       {
        fpos++;
        if ((o_sp > 0) && (o_stack[o_sp-1]==toMINUS)) fval = -(-fval - 32.0) * 5.0 / 9.0;

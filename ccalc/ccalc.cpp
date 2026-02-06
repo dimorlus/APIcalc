@@ -383,7 +383,7 @@ int main ()
   }
 
  // Загружаем конфигурацию
- ccalc_config config (PAS + FFLOAT + SCF + NRM + CMP + IGR + UNS + HEX + CHR + fBIN + DAT + DEG
+ ccalc_config config (PAS + FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + fBIN + DAT + DEG
                       + STR + FRC + FRI);
 
  // Находим путь к каталогу программы

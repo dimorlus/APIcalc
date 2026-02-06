@@ -32,6 +32,8 @@
 #define _WIN_
 #define INT_FORMAT "ll"
 #define _ENABLE_PREIMAGINARY_
+#define _NEW_HEX_PREFIX_ // 0x for hex, 0b for binary, 0o for octal
+//#define _OLD_HEX_PREFIX_ // 0x for hex, 0b for binary, 0o for octal
 
 float__t Const (void *clc, char *name, float__t x)
 {
@@ -108,7 +110,9 @@ calculator::calculator (int cfg)
  add (tsVFUNC2, vf_rootn, "rootn", (void *)vfunc2);
  add (tsVFUNC2, vf_logn, "logn", (void *)vfunc2);
 
+ add (tsVFUNC2, vf_cplx, "cmplx", (void *)vfunc2);
  add (tsVFUNC2, vf_cplx, "cplx", (void *)vfunc2);
+ add (tsVFUNC2, vf_cplx, "cpx", (void *)vfunc2);
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
 
@@ -456,7 +460,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
       }
     }
    // (RO) Scientific (6.8k) format found
-   if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
+   if ((Options & SCI) || (scfg & ENG))
     {
      char scistr[80];
      if (result_imval == 0) d2scistr (scistr, result_fval);
@@ -872,7 +876,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       }
     }
    // (RO) Scientific (6.8k) format found
-   if ((Options & SCI) || (scfg & SCF) || (scfg & ENG))
+   if ((Options & SCI) || (scfg & ENG))
     {
      char scistr[80];
      if (result_imval == 0)
@@ -1753,7 +1757,6 @@ void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
   }
  fval *= mul;
  fval += (fract * mul) / div;
- scfg |= SCF;
 }
 
 void calculator::scientific (char *&fpos, float__t &fval)
@@ -2381,6 +2384,7 @@ t_operator calculator::scan (bool operand, bool percent)
 
       c_imaginary         = buf[pos - 1];
       v_stack[v_sp].tag   = tvCOMPLEX;
+      scfg |= CPX;
       v_stack[v_sp].imval = fval;
       v_stack[v_sp].fval  = 0;
       v_stack[v_sp].pos   = pos;
@@ -2412,32 +2416,129 @@ t_operator calculator::scan (bool operand, bool percent)
     int ierr       = 0, ferr;
     char *ipos, *fpos, *sfpos;
     int n = 0;
-    //char sign = '\0';
-
-    //if (pos > 1) sign = buf[pos - 2];
-    //else sign = '\0';
-     
 
     if (buf[pos - 1] == '\\')
      {
       ierr = xscanf (buf + pos, 1, ival, n);
       ipos = buf + pos + n;
+      scfg |= ESC;
      }
     else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
      {
       ierr = bscanf (buf + pos + 1, ival, n);
       ipos = buf + pos + n + 1;
+      scfg |= fBIN;
      }
     else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
      {
       ierr = oscanf (buf + pos + 1, ival, n);
       ipos = buf + pos + n + 1;
+      scfg |= OCT;
      }
     else if (buf[pos - 1] == '$')
      {
       ierr = hscanf (buf + pos, ival, n);
       ipos = buf + pos + n;
+      scfg |= HEX;
      }
+#ifdef _NEW_HEX_PREFIX_
+    else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
+     {
+      ierr = hscanf (buf + pos + 1, ival, n);
+      ipos = buf + pos + n + 1;
+      scfg |= HEX;
+     }
+    else
+     {
+      errno = 0;
+      ival = strtoll (buf + pos - 1, &ipos, 10);
+      ierr = errno;
+     }
+    errno = 0;
+    sfval = fval = strtold (buf + pos - 1, &fpos);
+    sfpos = fpos;
+
+    v_stack[v_sp].tag = tvFLOAT;
+
+    //` - degrees, ' - minutes, " - seconds
+    if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
+     fval = dstrtod (buf + pos - 1, &fpos);
+    else 
+    if (*fpos == ':') fval = tstrtod (buf + pos - 1, &fpos);
+    else 
+    if (scfg & SCI + FRI) scientific (fpos, fval);
+    if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
+     {
+      fpos++;
+      if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS))
+       fval = -(-fval - 32.0) * 5.0 / 9.0;
+      else
+       fval = (fval - 32.0) * 5.0 / 9.0;
+     }
+    if (operand && percent && (*fpos == '%'))
+     {
+      fpos++;
+      v_stack[v_sp].tag = tvPERCENT;
+     }
+    if ((*fpos == 'i') || (*fpos == 'j'))
+     {
+      c_imaginary = *fpos;
+      fpos++;
+      scfg |= CPX;
+      v_stack[v_sp].tag = tvCOMPLEX;
+     }
+    if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
+     {
+      fpos = sfpos;
+      fval = sfval;
+     }
+     
+    if (v_stack[v_sp].tag == tvCOMPLEX)
+     {
+      v_stack[v_sp].imval = fval;
+      v_stack[v_sp].fval  = 0;
+     }
+    else
+     {
+      v_stack[v_sp].fval  = fval;
+      v_stack[v_sp].imval = 0;
+     }
+    pos = fpos - buf;
+
+    if (v_stack[v_sp].tag == tvFLOAT)
+     {
+      ferr = errno;
+      if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\')))
+       {
+        pos = fpos - buf + 1;
+        error ("bad numeric constant");
+        return toERROR;
+       }
+      if (ierr && ferr)
+       {
+        error ("bad numeric constant");
+        return toERROR;
+       }
+      if (v_sp == max_stack_size)
+       {
+        error ("stack overflow");
+        return toERROR;
+       }
+      if (!ierr && ipos >= fpos && 
+          (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
+       {
+        if (scfg & FFLOAT) v_stack[v_sp].tag = tvFLOAT;
+        else v_stack[v_sp].tag = tvINT;
+        v_stack[v_sp].ival = ival;
+        v_stack[v_sp].fval = (float__t)ival;
+        pos                = ipos - buf;
+       }
+     }
+    v_stack[v_sp].pos   = pos;
+    v_stack[v_sp++].var = nullptr;
+    return toOPERAND;
+#endif _NEW_HEX_PREFIX_
+#ifdef _OLD_HEX_PREFIX_
     else if (buf[pos - 1] == '0')
      {
       ierr = sscanf (buf + pos - 1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
@@ -2452,17 +2553,18 @@ t_operator calculator::scan (bool operand, bool percent)
       n    = 0;
       ipos = buf + pos - 1 + n;
      }
+
     errno = 0;
-    sfval = fval = strtod (buf + pos - 1, &fpos);
+    sfval = fval = strtold (buf + pos - 1, &fpos);
     sfpos = fpos;
 
     //` - degrees, ' - minutes, " - seconds
     if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
      fval = dstrtod (buf + pos - 1, &fpos);
-    else if (*fpos == ':')
-     fval = tstrtod (buf + pos - 1, &fpos);
-    else if (scfg & SCI + FRI)
-     scientific (fpos, fval);
+    else 
+    if (*fpos == ':') fval = tstrtod (buf + pos - 1, &fpos);
+    else 
+    if (scfg & SCI + FRI) scientific (fpos, fval);
     if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
       {
        fpos++;
@@ -2486,10 +2588,11 @@ t_operator calculator::scan (bool operand, bool percent)
       error ("stack overflow");
       return toERROR;
      }
-    if (!ierr && ipos >= fpos)
+    if (!ierr && ipos >= fpos && (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
      {
       v_stack[v_sp].tag  = tvINT;
       v_stack[v_sp].ival = ival;
+      v_stack[v_sp].fval = (float__t)ival;
       pos = ipos - buf;
      }
     else
@@ -2503,6 +2606,7 @@ t_operator calculator::scan (bool operand, bool percent)
        {
         c_imaginary = *fpos;
         fpos++;
+        scfg |= CPX;
         v_stack[v_sp].tag = tvCOMPLEX;
        }
       else
@@ -2529,6 +2633,7 @@ t_operator calculator::scan (bool operand, bool percent)
     v_stack[v_sp].pos   = pos;
     v_stack[v_sp++].var = nullptr;
     return toOPERAND;
+   #endif /*_OLD_HEX_PREFIX_*/
    }
   default:
   def:
@@ -2866,11 +2971,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].get ();
          v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
+         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
          v_stack[v_sp - 2].tag   = tvCOMPLEX;
         }
        else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
+         v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].get ();
+         v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
+         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 2].tag == tvSTR))
         {
@@ -2923,8 +3031,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
+         v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
          v_stack[v_sp - 2].fval += v_stack[v_sp - 1].get ();
          v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
+         v_stack[v_sp - 2].tag = tvCOMPLEX;
         }
        else
         {
@@ -2933,11 +3043,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = left + (left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
           {
+           v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () + v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
+           v_stack[v_sp - 2].tag = tvFLOAT;
           }
          if (v_stack[v_sp - 2].imval != 0)
           v_stack[v_sp - 2].tag = tvCOMPLEX;
@@ -2971,8 +3084,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
+         v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
          v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].get ();
          v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
+         v_stack[v_sp - 2].tag = tvCOMPLEX;
         }
        else
         {
@@ -2981,11 +3096,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = left - (left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
           {
            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () - v_stack[v_sp - 1].get ();
+           v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
            v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
+           v_stack[v_sp - 2].tag = tvFLOAT;
           }
          if (v_stack[v_sp - 2].imval != 0)
           v_stack[v_sp - 2].tag = tvCOMPLEX;
@@ -3009,6 +3127,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
          v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
+         v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () * v_stack[v_sp - 1].get ();
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
@@ -3037,6 +3156,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = left * (left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
           {
@@ -3092,6 +3212,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;
+         v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
+         v_stack[v_sp - 2].tag  = tvINT;
         }
        else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
         {
@@ -3100,6 +3222,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = left / (left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
           {
@@ -3137,6 +3260,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          float__t left          = v_stack[v_sp - 2].get ();
          float__t right         = v_stack[v_sp - 1].get ();
          v_stack[v_sp - 2].fval = 1 / (1 / left + 1 / (left * right / 100.0));
+         v_stack[v_sp - 2].tag  = tvFLOAT;
         }
        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
                 || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
@@ -3216,6 +3340,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          float__t right         = v_stack[v_sp - 1].get ();
          right                  = left * right / 100.0;
          v_stack[v_sp - 2].fval = 100.0 * (left - right) / right;
+         v_stack[v_sp - 2].tag  = tvFLOAT;
         }
        else
         {
@@ -3259,6 +3384,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = fmod (left, left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
           v_stack[v_sp - 2].fval = fmod (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
@@ -3296,6 +3422,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
            v_stack[v_sp - 2].fval = pow (left, left * right / 100.0);
+           v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else if (((v_stack[v_sp - 2].tag == tvCOMPLEX) || (v_stack[v_sp - 1].tag == tvCOMPLEX))
                   || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
@@ -3908,15 +4035,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       else if (v_stack[v_sp - 1].tag == tvINT)
-        {
-         v_stack[v_sp - 1].ival = -v_stack[v_sp - 1].ival;
-        }
        else
-        {
-         v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
-         v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
-        }
+       {
+        v_stack[v_sp - 1].ival = -v_stack[v_sp - 1].ival;
+        v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
+        v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
+       }
+       //if (v_stack[v_sp - 1].tag == tvINT)
+       // {
+       //  v_stack[v_sp - 1].ival = -v_stack[v_sp - 1].ival;
+       // }
+       //else
+       // {
+       //  v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
+       //  v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
+       // }
        // no break
 
       case toPLUS: //+v
@@ -3986,6 +4119,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             //if (scfg & CPX) v_stack[v_sp - 2].tag = tvCOMPLEX; // result should be complex
              ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                             sym->fidx);
              v_sp -= 1;
@@ -3998,6 +4132,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             //if (scfg & CPX) v_stack[v_sp - 3].tag = tvCOMPLEX; // result should be complex
              ((void (*) (value *, value *, value *, int))sym->func) (
                  &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
              v_sp -= 2;

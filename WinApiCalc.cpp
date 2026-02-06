@@ -2296,7 +2296,7 @@ void WinApiCalc::LoadSettings ()
  HKEY hKey;
  if (RegOpenKeyExA (HKEY_CURRENT_USER, "Software\\WinApiCalc", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
   {
-   DWORD dwOptions = (FFLOAT + SCF + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT
+   DWORD dwOptions = (FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT
                       + DEG + STR + ALL + MNU + FRC + FRI);
    DWORD dwSize    = sizeof (dwOptions);
    dwOptions       = 0x0bcf7f37; // Default options if not found

@@ -26,7 +26,7 @@
 #define FFLOAT (1 << 4) // (WO) Forced float
 
 #define DEG  (1 << 5)  // (RO) Degrees format found
-#define SCF  (1 << 6)  // (RO) Scientific (6.8k) format found
+#define CPX  (1 << 6)  // (RW) Complex format found
 #define ENG  (1 << 7)  // (RO) Engineering (6k8) format found
 #define STR  (1 << 8)  // (RO) String format found
 #define HEX  (1 << 9)  // (RO) Hex format found
@@ -86,7 +86,7 @@ typedef union
   int utmp : 1;
   int ffloat : 1;
   int deg : 1;
-  int scf : 1;
+  int cpx : 1;
   int eng : 1;
   int str : 1;
   int hex : 1;

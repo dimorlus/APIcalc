@@ -26,7 +26,7 @@
 #define FFLOAT (1 << 4) // (WO) Forced float
 
 #define DEG  (1 << 5)  // (RO) Degrees format found
-#define CPX  (1 << 6)  // (RW) Complex format found
+#define CPX  (1 << 6)  // (RO) Complex format found
 #define ENG  (1 << 7)  // (RO) Engineering (6k8) format found
 #define STR  (1 << 8)  // (RO) String format found
 #define HEX  (1 << 9)  // (RO) Hex format found
@@ -45,7 +45,7 @@
 #define ALL  (1 << 20) // (UI) All outputs
 #define MIN  (1 << 21) // (UI) Esc minimized feature
 #define MNU  (1 << 22) // (UI) Show/hide menu feature
-#define UTM  (1 << 23) // (RO) Unix time
+#define UTM  (1 << 23) // (UI) Unix time
 #define FRC  (1 << 24) // (UI) Fraction output
 #define FRI  (1 << 25) // (UI) Fraction inch output
 #define AUTO (1 << 26) // (UI) Auto output
@@ -331,6 +331,7 @@ class calculator
  int64_t result_ival;
  float__t result_fval;
  float__t result_imval;
+ t_value result_tag;
 
  inline unsigned string_hash_function (const char *p);
  symbol *add (t_symbol tag, const char *name, void *func = nullptr);

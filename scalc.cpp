@@ -32,8 +32,8 @@
 #define _WIN_
 #define INT_FORMAT "ll"
 #define _ENABLE_PREIMAGINARY_
-#define _NEW_HEX_PREFIX_ // 0x for hex, 0b for binary, 0o for octal
-//#define _OLD_HEX_PREFIX_ // 0x for hex, 0b for binary, 0o for octal
+#define _NEW_HEX_PREFIX_ // New scan engine for digits
+//#define _OLD_HEX_PREFIX_ // Old scan engine for digits
 
 float__t Const (void *clc, char *name, float__t x)
 {
@@ -153,6 +153,7 @@ calculator::calculator (int cfg)
  add (tsFFUNC1, "root3", (void *)(float__t (*) (float__t))Root3);
  add (tsFFUNC1, "cbrt", (void *)(float__t (*) (float__t))Root3);
  // add(tsFFUNC2, "rootn", (void*)(float__t(*)(float__t,float__t))Rootn);
+
  add (tsFFUNC1, "swg", (void *)(float__t (*) (float__t))Swg);
  add (tsFFUNC1, "sswg", (void *)(float__t (*) (float__t))SSwg);
  add (tsFFUNC1, "aswg", (void *)(float__t (*) (float__t))Aswg);
@@ -460,7 +461,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
       }
     }
    // (RO) Scientific (6.8k) format found
-   if ((Options & SCI) || (scfg & ENG))
+   if (Options & (SCI | ENG))
     {
      char scistr[80];
      if (result_imval == 0) d2scistr (scistr, result_fval);
@@ -544,7 +545,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Fraction output
-   if ((Options & FRC) && (result_imval == 0))
+   if ((Options & FRC) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char frcstr[80];
      int num, denum;
@@ -577,7 +578,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Fraction inch output
-   if ((Options & FRI) && (result_imval == 0))
+   if ((Options & FRI) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char frcstr[80];
      int num, denum;
@@ -712,7 +713,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
-   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0))
+   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char dgrstr[80];
      char *cp = dgrstr;
@@ -726,7 +727,8 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     }
 
    // (UI) Temperature format 
-   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && (result_fval > -273.15))
+   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && 
+       (result_fval > -273.15) && (result_tag == tvFLOAT))
     {
      char frhstr[80];
      sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
@@ -876,7 +878,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       }
     }
    // (RO) Scientific (6.8k) format found
-   if ((Options & SCI) || (scfg & ENG))
+   if (Options & (SCI | ENG))
     {
      char scistr[80];
      if (result_imval == 0)
@@ -980,7 +982,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Fraction output
-   if ((Options & FRC) && (result_imval == 0))
+   if ((Options & FRC) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char frcstr[80];
      int num, denum;
@@ -1017,7 +1019,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Fraction inch output
-   if ((Options & FRI) && (result_imval == 0))
+   if ((Options & FRI) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char frcstr[80];
      int num, denum;
@@ -1202,7 +1204,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
-   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0))
+   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char dgrstr[80];
      char *cp = dgrstr;
@@ -1217,7 +1219,8 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Temperature format
-   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && (result_fval > -273.15))
+   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && 
+       (result_fval > -273.15) && (result_tag == tvFLOAT))
     {
      char frhstr[80];
      sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
@@ -2365,7 +2368,7 @@ t_operator calculator::scan (bool operand, bool percent)
     if (buf[pos] && (isdigit (buf[pos] & 0x7f) || buf[pos] == '.'))
      {
       float__t fval = strtod (buf + pos, &fpos);
-      if (scfg & SCI + FRI)
+      if (scfg & (ENG | SCI | FRI))
        {
         scientific (fpos, fval);
        }
@@ -2466,7 +2469,7 @@ t_operator calculator::scan (bool operand, bool percent)
     else 
     if (*fpos == ':') fval = tstrtod (buf + pos - 1, &fpos);
     else 
-    if (scfg & SCI + FRI) scientific (fpos, fval);
+    if (scfg & (ENG | SCI | FRI)) scientific (fpos, fval);
     if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
      {
       fpos++;
@@ -2908,6 +2911,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = v_stack[0].get ();
          result_imval = v_stack[0].imval;
          result_ival  = v_stack[0].ival;
+         result_tag   = v_stack[0].tag;
          if (piVal) *piVal = v_stack[0].ival;
          if (pimval) *pimval = v_stack[0].imval;
          if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == 0.0))

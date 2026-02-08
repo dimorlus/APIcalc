@@ -22,7 +22,8 @@
 //With my changes, SafeFree handles the cleanup before you blindly overwrite sval, so it should be clean.
 
 #define WINE_W 5 // Under Wine we need to add some extra width to accommodate font rendering differences
-
+//#define _FORMAT_OUT_
+#define _PRINT_
 // Debug logging macro - can be enabled/disabled
 #define ENABLE_DEBUG_LOG 0
 
@@ -1110,6 +1111,7 @@ void WinApiCalc::EvaluateExpression ()
    // Get syntax flags from calculator
    int scfg = m_pCalculator->issyntax ();
 
+  #ifdef _FORMAT_OUT_
    // Format output using format_out
    char strings[20][80];
    memset (strings, 0, sizeof (strings));
@@ -1174,7 +1176,31 @@ void WinApiCalc::EvaluateExpression ()
    if (m_resultLines > 20) m_resultLines = 20; // Increased limit for better display
 
    SetWindowTextA (m_hResultEdit, result.c_str ());
-
+#endif // _FORMAT_OUT_
+#ifdef _PRINT_ // Format output using print
+   char printBuf[2048];
+   int lineCount = 0;
+   int prnSize;
+   memset (printBuf, 0, sizeof (printBuf));
+   try
+    {
+     lineCount = m_pCalculator->print (printBuf, m_options, m_binWidth, &prnSize);
+     if ((prnSize > 2) && (printBuf[prnSize - 2] == '\r')) printBuf[prnSize - 2] = '\0';
+    }
+   catch (...)
+    {
+     // If print crashes, provide fallback
+     SetWindowTextA (m_hResultEdit, "Error: Number too large to display");
+     m_resultLines = 1;
+     ResizeWindow ();
+     return;
+    }
+   // Count lines in result for window sizing
+   if (lineCount > 20) lineCount = 20; // Safety check 
+   if (lineCount) m_resultLines = lineCount;
+   else m_resultLines = 1;    // At least 1 line
+   SetWindowTextA (m_hResultEdit, printBuf);
+#endif         // _PRINT_
    // OutputDebugStringA("EvaluateExpression: result set to '");
    // OutputDebugStringA(result.c_str());
    // OutputDebugStringA("'\n");

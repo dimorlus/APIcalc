@@ -48,8 +48,8 @@
 #define UTM  (1 << 23) // (UI) Unix time
 #define FRC  (1 << 24) // (UI) Fraction output
 #define FRI  (1 << 25) // (UI) Fraction inch output
-#define AUTO (1 << 26) // (UI) Auto output
-#define AUT  (1 << 26) // (UI) Auto output
+//#define AUTO (1 << 26) // (UI) Auto output
+//#define AUT  (1 << 26) // (UI) Auto output
 #define TOP  (1 << 27) // (UI) Always on top
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define OPT  (1 << 29) // (UI) Print options
@@ -342,6 +342,7 @@ class calculator
  inline void error (const char *msg) { error (pos - 1, msg); }
  bool assign ();
 
+ bool isCMP (char *&fpos);
  int hscanf (char *str, int_t &ival, int &nn);
  int bscanf (char *str, int_t &ival, int &nn);
  int oscanf (char *str, int_t &ival, int &nn);

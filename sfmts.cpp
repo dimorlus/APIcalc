@@ -152,9 +152,11 @@ int b2str (char *str, const char *fmt, uint64_t b)
 int d2scistr (char *str, float__t d)
 {
  const char csci[]
-     = { 'y', 'z', 'a', 'f', 'p', 'n', 'u', 'm', ' ', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
+     = { 'q', 'r', 'y', 'z', 'a', 'f', 'p', 'n', 'u', 'm', ' ', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
  enum
  {
+  quecto,
+  ronto,
   yocto,
   zepto,
   atto,
@@ -171,7 +173,9 @@ int d2scistr (char *str, float__t d)
   peta,
   exa,
   zetta,
-  yotta
+  yotta,
+  ronna,
+  quetta
  };
 
  if (isNan (d))
@@ -190,20 +194,20 @@ int d2scistr (char *str, float__t d)
       {
        rng++;
        dd /= 1000;
-       if (rng > yotta) break;
+       if (rng > quetta) break;
       }
      while (dd < 1)
       {
        rng--;
        dd *= 1000;
-       if (rng < yocto) break;
+       if (rng < quecto) break;
       }
     }
    if (d < 0) dd = -dd;
 #ifdef _long_double_
    if (rng == empty)
     return sprintf (str, "%.4Lg", d);
-   else if ((rng >= yocto) && (rng <= yotta))
+   else if ((rng >= quecto) && (rng <= quetta))
     return sprintf (str, "%.4Lg%c", dd, csci[rng]);
    else
     return sprintf (str, "%.2Le", d);
@@ -276,7 +280,7 @@ int d2nrmstr (char *str, float__t d)
 
 int b2scistr (char *str, float__t d)
 {
- const char csci_plus[] = { ' ', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y' };
+ const char csci_plus[] = { ' ', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'};
  enum
  {
   Empty,
@@ -287,7 +291,9 @@ int b2scistr (char *str, float__t d)
   Peta,
   Exa,
   Zetta,
-  Yotta
+  Yotta,
+  Ronna,
+  Quetta
  };
 
  if (isNan (d))
@@ -302,7 +308,7 @@ int b2scistr (char *str, float__t d)
    int rng = Empty;
    if (dd > 0)
     {
-     while ((rng <= Yotta) && (dd >= 1024))
+     while ((rng <= Quetta) && (dd >= 1024))
       {
        rng++;
        dd /= 1024;
@@ -311,12 +317,12 @@ int b2scistr (char *str, float__t d)
    if (d < 0) dd = -dd;
 
 #ifdef _long_double_
-   if ((rng > Empty) && (rng <= Yotta))
+   if ((rng > Empty) && (rng <= Quetta))
     return sprintf (str, "%.4Lg%cB", dd, csci_plus[rng]);
    else
     return sprintf (str, "%.4Lg", d);
 #else  /*_long_double_*/
-   if ((rng > Empty) && (rng <= Yotta))
+   if ((rng > Empty) && (rng <= Quetta))
     return sprintf (str, "%.4g%cB", dd, csci_plus[rng]);
    else
     return sprintf (str, "%.4g", d);

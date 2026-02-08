@@ -68,7 +68,7 @@ BEGIN
             MENUITEM "String",                  ID_FORMAT_STRING
             MENUITEM "Inch",                    ID_FORMAT_INCH
             MENUITEM "All",                     ID_FORMAT_ALL
-            MENUITEM "Auto",                    ID_FORMAT_AUTO
+//            MENUITEM "Auto",                    ID_FORMAT_AUTO
         END
         POPUP "&Binary width"
         BEGIN

@@ -74,7 +74,7 @@ static const option_def all_options[] =
     { "FRI",    FRI    },
     { "FRH",    FRH    },
  //{ "AUT",    AUTO   },
-    { "AUTO",   AUTO   },
+ //   { "AUTO",   AUTO   },
   //{ "MIN",    MIN    },
   //{ "MNU",    MNU    },
     { "UTM",    UTM    },

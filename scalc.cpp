@@ -152,7 +152,6 @@ calculator::calculator (int cfg)
  add (tsFFUNC1, "frh", (void *)(float__t (*) (float__t))Farenheit);
  add (tsFFUNC1, "root3", (void *)(float__t (*) (float__t))Root3);
  add (tsFFUNC1, "cbrt", (void *)(float__t (*) (float__t))Root3);
- // add(tsFFUNC2, "rootn", (void*)(float__t(*)(float__t,float__t))Rootn);
 
  add (tsFFUNC1, "swg", (void *)(float__t (*) (float__t))Swg);
  add (tsFFUNC1, "sswg", (void *)(float__t (*) (float__t))SSwg);
@@ -235,8 +234,8 @@ calculator::calculator (int cfg)
  // Pressure
  addfconst ("atm", 101325.0);          // Standard atmosphere (Pa)
  addfconst ("bar", 100000.0);          // Bar (Pa)
- addfconst ("psi", 6894.757293168361); // Pound-force per
-                                     // square inch (Pa)
+ addfconst ("psi", 6894.757293168361); // Pound-force per square inch (Pa)
+
  // Speed
  addfconst ("kmh", 0.277777778); // Kilometers per hour to meters per second
  addfconst ("mph", 0.44704);     // Miles per hour to meters per second   
@@ -414,16 +413,6 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      // (RO) String format found
      if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
       {
-       if (Options & AUTO)
-        {
-         if (sres[0])
-          {
-           char strcstr[80];
-           sprintf (strcstr, "'%s'", sres);
-           if (strcstr[0]) sprintf (strings[n++], "%65.64s", strcstr);
-          }
-        }
-       else
         {
          if (sres[0])
           {
@@ -525,22 +514,12 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
    // (UI) Integer output
    if ((Options & IGR) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65lld i", result_ival);
-      }
-     else
       sprintf (strings[n++], "%65lld i", result_ival);
     }
 
    // (UI) Unsigned output
    if ((Options & UNS) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65llu u", result_ival); //%llu|%zu
-      }
-     else
       sprintf (strings[n++], "%65llu u", result_ival); //%llu|%zu
     }
 
@@ -623,12 +602,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  ", binwide / 4);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], binfstr, result_ival);
-      }
-     else
-      sprintf (strings[n++], binfstr, result_ival);
+     sprintf (strings[n++], binfstr, result_ival);
     }
 
    // (RO) Octal format found
@@ -636,12 +610,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  ", binwide / 3);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], binfstr, result_ival);
-      }
-     else
-      sprintf (strings[n++], binfstr, result_ival);
+     sprintf (strings[n++], binfstr, result_ival);
     }
 
    // (RO) Binary format found
@@ -651,12 +620,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      char binstr[80];
      sprintf (binfstr, "%%%ib", binwide);
      b2str (binstr, binfstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64sb  ", binstr);
-      }
-     else
-      sprintf (strings[n++], "%64.64sb  ", binstr);
+     sprintf (strings[n++], "%64.64sb  ", binstr);
     }
 
    // (RO) Char format found
@@ -664,12 +628,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64s c", chrstr);
-      }
-     else
-      sprintf (strings[n++], "%64.64s c", chrstr);
+     sprintf (strings[n++], "%64.64s c", chrstr);
     }
 
    // (RO) WChar format found
@@ -678,12 +637,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
      char wchrstr[80];
      int i = result_ival & 0xffff;
      wchr2str (wchrstr, i);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%64.64s c", wchrstr);
-      }
-     else
-      sprintf (strings[n++], "%64.64s c", wchrstr);
+     sprintf (strings[n++], "%64.64s c", wchrstr);
     }
 
    // (RO) Date time format found
@@ -691,12 +645,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65.64s ", dtstr);
-      }
-     else
-      sprintf (strings[n++], "%65.64s ", dtstr);
+     sprintf (strings[n++], "%65.64s ", dtstr);
     }
 
    // (RO) Unix time
@@ -704,12 +653,7 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) sprintf (strings[n++], "%65.64s  ", dtstr);
-      }
-     else
-      sprintf (strings[n++], "%65.64s  ", dtstr);
+     sprintf (strings[n++], "%65.64s  ", dtstr);
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
@@ -740,18 +684,6 @@ int calculator::format_out (int Options, int binwide, char strings[20][80])
    // (RO) String format found
    if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if (Sres ()[0])
-        {
-         char strcstr[80];
-         sprintf (strcstr, "'%s'", Sres ());
-         if (strcstr[0]) sprintf (strings[n++], "%65.64s S", strcstr);
-        }
-       else
-        sprintf (strings[n++], "%65.64s S", "''");
-      }
-     else
       {
        if (Sres ()[0])
         {
@@ -820,20 +752,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      // (RO) String format found
      if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
       {
-       if (Options & AUTO)
-        {
-         if (sres[0])
-          {
-           char strcstr[80];
-           sprintf (strcstr, "'%s'", sres);
-           if (strcstr[0])
-            {
-             bsize += sprintf (str + bsize, "%65.64s\r\n", strcstr);
-             n++;
-            }
-          }
-        }
-       else
         {
          if (sres[0])
           {
@@ -951,34 +869,15 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    // (UI) Integer output
    if ((Options & IGR) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0) bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
-       n++;
-      }
-     else
-      {
        bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
        n++;
-      }
     }
 
    // (UI) Unsigned output
    if ((Options & UNS) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);
-         n++;
-        } //%llu|%zu
-      }
-     else
-      {
-       bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);
+       bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);//%llu|%zu
        n++;
-      } //%llu|%zu
     }
 
    // (UI) Fraction output
@@ -1065,15 +964,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  \r\n", binwide / 4);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, binfstr, result_ival);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, binfstr, result_ival);
        n++;
@@ -1085,15 +975,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  \r\n", binwide / 3);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, binfstr, result_ival);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, binfstr, result_ival);
        n++;
@@ -1107,15 +988,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      char binstr[80];
      sprintf (binfstr, "%%%ib", binwide);
      b2str (binstr, binfstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%64.64sb  \r\n", binstr);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, "%64.64sb  \r\n", binstr);
        n++;
@@ -1127,15 +999,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%64.64s  c\r\n", chrstr);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, "%64.64s  c\r\n", chrstr);
        n++;
@@ -1148,15 +1011,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      char wchrstr[80];
      int i = result_ival & 0xffff;
      wchr2str (wchrstr, i);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%64.64s  c\r\n", wchrstr);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, "%64.64s  c\r\n", wchrstr);
        n++;
@@ -1168,15 +1022,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%65.64s \r\n", dtstr);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, "%65.64s \r\n", dtstr);
        n++;
@@ -1188,15 +1033,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
-     if (Options & AUTO)
-      {
-       if ((result_fval - result_ival) == 0)
-        {
-         bsize += sprintf (str + bsize, "%65.64s  \r\n", dtstr);
-         n++;
-        }
-      }
-     else
       {
        bsize += sprintf (str + bsize, "%65.64s  \r\n", dtstr);
        n++;
@@ -1234,25 +1070,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    // (RO) String format found
    if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
     {
-     if (Options & AUTO)
-      {
-       if (sres[0])
-        {
-         char strcstr[80];
-         sprintf (strcstr, "'%s'", sres);
-         if (strcstr[0])
-          {
-           bsize += sprintf (str + bsize, "%65.64s S\r\n", strcstr);
-           n++;
-          }
-        }
-       else
-        {
-         bsize += sprintf (str + bsize, "%65.64s S\r\n", "''");
-         n++;
-        }
-      }
-     else
       {
        if (sres[0])
         {
@@ -1744,7 +1561,7 @@ float__t calculator::tstrtod (char *s, char **endptr)
  return res;
 }
 
-// http://searchstorage.techtarget.com/sDefinition/0,,sid5_gci499008,00.html
+// https://en.wikipedia.org/wiki/Metric_prefix
 // process expression like 1k56 => 1.56k (maximum 3 digits)
 void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
 {
@@ -1762,6 +1579,24 @@ void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
  fval += (fract * mul) / div;
 }
 
+bool calculator::isCMP (char *&fpos)
+{
+ if (*fpos == 'B')
+  {
+   fpos++;
+   scfg |= CMP;
+   return true;
+  }
+ else
+ if ((*fpos == 'i') && (*(fpos + 1) == 'B'))
+  {
+   fpos += 2;
+   scfg |= CMP;
+   return true;
+  }
+ return false;
+}
+
 void calculator::scientific (char *&fpos, float__t &fval)
 {
  if (*(fpos - 1) == 'E') fpos--;
@@ -1775,98 +1610,64 @@ void calculator::scientific (char *&fpos, float__t &fval)
      engineering (25.4e-3, fpos, fval);
     }
    break;
-  case 'Y':
+  case 'Q':
    fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1.20892582e+24; // 2**80
-     scfg |= CMP;
-    }
-   else
-    engineering (1e24, fpos, fval);
-   break;
-  case 'Z':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1.180591620717411e+21; // 2**70
-     scfg |= CMP;
-    }
-   else
-    engineering (1e21, fpos, fval);
-   break;
-  case 'E':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1152921504606846976ull; // 2**60
-     scfg |= CMP;
-    }
-   else
-    engineering (1e18, fpos, fval);
-   break;
-  case 'P':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1125899906842624ull; // 2**50
-     scfg |= CMP;
-    }
-   else
-    engineering (1e15, fpos, fval);
-   break;
-  case 'T':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1099511627776ull; // 2**40
-     scfg |= CMP;
-    }
-   else
-    engineering (1e12, fpos, fval);
-   break;
-  case 'G':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1073741824ull; // 2**30
-     scfg |= CMP;
-    }
-   else
-    engineering (1e9, fpos, fval);
-   break;
-  case 'M':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1048576; // 2**20
-     scfg |= CMP;
-    }
-   else
-    engineering (1e6, fpos, fval);
-   break;
-  case 'K':
-   fpos++;
-   if (*fpos == 'B')
-    {
-     fpos++;
-     fval *= 1024; // 2**10
-     scfg |= CMP;
-    }
-   else
-    engineering (1e3, fpos, fval);
+   if (isCMP (fpos))
+    fval *= 1.267650600228229401496703205376e+30; // 2**100
+   else engineering (1e30, fpos, fval);
    break;
   case 'R':
    fpos++;
-   engineering (1, fpos, fval);
+   if (isCMP (fpos))
+    fval *= 1.237940039285380274899124224e+27; // 2**90
+   else engineering (1e27, fpos, fval);
    break;
+  case 'Y':
+   fpos++;
+   if (isCMP (fpos))
+    fval *= 1.208925819614629174706176e+24; // 2**80
+   else engineering (1e24, fpos, fval);
+   break;
+  case 'Z':
+   fpos++;
+   if (isCMP (fpos))
+    fval *= 1.180591620717411303424e+21; // 2**70
+   else engineering (1e21, fpos, fval);
+   break;
+  case 'E':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1152921504606846976ull; // 2**60
+   else engineering (1e18, fpos, fval);
+   break;
+  case 'P':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1125899906842624ull; // 2**50
+   else engineering (1e15, fpos, fval);
+   break;
+  case 'T':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1099511627776ull; // 2**40
+   else engineering (1e12, fpos, fval);
+   break;
+  case 'G':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1073741824ull; // 2**30
+   else engineering (1e9, fpos, fval);
+   break;
+  case 'M':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1048576; // 2**20
+   else engineering (1e6, fpos, fval);
+   break;
+  case 'K':
+   fpos++;
+   if (isCMP (fpos)) fval *= 1024; // 2**10
+   else engineering (1e3, fpos, fval);
+   break;
+  //case 'R':
+  // fpos++;
+  // engineering (1, fpos, fval);
+  // break;
   case 'h':
    fpos++;
    engineering (1e2, fpos, fval);
@@ -1924,6 +1725,14 @@ void calculator::scientific (char *&fpos, float__t &fval)
   case 'y':
    fpos++;
    engineering (1e-24, fpos, fval);
+   break;
+  case 'r':
+   fpos++;
+   engineering (1e-27, fpos, fval);
+   break;
+  case 'q':
+   fpos++;
+   engineering (1e-30, fpos, fval);
    break;
   }
 }
@@ -2820,7 +2629,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     case toADD:
     case toSUB:
     case toCOMMA:
-     // case toPERCENT:
      percent = true;
      break;
     default:
@@ -2925,7 +2733,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (v_stack[0].sval) free (v_stack[0].sval);
              v_stack[0].sval = nullptr;
             }
-           // else sres[0] = '\0';
            return v_stack[0].ival;
           }
          else
@@ -2945,7 +2752,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            v_stack[0].ival  = 0;
            v_stack[0].tag   = tvINT;
            return result_fval;
-           
           }
         }
        else if (v_sp != 0)
@@ -2961,15 +2767,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         result_fval = 0;
         return 0;
        }
-       //error ("Unexpected end of expression");
-       //result_fval = qnan;
-       //return qnan;
 
-      case toCOMMA:
+      case toCOMMA: // ,
        n_args += 1;
        continue;
 
-      case toSEMI: //;
+      case toSEMI: // ;
        if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
            || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
         {
@@ -3004,8 +2807,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toADD:    //+
-      case toSETADD: //+=
+      case toADD:    // +
+      case toSETADD: // +=
        if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
          v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
@@ -3074,8 +2877,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toSUB:
-      case toSETSUB: //-=
+      case toSUB:    // -
+      case toSETSUB: // -=
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
@@ -3126,8 +2929,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toMUL:    //*
-      case toSETMUL: //*=
+      case toMUL:    // *
+      case toSETMUL: // *=
        if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
          v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
@@ -3180,7 +2983,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toDIV:    ///
+      case toDIV:    // /
       case toSETDIV: // /=
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
@@ -3357,8 +3160,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toMOD:    //%
-      case toSETMOD: //%=
+      case toMOD:    // %
+      case toSETMOD: // %=
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -3406,8 +3209,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toPOW:    //** ^
-      case toSETPOW: //*= ^=
+      case toPOW:    // ** ^
+      case toSETPOW: // **= ^=
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
@@ -3661,8 +3464,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         }
        else
         {
-         v_stack[v_sp - 2].ival
-             = (unsigned_t)v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
+         v_stack[v_sp - 2].ival = (unsigned_t)v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
          v_stack[v_sp - 2].tag = tvINT;
         }
        v_sp -= 1;
@@ -3677,7 +3479,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toEQ: //==
+      case toEQ: // ==
        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival == v_stack[v_sp - 1].ival;
@@ -3721,7 +3523,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toGT: //>
+      case toGT: // >
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -3748,7 +3550,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toGE: //>=
+      case toGE: // >=
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -3775,7 +3577,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toLT: //<
+      case toLT: // <
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -3802,7 +3604,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toLE: //<=
+      case toLE: // <=
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -3858,7 +3660,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toPREDEC: //--v
+      case toPREDEC: // --v
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
@@ -4007,7 +3809,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        // v_stack[v_sp-1].var = nullptr;
        break;
 
-      case toNOT: //!
+      case toNOT: // !
        if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
@@ -4032,7 +3834,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toMINUS: //-v
+      case toMINUS: // -v
        if ((v_stack[v_sp - 1].tag == tvSTR))
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
@@ -4067,7 +3869,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toCOM: //~
+      case toCOM: // ~
        if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
@@ -4091,7 +3893,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toRPAR: //
+      case toRPAR: // )
        error ("mismatched ')'");
        result_fval = qnan;
        return qnan;
@@ -4101,7 +3903,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        result_fval = qnan;
        return qnan;
 
-      case toLPAR: //)
+      case toLPAR: // (
        if (oper != toRPAR)
         {
          error ("')' expected");

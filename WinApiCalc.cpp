@@ -850,13 +850,13 @@ void WinApiCalc::OnCommand (WPARAM wParam)
   case ID_FORMAT_INCH:
    ToggleOption (FRI);
    break;
-  case ID_FORMAT_AUTO:
-   ToggleOption (AUT);
-   break;
+  //case ID_FORMAT_AUTO:
+  // ToggleOption (AUT);
+  // break;
   case ID_FORMAT_ALL:
    // Set all format options (not toggle)
    m_options |= (SCI | NRM | FRC | CMP | IGR | UNS | HEX | OCT | FBIN | CHR | WCH | DAT | UTM | DEG
-                 | STR | FRI | AUT | FRH);
+                 | STR | FRI | FRH);
    UpdateMenuChecks ();
    EvaluateExpression ();
    break;
@@ -1370,7 +1370,7 @@ void WinApiCalc::UpdateMenuChecks ()
  CheckMenuItem (m_hMenu, ID_FORMAT_FRH, (m_options & FRH) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_STRING, (m_options & STR) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_INCH, (m_options & FRI) ? MF_CHECKED : MF_UNCHECKED);
- CheckMenuItem (m_hMenu, ID_FORMAT_AUTO, (m_options & AUT) ? MF_CHECKED : MF_UNCHECKED);
+ //CheckMenuItem (m_hMenu, ID_FORMAT_AUTO, (m_options & AUT) ? MF_CHECKED : MF_UNCHECKED);
 
  // Binary width radio buttons
  int radioIndex;

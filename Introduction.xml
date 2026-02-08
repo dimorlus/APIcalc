@@ -1,4 +1,6 @@
-<topic template="Default" lasteditedby="Dmitry Orlov">
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../helpproject.xsl" ?>
+<topic template="Default" lasteditedby="Dmitry Orlov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../helpproject.xsd">
   <title translate="true">Introduction</title>
   <body>
     <header>
@@ -7,7 +9,7 @@
     <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Input for this calculator are normal C expressions containing operators, float or integer constants, variables.</text></para>
     <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Precedence and semantic of operators is the same as in C language. Variables and functions names are case </text></para>
     <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">insensitive. Following functions and operators are supported:</text></para>
-    <para style="white-space:nowrap;"><table rowcount="83" colcount="6" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:2px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#808080; border-style:solid; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para style="white-space:nowrap;"><table rowcount="86" colcount="6" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:2px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#808080; border-style:solid; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="2" style="vertical-align:top; width:468px; height:5px; background-color:#ffffff;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Functions:</text></para>
@@ -637,7 +639,7 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Current Unix time (+/- n hours)</text></para>
         </td>
         <td colspan="3" style="width:385px;">
-          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c))</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant</text></para>
         </td>
         <td style="width:167px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">297.6k</text></para>
@@ -721,7 +723,7 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">x/20 </text></para>
         </td>
         <td colspan="3" style="width:385px;">
-          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">abs(3+4j)</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">abs(3+4j);;Comment</text></para>
         </td>
         <td style="width:167px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">5</text></para>
@@ -758,6 +760,14 @@
         </td>
         <td style="vertical-align:top; width:257px; height:18px; background-color:#ffffff;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Vout=Vref*(Rh+Rl)/Rl</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="width:187px; height:18px; background-color:#ffffff;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">frh</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(x)</text></para>
+        </td>
+        <td colspan="5" style="height:18px; background-color:#ffffff;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Fahrenheit to Celsius.</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -918,7 +928,7 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:187px; height:18px; background-color:#ffffff;">
-          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">cmplx</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(x,y)</text></para>
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">cmplx</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(x,y), </text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">cpx</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(x,y)</text></para>
         </td>
         <td colspan="2" style="vertical-align:top; width:378px; height:18px; background-color:#ffffff;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Return complex value</text></para>
@@ -1189,7 +1199,7 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Computing</text></para>
         </td>
         <td style="width:163px;">
-          <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1KB</text></para>
+          <para styleclass="Normal"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1KB, 1KiB</text></para>
         </td>
         <td colspan="2" style="width:253px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">1024</text></para>
@@ -1203,13 +1213,13 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Set binary width</text></para>
         </td>
         <td style="width:117px;">
-          <para><text style="font-family:Arial; font-size:10pt; color:#000000;" translate="true">Fractional</text></para>
+          <para><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Fractional</text></para>
         </td>
         <td style="width:163px;">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">3+9/64</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">3+9/64</text></para>
         </td>
         <td colspan="2" style="width:253px;">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">Pi</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Pi</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1223,10 +1233,10 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Gauge</text></para>
         </td>
         <td style="width:163px;">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">#28</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">#28, awg(28)</text></para>
         </td>
         <td colspan="2" style="width:253px;">
-          <para styleclass="Normal"><text styleclass="Normal" translate="true">awg(28)=0.3211265489669004</text></para>
+          <para styleclass="Normal"><text styleclass="Normal" translate="true">0.3211265489669004</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1263,12 +1273,46 @@
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3+4i</text></para>
         </td>
       </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:187px; height:18px; background-color:#ffffff;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">const</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(&quot;name&quot;,x)</text></para>
+        </td>
+        <td style="vertical-align:top; width:257px; height:18px; background-color:#ffffff;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Add constant </text></para>
+        </td>
+        <td style="width:117px;">
+          <para><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Temperature</text></para>
+        </td>
+        <td style="width:163px;">
+          <para><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">frh(75), 75F</text></para>
+        </td>
+        <td colspan="2" style="width:253px;">
+          <para><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">297.039 K|23.8889 `C|75 `F</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:187px; height:18px; background-color:#ffffff;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">var</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">(&quot;name&quot;,x)</text></para>
+        </td>
+        <td style="vertical-align:top; width:257px; height:18px; background-color:#ffffff;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Add variable</text></para>
+        </td>
+        <td style="width:117px;">
+          <para></para>
+        </td>
+        <td style="width:163px;">
+          <para></para>
+        </td>
+        <td colspan="2" style="width:253px;">
+          <para></para>
+        </td>
+      </tr>
     </table></para>
     <para></para>
-    <para><table rowcount="20" colcount="12" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:2px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#808080; border-style:solid; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
+    <para><table rowcount="23" colcount="12" style="width:auto; cell-padding:0px; cell-spacing:0px; page-break-inside:auto; border-width:2px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#808080; border-style:solid; background-color:none; head-row-background-color:none; alt-row-background-color:none;">
       <tr style="vertical-align:top">
         <td colspan="12" style="vertical-align:top; width:796px; height:19px;">
-          <para style="text-align:center;"><anchor id="range" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;"></anchor><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Range postfix:</text></para>
+          <para style="text-align:center;"><anchor id="range" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;"></anchor><link displaytype="text" defaultstyle="true" type="weblink" href="https://en.wikipedia.org/wiki/Metric_prefix" target="_blank" styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Range postfix</link><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">:</text></para>
         </td>
       </tr>
       <tr style="vertical-align:top">
@@ -1276,107 +1320,133 @@
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Binary (power of 2)</text></para>
         </td>
       </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:49px; height:19px;">
+      <tr style="vertical-align:middle">
+        <td style="width:49px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">QB</text></para>
+        </td>
+        <td style="width:43px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">quetta</text></para>
+        </td>
+        <td colspan="3" style="width:255px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:9pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1267650600228229401496703205376</text></para>
+        </td>
+        <td style="width:43px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">100</text></para>
+        </td>
+        <td style="width:45px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">RB</text></para>
+        </td>
+        <td style="width:56px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">ronna</text></para>
+        </td>
+        <td colspan="3" style="width:258px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1237940039285380274899124224</text></para>
+        </td>
+        <td style="width:84px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">90</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:middle">
+        <td style="width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">YB</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">yotta</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:255px; height:19px;">
+        <td colspan="3" style="width:255px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1208925819614629174706176</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">80</text></para>
         </td>
-        <td style="vertical-align:top; width:45px; height:19px;">
+        <td style="width:45px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">ZB</text></para>
         </td>
-        <td style="vertical-align:top; width:56px; height:19px;">
+        <td style="width:56px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">zetta</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:258px; height:19px;">
+        <td colspan="3" style="width:258px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1180591620717411303424</text></para>
         </td>
-        <td style="vertical-align:top; width:84px; height:19px;">
+        <td style="width:84px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">70</text></para>
         </td>
       </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:49px; height:19px;">
+      <tr style="vertical-align:middle">
+        <td style="width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">EB</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">exa</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:255px; height:19px;">
+        <td colspan="3" style="width:255px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1152921504606846976</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">60</text></para>
         </td>
-        <td style="vertical-align:top; width:45px; height:19px;">
+        <td style="width:45px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">PB</text></para>
         </td>
-        <td style="vertical-align:top; width:56px; height:19px;">
+        <td style="width:56px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">peta</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:258px; height:19px;">
+        <td colspan="3" style="width:258px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1125899906842624</text></para>
         </td>
-        <td style="vertical-align:top; width:84px; height:19px;">
+        <td style="width:84px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">50</text></para>
         </td>
       </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:49px; height:19px;">
+      <tr style="vertical-align:middle">
+        <td style="width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">TB</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">tera</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:255px; height:19px;">
+        <td colspan="3" style="width:255px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1099511627776</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">40</text></para>
         </td>
-        <td style="vertical-align:top; width:45px; height:19px;">
+        <td style="width:45px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">GB</text></para>
         </td>
-        <td style="vertical-align:top; width:56px; height:19px;">
+        <td style="width:56px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">giga</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:258px; height:19px;">
+        <td colspan="3" style="width:258px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1073741824</text></para>
         </td>
-        <td style="vertical-align:top; width:84px; height:19px;">
+        <td style="width:84px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">30</text></para>
         </td>
       </tr>
-      <tr style="vertical-align:top">
-        <td style="vertical-align:top; width:49px; height:19px;">
+      <tr style="vertical-align:middle">
+        <td style="width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">MB</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">mega</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:255px; height:19px;">
+        <td colspan="3" style="width:255px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1048576</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td style="width:43px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">20</text></para>
         </td>
-        <td style="vertical-align:top; width:45px; height:19px;">
+        <td style="width:45px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">KB</text></para>
         </td>
-        <td style="vertical-align:top; width:56px; height:19px;">
+        <td style="width:56px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">kilo</text></para>
         </td>
-        <td colspan="3" style="vertical-align:top; width:258px; height:19px;">
+        <td colspan="3" style="width:258px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1024</text></para>
         </td>
-        <td style="vertical-align:top; width:84px; height:19px;">
+        <td style="width:84px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text></para>
         </td>
       </tr>
@@ -1389,17 +1459,14 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px; height:19px;">
           <para style="text-align:center;"></para>
         </td>
         <td style="vertical-align:top; width:150px; height:19px;">
-          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">EU</text></para>
+          <para style="text-align:center;"><link displaytype="text" defaultstyle="true" type="weblink" href="https://simple.wikipedia.org/wiki/Names_of_large_numbers" target="_blank" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">EU</link></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
           <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">US</text></para>
@@ -1419,13 +1486,68 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:49px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Q</text></para>
+        </td>
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">quetta</text></para>
+        </td>
+        <td style="vertical-align:top; width:53px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">30</text></para>
+        </td>
+        <td style="vertical-align:top; width:150px; height:19px;">
+          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Quintillion</text></para>
+        </td>
+        <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
+          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Nonillion</text></para>
+        </td>
+        <td style="vertical-align:top; width:35px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">q</text></para>
+        </td>
+        <td style="vertical-align:top; width:52px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">quecto</text></para>
+        </td>
+        <td style="vertical-align:top; width:163px; height:19px;">
+          <para></para>
+        </td>
+        <td style="vertical-align:top; width:84px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-30</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:49px; height:19px;">
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">R</text></para>
+        </td>
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">ronna</text></para>
+        </td>
+        <td style="vertical-align:top; width:53px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">27</text></para>
+        </td>
+        <td style="vertical-align:top; width:150px; height:19px;">
+          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Quadrilliard</text></para>
+        </td>
+        <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
+          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Octillion</text></para>
+        </td>
+        <td style="vertical-align:top; width:35px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">r</text></para>
+        </td>
+        <td style="vertical-align:top; width:52px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">ronto</text></para>
+        </td>
+        <td style="vertical-align:top; width:163px; height:19px;">
+          <para></para>
+        </td>
+        <td style="vertical-align:top; width:84px; height:19px;">
+          <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">-27</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Y</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">yotta</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">24</text></para>
@@ -1434,7 +1556,7 @@
           <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Quadrillion</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para style="text-align:center;"></para>
+          <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Septillion</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">y</text></para>
@@ -1453,17 +1575,14 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">Z</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">zetta</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">21</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
-          <para styleclass="Normal" style="text-align:center;"></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Trilliard</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
           <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Sextillion</text></para>
@@ -1484,11 +1603,8 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">E</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">exa</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">18</text></para>
@@ -1515,17 +1631,14 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">P</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">peta</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">15</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
-          <para styleclass="Normal" style="text-align:center;"></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Billiard</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
           <para style="text-align:center;"><text style="font-family:&apos;Times New Roman&apos;; font-size:12pt; color:#000000;" translate="true">Quadrillion</text></para>
@@ -1546,11 +1659,8 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">T</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">tera</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">12</text></para>
@@ -1577,11 +1687,8 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">G</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">giga</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">9</text></para>
@@ -1608,11 +1715,8 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">M</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">mega</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">6</text></para>
@@ -1639,19 +1743,17 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">K</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">kilo</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Thousand</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Thousand</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">m</text></para>
@@ -1669,24 +1771,23 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">k</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">kilo</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">3</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Thousand</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Thousand</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"></para>
         </td>
         <td style="vertical-align:top; width:52px;">
+          <para styleclass="Normal" style="text-align:center;"></para>
         </td>
         <td style="vertical-align:top; width:163px;">
         </td>
@@ -1698,19 +1799,17 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">h</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">hecto</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">2</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Hundred</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Hundred</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">c</text></para>
@@ -1728,19 +1827,17 @@
         <td style="vertical-align:top; width:49px; height:19px;">
           <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">D, da</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">deka</text></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Ten</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Ten</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">d</text></para>
@@ -1756,21 +1853,19 @@
       </tr>
       <tr style="vertical-align:top">
         <td style="vertical-align:top; width:49px; height:19px;">
-          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:10pt; font-weight:bold; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">R</text></para>
+          <para><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">1</text></para>
         </td>
-        <td style="vertical-align:top; width:43px; height:19px;">
+        <td colspan="2" style="vertical-align:top; width:36px; height:19px;">
           <para style="text-align:center;"></para>
-        </td>
-        <td style="vertical-align:top; width:36px; height:19px;">
-          <para></para>
         </td>
         <td style="vertical-align:top; width:53px;">
           <para style="text-align:center;"><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:baseline; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">10</text><text styleclass="Font Style" style="font-family:&apos;Times New Roman&apos;; font-size:8pt; font-weight:normal; font-style:normal; text-decoration:none; text-transform:none; vertical-align:super; color:#000000; background-color:transparent; letter-spacing:normal; letter-scaling:100%;" translate="true">0</text></para>
         </td>
         <td style="vertical-align:top; width:150px;">
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">One</text></para>
         </td>
         <td colspan="3" style="vertical-align:top; width:101px; height:19px;">
-          <para></para>
+          <para styleclass="Normal" style="text-align:center;"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">One</text></para>
         </td>
         <td style="vertical-align:top; width:35px; height:19px;">
           <para style="text-align:center;"></para>
@@ -1860,7 +1955,7 @@
       </tr>
     </table></para>
     <para></para>
-    <para><table styleclass="Default" rowcount="148" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
+    <para><table styleclass="Default" rowcount="149" colcount="3" style="border-width:1px; border-spacing:0px; border-collapse:collapse; cell-border-width:1px; border-color:#000000; border-style:solid;">
       <tr style="vertical-align:top">
         <td colspan="3" style="width:1041px;">
           <para styleclass="Normal" style="text-align:center;"><anchor id="const" styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;"></anchor><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold;" translate="true">Predefined constants:</text></para>
@@ -3308,6 +3403,11 @@
         </td>
         <td style="width:776px;">
           <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt;" translate="true">Estimating the wavelength of an LED based on its forward voltage drop</text></para>
+        </td>
+      </tr>
+      <tr style="vertical-align:top">
+        <td colspan="3" style="width:776px;">
+          <para styleclass="Normal"><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-style:italic;" translate="true">The program directory contains a file called </text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-weight:bold; font-style:italic;" translate="true">consts.txt</text><text styleclass="Normal" style="font-family:&apos;Times New Roman&apos;; font-size:12pt; font-style:italic;" translate="true"> with additional constants loaded when the program starts. This file can be edited.</text></para>
         </td>
       </tr>
     </table></para>

@@ -48,24 +48,30 @@
 #define UTM  (1 << 23) // (UI) Unix time
 #define FRC  (1 << 24) // (UI) Fraction output
 #define FRI  (1 << 25) // (UI) Fraction inch output
-//#define AUTO (1 << 26) // (UI) Auto output
-//#define AUT  (1 << 26) // (UI) Auto output
+#define FRH  (1 << 26) // (UI) Farenheit input/output
 #define TOP  (1 << 27) // (UI) Always on top
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define OPT  (1 << 29) // (UI) Print options
-#define FRH  (1 << 30) // (UI) Farenheit input/output
 
 
 #define STRBUF 256 // bufer size for string operations
 
 #define _WCHAR_ // L'c' and 'c'W input format allow
 
+#ifdef __BORLANDC__
+
+#define nullptr NULL
+#define _long_double_
+typedef __int64 int_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 unsigned_t;
+#else //__BORLANDC__
 #define _long_double_
 #include <cstdint>
 typedef int64_t int_t;
 typedef uint64_t unsigned_t;
-// typedef __int64 int_t;
-// typedef unsigned __int64 unsigned_t;
+#endif //__BORLANDC__
+
 #ifdef _long_double_
 typedef long double float__t;
 #else
@@ -106,7 +112,7 @@ typedef union
   int utm : 1;
   int frc : 1;
   int fri : 1;
-  int aut : 1;
+  int frh : 1;
   int top : 1;
   int imul : 1;
  };
@@ -374,7 +380,6 @@ class calculator
  int varlist (char *buf, int bsize, int *maxlen = nullptr);
  float__t evaluate (char *expr, __int64 *piVal = nullptr, float__t *pimval = nullptr);
 
- int format_out (int Options, int binwide, char strings[20][80]);
  int print (char *str, int Options, int binwide, int *size = nullptr);
 
  ~calculator (void);

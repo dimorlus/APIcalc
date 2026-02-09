@@ -3,7 +3,11 @@
 #ifndef sfmtsH
 #define sfmtsH
 //---------------------------------------------------------------------------
+#ifdef __BORLANDC__
+#include <stdint.h>
+#else
 #include <cstdint>
+#endif
 
 extern int t2str(char * str, uint64_t sec);
 extern int b2str(char *str, const char *fmt, uint64_t b);

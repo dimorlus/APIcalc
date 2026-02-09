@@ -1,7 +1,22 @@
 
 #include <windows.h>
-
 #include "pch.h"
+
+#ifdef __BORLANDC__
+#include <stdint.h>
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
+#include <float.h>
+#include <errno.h>
+#include <limits>
+
+#else //__BORLANDC__
+
 #include <cstdint>
 #include <ctime>
 #include <ctype.h>
@@ -15,19 +30,28 @@
 #include <string.h>
 #include <time.h>
 
+#endif //__BORLANDC__
+
 #include "scalc.h"
 #include "sfmts.h"
 #include "sfunc.h"
 
 #include "ver.h"
 
+#ifdef __BORLANDC__
+#define M_PI_2l 1.5707963267948966192313216916398
+#define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
+#pragma warn -8004 // assigned a value that is never used
+
+#else //__BORLANDC__
+
 #define M_PI    3.1415926535897932384626433832795
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E     2.7182818284590452353602874713527
 #define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
-
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
+#endif //__BORLANDC__
 
 #define _WIN_
 #define INT_FORMAT "ll"
@@ -371,336 +395,7 @@ calculator::~calculator (void)
 }
 
 //---------------------------------------------------------------------------
-int calculator::format_out (int Options, int binwide, char strings[20][80])
-{
- int n = 0;
-
- if (!expr)
-  {
-   sprintf (strings[n++], "%66.66s ", " ");
-   return n;
-  }
-
- if (IsNaN (result_fval))
-  {
-   if (err[0])
-    {
-     int ep = errpos;
-     if (ep < 0) ep = 0;
-     if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
-     if ((ep < 64))
-      {
-       char binstr[80];
-       memset (binstr, ' ', sizeof (binstr));
-       memset (binstr, '-', ep);
-       binstr[ep]                  = '^';
-       binstr[sizeof (binstr) - 1] = '\0';
-       sprintf (strings[n++], "%64.64s   ", binstr);
-       sprintf (strings[n++], "%67.67s", err);
-      }
-     else
-      {
-       sprintf (strings[n++], "%67.67s", err);
-      }
-    }
-   else
-    {
-     if (expr)
-      sprintf (strings[n++], "%66.66s ", "NaN");
-     else
-      sprintf (strings[n++], "%66.66s ", " ");
-
-     // (RO) String format found
-     if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
-      {
-        {
-         if (sres[0])
-          {
-           char strcstr[80];
-           sprintf (strcstr, "'%s'", sres);
-           sprintf (strings[n++], "%65.64s", strcstr);
-          }
-         else
-          sprintf (strings[n++], "%65.64s S", "''");
-        }
-      }
-    }
-  }
- else
-  {
-   // (WO) Forced float
-   if (Options & FFLOAT)
-    {
-     if (result_imval == 0)
-      sprintf (strings[n++], "%65.16Lg f", (long double)result_fval);
-     else
-      {
-       char imstr[80];
-       char cphi[20];
-       float__t phi = atan2l (result_imval, result_fval);
-       float__t r  = hypotl (result_fval, result_imval);
-       dgr2str (cphi, phi);
-       sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi, 
-                (long double)result_fval, (long double)result_imval,
-                c_imaginary);
-
-       //sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
-       //         c_imaginary);
-       sprintf (strings[n++], "%65.64s f", imstr);
-      }
-    }
-   // (RO) Scientific (6.8k) format found
-   if (Options & (SCI | ENG))
-    {
-     char scistr[80];
-     if (result_imval == 0) d2scistr (scistr, result_fval);
-     else
-      {
-       char cphi[20];
-       char cr[20];
-       char *cp = scistr;
-       float__t imval = result_imval;
-       float__t fval  = result_fval;
-       float__t phi   = atan2l (imval, fval);
-       float__t r     = hypotl (fval, imval);
-       d2scistr (cr, r);
-       dgr2str (cphi, phi);
-       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
-       normz (fval, imval);
-       cp += d2scistr (cp, fval);
-       if (imval >= 0) *cp++ = '+';
-
-       cp += d2scistr (cp, imval);
-       *cp++ = c_imaginary;
-       *cp   = '\0';
-      }
-     sprintf (strings[n++], "%65.64s S", scistr);
-    }
-   // (UI) Normalized output
-   if (Options & NRM)
-    {
-     char nrmstr[80];
-     if (result_imval == 0) d2nrmstr (nrmstr, result_fval);
-     else
-      {
-       char cphi[20];
-       char cr[20];
-       char *cp = nrmstr;
-       float__t imval = result_imval;
-       float__t fval  = result_fval;
-       float__t phi   = atan2l (imval, fval);
-       float__t r     = hypotl (fval, imval);
-       d2nrmstr (cr, r);
-       dgr2str (cphi, phi);
-       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
-       normz (fval, imval);
-       cp += d2nrmstr (cp, fval);
-       if (imval >= 0) *cp++ = '+';
-       cp += d2nrmstr (cp, imval);
-       *cp++ = c_imaginary;
-       *cp   = '\0';
-      }
-     sprintf (strings[n++], "%65.64s n", nrmstr);
-    }
-
-   // (RO) Computing format found
-   if (((Options & CMP) || (scfg & CMP)) && (result_imval == 0))
-    {
-     char bscistr[80];
-     b2scistr (bscistr, result_fval);
-     sprintf (strings[n++], "%65.64s c", bscistr);
-    }
-
-   // (UI) Integer output
-   if ((Options & IGR) && (result_imval == 0))
-    {
-      sprintf (strings[n++], "%65lld i", result_ival);
-    }
-
-   // (UI) Unsigned output
-   if ((Options & UNS) && (result_imval == 0))
-    {
-      sprintf (strings[n++], "%65llu u", result_ival); //%llu|%zu
-    }
-
-   // (UI) Fraction output
-   if ((Options & FRC) && (result_imval == 0) && (result_tag == tvFLOAT))
-    {
-     char frcstr[80];
-     int num, denum;
-     double val;
-     if (result_fval > 0)
-      val = result_fval;
-     else
-      val = -result_fval;
-     double intpart = floor (val);
-     if (intpart < 1e15)
-      {
-       if (intpart > 0)
-        {
-         fraction (val - intpart, 0.001, num, denum);
-         if (result_fval > 0)
-          sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
-         else
-          sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
-        }
-       else
-        {
-         fraction (val, 0.001, num, denum);
-         if (result_fval > 0)
-          sprintf (frcstr, "%d/%d", num, denum);
-         else
-          sprintf (frcstr, "-%d/%d", num, denum);
-        }
-       if (denum) sprintf (strings[n++], "%65.64s F", frcstr);
-      }
-    }
-
-   // (UI) Fraction inch output
-   if ((Options & FRI) && (result_imval == 0) && (result_tag == tvFLOAT))
-    {
-     char frcstr[80];
-     int num, denum;
-     double val;
-     if (result_fval > 0)
-      val = result_fval;
-     else
-      val = -result_fval;
-     val /= 25.4e-3;
-     double intpart = floor (val);
-     if (intpart < 1e15)
-      {
-       if (intpart > 0)
-        {
-         fraction (val - intpart, 0.001, num, denum);
-         if (num && denum)
-          {
-           if (result_fval > 0)
-            sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
-           else
-            sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
-          }
-         else
-          {
-           sprintf (frcstr, "%.0f", intpart);
-          }
-        }
-       else
-        {
-         fraction (val, 0.001, num, denum);
-         if (result_fval > 0)
-          sprintf (frcstr, "%d/%d", num, denum);
-         else
-          sprintf (frcstr, "-%d/%d", num, denum);
-        }
-       sprintf (strings[n++], "%65.64s \"", frcstr);
-      }
-    }
-
-   // (RO) Hex format found
-   if (((Options & HEX) || (scfg & HEX)) && (result_imval == 0))
-    {
-     char binfstr[16];
-     sprintf (binfstr, "%%64.%illxh  ", binwide / 4);
-     sprintf (strings[n++], binfstr, result_ival);
-    }
-
-   // (RO) Octal format found
-   if (((Options & OCT) || (scfg & OCT)) && (result_imval == 0))
-    {
-     char binfstr[16];
-     sprintf (binfstr, "%%64.%illoo  ", binwide / 3);
-     sprintf (strings[n++], binfstr, result_ival);
-    }
-
-   // (RO) Binary format found
-   if (((Options & fBIN) || (scfg & fBIN)) && (result_imval == 0))
-    {
-     char binfstr[16];
-     char binstr[80];
-     sprintf (binfstr, "%%%ib", binwide);
-     b2str (binstr, binfstr, result_ival);
-     sprintf (strings[n++], "%64.64sb  ", binstr);
-    }
-
-   // (RO) Char format found
-   if (((Options & CHR) || (scfg & CHR)) && (result_imval == 0))
-    {
-     char chrstr[80];
-     chr2str (chrstr, result_ival);
-     sprintf (strings[n++], "%64.64s c", chrstr);
-    }
-
-   // (RO) WChar format found
-   if (((Options & WCH) || (scfg & WCH)) && (result_imval == 0))
-    {
-     char wchrstr[80];
-     int i = result_ival & 0xffff;
-     wchr2str (wchrstr, i);
-     sprintf (strings[n++], "%64.64s c", wchrstr);
-    }
-
-   // (RO) Date time format found
-   if (((Options & DAT) || (scfg & DAT)) && (result_imval == 0))
-    {
-     char dtstr[80];
-     t2str (dtstr, result_ival);
-     sprintf (strings[n++], "%65.64s ", dtstr);
-    }
-
-   // (RO) Unix time
-   if (((Options & UTM) || (scfg & UTM)) && (result_imval == 0))
-    {
-     char dtstr[80];
-     nx_time2str (dtstr, result_ival);
-     sprintf (strings[n++], "%65.64s  ", dtstr);
-    }
-
-   // (RO) Degrees format found  * 180.0 / M_PI
-   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0) && (result_tag == tvFLOAT))
-    {
-     char dgrstr[80];
-     char *cp = dgrstr;
-     cp += sprintf (cp, "%.6Lg rad|", (long double)result_fval);
-     cp += dgr2str (cp, result_fval);
-     cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
-     cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
-     cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
-
-     sprintf (strings[n++], "%65.64s  ", dgrstr);
-    }
-
-   // (UI) Temperature format 
-   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && 
-       (result_fval > -273.15) && (result_tag == tvFLOAT))
-    {
-     char frhstr[80];
-     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
-              (long double)result_fval, (long double)(result_fval * 9.0 / 5.0 + 32.0));
-
-     sprintf (strings[n++], "%65.64s  ", frhstr);
-    }
-
-   // (RO) String format found
-   if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
-    {
-      {
-       if (Sres ()[0])
-        {
-         char strcstr[80];
-         sprintf (strcstr, "'%s'", Sres ());
-         sprintf (strings[n++], "%65.64s S", strcstr);
-        }
-       else
-        sprintf (strings[n++], "%65.64s S", "''");
-      }
-    }
-  }
-
- return n++;
-}
 //---------------------------------------------------------------------------
-
 int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
@@ -2263,11 +1958,19 @@ t_operator calculator::scan (bool operand, bool percent)
     else
      {
       errno = 0;
+      #ifdef __BORLANDC__
+      ival = strtol (buf + pos - 1, &ipos, 10);
+      #else
       ival = strtoll (buf + pos - 1, &ipos, 10);
+      #endif
       ierr = errno;
      }
     errno = 0;
+    #ifdef __BORLANDC__
+    sfval = fval = strtod (buf + pos - 1, &fpos);
+    #else
     sfval = fval = strtold (buf + pos - 1, &fpos);
+    #endif
     sfpos = fpos;
 
     v_stack[v_sp].tag = tvFLOAT;
@@ -2572,8 +2275,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  const __int64 i64mindbl = 0x0010000000000001ull;
  const double maxdbl     = *(double *)&i64maxdbl;
  const double mindbl     = *(double *)&i64mindbl;
- // const float__t qnan = 0.0/0.0;
+ #ifdef __BORLANDC__
+ const float__t qnan = 0.0/0.0;
+ #else
  constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
+ #endif
  t_operator saved_oper   = toBEGIN;
  value saved_val;
  bool has_saved_val = false;

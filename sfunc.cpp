@@ -1,4 +1,25 @@
 ﻿#include "pch.h"
+#ifdef __BORLANDC__
+#include <stdint.h>
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <math.h>
+#include <float.h>
+#include <errno.h>
+#include <limits>
+
+#include "scalc.h"
+#include "sfmts.h"
+#include "sfunc.h"
+
+#define M_PI_2l 1.5707963267948966192313216916398
+#define nullptr NULL
+
+#else
 #include <cstdint>
 #include <ctime>
 #include <ctype.h>
@@ -22,6 +43,7 @@
 #define M_PI    3.1415926535897932384626433832795
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E     2.7182818284590452353602874713527
+#endif
 
 int_t To_int (int_t val)
 {
@@ -1137,6 +1159,12 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
  return dst - dest;
 }
 
+#ifdef __BORLANDC__
+int timezone(void) //return seconds
+{
+    return -_timezone;
+}
+#else
 int timezone (void) // return seconds
 {
  TIME_ZONE_INFORMATION tzi;
@@ -1145,7 +1173,7 @@ int timezone (void) // return seconds
  int tzHours       = timezoneBias * 60;
  return tzHours;
 }
-
+#endif
 int_t datatime (char *tstr)
 {
  time_t result = 0;

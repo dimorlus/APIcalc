@@ -1,5 +1,7 @@
+#ifndef __BORLANDC__
 #include <cstdint>
 #include <ctime>  // Добавляем заголовочный файл для работы с временем
+#endif
 #include <stdint.h>
 #include <time.h>
 #include <stdio.h>

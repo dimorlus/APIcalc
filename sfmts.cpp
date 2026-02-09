@@ -1,5 +1,20 @@
 //---------------------------------------------------------------------------
 #include "pch.h"
+
+#ifdef __BORLANDC__
+#if defined(_WIN64)||defined(_WIN32)
+#define _WIN_
+#include <windows.h>
+#endif
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <float.h>
+
+#pragma hdrstop
+#else
 #if defined(_WIN64) || defined(_WIN32)
 #define _WIN_
 #include <windows.h>
@@ -11,19 +26,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#endif
 
-#pragma hdrstop
 #include "scalc.h"
 #include "sfmts.h"
 
 //---------------------------------------------------------------------------
+#ifdef __BORLANDC__
+#pragma package(smart_init)
+#pragma warn -8008 // Condition is always true
+#pragma warn -8066 // Unreachable code
+#pragma warn -8004 // assigned a value that is never used
+
+#else
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
 #define M_PI    3.1415926535897932384626433832795
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E     2.7182818284590452353602874713527
-
+#endif
 //----------------------------------
 int ones (unsigned char *cp, int from, int to)
 {
@@ -424,6 +446,26 @@ int wchr2str (char *str, int i)
 #endif /*_WIN_*/
 }
 
+
+#ifdef __BORLANDC__
+int nx_time2str (char *str, uint64_t time)
+{
+  struct tm t;
+
+  if (time > 0x7FFFFFFF) // 2147483647 signed 32-bit (19 Jan 2038)
+  {
+
+    strcpy(str, "Date overflow (>2038)");
+    return (int)strlen(str);
+  }
+  
+  //time_t safe_time = (time_t)time;
+  //gmtime_s(&t, &safe_time);
+  t = *gmtime((time_t*)&time);
+  return (int)strftime(str, 80, "%a, %b %d %H:%M:%S %Y", &t);
+}
+
+#else
 int nx_time2str (char *str, uint64_t time)
 {
  struct tm t;
@@ -441,7 +483,7 @@ int nx_time2str (char *str, uint64_t time)
  gmtime_s (&t, &safe_time); // Используем безопасную версию функции с проверенным значением
  return (int)strftime (str, 80, "%a, %b %d %H:%M:%S %Y", &t);
 }
-
+#endif
 void fraction (double val, double eps, int &num, int &denum)
 {
  int a = 1, b = 1;

@@ -1,0 +1,101 @@
+;; --- Density (kg/m3) ---
+const("ro_cu", 8930);; Copper
+const("ro_al", 2700);; Aluminium
+const("ro_mg", 1738);; Magnesium
+const("ro_fe", 7874);; Iron
+const("ro_ag", 10490);; Silver
+const("ro_au", 19300);; Gold
+const("ro_pb", 11340);; Lead
+const("ro_ti", 4505);; Titanium
+const("ro_w", 19250);; Tungsten
+const("ro_zn", 7140);; Zinc
+const("ro_ni", 8900);; Nickel
+const("ro_sn", 7310);; Tin
+const("ro_hg", 13546);; Mercury
+
+const("ro_steel", 7850);; Steel (typical)
+const("ro_ss", 8000);; Stainless Steel
+const("ro_brass", 8500);; Brass
+const("ro_bronze", 8700);; Bronze
+const("ro_solder", 8400);; Solder (Sn60Pb40)
+
+;; --- Electrical Resistivity at 20C (Ohm*m) ---
+;; Formula: R = re * length / area
+const("re_ag", 1.59e-8);; Silver
+const("re_cu", 1.68e-8);; Copper
+const("re_au", 2.44e-8);; Gold
+const("re_al", 2.65e-8);; Aluminium
+const("re_mg", 4.4e-8);; Magnesium
+const("re_w", 5.6e-8);; Tungsten
+const("re_zn", 5.9e-8);; Zinc
+const("re_ni", 6.99e-8);; Nickel
+const("re_fe", 1.0e-7);; Iron
+const("re_pb", 2.2e-7);; Lead
+const("re_ti", 4.2e-7);; Titanium
+
+const("re_steel", 1.5e-7);; Low-carbon Steel
+const("re_ss", 7.2e-7);; Stainless Steel (304)
+const("re_brass", 0.7e-7);; Brass
+const("re_nichr", 1.1e-6);; Nichrome
+const("re_const", 4.9e-7);; Constantan
+
+;; --- Various Solids Density (kg/m3) ---
+const("ro_glass", 2500);; Glass
+const("ro_conc", 2400);; Concrete
+const("ro_brick", 1800);; Brick
+const("ro_ice", 917);; Ice
+const("ro_silic", 2330);; Silicon
+
+const("ro_abs", 1040);; ABS Plastic
+const("ro_pla", 1240);; PLA (3D Printing)
+const("ro_tefl", 2200);; Teflon (PTFE)
+
+;; --- Liquids Density (kg/m3) ---
+const("ro_water", 1000);; Pure Water (4C)
+const("ro_sea", 1025);; Sea Water
+const("ro_oil", 900);; Engine Oil (approx)
+const("ro_eth", 789);; Ethanol
+
+;; --- Gases Density at STP (kg/m3) ---
+const("ro_air", 1.225);; Air (sea level, 15C)
+const("ro_he", 0.178);; Helium
+const("ro_h2", 0.089);; Hydrogen
+
+;; --- Linear Thermal Expansion Coefficients (1/K) ---
+const("te_al", 23.1e-6);; Aluminium
+const("te_cu", 17.0e-6);; Copper
+const("te_fe", 11.8e-6);; Iron
+const("te_ss", 17.3e-6);; Stainless Steel
+const("te_glass", 9.0e-6);; Glass (typical)
+
+;; --- Temperature Coefficient of Resistance (1/K) ---
+;; Formula: R = R20 * (1 + tcr * (T - 20))
+const("tcr_ag", 0.0038);; Silver
+const("tcr_cu", 0.00393);; Copper
+const("tcr_au", 0.0034);; Gold
+const("tcr_al", 0.0039);; Aluminium
+const("tcr_w", 0.0045);; Tungsten
+const("tcr_fe", 0.005);; Iron
+const("tcr_ni", 0.006);; Nickel
+const("tcr_pb", 0.0039);; Lead
+const("tcr_ti", 0.0038);; Titanium
+
+;; Alloys with low TCR (used for precision resistors)
+const("tcr_const", 0.00001);; Constantan (near zero)
+const("tcr_mang", 0.000002);; Manganin
+const("tcr_nichr", 0.0004);; Nichrome
+const("tcr_steel", 0.003);; Steel (typical)
+
+;; --- Platinum (Pt) Properties ---
+const("ro_pt", 21450);; Density (kg/m3)
+const("re_pt", 1.06e-7);; Electrical Resistivity (Ohm*m)
+const("tcr_pt", 0.003927);; TCR (1/K) - Standard for Pt100/Pt1000
+
+;; --- Common Resistance Sensor Benchmarks ---
+const("pt100_r0", 100);; Resistance at 0C (Ohms)
+const("pt1000_r0", 1000);; Resistance at 0C (Ohms)
+
+;; --- Propagation & Air ---
+const("v_sound", 343);; Speed of sound in dry air at 20C (m/s)
+const("v_light", 299792458);; Speed of light in vacuum (m/s) - if not in core
+const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)

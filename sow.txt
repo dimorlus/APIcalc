@@ -1,0 +1,245 @@
+Я хочу сделать новую версию своего старого приложения (CBuilder 6) под Windows - калькулятор выражений. 
+Я хочу использовать VC2022 и делать MFC или Win API приложение. Цель - получить один исполняемый файл минимального 
+размера (и один готовый файл помощи в формате .chm) без каких-либо зависимостей (никаких runtime библиотек и т. п.). 
+Приложение представляет собой окно, со строкой для ввода выражения с историей прошлых выражений и полем под ним для 
+вывода результата в различных, определяемых как опциями, так и самим выражением форматах (по строке на каждый формат).
+Калькулятор (его движок уже написан) должен пересчитывать выражение по мере его ввода. При нажатии на Enter текущее
+выражение должно попадать в сохраняемую в реестре историю, а в строку ввода попадать результат как printf("%.16Lg", fVal).
+И строка ввода, и поле вывода должны иметь белый цвет, минимально возможного размера рамки и отступы от границ окна, 
+меню и друг друга. Шрифт в строке ввода и поле вывода - моноширинный, желательно иметь возможность менять его размер. 
+Размер окна калькулятора должен автоматически подстраиваться под число выводимых в поле вывода строк, а по ширине 
+вмещать 70 символов. Внешний вид не должен зависеть от разрешения экрана. История должна появляться при клике по стрелке
+в конце строки ввода, иметь ту же ширину, что и сам калькулятор, и вмещать минимум 5 строк. Окошко истории должно 
+иметь вертикальный scrool bar и отображать только ту часть длинной строки, что помещается в его ширину. При открытом 
+окне истории, нажатие на кнопку Del должно удалять текущую строку из истории. Историю следует ограничить, например 100 строк.
+История должна храниться в простом несортированном контейнере (допустим для простоты, что это массив строк, не важно как 
+он реализован), ограниченный размером в 100 записей. При добавлении новой нужно сначала поискать такую в истории (можно 
+просто перебором, записей не много, это не займет ресурсы), если не найдено, то найти последнюю, перенести ее на следующее 
+место (если их меньше 100, иначе ничего не делать), на ее место поставить предыдущую, и так далее до 0. На нулевое место 
+поместить новую строку. Если такая запись уже есть - ничего не делать. Показываться этот список должен в окне с вертикальным 
+скроллером на всю ширину строки окна приложения и вмещать минимум 5 видимых строк. Если окно вылезло за пределы окна 
+приложения - не страшно. При выборе строки (Enter или Mouse Click), она должна попадать в строку ввода и сразу пересчитываться, 
+а окно истории закрываться. При нажатии на Del - удаляться из списка (соответственно список "поднимается"), окно должно 
+оставаться. При нажатии Esc окно истории должно закрыться, как и при клике мышкой за его пределами.
+При выходе из приложения, история, текущее выражение, выбранные опции должны сохраняться в реестре и восстанавливаться 
+из него при следующем запуске. История не должна мешать вводить выражения (autocomplite не должен работать). 
+И строка ввода, и поле вывода должны поддерживать стандартные выделение и copy/paste операции (поле вывода - read only 
+так что только copy). 
+
+Нажатие на F1 в любом месте должно открывть помощь. Нажатие на Ctrl+Home - убрать прозрачность и поместить калькулятор 
+в координаты 100:100 на экране. Должны поддерживаться также такие горячие клавиши:
+
+	Ctrl+R  Root2(...)
+	Ctrl+S 	(...)^2
+    Ctrl+I	1/(...)
+	Ctrl+[	(...)
+	Ctrl+]	(...)
+
+Где ... - текущее значение строки выражения. Так, если выражение "2", то нажатие Ctrl+R должно сделать "Root2(2)". 
+Нажатие на Esc в зависимости от выбора меню Esc minimized должно минимизировать окно в трей (если выбран), или закрывать 
+окно приложения.
+ 
+Приложение имеет слкдующую структуру меню:
+BEGIN
+    POPUP "Calc"
+    BEGIN
+        MENUITEM "Pas style",       	ID_CALC_PASSTYLE		//PAS
+        MENUITEM "Case sensetive",  	ID_CALC_CASESENSETIVE	//UPCASE
+        MENUITEM "Forced float",    	ID_CALC_FORCEDFLOAT		//FFLOAT
+        POPUP "Format..."
+        BEGIN
+            MENUITEM "Scientific",     	ID_FORMAT_SCIENTIFIC	//SCI
+            MENUITEM "Normalized",     	ID_FORMAT_NORMALIZED	//NRM
+            MENUITEM "Fraction",       	ID_FORMAT_FRACTION		//FRC
+            MENUITEM "Computing",      	ID_FORMAT_COMPUTING		//CMP
+            MENUITEM "Integer",        	ID_FORMAT_INTEGER		//IGR
+            MENUITEM "Unsigned",       	ID_FORMAT_UNSIGNED		//UNS
+            MENUITEM "Hex",            	ID_FORMAT_HEX			//HEX
+            MENUITEM "Octal",          	ID_FORMAT_OCTAL			//OCT
+            MENUITEM "Binary",         	ID_FORMAT_BINARY		//FBIN
+            MENUITEM "Char",           	ID_FORMAT_CHAR			//CHR
+            MENUITEM "Wide char",      	ID_FORMAT_WIDECHAR		//WCH
+            MENUITEM "Date time",      	ID_FORMAT_DATETIME		//DAT
+            MENUITEM "Unix time",     	ID_FORMAT_UNIXTIME		//UTM
+            MENUITEM "Degreese",        ID_FORMAT_DEGREESE		//DEG
+            MENUITEM "String",          ID_FORMAT_STRING		//STR
+            MENUITEM "Inch",            ID_FORMAT_INCH			//FRI
+            MENUITEM "All",             ID_FORMAT_ALL			//SCI+NRM+FRC+CMP+IGR+UNS+HEX+OCT+FBIN+CHR+WCH+DAT+UTM+DEG+STR+FRI+AUT
+            MENUITEM "Auto",            ID_FORMAT_AUTO			//AUT
+        END
+        POPUP "Binary width=64"
+        BEGIN
+            MENUITEM "8",               ID_BINARYWIDTH_8
+            MENUITEM "16",              ID_BINARYWIDTH_16
+            MENUITEM "24",              ID_BINARYWIDTH_24
+            MENUITEM "32",              ID_BINARYWIDTH_32
+            MENUITEM "48",              ID_BINARYWIDTH_48
+            MENUITEM "64",              ID_BINARYWIDTH_64
+            MENUITEM "binwide(64)",     ID_BINARYWIDTH_BINWIDE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "View &variables",     ID_CALC_VIEWVARIABLES
+        MENUITEM SEPARATOR
+        MENUITEM "Esc minimized",       ID_CALC_ESCMINIMIZED
+        MENUITEM "Opacity(100)",        ID_Opac
+        MENUITEM "Exit",                ID_CALC_EXIT
+    END
+END
+
+Пункты "Case sensetive", "Forced float", "Esc minimized" - checkable то есть при их выборе должен появляться или сниматься 
+соответствующий значок (V). Пункт "Pas style" должен быть всегда check, но при его выборе сменяться на "C style". Все
+пункты подменю "Format...", кроме "All" - тоже checkable. All должно включать или наоборот выключать все остальные пункты 
+подменю "Format...". Пункты "Binary width=64" (число должно отражать текущее выбранное значение) "8".."64" должны быть 
+checkable по принципу Radio button, выбор "binwide(64)" просто помещает этот текст в строку выражений калькулятора, как и 
+выбор "Opacity(100)". Калькулятор должен поддерживать ряд связанных с интерфейсом псевдофункций
+	menu(0)        	скрыть (если 0)/показать меню (если не 0).
+	help(0)			вызвать помощь (аргумент игнорируется).
+	opacity(100)	установить прозрачность окна (100 - полностью непрозрачное, 0 - полностью прозрачное).
+	binwide(64)     установить число бит для двоичного формата (кратно 8).
+	home(0)			действия аналогичные нажатию Ctrl+Home (аргумент игнорируется).
+    font(14)		размер шрифта в пунктах (недопустимые значения приводятся к ближайшим допустимым).
+	vars(0)			показать окошко с переменными и их значениями. 
+	
+Окошко Variables - это просто модальное окошко с текстом, вида "переменная = значение", куда выводятся все предопределенные и 
+определенные пользоватеоем переменные. Например:
+	e          = 2.7183
+	pi         = 3.1416
+	timezone   = 2
+
+Изменение выбранных пунктов меню должно менять указанные биты переменной Option и наоборот, изменение опций в процессе пересчета 
+выражения должно менять значение checked в меню. Перед вызовом калькулятора и после него синхронизируются опции калькулятора и 
+интерфейса. 
+
+Биты опций:
+// RW - set both by calc engine and application
+// WO - set only from application
+// RO - set only by calc engine
+// UI - set and used only from application
+#define PAS     (1<<0)  // (RW) Pascal assingment and comparison style (:= =) <-> (= ==)
+#define SCI     (1<<1)  // (WO) Scientific numbers format (2k == 2000)
+#define UPCASE  (1<<2)  // (WO) Case insensetive variables
+#define UTMP    (1<<3)  // (WO) Using $n for temp
+#define FFLOAT  (1<<4)  // (WO) Forced float
+
+#define DEG     (1<<5)  // (RO) Degrees format found
+#define SCF     (1<<6)  // (RO) Scientific (6.8k) format found
+#define ENG     (1<<7)  // (RO) Engineering (6k8) format found
+#define STR     (1<<8)  // (RO) String format found
+#define HEX     (1<<9)  // (RO) Hex format found
+#define OCT     (1<<10) // (RO) Octal format found
+#define fBIN    (1<<11) // (RO) Binary format found
+#define FBIN    (1<<11) // (RO) Binary format found
+#define DAT     (1<<12) // (RO) Date time format found
+#define CHR     (1<<13) // (RO) Char format found
+#define WCH     (1<<14) // (RO) WChar format found
+#define ESC     (1<<15) // (RO) Escape format found
+#define CMP     (1<<16) // (RO) Computing format found
+
+#define NRM     (1<<17) // (UI) Normalized output
+#define IGR     (1<<18) // (UI) Integer output
+#define UNS     (1<<19) // (UI) Unsigned output
+#define ALL     (1<<20) // (UI) All outputs
+#define MIN     (1<<21) // (UI) Esc minimized feature
+#define MNU     (1<<22) // (UI) Show/hide menu feature
+#define UTM     (1<<23) // (RO) Unix time
+#define FRC     (1<<24) // (UI) Fraction output
+#define FRI     (1<<25) // (UI) Fraction inch output
+#define AUTO    (1<<26) // (UI) Auto output
+#define AUT     (1<<26) // (UI) Auto output
+
+Они же, заданные другим способом
+#pragma pack(push, 1)
+typedef union
+{
+    int options;
+    struct
+    {
+        int pas:1;
+        int sci:1;
+        int upcase:1;
+        int utmp:1;
+        int ffloat:1;
+        int deg:1;
+        int scf:1;
+        int eng:1;
+        int str:1;
+        int hex:1;
+        int oct:1;
+        int fbin:1;
+        int dat:1;
+        int chr:1;
+        int wch:1;
+        int esc:1;
+        int cmp:1;
+        int nrm:1;
+        int igr:1;
+        int uns:1;
+        int all:1;
+        int min:1;
+        int mnu:1;
+        int utm:1;
+        int frc:1;
+        int fri:1;
+        int aut:1;
+    };
+} toptions;
+#pragma pack(pop)
+
+typedef long double float__t;
+typedef int64_t int_t;
+
+Класс калькулятора предоставляет следующий интерфейс:
+public:
+    calculator(int cfg = PAS + SCI + UPCASE);
+    void syntax(int cfg = PAS + SCI + UPCASE + FFLOAT);
+    int issyntax(void);
+    char *error(void;
+    int errps(void);
+    void addfvar(const char* name, float__t val);
+    void addivar(const char* name, int_t val);
+    bool checkvar(const char* name);
+    //void addfn(const char* name, void *func, void* context = nullptr);
+	void addfn(const char* name, void *func);
+    void addfn2(const char* name, void *func);
+    //void varlist(void (*f)(char*, float__t, void*), void* context);
+    void varlist(void (*f)(char*, float__t));
+    void varlist(void (*f)(char*, value*));
+	int varlist(char* buf, int bsize); 
+    float__t evaluate(char* expr, int_t *piVal = NULL);
+    char *Sres(void);
+    ~calculator(void);
+
+Это должно делаться при каждом изменении строки ввода:
+#include "scalc.h"
+#include "sfmts.h"
+...
+	int64_t iVal = 0;
+	char exprBuf[2048];
+	char strings[20][80];
+	memset(strings, 0, sizeof(strings));
+	strncpy_s(exprBuf, CStringA(expr), sizeof(exprBuf) - 1);
+	exprBuf[sizeof(exprBuf) - 1] = '\0';
+
+	ccalc->syntax(opts.options);
+
+	fVal = ccalc->evaluate(exprBuf, &iVal);
+
+	int n = 0;
+	n = format_out(opts.options, scfg, binwide, n, fVal, iVal, exprBuf, strings, ccalc);
+	int scfg = ccalc->issyntax();
+...
+
+
+//Псевдофункции должны добавляться путем вызова метода void calculator::addfn(const char* name, void *func, void* context = nullptr), 
+//которому передается имя, указатель на статическую функцию static float__t function(float__t x, void* context) и указатель на контекст. 
+
+//Для получения списка переменных используется метод void calculator::varlist(void (*f)(char*, float__t, void*), void* context), которому
+//передается указатель на статическую функцию static void AddVarList(char* VarName, float__t fVal, void* context)
+
+Псевдофункции должны добавляться путем вызова метода void calculator::addfn(const char* name, void *func), 
+которому передается имя, указатель на статическую функцию static float__t function(float__t x). 
+
+Для получения списка переменных используется метод void calculator::varlist(void (*f)(char*, float__t, void*)), которому
+передается указатель на статическую функцию static void AddVarList(char* VarName, float__t fVal)
+
+Комментарии к коду я хочу на английском, ответы мне - на русском языке.

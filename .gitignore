@@ -77,7 +77,9 @@ Release/
 ccalc/bin
 ccalc/obj
 # Keep release executable
-!ccalc/bin/x64/Release/ccalc.exe
-!ccalc/bin/Win32/Release/ccalc.exe
-!x64/Release/fcalc.exe
-!Release/fcalc.exe
+# !ccalc/bin/x64/Release/ccalc.exe
+# !ccalc/bin/Win32/Release/ccalc.exe
+# !x64/Release/fcalc.exe
+# !Release/fcalc.exe
+*.aps
+Setup/

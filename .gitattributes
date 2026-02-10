@@ -1,1 +1,8 @@
 * text=auto
+*.cpp text
+*.h   text
+*.rc  text
+*.bat  text
+*.cmd  text
+*.iss  text
+*.c  text

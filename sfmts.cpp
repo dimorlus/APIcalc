@@ -360,19 +360,11 @@ int dgr2str (char *str, float__t radians)
  double min_full   = (degrees - deg) * 60.0;
  int min           = (int)min_full;
  double sec_full   = (min_full - min) * 60.0;
-<<<<<<< HEAD
- int sec           = (int)(sec_full + 0.5); // Round seconds
-
- if (fabs (degrees) > 36000)
-  return sprintf (str, "--%c--%c--%c", cdeg[0], cdeg[1], cdeg[2]);
- // Correct overflow of seconds and minutes
-=======
  int sec           = (int)(sec_full + 0.5); // Rounding seconds
 
  if (fabs (degrees) > 36000)
   return sprintf (str, "--%c--%c--%c", cdeg[0], cdeg[1], cdeg[2]);
  // Seconds and minutes overflow correction
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
  if (sec == 60)
   {
    sec = 0;
@@ -476,29 +468,17 @@ int nx_time2str (char *str, uint64_t time)
 {
  struct tm t;
 
-<<<<<<< HEAD
- // Check that the time is within the valid range for time_t (32-bit unix time)
- // time_t is usually 32-bit and supports dates from 1970 to 2038
- if (time > 0x7FFFFFFF) // 2147483647 = max value for signed 32-bit (19 Jan 2038)
-  {
-   // For large values, return an error message
-=======
  // Checking that the time is within the valid range for time_t (32-bit unix time)
  // time_t is usually 32-bit and supports dates from 1970 to 2038
  if (time > 0x7FFFFFFF) // 2147483647 = maximum value for signed 32-bit (19 Jan 2038)
   {
    // For larger values, return an error message
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
    strcpy (str, "Date overflow (>2038)");
    return (int)strlen (str);
   }
 
  time_t safe_time = (time_t)time;
-<<<<<<< HEAD
- gmtime_s (&t, &safe_time); // Use the safe version of the function with a checked value
-=======
  gmtime_s (&t, &safe_time); // Using the safe version of the function with a checked value
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
  return (int)strftime (str, 80, "%a, %b %d %H:%M:%S %Y", &t);
 }
 #endif

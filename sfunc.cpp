@@ -1195,11 +1195,7 @@ int_t datatime (char *tstr)
 
 const char *wavelength_info (float__t wavelength_m)
 {
-<<<<<<< HEAD
  // wavelength_m - wavelength in meters
-=======
- // wavelength_m - wave length in meters
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 
  if (wavelength_m > 10000)
   {
@@ -1332,11 +1328,7 @@ const char *wavelength_info (float__t wavelength_m)
 // Applies intensity correction at the edges (the eye is less sensitive to violet and deep red)
 // Applies gamma correction for more realistic display
 //
-<<<<<<< HEAD
 // Usage examples:
-=======
-// Usage examples :
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 //
 // 650 nm (red): wavelength_to_rgb(650e-9) → about 0xFF0000
 // 550 nm (green): wavelength_to_rgb(550e-9) → about 0x00FF00
@@ -1436,7 +1428,6 @@ uint32_t wavelength_to_rgb (float__t wavelength_m)
 // Returns RGB color in 0xRRGGBB format
 // For temperatures below 1000K returns black
 //
-<<<<<<< HEAD
 // Example temperatures:
 //
 // 1000K: Red-orange glow (lava)
@@ -1447,18 +1438,6 @@ uint32_t wavelength_to_rgb (float__t wavelength_m)
 // 6500K: Cool white (studio light)
 // 9000K: Bluish tint
 // 15000-40000K: Blue sky
-=======
-// Example temperatures :
-//
-// 1000K : Red - orange glow (lava)
-// 1850K : Candle (~0xFF8E13)
-// 2700K : Incandescent lamp (warm yellow)
-// 3400K : Halogen lamp
-// 5500K : Daylight (white)
-// 6500K : Cool white (studio light)
-// 9000K : Bluish tint
-// 15000 - 40000K : Blue sky
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 //
 // The formulas are based on the empirical approximation by Tanner Helland for converting black body color temperature to RGB.
 
@@ -1487,11 +1466,7 @@ uint32_t temperature_to_rgb (float__t temp_kelvin)
    if (red > 255) red = 255;
   }
 
-<<<<<<< HEAD
  // Green channel
-=======
- // Green channel   
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
  if (temp <= 66)
   {
    green = temp;
@@ -1507,11 +1482,7 @@ uint32_t temperature_to_rgb (float__t temp_kelvin)
    if (green > 255) green = 255;
   }
 
-<<<<<<< HEAD
  // Blue channel
-=======
- // Blue channel    
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
  if (temp >= 66)
   {
    blue = 255;
@@ -1555,11 +1526,7 @@ void SinC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Cosine: cos(z) = cos(x) * cosh(y) - i * sin(x) * sinh(y)
-=======
 // Cosine of a complex number: cos(z) = cos(x) * cosh(y) - i * sin(x) * sinh(y)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void CosC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1571,11 +1538,7 @@ void CosC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Exponential: exp(z) = exp(x) * (cos(y) + i * sin(y))
-=======
 // Exponential of a complex number: exp(z) = exp(x) * (cos(y) + i * sin(y))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void ExpC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1589,11 +1552,7 @@ void ExpC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Modulus (absolute value): abs(z) = sqrt(x^2 + y^2)
-=======
 // Absolute value (magnitude) of a complex number: abs(z) = sqrt(x^2 + y^2)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 float__t AbsC (float__t x, float__t y)
 {
 #ifdef _long_double_
@@ -1603,11 +1562,7 @@ float__t AbsC (float__t x, float__t y)
 #endif
 }
 
-<<<<<<< HEAD
-// Tangent: tan(z) = sin(z) / cos(z)
-=======
 // Tangent of a complex number: tan(z) = sin(z) / cos(z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void TanC (float__t x, float__t y, float__t &re, float__t &im)
 {
  float__t sin_re, sin_im, cos_re, cos_im;
@@ -1625,11 +1580,7 @@ void TanC (float__t x, float__t y, float__t &re, float__t &im)
  im = (sin_im * cos_re - sin_re * cos_im) / denom;
 }
 
-<<<<<<< HEAD
-// Cotangent: cot(z) = 1 / tan(z)
-=======
 // Cotangent of a complex number: cot(z) = 1 / tan(z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void CotC (float__t x, float__t y, float__t &re, float__t &im)
 {
  float__t tan_re, tan_im;
@@ -1645,11 +1596,7 @@ void CotC (float__t x, float__t y, float__t &re, float__t &im)
  im = -tan_im / denom;
 }
 
-<<<<<<< HEAD
-// Arcsine: arcsin(z) = -i * ln(iz + sqrt(1 - z^2))
-=======
 // Arcsine of a complex number: arcsin(z) = -i * ln(iz + sqrt(1 - z^2))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AsinC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // iz = -y + ix
@@ -1668,11 +1615,7 @@ void AsinC (float__t x, float__t y, float__t &re, float__t &im)
  im = -ln_re;
 }
 
-<<<<<<< HEAD
-// Arccosine: arccos(z) = -i * ln(z + sqrt(z^2 - 1))
-=======
 // Arccosine of a complex number: arccos(z) = -i * ln(z + sqrt(z^2 - 1))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AcosC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // z^2 - 1
@@ -1690,11 +1633,7 @@ void AcosC (float__t x, float__t y, float__t &re, float__t &im)
  im = -ln_re;
 }
 
-<<<<<<< HEAD
-// Arctangent: arctan(z) = (i/2) * [ln(1 - iz) - ln(1 + iz)]
-=======
 // Arctangent of a complex number: arctan(z) = (i/2) * [ln(1 - iz) - ln(1 + iz)]
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AtanC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // 1 - iz = 1 + y - ix
@@ -1713,11 +1652,7 @@ void AtanC (float__t x, float__t y, float__t &re, float__t &im)
  im = 0.5 * (ln2_re - ln1_re);
 }
 
-<<<<<<< HEAD
-// Hyperbolic sine: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
-=======
 // Hyperbolic sine of a complex number: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void SinhC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1729,11 +1664,7 @@ void SinhC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Hyperbolic cosine: cosh(z) = cosh(x) * cos(y) + i * sinh(x) * sin(y)
-=======
 // Hyperbolic cosine of a complex number: cosh(z) = cosh(x) * cos(y) + i * sinh(x) * sin(y)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void CoshC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1745,11 +1676,7 @@ void CoshC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Hyperbolic tangent: tanh(z) = sinh(z) / cosh(z)
-=======
 // Hyperbolic tangent of a complex number: tanh(z) = sinh(z) / cosh(z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void TanhC (float__t x, float__t y, float__t &re, float__t &im)
 {
  float__t sinh_re, sinh_im, cosh_re, cosh_im;
@@ -1766,11 +1693,7 @@ void TanhC (float__t x, float__t y, float__t &re, float__t &im)
  im = (sinh_im * cosh_re - sinh_re * cosh_im) / denom;
 }
 
-<<<<<<< HEAD
-// Natural logarithm: ln(z) = ln|z| + i*arg(z)
-=======
 // Natural logarithm of a complex number: ln(z) = ln|z| + i*arg(z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void LnC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1782,11 +1705,7 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
-<<<<<<< HEAD
-// Square root: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
-=======
 // Square root of a complex number: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
@@ -1803,11 +1722,7 @@ void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
  im         = r * sin (phi / 2);
 #endif
 }
-<<<<<<< HEAD
-// Arccotangent: acot(z) = arctan(1/z)
-=======
 // Arccotangent of a complex number: acot(z) = arctan(1/z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AcotC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // 1/z = (x - iy) / (x^2 + y^2)
@@ -1817,11 +1732,7 @@ void AcotC (float__t x, float__t y, float__t &re, float__t &im)
  AtanC (zx, zy, re, im);
 }
 
-<<<<<<< HEAD
-// Hyperbolic cotangent: coth(z) = 1 / tanh(z)
-=======
 // Hyperbolic cotangent of a complex number: coth(z) = 1 / tanh(z)
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void CothC (float__t x, float__t y, float__t &re, float__t &im)
 {
  float__t tanh_re, tanh_im;
@@ -1837,11 +1748,7 @@ void CothC (float__t x, float__t y, float__t &re, float__t &im)
  im = -tanh_im / denom;
 }
 
-<<<<<<< HEAD
-// Hyperbolic arcsine: asinh(z) = ln(z + sqrt(z^2 + 1))
-=======
 // Hyperbolic arcsine of a complex number: asinh(z) = ln(z + sqrt(z^2 + 1))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AsinhC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // z^2 + 1
@@ -1855,11 +1762,7 @@ void AsinhC (float__t x, float__t y, float__t &re, float__t &im)
  LnC (s_re, s_im, re, im);
 }
 
-<<<<<<< HEAD
-// Hyperbolic arccosine: acosh(z) = ln(z + sqrt(z + 1) * sqrt(z - 1))
-=======
 // Hyperbolic arccosine of a complex number: acosh(z) = ln(z + sqrt(z + 1) * sqrt(z - 1))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AcoshC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // sqrt(z + 1)
@@ -1877,11 +1780,7 @@ void AcoshC (float__t x, float__t y, float__t &re, float__t &im)
  LnC (s_re, s_im, re, im);
 }
 
-<<<<<<< HEAD
-// Hyperbolic arctangent: atanh(z) = 0.5 * [ln(1 + z) - ln(1 - z)]
-=======
 // Hyperbolic arctangent of a complex number: atanh(z) = 0.5 * [ln(1 + z) - ln(1 - z)]
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AtanhC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // 1 + z
@@ -1900,11 +1799,7 @@ void AtanhC (float__t x, float__t y, float__t &re, float__t &im)
  im = 0.5 * (ln1_im - ln2_im);
 }
 
-<<<<<<< HEAD
-// Hyperbolic arccotangent: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
-=======
 // Hyperbolic arccotangent of a complex number: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void AcothC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // 1/z = (x - iy) / (x^2 + y^2)
@@ -1928,11 +1823,7 @@ void AcothC (float__t x, float__t y, float__t &re, float__t &im)
  im = 0.5 * (ln1_im - ln2_im);
 }
 
-<<<<<<< HEAD
-// Complex exponentiation: PowC(z1, z2) = exp(z2 * ln(z1))
-=======
 // Complex exponentiation of a complex number: PowC(z1, z2) = exp(z2 * ln(z1))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 void PowC (float__t x1, float__t y1, float__t x2, float__t y2, float__t &re, float__t &im)
 {
  // ln(z1)
@@ -1947,11 +1838,7 @@ void PowC (float__t x1, float__t y1, float__t x2, float__t y2, float__t &re, flo
  ExpC (a, b, re, im);
 }
 
-<<<<<<< HEAD
-// Extracting the root of degree y from a complex number:
-=======
 // Extraction of the y-th root of a complex number: RootNC(xr, xi, yr, yi, re, im) = (xr + i*xi)^(1/(yr + i*yi))
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
 // RootNC(xr, xi, yr, yi, re, im) = (xr + i*xi)^(1/(yr + i*yi))
 void RootNC (float__t xr, float__t xi, float__t yr, float__t yi, float__t &re, float__t &im)
 {

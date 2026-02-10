@@ -161,11 +161,7 @@ int APIENTRY wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
  // Main message loop:
  while (GetMessage (&msg, nullptr, 0, 0))
   {
-<<<<<<< HEAD
-   // For accelerators, use the main window hwnd, not msg.hwnd
-=======
    // For accelerators, use the main window's hwnd, not msg.hwnd
->>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
    HWND hMainWnd = (g_pApp) ? g_pApp->GetMainWindow () : msg.hwnd;
    if (!TranslateAccelerator (hMainWnd, hAccelTable, &msg))
     {
@@ -2021,7 +2017,7 @@ void WinApiCalc::ShowVariablesDialog ()
  while (dialogActive && IsWindow (hDialog))
   {
    BOOL bRet = GetMessage (&msg, nullptr, 0, 0);
-   if (bRet == 0) break; // WM_QUIT
+   if (bRet == 0 || bRet == -1) break; // WM_QUIT or error
 
    // Check if our dialog was destroyed
    if (!IsWindow (hDialog))

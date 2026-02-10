@@ -54,10 +54,7 @@
 #endif //__BORLANDC__
 
 #define _WIN_
-#define INT_FORMAT "ll"
 #define _ENABLE_PREIMAGINARY_
-#define _NEW_HEX_PREFIX_ // New scan engine for digits
-//#define _OLD_HEX_PREFIX_ // Old scan engine for digits
 
 float__t Const (void *clc, char *name, float__t x)
 {
@@ -1948,7 +1945,6 @@ t_operator calculator::scan (bool operand, bool percent)
       ipos = buf + pos + n;
       scfg |= HEX;
      }
-#ifdef _NEW_HEX_PREFIX_
     else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
      {
       ierr = hscanf (buf + pos + 1, ival, n);
@@ -2052,103 +2048,6 @@ t_operator calculator::scan (bool operand, bool percent)
     v_stack[v_sp].pos   = pos;
     v_stack[v_sp++].var = nullptr;
     return toOPERAND;
-#endif _NEW_HEX_PREFIX_
-#ifdef _OLD_HEX_PREFIX_
-    else if (buf[pos - 1] == '0')
-     {
-      ierr = sscanf (buf + pos - 1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
-      ipos = buf + pos - 1 + n;
-      if ((ierr == 0) && ((buf[pos] == 'x') || (buf[pos] == 'X'))) scfg |= HEX;
-     }
-    else
-     {
-      // if (scfg & FFLOAT) {ierr = 0; n = 0;} //I don't remember how it works and for what it was
-      // else ierr = sscanf(buf+pos-1, "%" INT_FORMAT "i%n", &ival, &n) != 1;
-      ierr = 0;
-      n    = 0;
-      ipos = buf + pos - 1 + n;
-     }
-
-    errno = 0;
-    sfval = fval = strtold (buf + pos - 1, &fpos);
-    sfpos = fpos;
-
-    //` - degrees, ' - minutes, " - seconds
-    if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
-     fval = dstrtod (buf + pos - 1, &fpos);
-    else 
-    if (*fpos == ':') fval = tstrtod (buf + pos - 1, &fpos);
-    else 
-    if (scfg & SCI + FRI) scientific (fpos, fval);
-    if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
-      {
-       fpos++;
-       if ((o_sp > 0) && (o_stack[o_sp-1]==toMINUS)) fval = -(-fval - 32.0) * 5.0 / 9.0;
-       else fval = (fval - 32.0) * 5.0 / 9.0;
-      }
-    ferr = errno;
-    if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\'))) 
-     {
-      pos = fpos - buf+1;
-      error ("bad numeric constant");
-      return toERROR;
-     }
-    if (ierr && ferr)
-     {
-      error ("bad numeric constant");
-      return toERROR;
-     }
-    if (v_sp == max_stack_size)
-     {
-      error ("stack overflow");
-      return toERROR;
-     }
-    if (!ierr && ipos >= fpos && (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
-     {
-      v_stack[v_sp].tag  = tvINT;
-      v_stack[v_sp].ival = ival;
-      v_stack[v_sp].fval = (float__t)ival;
-      pos = ipos - buf;
-     }
-    else
-     {
-      if (operand && percent && (*fpos == '%'))
-       {
-        fpos++;
-        v_stack[v_sp].tag = tvPERCENT;
-       }
-      else if ((*fpos == 'i') || (*fpos == 'j'))
-       {
-        c_imaginary = *fpos;
-        fpos++;
-        scfg |= CPX;
-        v_stack[v_sp].tag = tvCOMPLEX;
-       }
-      else
-       {
-        if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
-         {
-          fpos = sfpos;
-          fval = sfval;
-         }
-        v_stack[v_sp].tag = tvFLOAT;
-       }
-      if (v_stack[v_sp].tag == tvCOMPLEX)
-       {
-        v_stack[v_sp].imval = fval;
-        v_stack[v_sp].fval  = 0;
-       }
-      else
-       {
-        v_stack[v_sp].fval  = fval;
-        v_stack[v_sp].imval = 0;
-       }
-      pos = fpos - buf;
-     }
-    v_stack[v_sp].pos   = pos;
-    v_stack[v_sp++].var = nullptr;
-    return toOPERAND;
-   #endif /*_OLD_HEX_PREFIX_*/
    }
   default:
   def:

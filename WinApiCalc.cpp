@@ -161,7 +161,11 @@ int APIENTRY wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
  // Main message loop:
  while (GetMessage (&msg, nullptr, 0, 0))
   {
+<<<<<<< HEAD
    // For accelerators, use the main window hwnd, not msg.hwnd
+=======
+   // For accelerators, use the main window's hwnd, not msg.hwnd
+>>>>>>> 556203f (10-Feb-26 16:04:31.03  v2.090)
    HWND hMainWnd = (g_pApp) ? g_pApp->GetMainWindow () : msg.hwnd;
    if (!TranslateAccelerator (hMainWnd, hAccelTable, &msg))
     {
@@ -240,7 +244,7 @@ BOOL WinApiCalc::InitInstance (HINSTANCE hInstance, int nCmdShow)
    return FALSE;
   }
 
- // Настраиваем поддержку прозрачности - ОТКЛЮЧЕНО
+ // Configure transparency support - DISABLED
  // SetWindowLongA(m_hWnd, GWL_EXSTYLE, GetWindowLongA(m_hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
  // SetLayeredWindowAttributes(m_hWnd, 0, m_opacity, LWA_ALPHA);
 
@@ -261,14 +265,14 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
 {
  WinApiCalc *pThis = (WinApiCalc *)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
 
- // КРИТИЧНО: Обрабатываем WM_GETDLGCODE чтобы перехватить системные клавиши
+ // CRITICAL: Handle WM_GETDLGCODE to intercept system keys
  if (message == WM_GETDLGCODE)
   {
-   // Говорим Windows что мы хотим получать ВСЕ клавиши
+   // Tell Windows that we want to receive ALL keys
    return DLGC_WANTALLKEYS;
   }
 
- // Пробуем перехватить через WM_SYSKEYDOWN (системные клавиши как Alt+F4, F1)
+ // Try to intercept through WM_SYSKEYDOWN (system keys like Alt+F4, F1)
  if (message == WM_SYSKEYDOWN)
   {
    LogKeyEvent ("EditSubclassProc SYSKEYDOWN", (int)wParam, false);
@@ -280,17 +284,17 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
     }
   }
 
- // Отладка - проверяем что subclass вообще работает
+ // Debugging - check if subclass is working at all
  if (message == WM_KEYDOWN)
   {
-   // Логируем только специальные клавиши для отладки
+   // Log only special keys for debugging
    if (wParam == VK_F1 || wParam == VK_ESCAPE)
     {
      LogKeyEvent ("EditSubclassProc", (int)wParam, false);
     }
 
-   // СИСТЕМНЫЕ КЛАВИШИ ОБРАБАТЫВАЕМ ЗДЕСЬ (не в Main WndProc)
-   // Main WndProc не получает фокус клавиатуры!
+   // SYSTEM KEYS ARE HANDLED HERE (not in Main WndProc)
+   // Main WndProc does not receive keyboard focus!
 
    if (wParam == VK_F1)
     {
@@ -482,11 +486,11 @@ LRESULT CALLBACK WinApiCalc::WndProc (HWND hWnd, UINT message, WPARAM wParam, LP
   case WM_KEYDOWN:
    if (g_pApp)
     {
-     // Логируем в основном WndProc (только для отладки)
+     // Log in the main WndProc (for debugging only)
      bool ctrlPressedMain = (GetKeyState (VK_CONTROL) < 0);
      LogKeyEvent ("Main WndProc", (int)wParam, ctrlPressedMain);
 
-     // Прямая обработка горячих клавиш в main WndProc
+     // Direct handling of hotkeys in main WndProc
      bool ctrlPressed = (GetKeyState (VK_CONTROL) < 0);
 
      if (wParam == VK_F1)
@@ -1111,73 +1115,6 @@ void WinApiCalc::EvaluateExpression ()
    // Get syntax flags from calculator
    int scfg = m_pCalculator->issyntax ();
 
-  #ifdef _FORMAT_OUT_
-   // Format output using format_out
-   char strings[20][80];
-   memset (strings, 0, sizeof (strings));
-
-   int n = 0;
-   try
-    {
-     // Call format_out
-     n = m_pCalculator->format_out (m_options, m_binWidth, strings);
-     // Safety check - ensure n is within bounds
-     if (n < 0) n = 0;
-     if (n > 20) n = 20;
-    }
-   catch (...)
-    {
-     // If format_out crashes, provide fallback
-     SetWindowTextA (m_hResultEdit, "Error: Number too large to display");
-     m_resultLines = 1;
-     ResizeWindow ();
-     return;
-    }
-
-   // Build result text
-   std::string result;
-   int lineCount = 0;
-   for (int i = 0; i < n && i < 20; i++)
-    {
-     if (strings[i][0] != '\0') // Skip empty strings
-      {
-       // Check string length to prevent buffer overflow issues
-       size_t len = strnlen (strings[i], 79); // Max 79 chars per string
-       if (len > 0)
-        {
-         if (!result.empty ()) result += "\r\n";
-
-         // Safely append string with length limit
-         result.append (strings[i], len);
-         lineCount++;
-
-         // Prevent result from becoming too large
-         if (result.length () > 4000) // Reasonable limit
-          {
-           result += "\r\n... (output truncated)";
-           lineCount++;
-           break;
-          }
-        }
-      }
-    }
-
-   // If no output from format_out, show simple result
-   if (n == 0 || result.empty ())
-    {
-     char fallback[256];
-     sprintf_s (fallback, "= %Lg", fVal);
-     result    = fallback;
-     lineCount = 1;
-    }
-
-   // Update result lines count for window sizing
-   m_resultLines = lineCount > 0 ? lineCount : 1;
-   if (m_resultLines > 20) m_resultLines = 20; // Increased limit for better display
-
-   SetWindowTextA (m_hResultEdit, result.c_str ());
-#endif // _FORMAT_OUT_
-#ifdef _PRINT_ // Format output using print
    char printBuf[2048];
    int lineCount = 0;
    int prnSize;
@@ -1200,7 +1137,7 @@ void WinApiCalc::EvaluateExpression ()
    if (lineCount) m_resultLines = lineCount;
    else m_resultLines = 1;    // At least 1 line
    SetWindowTextA (m_hResultEdit, printBuf);
-#endif         // _PRINT_
+
    // OutputDebugStringA("EvaluateExpression: result set to '");
    // OutputDebugStringA(result.c_str());
    // OutputDebugStringA("'\n");
@@ -1213,7 +1150,7 @@ void WinApiCalc::EvaluateExpression ()
   }
  catch (...)
   {
-   // Защита от краша при некорректных символах
+   // Crash protection for invalid characters
    SetWindowTextA (m_hResultEdit, "Syntax error: invalid characters");
    m_resultLines = 1;
    ResizeWindow ();
@@ -1247,22 +1184,22 @@ void WinApiCalc::WrapExpressionWith (const char *prefix, const char *suffix)
 {
  if (!m_hExpressionEdit) return;
 
- // Получаем текущее выражение
+ // Get the current expression
  char buffer[2048];
  GetWindowTextA (m_hExpressionEdit, buffer, sizeof (buffer));
 
- // Создаем новое выражение с префиксом и суффиксом
+ // Create a new expression with prefix and suffix
  std::string newExpression = prefix;
  newExpression += buffer;
  newExpression += suffix;
 
- // Устанавливаем новое выражение
+ // Set the new expression
  SetWindowTextA (m_hExpressionEdit, newExpression.c_str ());
 
- // Ставим курсор в конец
+ // Move the cursor to the end
  SendMessageA (m_hExpressionEdit, EM_SETSEL, newExpression.length (), newExpression.length ());
 
- // Обновляем выражение и пересчитываем
+ // Update the expression and recalculate
  OnExpressionChanged ();
 }
 
@@ -1271,7 +1208,7 @@ void WinApiCalc::OnKeyDown (WPARAM key)
  bool ctrlPressed  = (GetKeyState (VK_CONTROL) & 0x8000) != 0;
  bool shiftPressed = (GetKeyState (VK_SHIFT) & 0x8000) != 0;
 
- // Отладочное сообщение
+ // Debug message
  if (key == 'R' && ctrlPressed)
   {
    MessageBoxA (m_hWnd, "Ctrl+R detected!", "Debug", MB_OK);
@@ -1279,18 +1216,18 @@ void WinApiCalc::OnKeyDown (WPARAM key)
 
  if (key == VK_F1)
   {
-   // F1 - открыть помощь
+   // F1 - open help
    MessageBoxA (m_hWnd, "F1 detected!", "Debug", MB_OK);
    ShowHelp ();
   }
  else if (key == VK_HOME && ctrlPressed)
   {
-   // Ctrl+Home - убрать прозрачность и поместить в 100:100
+   // Ctrl+Home - remove transparency and move to 100:100
    MessageBoxA (m_hWnd, "Ctrl+Home detected!", "Debug", MB_OK);
    SetWindowPos (m_hWnd, nullptr, 100, 100, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-   // m_opacity = 255; // Прозрачность отключена
+   // m_opacity = 255; // Transparency disabled
    // SetLayeredWindowAttributes(m_hWnd, 0, m_opacity, LWA_ALPHA);
-   UpdateMenuChecks (); // Обновим отображение в меню
+   UpdateMenuChecks (); // Update menu display
   }
  else if (ctrlPressed)
   {
@@ -1342,13 +1279,13 @@ void WinApiCalc::OnKeyDown (WPARAM key)
   }
  else if (key == VK_ESCAPE)
   {
-   if (m_options & MIN) // Если включен "Esc minimized"
+   if (m_options & MIN) // If "Esc minimized" is enabled
     {
      ShowWindow (m_hWnd, SW_MINIMIZE);
     }
    else
     {
-     // Закрыть приложение
+     // Close the application
      PostMessage (m_hWnd, WM_CLOSE, 0, 0);
     }
   }
@@ -1370,7 +1307,7 @@ void WinApiCalc::UpdateMenuChecks ()
 
  CheckMenuItem (m_hMenu, ID_CALC_CASESENSETIVE,
                 (m_options & UPCASE) ? MF_UNCHECKED
-                                     : MF_CHECKED); // Инверсия: UPCASE=case insensitive
+                                     : MF_CHECKED); // Inversion: UPCASE=case insensitive
  CheckMenuItem (m_hMenu, ID_CALC_FORCEDFLOAT, (m_options & FFLOAT) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_CALC_IMPLICITMUL, (m_options & IMUL) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_CALC_ESCMINIMIZED, (m_options & MIN) ? MF_CHECKED : MF_UNCHECKED);
@@ -1447,15 +1384,15 @@ void WinApiCalc::ToggleOption (int flag)
 
  UpdateMenuChecks ();
  EvaluateExpression ();
- ResizeWindow (); // Пересчитываем размер при изменении опций
+ ResizeWindow (); // Recalculate size when options change
 }
 
 void WinApiCalc::SetBinaryWidth (int width)
 {
  m_binWidth = width;
  UpdateMenuChecks ();
- EvaluateExpression (); // Пересчитываем результат при изменении ширины
- ResizeWindow ();       // Пересчитываем размер при изменении ширины bin
+ EvaluateExpression (); // Recalculate result when binary width changes
+ ResizeWindow ();       // Recalculate size when binary width changes
 }
 
 void WinApiCalc::UpdateLayout ()
@@ -1611,7 +1548,7 @@ int WinApiCalc::CalculateOptimalWidth (int charCount)
 {
  int charWidth = GetCharWidth ();
 
- // Для моноширинного шрифта протестируем реальную ширину строки из 70 символов
+ // For a monospaced font, test the actual width of a 70-character string
  HDC hdc = GetDC (m_hWnd);
  if (!hdc) return charWidth * charCount + 50; // fallback
 
@@ -1621,9 +1558,9 @@ int WinApiCalc::CalculateOptimalWidth (int charCount)
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
- // Тестовая строка из 70 символов (как в format_out)
+ // Test string of 70 characters (as in format_out)
  char testString[80];
- memset (testString, 'W', charCount); // 'W' - один из самых широких символов
+ memset (testString, 'W', charCount); // 'W' - one of the widest characters
  testString[charCount] = '\0';
 
  SIZE textSize;
@@ -1633,9 +1570,9 @@ int WinApiCalc::CalculateOptimalWidth (int charCount)
  DeleteObject (hFont);
  ReleaseDC (m_hWnd, hdc);
 
- // Добавляем запас: реальная ширина + кнопка истории + отступы + скроллбар
- // + внутренние отступы Edit контрола (примерно 6-8 пикселей с каждой стороны)
- // Учитываем внутренние отступы Edit контрола (примерно 2 символа)
+ // Add buffer: actual width + history button + margins + scrollbar
+ // + internal padding of the Edit control (approximately 6-8 pixels on each side)
+ // Consider internal padding of the Edit control (approximately 2 characters)
 
  // For large fonts, add extra margin to prevent text wrapping
  int extraMargin = 0;
@@ -1654,16 +1591,16 @@ int WinApiCalc::CalculateOptimalWidth (int charCount)
  int wrapBuffer = (m_fontSize <= -22) ? 60 : 15; // Much bigger buffer for large fonts
 
  return textSize.cx + 25 - (charWidth * 2) + extraMargin
-        + wrapBuffer; // кнопка минус внутренние отступы плюс доп. отступ плюс буфер против переноса
+        + wrapBuffer; // history button - internal padding + extra margin + buffer against wrapping
 }
 
 void WinApiCalc::UpdateFont ()
 {
- // Удаляем старый шрифт если он есть
+ // Remove old font if it exists
  HFONT hCurrentFont = (HFONT)SendMessage (m_hExpressionEdit, WM_GETFONT, 0, 0);
  if (hCurrentFont) DeleteObject (hCurrentFont);
 
- // Создаем новый шрифт Courier New
+ // Create new Courier New font
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                             DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
@@ -1675,7 +1612,7 @@ void WinApiCalc::UpdateFont ()
    SendMessage (m_hComboBox, WM_SETFONT, (WPARAM)hFont, TRUE);
   }
 
- // Пересчитываем размер окна с новым шрифтом
+ // Recalculate window size with the new font
  ResizeWindow ();
 }
 
@@ -1696,7 +1633,7 @@ int WinApiCalc::CalculateContentBasedWidth ()
  int maxPixelWidth = 0;
 
  {
-  //  измеряем тестовую строку
+  //  Measure the test string
   char fallbackStr[80];
   memset (fallbackStr, 'W', 76);
   fallbackStr[76] = '\0';
@@ -1709,12 +1646,11 @@ int WinApiCalc::CalculateContentBasedWidth ()
  DeleteObject (hFont);
  ReleaseDC (m_hWnd, hdc);
 
- // Если ничего не получили, используем fallback
+ // If nothing was obtained, use fallback
  if (maxPixelWidth == 0) return CalculateOptimalWidth (76);
 
- // Добавляем места для кнопки истории (25px) + отступы + запас на рамку
- // + внутренние отступы Edit контрола (примерно 6-8 пикселей с каждой стороны)
-
+ // Add space for history button (25px) + margins + border
+ // + internal padding of the Edit control (approximately 6-8 pixels on each side)
  // Base calculation with 6% margin for measurement inaccuracies
  // Increased base padding for Wine compatibility
  int baseWidth = maxPixelWidth + (maxPixelWidth * 6 / 100) + 50;
@@ -1742,14 +1678,14 @@ int WinApiCalc::CalculateCurrentResultWidth ()
 {
  if (!m_hResultEdit) return CalculateOptimalWidth (76);
 
- // Получаем текущий текст из поля результата
+ // Get the current text from the result field
  int textLen = GetWindowTextLengthA (m_hResultEdit);
  if (textLen == 0) return CalculateOptimalWidth (76);
 
  char *buffer = new char[textLen + 1];
  GetWindowTextA (m_hResultEdit, buffer, textLen + 1);
 
- // Создаем DC и настраиваем шрифт
+ // Create DC and set up font
  HDC hdc = GetDC (m_hWnd);
  if (!hdc)
   {
@@ -1765,7 +1701,7 @@ int WinApiCalc::CalculateCurrentResultWidth ()
 
  int maxPixelWidth = 0;
 
- // Разбиваем текст на строки и измеряем каждую
+ // Split the text into lines and measure each one
  char *context = nullptr;
  char *line    = strtok_s (buffer, "\r\n", &context);
  while (line)
@@ -1784,12 +1720,11 @@ int WinApiCalc::CalculateCurrentResultWidth ()
  ReleaseDC (m_hWnd, hdc);
  delete[] buffer;
 
- // Если ничего не получили, используем fallback
+ // If nothing was obtained, use fallback
  if (maxPixelWidth == 0) return CalculateOptimalWidth (76);
 
- // Добавляем места для кнопки истории (25px) + отступы + запас на рамку
- // + внутренние отступы Edit контрола (примерно 6-8 пикселей с каждой стороны)
-
+ // Add space for history button (25px) + margins + border
+ // + internal padding of the Edit control (approximately 6-8 pixels on each side)
  // For large fonts, add proportional margin like in CalculateOptimalWidth
  // Increased padding for Wine compatibility (was + 25 - 16)
  int baseWidth = maxPixelWidth + 25 - 16;
@@ -1820,15 +1755,15 @@ void WinApiCalc::OnCtrlR ()
 
 void WinApiCalc::OnCtrlS ()
 {
- // Проверяем PAS style для выбора синтаксиса возведения в степень
+ // Check PAS style for choosing exponentiation syntax
  if (m_options & PAS)
   {
-   // PAS style включен - используем Pascal математический синтаксис ^
+   // PAS style enabled - use Pascal mathematical syntax ^
    WrapExpressionWith ("(", ")^2");
   }
  else
   {
-   // C-style синтаксис **
+   // C-style syntax **
    WrapExpressionWith ("(", ")**2");
   }
 }
@@ -2014,7 +1949,7 @@ void WinApiCalc::ShowVariablesDialog ()
  HDC hdc            = GetDC (m_hWnd);
  HFONT hOldFont     = hFontMeasure ? (HFONT)SelectObject (hdc, hFontMeasure) : nullptr;
  SIZE sz            = { 0, 0 };
- // Формируем строку из maxlen символов 'X' (ширина максимальная для моноширинного)
+ // Form a string of maxlen 'X' characters (maximum width for monospaced font)
  char testStr[256];
  int testLen = (maxlen < 255) ? maxlen : 255;
  for (int i = 0; i < testLen; ++i) testStr[i] = 'X';
@@ -2043,8 +1978,8 @@ void WinApiCalc::ShowVariablesDialog ()
  // Always create edit control with vertical scrollbar, limit height to max 15 lines
  int maxLines  = 15;
  int editLines = (variableCount > maxLines) ? maxLines : displayLines;
- // Добавим +18px к ширине edit-контрола для скроллера
- // Edit control шириной на 6px меньше окна, сдвинут на 3px вправо
+ // Add +18px to the width of the edit control for the scrollbar
+ // Edit control width is 6px less than the window, shifted 3px to the right
  int editX      = 3;
  int editW      = dialogWidth - 20;
  HWND hMemoEdit = CreateWindowExA (0, // No extra styles
@@ -2253,7 +2188,7 @@ void WinApiCalc::AddToHistory (const std::string &expression)
 
 void WinApiCalc::LoadHistoryItem (int index)
 {
- // Проверяем валидность индекса
+ // Check the validity of the index
  if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
   {
    return;
@@ -2271,13 +2206,13 @@ void WinApiCalc::LoadHistoryItem (int index)
  // OutputDebugStringA(expression.c_str());
  // OutputDebugStringA("'\n");
 
- // Проверяем, что выражение не пустое
+ // Check if the expression is empty
  if (expression.empty ())
   {
    return;
   }
 
- // Устанавливаем выражение в поле ввода
+ // Set the expression in the input field
  m_isUpdatingHistory = true;
  SetWindowTextA (m_hExpressionEdit, expression.c_str ());
  m_isUpdatingHistory = false;
@@ -2497,24 +2432,24 @@ void WinApiCalc::ClearHistoryCombo ()
 
 void WinApiCalc::ResizeWindow ()
 {
- if (!m_hWnd) return; // Защита от вызова до инициализации окна
+ if (!m_hWnd) return; // Protect against calling before window initialization
 
- // Рассчитываем ширину на основе текущего результата, если он есть, иначе на основе настроек
+ // Calculate width based on current result if available, otherwise based on settings
  int clientWidth;
  try
   {
    if (m_hResultEdit && GetWindowTextLengthA (m_hResultEdit) > 0)
     {
-     clientWidth = CalculateCurrentResultWidth (); // Используем реальный результат
+     clientWidth = CalculateCurrentResultWidth (); // Use the actual result
     }
    else
     {
-     clientWidth = CalculateContentBasedWidth (); // Используем тестовые данные
+     clientWidth = CalculateContentBasedWidth (); // Use test data
     }
   }
  catch (...)
   {
-   // Fallback на минимальную ширину в случае ошибки
+   // Fallback to minimum width in case of error
    clientWidth = ScaleDPI (WINDOW_MIN_WIDTH);
   }
 
@@ -2523,7 +2458,7 @@ void WinApiCalc::ResizeWindow ()
  int rowHeight   = GetControlHeight ();
  int inputHeight = rowHeight; // Use safe GetControlHeight
 
- // Проверяем, показывается ли история - для истории нужно минимум 5 строк
+ // Check if history is displayed - for history, at least 5 lines are needed
  // With ComboBox, the dropdown floats, so we don't need to reserve space in the window.
  int displayLines = m_resultLines;
 
@@ -2537,9 +2472,9 @@ void WinApiCalc::ResizeWindow ()
  // Scale gap with font size: smaller gap for smaller fonts, larger for bigger
  int gap = ScaleDPI (max (2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
 
- // Адаптивный запас: уменьшённый и более предсказуемый padding для
- // малых чисел строк, чтобы не оставлять лишнюю пустую строку в результате.
- // Для больших результатов оставляем расширенный запас для защиты от обрезания.
+ // Adaptive padding: reduced and more predictable padding for
+ // small numbers of lines to avoid leaving extra blank lines in the result.
+ // For larger results, leave extended padding to prevent clipping.
  // Use a small, scaled padding instead of large multi-row padding to avoid
  // visible blank lines under the last result line. Scrollbars handle overflow.
  int padding = ScaleDPI (4);
@@ -2649,8 +2584,8 @@ void WinApiCalc::ResizeWindow ()
 
  RECT rect = { 0, 0, clientWidth, clientHeight };
 
- // Убедимся, что стиль окна правильный (без изменения размеров)
- style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX); // Убираем возможность ресайза
+ // Ensure the window style is correct (without resizing)
+ style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX); // Remove the ability to resize
  style |= (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
  SetWindowLong (m_hWnd, GWL_STYLE, style);
 
@@ -2689,29 +2624,29 @@ void WinApiCalc::ResizeWindow ()
 
 void WinApiCalc::ShowHelp ()
 {
- // Сначала пытаемся открыть CHM файл
+ // First, try to open the CHM file
  char helpPath[MAX_PATH];
 
- // Получаем путь к исполняемому файлу
+ // Get the path to the executable
  if (GetModuleFileNameA (nullptr, helpPath, MAX_PATH) != 0)
   {
-   // Заменяем имя exe на chm
+   // Replace the exe name with chm
    char *lastSlash = strrchr (helpPath, '\\');
    if (lastSlash)
     {
      strcpy_s (lastSlash + 1, MAX_PATH - (lastSlash + 1 - helpPath), "fcalc.chm");
 
-     // Пробуем открыть CHM файл
+     // Try to open the CHM file
      HWND helpWindow = HtmlHelpA (m_hWnd, helpPath, HH_DISPLAY_TOPIC, 0);
      if (helpWindow != nullptr)
       {
-       // CHM файл открылся успешно
+       // CHM file opened successfully
        return;
       }
     }
   }
 
- // Если CHM файл не удалось открыть, показываем MessageBox
+ // If the CHM file could not be opened, show a MessageBox
  MessageBoxA (m_hWnd,
               "Calculator Help\n\n"
               "Enter mathematical expressions in the input field.\n"
@@ -2782,7 +2717,7 @@ void WinApiCalc::SetFontSize (int size)
   }
 }
 
-// Pseudo-functions implementation - статические C-функции
+// Pseudo-functions implementation - static C-functions
 static long double MenuFunction (long double x)
 {
  // Safety check: ensure UI is fully initialized

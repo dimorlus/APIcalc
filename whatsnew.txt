@@ -1,0 +1,15 @@
+10.02.26 (2.09)
+* Internal changes (comments translated to English), obsolet code removed.
+* KB -> KiB changed in the Computing output format
++ KiB added to the Computing input format (KB also possible)
++ Added postfixes of order Q, R, q, r to engineering (scientific) formatb help file supplemented.
+* The number reading code has been rewritten to be more understandable.
+* Duplicate code formatting the result has been removed. Now, everything is handled by one function 
+  (instead of two), and when making corrections or additions, you only need to change one function, 
+  not two as before. The output itself has become more compact.
+- The Force float option has been fixed, and the Auto option has been removed (it didn't do anything anyway).
++ Added the 75F format for temperature in Fahrenheit (and the frh(75) function converting Fahrenheit to Celsius). 
++ Temperature formatting has been added for output and input in Fahrenheit.
++ Added display of complex numbers in polar coordinates |modulus|(`degrees 'minutes 'seconds)
++ Now, for engineering and normalized representations of complex numbers, the modulus order is checked, and the 
+  real and imaginary parts are normalized based on it.

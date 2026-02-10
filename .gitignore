@@ -82,4 +82,4 @@ ccalc/obj
 # !x64/Release/fcalc.exe
 # !Release/fcalc.exe
 *.aps
-Setup/
+Setup/*.exe

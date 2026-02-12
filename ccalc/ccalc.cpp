@@ -18,10 +18,10 @@ ccalc_config::ccalc_config (uint32_t dconf)
 
 bool ccalc_config::parse_single_option (const char *opt)
 {
- // Пропускаем начальный '/'
+ // Skip initial '/'
  if (*opt == '/') opt++;
 
- // Извлекаем имя опции
+ // Extract option name
  char name[32];
  int i = 0;
  while (*opt && *opt != '+' && *opt != '-' && *opt != '=' && i < 31)
@@ -30,7 +30,7 @@ bool ccalc_config::parse_single_option (const char *opt)
   }
  name[i] = '\0';
 
- // Специальная обработка для BW
+ // Special handling for BW
  if (strcmp (name, "BW") == 0)
   {
    if (*opt == '=')
@@ -41,7 +41,7 @@ bool ccalc_config::parse_single_option (const char *opt)
    return false;
   }
 
- // Определяем действие (+/-)
+ // Determine action (+/-)
  bool enable = true;
  if (*opt == '+')
   enable = true;
@@ -50,14 +50,14 @@ bool ccalc_config::parse_single_option (const char *opt)
  else
   return false;
 
- // Ищем опцию в таблице
+ // Search for the option in the table
  for (int j = 0; all_options[j].name != NULL; j++)
   {
    if (strcmp (name, all_options[j].name) == 0)
     {
      int flag = all_options[j].flag;
 
-     // Применяем флаг
+     // Apply the flag
      if (enable)
       {
        opts.calc_flags |= flag;
@@ -79,36 +79,36 @@ int ccalc_config::parse_cmdline_options (char *cmdline)
  int first_option_pos = -1;
  char *p              = cmdline;
 
- // Ищем первую опцию (начинается с /)
+ // Search for the first option (starts with /)
  while (*p)
   {
-   // Пропускаем пробелы
+   // Skip whitespace
    while (*p && isspace (*p)) p++;
    if (!*p) break;
 
    if (*p == '/')
     {
-     // Нашли первую опцию
+     // Found the first option
      first_option_pos = (int)(p - cmdline);
      break;
     }
    else
     {
-     // Не опция - пропускаем до следующего пробела
+     // Not an option - skip to the next whitespace
      while (*p && !isspace (*p)) p++;
     }
   }
 
- // Если нашли опции - обрабатываем их
+ // If options were found - process them
  if (first_option_pos >= 0)
   {
-   // Используем scan_opt для парсинга всех опций
+   // Use scan_opt to parse all options
    opts.calc_flags = scan_opt (cmdline + first_option_pos, opts.calc_flags, &opts.binary_width);
 
-   // Обрезаем строку (убираем опции)
+   // Trim the string (remove options)
    cmdline[first_option_pos] = '\0';
 
-   // Убираем trailing пробелы
+   // Remove trailing whitespace
    int len = first_option_pos - 1;
    while (len >= 0 && isspace (cmdline[len])) cmdline[len--] = '\0';
   }
@@ -126,47 +126,47 @@ int32_t scan_opt (char *str, int32_t initial_opts, int *binwide)
  l = 0;
  while (str[l])
   {
-   // Пропускаем whitespace
+   // Skip whitespace
    while (str[l] && (str[l] == ' ' || str[l] == '\t' || str[l] == '\r' || str[l] == '\n')) l++;
 
    if (!str[l]) break;
 
-   // Обработка комментариев
+   // Handle comments
    if (str[l] == ';' || str[l] == '#')
     {
-     // Пропускаем все до конца строки
+     // Skip to the end of the line
      while (str[l] && str[l] != '\n') l++;
      continue;
     }
 
-   // Ищем опцию
+   // Search for an option
    if (str[l] != '/')
     {
      l++;
      continue;
     }
 
-   l++; // Пропускаем '/'
+   l++; // Skip '/'
 
-   // Проверяем на BW=n
+   // Check for BW=n
    if ((str[l] == 'B' || str[l] == 'b') && (str[l + 1] == 'W' || str[l + 1] == 'w')
        && str[l + 2] == '=')
     {
      l += 3;
      if (binwide) *binwide = atoi (&str[l]);
-     // Пропускаем цифры
+     // Skip digits
      while (str[l] >= '0' && str[l] <= '9') l++;
      continue;
     }
 
-   // Ищем совпадение с опцией
+   // Search for a matching option
    bool found = false;
-   for (i = 0; i < OPTS - 1; i++) // -1 чтобы не проверять NULL sentinel
+   for (i = 0; i < OPTS - 1; i++) // -1 to avoid checking NULL sentinel
     {
      j = l;
      k = 0;
 
-     // Сравниваем имя опции
+     // Compare option name
      while (all_options[i].name[k])
       {
        c = str[j];
@@ -179,13 +179,13 @@ int32_t scan_opt (char *str, int32_t initial_opts, int *binwide)
        k++;
       }
 
-     // Проверяем, что имя совпало полностью
+     // Check if the name matched completely
      if (all_options[i].name[k] == '\0')
       {
        c = str[j];
        if (c == '+' || c == '-')
         {
-         // Нашли опцию!
+         // Found the option!
          if (c == '+')
           opts |= all_options[i].flag;
          else
@@ -200,7 +200,7 @@ int32_t scan_opt (char *str, int32_t initial_opts, int *binwide)
 
    if (!found)
     {
-     // Неизвестная опция - пропускаем до whitespace
+     // Unknown option - skip to whitespace
      while (str[l] && str[l] != ' ' && str[l] != '\t' && str[l] != '\r' && str[l] != '\n'
             && str[l] != ';' && str[l] != '#')
       l++;
@@ -230,7 +230,7 @@ void print_options (int32_t flags, int binary_width)
 {
  int count = 0;
 
- // Печатаем все опции из таблицы
+ // Print all options from the table
  for (int i = 0; all_options[i].name != NULL; i++)
   {
    if (flags & all_options[i].flag)
@@ -245,7 +245,7 @@ void print_options (int32_t flags, int binary_width)
     std::cout << " ";
   }
 
- // Печатаем binary width
+ // Print binary width
  std::cout << "/BW=" << binary_width;
 
  std::cout << std::endl;
@@ -280,7 +280,7 @@ float__t fhelp (float__t x)
    show_options_help ();
    break;
   default:
-   // Показываем все разделы
+   // Show all sections
    show_help_overview ();
    std::cout << std::endl << std::endl;
    show_help_functions ();
@@ -354,45 +354,45 @@ void load_user_constants (calculator &calc)
 
 int main ()
 {
- // Получаем исходную командную строку
+ // Get the original command line
  char *cmdline = GetCommandLineA ();
 
- // Пропускаем имя программы
- // Может быть в кавычках: "c:\path\ccalc.exe" args
- // Или без кавычек: c:\path\ccalc.exe args
+ // Skip the program name
+ // It may be in quotes: "c:\path\ccalc.exe" args
+ // Or without quotes: c:\path\ccalc.exe args
  bool in_quotes = false;
  if (*cmdline == '"')
   {
    in_quotes = true;
-   cmdline++; // Пропускаем открывающую кавычку
+   cmdline++; // Skip the opening quote
   }
 
- // Пропускаем имя программы
+ // Skip the program name
  while (*cmdline && (in_quotes ? (*cmdline != '"') : !isspace (*cmdline))) cmdline++;
 
- if (in_quotes && *cmdline == '"') cmdline++; // Пропускаем закрывающую кавычку
+ if (in_quotes && *cmdline == '"') cmdline++; // Skip the closing quote
 
- // Пропускаем пробелы после имени программы
+ // Skip spaces after the program name
  while (*cmdline && isspace (*cmdline)) cmdline++;
 
- // Если нет аргументов - показываем usage
+ // If there are no arguments, show usage
  if (*cmdline == '\0')
   {
    show_usage ();
    return 0;
   }
 
- // Загружаем конфигурацию
- ccalc_config config (PAS + FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + fBIN + DAT + DEG
+ // Load configuration
+ ccalc_config config (PAS + FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + FBIN + DAT + DEG
                       + STR + FRC + FRI);
 
- // Находим путь к каталогу программы
+ // Find the program directory path
  char exe_path[MAX_PATH];
  GetModuleFileNameA (NULL, exe_path, MAX_PATH);
  char *last_slash = strrchr (exe_path, '\\');
  if (last_slash) *(last_slash + 1) = '\0';
 
- // Формируем путь к файлу конфигурации
+ // Form the path to the configuration file
  char config_path[MAX_PATH];
  strcpy_s (config_path, sizeof (config_path), exe_path);
  strcat_s (config_path, sizeof (config_path), "ccalc.cfg");
@@ -400,18 +400,18 @@ int main ()
  config.load_config (config_path);
 
 
- // Копируем в изменяемый буфер
+ // Copy to a mutable buffer
  char expression[max_expression_length];
  strncpy_s (expression, sizeof (expression), cmdline, _TRUNCATE);
 
- // Убираем кавычки вокруг выражения (если есть)
+ // Remove quotes around the expression (if any)
  char *expr_ptr  = expression;
  size_t expr_len = strlen (expr_ptr);
 
- // Убираем начальные пробелы
+ // Remove leading spaces
  while (*expr_ptr && isspace (*expr_ptr)) expr_ptr++;
 
- // Если выражение начинается и заканчивается кавычками - убираем их
+ // If the expression starts and ends with quotes, remove them
  expr_len = strlen (expr_ptr);
  if (expr_len >= 2 && expr_ptr[0] == '"' && expr_ptr[expr_len - 1] == '"')
   {
@@ -420,16 +420,16 @@ int main ()
    expr_len -= 2;
   }
 
- // Копируем обратно в начало буфера если нужно
+ // Copy back to the beginning of the buffer if needed  
  if (expr_ptr != expression)
   {
    memmove (expression, expr_ptr, strlen (expr_ptr) + 1);
   }
 
- // Парсим опции и обрезаем строку
+ // Parse options and trim the string
  config.parse_cmdline_options (expression);
 
- // Проверяем на пустое выражение
+ // Check for empty expression
  expr_len = strlen (expression);
  while (expr_len > 0 && isspace (expression[expr_len - 1])) expression[--expr_len] = '\0';
 
@@ -439,7 +439,7 @@ int main ()
    return 1;
   }
 
- // Создаём калькулятор
+ // Create the calculator
  calculator calc (config.get_options ().calc_flags);
 
  calc.addfn ("help", (void *)(float__t (*) (float__t))fhelp);
@@ -451,7 +451,7 @@ int main ()
    return 1;
   }
 
- // Вычисляем
+ // Evaluate
  __int64 iVal    = 0;
  float__t imVal  = 0;
  float__t result = calc.evaluate (expression, &iVal, &imVal);

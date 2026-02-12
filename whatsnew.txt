@@ -1,15 +1,97 @@
+- Fixed a bug with recognizing 'i' or 'j' at the beginning of a name during implicit multiplication.
+
 10.02.26 (2.09)
 * Internal changes (comments translated to English), obsolet code removed.
 * KB -> KiB changed in the Computing output format
-+ KiB added to the Computing input format (KB also possible)
-+ Added postfixes of order Q, R, q, r to engineering (scientific) formatb help file supplemented.
-* The number reading code has been rewritten to be more understandable.
 * Duplicate code formatting the result has been removed. Now, everything is handled by one function 
   (instead of two), and when making corrections or additions, you only need to change one function, 
   not two as before. The output itself has become more compact.
+* A BCB6 compilation option has been added to the calculator engine.  
+
+08.02.26 (2.086)  
++ Added postfixes of order Q, R, q, r to engineering (scientific) formatb help file supplemented.
++ KiB added to the Computing input format (KB also possible)
+* Transition to a simpler implementation of the output function.
+
+07.02.26 (2.085)  
 - The Force float option has been fixed, and the Auto option has been removed (it didn't do anything anyway).
-+ Added the 75F format for temperature in Fahrenheit (and the frh(75) function converting Fahrenheit to Celsius). 
-+ Temperature formatting has been added for output and input in Fahrenheit.
++ cmplx, cpx added as synonim for cplx (cpx(1, 2)) function.
+* SCF option removed CPX option added.
+* The number reading code has been rewritten to be more understandable.
+
+05.02.26 (2.082)  
 + Added display of complex numbers in polar coordinates |modulus|(`degrees 'minutes 'seconds)
-+ Now, for engineering and normalized representations of complex numbers, the modulus order is checked, and the 
++ Only relevant output formats are left for complex results.
+
+26.01.26 (2.080)    
++ frh (frh(75)) fuction converting Fahrenheit to Celsius added.
+ 
+22.01.26 (2.077)    
++ Added the 75F format for temperature in Fahrenheit. 
++ Temperature formatting has been added for output and input in Fahrenheit.
+
+04.01.26 (2.076)    
+- Load user consts errors handling has been fixed.
+
+02.01.26 (2.075)    
++ const and var (const("name", value), var("name", value)) functions added.
++ ;; operator for comments (;; Comment) added.
++ Load user consts from consts.txt functionality added.
+
+31.12.25 (2.073)
++ A lot of constants for unit conversion added. The Help section now includes descriptions of them.
++ Added gon and turns to the Degrees (angular) output format.
++ Date time input format :w (weeks) added.
+
+30.12.25 (2.072)
+* Optimization of the output formatting function.
++ Now, for engineering and normalized formats of complex numbers, the modulus order is checked, and the 
   real and imaginary parts are normalized based on it.
+
+29.12.25 (2.069)
++ Added 1+i2 format for complex numbers in addition to 1+2i
+- Added stack clearing before a new calculation to eliminate the influence of the previous one.
+ 
+23.12.25 (2.067)
+- Fixed a bug with an extra dot in a number.
+
+22.12.25 (2.066)
+* The source text has been reformatted.
+
+17.12.25 (2.063)
+* Rainbow colors wavelength constants added
+- Fixed a bug in working with strings.
+
+16.12.25 (2.061)
+
+15.12.25 (2.060)
++ wrgb, trgb, winf functions added.
+
+14.12.25 (2.056)
+- All predefined variables are now constants (trying to redefine them will result in an error).
+
+12.12.25 (2.054)
++ Physical constants (CODATA 2018) added.
+
+11.12.25 (2.051)
++ Added new output function for CLI version.
+- Fixed a bug (memory leak) in working with strings.
+- Fixed a bug with non-Latin characters.
+- Fixed a bug with Implicit multiplication.
+- Fixed a bug under Wine fonts drawing.
+
+27.11.25 (2.045)
++ ceil, floor functions added.
++ Saved last expression to history now.
+
+26.11.25 (2.044)
++ Implicit multiplication added.
+
+23.11.25 (2.043)
+* Changing the History Window to a ComboBox based.
+
+06.11.25 (2.042)
++ Start of version control.
++ Added complex numbers.
+
+09.10.25 (2.038)

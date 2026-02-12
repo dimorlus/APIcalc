@@ -9,41 +9,8 @@ struct option_def
     int flag;            // Битовая маска
 };
 
-//#define PAS     (1<<0)  // (RW) Pascal assingment and comparison style (:= =) <-> (= ==)
-//#define SCI     (1<<1)  // (WO) Scientific numbers format (2k == 2000)
-//#define UPCASE  (1<<2)  // (WO) Case insensetive variables
-//#define UTMP    (1<<3)  // (WO) Using $n for temp
-//#define FFLOAT  (1<<4)  // (WO) Forced float
-//
-//#define DEG     (1<<5)  // (RO) Degrees format found
-//#define SCF     (1<<6)  // (RO) Scientific (6.8k) format found
-//#define ENG     (1<<7)  // (RO) Engineering (6k8) format found
-//#define STR     (1<<8)  // (RO) String format found
-//#define HEX     (1<<9)  // (RO) Hex format found
-//#define OCT     (1<<10) // (RO) Octal format found
-//#define fBIN    (1<<11) // (RO) Binary format found
-//#define FBIN    (1<<11) // (RO) Binary format found
-//#define DAT     (1<<12) // (RO) Date time format found
-//#define CHR     (1<<13) // (RO) Char format found
-//#define WCH     (1<<14) // (RO) WChar format found
-//#define ESC     (1<<15) // (RO) Escape format found
-//#define CMP     (1<<16) // (RO) Computing format found
-//
-//#define NRM     (1<<17) // (UI) Normalized output
-//#define IGR     (1<<18) // (UI) Integer output
-//#define UNS     (1<<19) // (UI) Unsigned output
-//#define ALL     (1<<20) // (UI) All outputs
-//#define MIN     (1<<21) // (UI) Esc minimized feature
-//#define MNU     (1<<22) // (UI) Show/hide menu feature
-//#define UTM     (1<<23) // (RO) Unix time
-//#define FRC     (1<<24) // (UI) Fraction output
-//#define FRI     (1<<25) // (UI) Fraction inch output
-//#define AUTO    (1<<26) // (UI) Auto output
-//#define AUT     (1<<26) // (UI) Auto output
-//#define TOP     (1<<27) // (UI) Always on top
-//#define IMUL	  (1<<28) // (WO) Implicit multiplication
 
-// Определение всех поддерживаемых опций
+// All supported options definitions
 static const option_def all_options[] = 
 {
     { "PAS",    PAS    },
@@ -87,8 +54,8 @@ static const option_def all_options[] =
 
 struct ccalc_options
 {
-    int calc_flags;     // Флаги для калькулятора и вывода
-    int binary_width;   // Ширина для двоичного формата
+    int calc_flags;     // Flags for calculator and output
+    int binary_width;   // Width for binary format
     
     ccalc_options()
     {

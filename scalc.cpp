@@ -1999,9 +1999,10 @@ t_operator calculator::scan (bool operand, bool percent)
       v_stack[v_sp].tag = tvCOMPLEX;
      }
     if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
-     {
+     { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
       fpos = sfpos;
       fval = sfval;
+      v_stack[v_sp].tag = tvFLOAT;
      }
      
     if (v_stack[v_sp].tag == tvCOMPLEX)

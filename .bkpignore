@@ -62,6 +62,14 @@
 *.dbk
 GLOBAL.adu
 *.$$$
+*.iobj
+*.pch
+*.o
+*.log
+*.ipdb
+*.idb
+*.ilk
+*.tlog
 desktop.*
 vc_redist.*
 log.txt*

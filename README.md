@@ -4,12 +4,25 @@
 
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, and complex numbers.
 
+This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
+VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 
+and Ccalc sources that have been heavily reworked since then.
+//-< CCALC.H >-----------------------------------------------*--------*
+// Ccalc              Version 1.01       (c) 1998  GARRET    *     ?  *
+// (C expression command line calculator)                    *   /\|  *
+//                                                           *  /  \  *
+//                  Created:     20-Oct-98    K.A. Knizhnik  * / [] \ *
+//                  Last update: 20-Oct-98    K.A. Knizhnik  * GARRET *
+//-----------------------------------------------------------*--------*`
+
 ## Two Versions Available
 
 ### 📊 GUI Version (WinApiCalc / fcalc.exe)
+
 Windows desktop application with native interface, history dropdown, and real-time calculation.
 
 ### 💻 CLI Version (ccalc.exe)
+
 Command-line calculator for scripts, automation, and terminal use.
 
 ## Features
@@ -94,6 +107,7 @@ ccalc "help(7)"                 # Options
 #### Physical Constants (CODATA 2018)
 
 **Fundamental:**
+
 - **c0**: Speed of light in vacuum (299792458 m/s)
 - **hp**: Planck constant (6.62607015e-34 J·s)
 - **hb**: Reduced Planck constant ℏ (1.054571817e-34 J·s)
@@ -103,11 +117,13 @@ ccalc "help(7)"                 # Options
 - **rg**: Universal gas constant (8.314462618 J/(mol·K))
 
 **Electromagnetic:**
+
 - **e0**: Electric constant (8.8541878128e-12 F/m)
 - **u0**: Magnetic constant (1.25663706212e-6 H/m)
 - **z0**: Impedance of vacuum (376.730313668 Ω)
 
 **Particle:**
+
 - **qe**: Elementary charge (1.602176634e-19 C)
 - **me**: Electron mass (9.1093837015e-31 kg)
 - **mp**: Proton mass (1.67262192369e-27 kg)
@@ -116,21 +132,25 @@ ccalc "help(7)"                 # Options
 - **a0**: Bohr radius (5.29177210903e-11 m)
 
 **Astronomical:**
+
 - **au**: Astronomical unit (1.495978707e11 m)
 - **ly**: Light year (9.4607304725808e15 m)
 - **pc**: Parsec (3.0856775814914e16 m)
 
 **Additional:**
+
 - **ry**: Rydberg constant (10973731.568160 m⁻¹)
 - **sb**: Stefan-Boltzmann constant (5.670374419e-8 W/(m²·K⁴))
 
 **Integer Limits:**
+
 - **max32**, **maxint**: Maximum signed 32-bit (2147483647)
 - **maxu32**, **maxuint**: Maximum unsigned 32-bit (4294967295)
 - **max64**, **maxlong**: Maximum signed 64-bit
 - **maxu64**, **maxulong**: Maximum unsigned 64-bit
 
 **System:**
+
 - **version**: Calculator version
 - **timezone**: System timezone offset (hours)
 - **daylight**: Daylight saving time flag
@@ -194,17 +214,21 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 **Important notes about scientific suffixes and imaginary unit:**
 
 - This feature is **disabled by default** — enable it via **Calc → Implicit multiplication** menu.
+
 - **Scientific suffixes have highest priority**: Single-letter suffixes (k, M, G, m, u, n, **p**, f, a, etc.) are recognized first if followed by space, operator, or end of expression.
+  
   - `3k` → `3×10³` = 3000 (kilo)
   - `3p` → `3×10⁻¹²` = 3e-12 (pico)
   - `3p+5` → `3×10⁻¹² + 5` (pico suffix applies)
-  
+
 - **Lowercase `i` and `j` are reserved for imaginary unit**: They are recognized **after** scientific suffixes.
+  
   - `5i` → `0+5i` (imaginary number, not `5 * i` variable)
   - `5j` → `0+5j` (alternative imaginary unit notation)
   - `3pi` → `0+3e-12i` (interpreted as 3 pico + imaginary unit `i`)
-  
+
 - **Use uppercase for variables to avoid conflicts**:
+  
   - `3PI` → `3 * PI` ≈ 9.42 (implicit multiplication with PI constant)
   - `3pI` → `3 * pI` (also works: `p` followed by uppercase `I` avoids pico suffix)
   - `5I` → `5 * I` (uppercase `I` as variable, not imaginary unit)
@@ -286,15 +310,18 @@ Both projects share the same calculation engine (`scalc.cpp`, `sfmts.cpp`, `sfun
 The application uses a clean separation of concerns:
 
 - **Common calculation engine** (shared by both GUI and CLI):
+  
   - **scalc.cpp/h**: Mathematical expression parser and evaluator
   - **sfmts.cpp/h**: Number format conversion and output
   - **sfunc.cpp/h**: Mathematical functions implementation
 
 - **GUI version** (WinApiCalc):
+  
   - **WinApiCalc.cpp/h**: Main application window and UI management
   - **Resources**: Menus, dialogs, and accelerators
 
 - **CLI version** (ccalc):
+  
   - **ccalc.cpp/h**: Command-line interface and argument parsing
   - **help.cpp**: Built-in help system
 

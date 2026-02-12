@@ -7,13 +7,16 @@ A scientific calculator with both **GUI** and **CLI** versions, built using pure
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
 VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 
 and Ccalc sources that have been heavily reworked since then.
+
+```
 //-< CCALC.H >-----------------------------------------------*--------*
 // Ccalc              Version 1.01       (c) 1998  GARRET    *     ?  *
 // (C expression command line calculator)                    *   /\|  *
 //                                                           *  /  \  *
 //                  Created:     20-Oct-98    K.A. Knizhnik  * / [] \ *
 //                  Last update: 20-Oct-98    K.A. Knizhnik  * GARRET *
-//-----------------------------------------------------------*--------*`
+//-----------------------------------------------------------*--------*
+```
 
 ## Two Versions Available
 

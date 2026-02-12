@@ -91,8 +91,26 @@
 23.11.25 (2.043)
 * Changing the History Window to a ComboBox based.
 
-06.11.25 (2.042)
-+ Start of version control.
-+ Added complex numbers.
-
 09.10.25 (2.038)
++ Start of automatic version control.
+
+06.10.25 (2.037)
++ pol fuction added.
+- Many bugs have been fixed.
+
+02.10.25 (2.02)
++ Start of version numbering.
+
+01.10.25 
++ Added complex numbers support.
+
+This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
+VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 
+and Ccalc sources that have been heavily reworked since then.
+//-< CCALC.H >-------------------------------------------------------*--------*
+// Ccalc                      Version 1.01       (c) 1998  GARRET    *     ?  *
+// (C expression command line calculator)                            *   /\|  *
+//                                                                   *  /  \  *
+//                          Created:     20-Oct-98    K.A. Knizhnik  * / [] \ *
+//                          Last update: 20-Oct-98    K.A. Knizhnik  * GARRET *
+//-------------------------------------------------------------------*--------*

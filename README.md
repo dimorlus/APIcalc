@@ -5,7 +5,7 @@
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, and complex numbers.
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
-VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 
+VCL (BCB6) [fcalc](https://github.com/dimorlus/fcalc), which, in turn, is based on DOS programs 
 and Ccalc sources that have been heavily reworked since then.
 
 ```

@@ -1,3 +1,4 @@
+12.02.26 (2.092)
 - Fixed a bug with recognizing 'i' or 'j' at the beginning of a name during implicit multiplication.
 
 10.02.26 (2.09)

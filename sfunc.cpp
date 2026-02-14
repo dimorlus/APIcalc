@@ -1153,9 +1153,9 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
       }
      n++;
     }
-   // else dst += sprintf(dst, fmt);
+   else dst += sprintf(dst, pfmt);
   }
- while (*sfmt && (i < STRBUF) && (n < args));
+ while (*sfmt && (i < STRBUF) && (n <= args));
  return dst - dest;
 }
 

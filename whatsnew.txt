@@ -1,3 +1,8 @@
+14.02.26 (2.093)
+- Fixed a bug with ; operator for string operands.
+- Fixed bug with prn and winf functions.
+- Fixed string return functionality.
+
 12.02.26 (2.092)
 - Fixed a bug with recognizing 'i' or 'j' at the beginning of a name during implicit multiplication.
 

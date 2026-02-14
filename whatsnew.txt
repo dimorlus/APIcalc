@@ -1,15 +1,21 @@
+14.02.26 (2.094)
+* Cosmetic changes in sources.
+
 14.02.26 (2.093)
 - Fixed a bug with ; operator for string operands.
-- Fixed bug with prn and winf functions.
+- Fixed bug with 'prn' and 'winf' functions.
 - Fixed string return functionality.
+- Now 'L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C));Rw:=sqrt(L/C);prn("f:%SHz, Rw:%SOhm",f,Rw);;resonant frequency' works properly.
+  Returns 'f:297.6kHz, Rw:243.1Ohm' as string result.
 
 12.02.26 (2.092)
 - Fixed a bug with recognizing 'i' or 'j' at the beginning of a name during implicit multiplication.
+- Now 'ik:=3;2ik' result 6, not 0+i6 as before.
 
 10.02.26 (2.09)
-* Internal changes (comments translated to English), obsolet code removed.
+* Internal changes (comments translated to English), obsolete code removed.
 * KB -> KiB changed in the Computing output format
-* Duplicate code formatting the result has been removed. Now, everything is handled by one function 
+* Duplicate result code formatting function has been removed. Now, everything is handled by one function 
   (instead of two), and when making corrections or additions, you only need to change one function, 
   not two as before. The output itself has become more compact.
 * A BCB6 compilation option has been added to the calculator engine.  
@@ -21,7 +27,7 @@
 
 07.02.26 (2.085)  
 - The Force float option has been fixed, and the Auto option has been removed (it didn't do anything anyway).
-+ cmplx, cpx added as synonim for cplx (cpx(1, 2)) function.
++ 'cmplx', 'cpx' added as synonym for 'cplx' (cpx(1, 2)) function.
 * SCF option removed CPX option added.
 * The number reading code has been rewritten to be more understandable.
 
@@ -30,19 +36,19 @@
 + Only relevant output formats are left for complex results.
 
 26.01.26 (2.080)    
-+ frh (frh(75)) fuction converting Fahrenheit to Celsius added.
++ 'frh' (frh(75)) function converting Fahrenheit to Celsius added.
  
 22.01.26 (2.077)    
 + Added the 75F format for temperature in Fahrenheit. 
-+ Temperature formatting has been added for output and input in Fahrenheit.
++ Temperature format has been added for output and input in Fahrenheit.
 
 04.01.26 (2.076)    
-- Load user consts errors handling has been fixed.
+- Load user constants errors handling has been fixed.
 
 02.01.26 (2.075)    
-+ const and var (const("name", value), var("name", value)) functions added.
++ 'const' and 'var' (const("name", value), var("name", value)) functions added.
 + ;; operator for comments (;; Comment) added.
-+ Load user consts from consts.txt functionality added.
++ Load user constants from consts.txt functionality added.
 
 31.12.25 (2.073)
 + A lot of constants for unit conversion added. The Help section now includes descriptions of them.
@@ -71,7 +77,7 @@
 16.12.25 (2.061)
 
 15.12.25 (2.060)
-+ wrgb, trgb, winf functions added.
++ 'wrgb', 'trgb', 'winf' functions added.
 
 14.12.25 (2.056)
 - All predefined variables are now constants (trying to redefine them will result in an error).
@@ -87,7 +93,7 @@
 - Fixed a bug under Wine fonts drawing.
 
 27.11.25 (2.045)
-+ ceil, floor functions added.
++ 'ceil', 'floor' functions added.
 + Saved last expression to history now.
 
 26.11.25 (2.044)
@@ -100,7 +106,7 @@
 + Start of automatic version control.
 
 06.10.25 (2.037)
-+ pol fuction added.
++ 'pol' function added.
 - Many bugs have been fixed.
 
 02.10.25 (2.02)
@@ -111,7 +117,7 @@
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
 VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 
-and Ccalc sources that have been heavily reworked since then.
+and Ccalc sources (http://www.garret.ru/ccalc.zip) that have been heavily reworked since then.
 //-< CCALC.H >-------------------------------------------------------*--------*
 // Ccalc                      Version 1.01       (c) 1998  GARRET    *     ?  *
 // (C expression command line calculator)                            *   /\|  *

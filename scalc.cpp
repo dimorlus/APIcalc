@@ -49,8 +49,8 @@
 #define M_PI_2l 1.5707963267948966192313216916398
 #define M_E     2.7182818284590452353602874713527
 #define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
-#pragma warning(disable : 4996)
-#pragma warning(disable : 4244)
+#pragma warning(disable : 4996) // 'function': was declared deprecated
+#pragma warning(disable : 4244) // 'argument': conversion from 'type1' to 'type2', possible loss of data
 #endif //__BORLANDC__
 
 #define _WIN_
@@ -2351,9 +2351,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (v_stack[0].sval) free (v_stack[0].sval);
              v_stack[0].sval = nullptr;
             }
-           else
-            sres[0] = '\0';
-           SafeFree (v_stack[v_sp - 1]);
+           else sres[0] = '\0'; // Clear sres if not a string result
+           SafeFree (v_stack[v_sp - 1]); // Clear the last value on the stack
            v_stack[v_sp - 1].var = nullptr;
            v_stack[0].imval = 0.0;
            v_stack[0].fval  = 0.0;
@@ -2377,54 +2376,16 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        }
 
       case toCOMMA: // ,
-       n_args += 1;
+       n_args += 1; // Just separate arguments, no calculation, return value of the last one
        continue;
 
       case toSEMI: // ;
-#ifdef _OLD_CALCULATOR_BEHAVIOR_
-       if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-           || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
-        {
-         v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
-         v_stack[v_sp - 2].tag   = tvCOMPLEX;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
-        {
-         v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         SafeFree (v_stack[v_sp - 2]);
-         DeepCopy (v_stack[v_sp - 2], v_stack[v_sp - 1]);
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;   
-         return qnan;
-        }
-       else
-        {
-         v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvFLOAT;
-        }
-#else //_OLD_CALCULATOR_BEHAVIOR_
+       // For sub-expressions separated by ';', return the value of the last one
        SafeFree (v_stack[v_sp - 2]);
        DeepCopy (v_stack[v_sp - 2], v_stack[v_sp - 1]);
        v_stack[v_sp - 2] = v_stack[v_sp - 1];
-       //v_stack[v_sp - 2].tag = v_stack[v_sp - 1].tag;
-       //v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
-       //v_stack[v_sp - 2].fval = v_stack[v_sp - 1].fval;
-       //v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
-       //v_stack[v_sp - 2].var   = v_stack[v_sp - 1].var;
-       //v_stack[v_sp - 2].sval  = v_stack[v_sp - 1].sval;
        v_stack[v_sp - 1].var   = nullptr;
        v_stack[v_sp - 1].sval  = nullptr;
-#endif //_OLD_CALCULATOR_BEHAVIOR_
        v_sp -= 1;
        v_stack[v_sp - 1].var = nullptr;
        break;
@@ -3469,16 +3430,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
         v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
        }
-       //if (v_stack[v_sp - 1].tag == tvINT)
-       // {
-       //  v_stack[v_sp - 1].ival = -v_stack[v_sp - 1].ival;
-       // }
-       //else
-       // {
-       //  v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
-       //  v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
-       // }
-       // no break
 
       case toPLUS: //+v
        if ((v_stack[v_sp - 1].tag == tvSTR))
@@ -3547,7 +3498,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
-             //if (scfg & CPX) v_stack[v_sp - 2].tag = tvCOMPLEX; // result should be complex
              ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                             sym->fidx);
              v_sp -= 1;
@@ -3560,7 +3510,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
-             //if (scfg & CPX) v_stack[v_sp - 3].tag = tvCOMPLEX; // result should be complex
              ((void (*) (value *, value *, value *, int))sym->func) (
                  &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
              v_sp -= 2;
@@ -3595,7 +3544,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
               v_stack[v_sp - 2].sval = strdup (sres);
               v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
               v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
-              //v_stack[v_sp - 2].tag  = tvFLOAT; // tvINT;// tvSTR;
               v_stack[v_sp - 2].tag  = tvSTR;
              }
              v_sp -= 1;
@@ -3694,11 +3642,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              (*(int_t (*) (char *, char *, int, value *))sym->func) // call prn(...)
                  (sres, // put result string in sres first
                   v_stack[v_sp - n_args].get_str (), n_args - 1, &v_stack[v_sp - n_args + 1]);
-
+             if (sres[0]) scfg |= STR;
              SafeFree (v_stack[v_sp - n_args - 1]);
              v_stack[v_sp - n_args - 1].sval = strdup (sres);
              v_stack[v_sp - n_args - 1].ival = 0;
-             //v_stack[v_sp - n_args - 1].tag  = tvINT; // tvSTR;
              v_stack[v_sp - n_args - 1].tag  = tvSTR;
 
              if (n_args > 1) // if there are arguments other than the first string argument, return
@@ -3755,7 +3702,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
               v_stack[v_sp - 2].fval  = out_re;
               v_stack[v_sp - 2].imval = out_im;
               v_stack[v_sp - 2].tag   = tvCOMPLEX;
-              v_stack[v_sp - 2].tag   = tvCOMPLEX;
              }
              v_sp -= 1;
              break;
@@ -3785,8 +3731,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              return qnan;
             }
           }
-         //SafeFree (v_stack[v_sp - 1]);
-         //v_stack[v_sp - 1].var = nullptr;
          o_sp -= 1;
          n_args = 1;
         }

@@ -55,6 +55,7 @@ float__t To_float (float__t val)
  return val;
 }
 
+// Check if a number is prime and return the next prime number greater than or equal to n
 int_t Prime (int_t n)
 {
  if (n <= 3) return n;
@@ -73,6 +74,7 @@ int_t Prime (int_t n)
   }
 }
 
+// Convert integer to binary string with spaces every 8 bits
 char *to_bin (int nval, char *pbuf, int nbufsize)
 {
  int ncnt;
@@ -96,6 +98,7 @@ char *to_bin (int nval, char *pbuf, int nbufsize)
  return pbuf;
 }
 
+// Euclidean Algorithm for GCD
 int_t Gcd (int_t x, int_t y)
 {
  while (x)
@@ -107,6 +110,7 @@ int_t Gcd (int_t x, int_t y)
  return y;
 }
 
+// Extended Euclidean Algorithm for finding modular inverse
 int_t Invmod (int_t x, int_t y)
 {
  int_t m = y;
@@ -135,11 +139,13 @@ int_t Not (int_t n)
  return n ^ -1L;
 }
 
+// Return the current time in seconds since the epoch plus n hours
 int_t Now (int_t n)
 {
  return (int_t)time (nullptr) + n * 60 * 60;
 }
 
+// Error function approximation using Abramowitz and Stegun formula 7.1.26
 float__t Erf (float__t x)
 {
  // constants
@@ -161,16 +167,19 @@ float__t Erf (float__t x)
  return sign * y;
 }
 
+// Complementary error function: erfc(x) = 1 - erf(x)
 float__t Erfc (float__t x)
 {
  return 1 - Erf (x);
 }
 
+// Generate a random float in the range [0, x)
 float__t Random (float__t x)
 {
  return rand () * x / RAND_MAX;
 }
 
+// Arctangent: atan(x)
 float__t Atan (float__t x)
 {
 #ifdef _long_double_
@@ -192,6 +201,7 @@ float__t Acot (float__t x)
 #endif
 }
 
+// Arctangent of y/x: atan2(y, x)
 float__t Atan2l (float__t x, float__t y)
 {
  if (x != 0 && y != 0)
@@ -206,6 +216,7 @@ float__t Atan2l (float__t x, float__t y)
   return std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
 }
 
+// Trigonometric functions
 float__t Cos (float__t x)
 {
 #ifdef _long_double_
@@ -215,6 +226,7 @@ float__t Cos (float__t x)
 #endif
 }
 
+// Hyperbolic cosine
 float__t Cosh (float__t x)
 {
 #ifdef _long_double_
@@ -224,6 +236,7 @@ float__t Cosh (float__t x)
 #endif
 }
 
+// Exponential function
 float__t Exp (float__t x)
 {
 #ifdef _long_double_
@@ -233,6 +246,7 @@ float__t Exp (float__t x)
 #endif
 }
 
+// Sine function
 float__t Sin (float__t x)
 {
 #ifdef _long_double_
@@ -242,6 +256,7 @@ float__t Sin (float__t x)
 #endif
 }
 
+// Hyperbolic sine
 float__t Sinh (float__t x)
 {
 #ifdef _long_double_
@@ -251,6 +266,7 @@ float__t Sinh (float__t x)
 #endif
 }
 
+// Tangent function
 float__t Tan (float__t x)
 {
 #ifdef _long_double_
@@ -260,6 +276,7 @@ float__t Tan (float__t x)
 #endif
 }
 
+// Hyperbolic tangent
 float__t Tanh (float__t x)
 {
 #ifdef _long_double_
@@ -269,6 +286,7 @@ float__t Tanh (float__t x)
 #endif
 }
 
+// Power function: x^y
 float__t Pow (float__t x, float__t y)
 {
  if ((x > 0) || ((x == 0) && (y > 0)) || ((x < 0) && (y - floor (y) == 0)))
@@ -283,6 +301,7 @@ float__t Pow (float__t x, float__t y)
   return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 }
 
+// Square root function
 float__t Sqrt (float__t x)
 {
 // return sqrtl(x);
@@ -299,11 +318,13 @@ float__t Sqrt (float__t x)
 #endif
 }
 
+// Hypotenuse function: sqrt(x^2 + y^2)
 float__t Hypot (float__t x, float__t y)
 {
  return Sqrt (x * x + y * y);
 }
 
+// Arccosine function
 float__t Acos (float__t x)
 {
 #ifdef _long_double_
@@ -319,6 +340,7 @@ float__t Acos (float__t x)
 #endif
 }
 
+// Arcsine function
 float__t Asin (float__t x)
 {
 #ifdef _long_double_
@@ -334,6 +356,7 @@ float__t Asin (float__t x)
 #endif
 }
 
+// Natural logarithm function
 float__t Log (float__t x)
 {
 #ifdef _long_double_
@@ -349,6 +372,7 @@ float__t Log (float__t x)
 #endif
 }
 
+// Base-10 logarithm function
 float__t Lg (float__t x)
 {
 #ifdef _long_double_
@@ -364,6 +388,7 @@ float__t Lg (float__t x)
 #endif
 }
 
+// Convert a linear value to decibels (20 * log10(x))
 float__t NP (float__t x)
 {
 #ifdef _long_double_
@@ -379,6 +404,7 @@ float__t NP (float__t x)
 #endif
 }
 
+// Convert a linear value to decibels (10 * log10(x))
 float__t DB (float__t x)
 {
 #ifdef _long_double_
@@ -394,6 +420,7 @@ float__t DB (float__t x)
 #endif
 }
 
+// Hyperbolic cotangent function
 float__t Ctanh (float__t x) // cth
 {
 #ifdef _long_double_
@@ -409,6 +436,7 @@ float__t Ctanh (float__t x) // cth
 #endif                                                /*_long_double_*/
 }
 
+// Inverse hyperbolic functions
 float__t Arsh (float__t x)
 {
 #ifdef _long_double_
@@ -418,6 +446,7 @@ float__t Arsh (float__t x)
 #endif /*_long_double_*/
 }
 
+// Inverse hyperbolic cosine function
 float__t Arch (float__t x)
 {
 #ifdef _long_double_
@@ -427,6 +456,7 @@ float__t Arch (float__t x)
 #endif /*_long_double_*/
 }
 
+// Inverse hyperbolic tangent function
 float__t Arth (float__t x)
 {
  if ((x == 1) || (x == -1)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
@@ -437,6 +467,7 @@ float__t Arth (float__t x)
 #endif /*_long_double_*/
 }
 
+// Inverse hyperbolic cotangent function
 float__t Arcth (float__t x)
 {
  if ((x == 1) || (x == -1)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
@@ -447,6 +478,7 @@ float__t Arcth (float__t x)
 #endif /*_long_double_*/
 }
 
+//  Convert decibels to linear scale (10^(x/20))
 float__t Exp10 (float__t x)
 {
 #ifdef _long_double_
@@ -456,16 +488,19 @@ float__t Exp10 (float__t x)
 #endif /*_long_double_*/
 }
 
+// Convert decibels to linear scale (10^(x/20))
 float__t ANP (float__t x)
 {
  return Exp10 (x / 20);
 }
 
+// Convert decibels to linear scale (10^(x/10))
 float__t ADB (float__t x)
 {
  return Exp10 (x / 10);
 }
 
+// Trigonometric functions with degree input
 float__t Sing (float__t x)
 {
 #ifdef _long_double_
@@ -475,6 +510,7 @@ float__t Sing (float__t x)
 #endif /*_long_double_*/
 }
 
+// Cosine function with degree input
 float__t Cosg (float__t x)
 {
 #ifdef _long_double_
@@ -484,6 +520,7 @@ float__t Cosg (float__t x)
 #endif /*_long_double_*/
 }
 
+// Tangent function with degree input
 float__t Tgg (float__t x)
 {
 #ifdef _long_double_
@@ -493,6 +530,7 @@ float__t Tgg (float__t x)
 #endif /*_long_double_*/
 }
 
+// Cotangent function with degree input
 float__t Ctgg (float__t x)
 {
  if (x == 0) return std::numeric_limits<float__t>::infinity (); // 1/0.0;
@@ -503,6 +541,7 @@ float__t Ctgg (float__t x)
 #endif /*_long_double_*/
 }
 
+// Cotangent function
 float__t Ctg (float__t x)
 {
  if (x == 0) return std::numeric_limits<float__t>::infinity (); // 1/0.0;
@@ -513,21 +552,25 @@ float__t Ctg (float__t x)
 #endif /*_long_double_*/
 }
 
+// Round a float to the nearest integer
 float__t Round (float__t x)
 {
  return (float__t)((int)(x + 0.5));
 }
 
+// Round a float to the nearest integer towards positive infinity
 float__t Ceil (float__t x)
 {
  return (float__t)((int)(x + 1));
 }
 
+// Round a float to the nearest integer towards negative infinity
 float__t Floor (float__t x)
 {
  return (float__t)((int)(x));
 }
 
+// Get the fractional part of a float
 float__t Frac (float__t x)
 {
  float__t d;
@@ -538,11 +581,19 @@ float__t Frac (float__t x)
 #endif
 }
 
+// Get the minimum of two floats
 float__t Min (float__t x, float__t y)
 {
  return (x < y) ? x : y;
 }
 
+// Get the maximum of two floats
+float__t Max (float__t x, float__t y)
+{
+ return (x > y) ? x : y;
+}
+
+// Get the base-2 logarithm of a float
 float__t Log2 (float__t x)
 {
  if (x <= 0) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
@@ -559,6 +610,8 @@ float__t powl(float__t x, float__t y)
   return exp(y*log(x));
 }
 */
+
+// Get the logarithm of y to the base x
 float__t Logn (float__t x, float__t y)
 {
  if (x <= 0) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
@@ -570,6 +623,7 @@ float__t Logn (float__t x, float__t y)
 #endif /*_long_double_*/
 }
 
+// Get the cube root of a float
 float__t Root3 (float__t x)
 {
 #ifdef _long_double_
@@ -579,6 +633,7 @@ float__t Root3 (float__t x)
 #endif /*_long_double_*/
 }
 
+// Get the y-th root of x
 float__t Rootn (float__t x, float__t y)
 {
 #ifdef _long_double_
@@ -596,6 +651,7 @@ double tswg[] = { 12.700, 11.786, 10.973, 10.160, 9.449,  8.839,  8.230,  7.620,
                   0.2337, 0.2134, 0.1930, 0.1727, 0.1524, 0.1321, 0.1219, 0.1118, 0.1016, 0.0914,
                   0.0813, 0.0711, 0.0610, 0.0508, 0.0406, 0.0305, 0.0254 };
 
+// Convert SWG to mm
 float__t Swg (float__t x) // SWG to mm
 {
  int n = x;
@@ -605,11 +661,13 @@ float__t Swg (float__t x) // SWG to mm
   return 0;
 }
 
+// Convert SWG to mm^2
 float__t SSwg (float__t x) // SWG to mm^2
 {
  return pow (Swg (x), 2) * M_PI / 4.0;
 }
 
+// Convert mm to SWG
 float__t Aswg (float__t x) // mm to SWG
 {
  if ((x < 0.0254) || (x > 12.7)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
@@ -626,27 +684,32 @@ float__t Aswg (float__t x) // mm to SWG
   return -6;
 }
 
+
 /* https://en.wikipedia.org/wiki/American_wire_gauge */
+// AWG to mm: d = 0.127 * 92^((36-n)/39) = exp(2.1104 - 0.11594 * n)
 float__t Awg (float__t x) // AWG to mm
 {
  return exp (2.1104 - 0.11594 * x);
 }
 
+// AWG to mm^2: A = pi * (d/2)^2 = pi * (exp(2.1104 - 0.11594 * n)/2)^2
 float__t SAwg (float__t x) // AWG to mm^2
 {
  return pow (exp (2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
 }
 
+// Convert diameter to mm^2: A = pi * (d/2)^2 = pi * d^2 / 4
 float__t Cs (float__t x) // diameter to mm^2
 {
  return pow (x, 2) * M_PI / 4.0;
 }
-
+// Convert mm^2 to diameter: d = sqrt(4 * A / pi)
 float__t Acs (float__t x) // mm^2 to diameter
 {
  return sqrt (4.0 * x / M_PI);
 }
 
+// Convert mm to AWG: n = 36 - 39 * log(d/0.127) / log(92) = (2.1104 - log(x)) / 0.11594
 float__t Aawg (float__t x) // mm to AWG
 {
  return (2.1104 - log (x)) / 0.11594;
@@ -683,6 +746,7 @@ double E192[]
         6.04, 6.12, 6.19, 6.26, 6.34, 6.42, 6.49, 6.57, 6.65, 6.73, 6.81, 6.90, 6.98, 7.06, 7.15,
         7.23, 7.32, 7.41, 7.50, 7.59, 7.68, 7.77, 7.87, 7.96, 8.06, 8.16, 8.25, 8.35, 8.45, 8.56,
         8.66, 8.76, 8.87, 8.98, 9.09, 9.20, 9.31, 9.42, 9.53, 9.65, 9.76, 9.88, 10 };
+// Find the nearest standard value from E-series
 float__t Ee (float__t x, float__t y) // find standard value
 {
  if (y)
@@ -795,11 +859,7 @@ float__t Ee (float__t x, float__t y) // find standard value
   return 0;
 }
 
-float__t Max (float__t x, float__t y)
-{
- return (x > y) ? x : y;
-}
-
+// Calculate the factorial of a number
 float__t Factorial (float__t x)
 {
  int n        = (int)x;
@@ -808,11 +868,13 @@ float__t Factorial (float__t x)
  return res;
 }
 
+// Convert Celsius to Farenheit
 float__t Farenheit (float__t x)
 {
  return (x - 32.0) * 5.0 / 9.0;
 }
 
+// Compare two floats with a given precision
 float__t Cmp (float__t x, float__t y, float__t prec)
 {
  float__t rel_diff = fabs (x - y) / (x > y ? x : y);
@@ -826,6 +888,7 @@ float__t Cmp (float__t x, float__t y, float__t prec)
 
 // Vref=Vout*Rl/(Rh+Rl)
 // Vout=Vref*(Rh+Rl)/Rl
+// Calculate the output voltage of a voltage divider
 float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 {
  return Vref * (Rh + Rl) / Rl;
@@ -836,21 +899,25 @@ float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 //   return 0;             /* error has been handled */
 // }
 
+// Check if a double value is NaN (Not a Number)
 bool IsNaN (const double fVal)
 {
  return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
          && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
 }
 
+// Check if a long double value is NaN (Not a Number)
 bool IsNaNL (const long double ldVal)
 {
  return IsNaN ((double)ldVal);
 }
 
+// Template function to get the minimum of two values
 template <class T> T tmax (T x, T y)
 {
  return (x > y) ? x : y;
 }
+
 
 template <class T> bool tisnan (T f)
 {
@@ -882,6 +949,7 @@ bool IsNaNL(const long float__t ldVal)
 }
 */
 
+// Extract the format string from a printf-style format and copy it to the destination buffer
 int fmtc (char *dst, char *fmt)
 {
  char c;
@@ -898,7 +966,7 @@ int fmtc (char *dst, char *fmt)
 }
 
 // prn("%1.30LG",(x:=1.84467440737095536e19;(x-1)/x))
-
+// Format a string with the given format and arguments, and copy it to the destination buffer
 int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
 {
  char pfmt[STRBUF];
@@ -1165,6 +1233,7 @@ int timezone(void) //return seconds
     return -_timezone;
 }
 #else
+// Get the timezone offset in seconds
 int timezone (void) // return seconds
 {
  TIME_ZONE_INFORMATION tzi;
@@ -1174,6 +1243,7 @@ int timezone (void) // return seconds
  return tzHours;
 }
 #endif
+// Convert a date-time string to a timestamp (seconds since epoch)
 int_t datatime (char *tstr)
 {
  time_t result = 0;
@@ -1193,6 +1263,7 @@ int_t datatime (char *tstr)
  return (int_t)result;
 }
 
+// Get information about the type of electromagnetic wave based on its wavelength in meters
 const char *wavelength_info (float__t wavelength_m)
 {
  // wavelength_m - wavelength in meters
@@ -1880,6 +1951,8 @@ void LognC (float__t x, float__t y, float__t u, float__t v, float__t &re, float_
  im = (ln_num_im * ln_den_re - ln_num_re * ln_den_im) / denom;
 }
 
+// This function performs various vectorized operations on complex numbers based on the index
+// provided.
 void vfunc2 (value *res, value *arg1, value *arg2, int idx)
 {
  if (res == nullptr || arg1 == nullptr || arg2 == nullptr) return;
@@ -1955,6 +2028,7 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
   }
 }
 
+// This function performs various vectorized operations on complex numbers based on the index
 void vfunc (value *res, value *arg, int idx)
 {
  if (res == nullptr || arg == nullptr) return;

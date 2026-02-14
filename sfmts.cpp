@@ -47,6 +47,8 @@
 #define M_E     2.7182818284590452353602874713527
 #endif
 //----------------------------------
+
+// Count the number of 1 bits in a range of bits in a byte array
 int ones (unsigned char *cp, int from, int to)
 {
  int res = 0;
@@ -56,6 +58,7 @@ int ones (unsigned char *cp, int from, int to)
 }
 //---------------------------------------------------------------------------
 
+// Check if a floating-point number is NaN (Not a Number) by examining its bit pattern
 bool isNan (float__t d)
 {
  int fr, ex;
@@ -88,7 +91,7 @@ const uint64_t dms[] = { (60ull * 60 * 60 * 24 * 36525ull),
                          (60ull * 60),
                          60ull,
                          1ull };
-
+// Convert seconds to a human-readable string format (e.g., "1:y 2:d 3:h 4:m 5:s")
 int t2str (char *str, uint64_t sec)
 {
  const char *fmt[] = { "%lld:c ", "%lld:y ", "%lld:d ", "%lld:h ", "%lld:m ", "%lld:s " };
@@ -170,7 +173,7 @@ int b2str (char *str, const char *fmt, uint64_t b)
  return j;
 }
 //---------------------------------------------------------------------------
-
+// Convert a floating-point number to a string with SI prefixes (e.g., "1.23k" for 1230)
 int d2scistr (char *str, float__t d)
 {
  const char csci[]
@@ -244,7 +247,8 @@ int d2scistr (char *str, float__t d)
   }
 }
 //---------------------------------------------------------------------------
-
+// Normalize a complex number represented by its real and imaginary parts to prevent overflow in
+// calculations
 int normz (float__t &re, float__t &im)
  {
   float__t d = sqrt (re * re + im * im);
@@ -257,7 +261,9 @@ int normz (float__t &re, float__t &im)
 
 
 //---------------------------------------------------------------------------
-int d2nrmstr (char *str, float__t d)
+ // Convert a floating-point number to a string with normalized scientific notation (e.g., "1.23e3"
+ // for 1230)
+ int d2nrmstr (char *str, float__t d)
 {
  if (isNan (d))
   return sprintf (str, "%e", d);
@@ -299,7 +305,7 @@ int d2nrmstr (char *str, float__t d)
   }
 }
 //---------------------------------------------------------------------------
-
+// Convert a floating-point number to a string with binary prefixes (e.g., "1.23KiB" for 1258 bytes)
 int b2scistr (char *str, float__t d)
 {
  const char csci_plus[] = { ' ', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'};
@@ -352,6 +358,8 @@ int b2scistr (char *str, float__t d)
   }
 }
 //---------------------------------------------------------------------------
+// Convert an angle in radians to a string in degrees, minutes, and seconds format (e.g.,
+// "30°15'20"")
 int dgr2str (char *str, float__t radians)
 {
  const char cdeg[] = { 96, 39, 34 }; // ` ' "
@@ -386,7 +394,8 @@ int dgr2str (char *str, float__t radians)
 }
 
 //---------------------------------------------------------------------------
-
+// Convert a character to a string representation, showing both the character and its escape
+// sequence if it's a control character
 int chr2str (char *str, unsigned char c)
 {
  const char *const ch[] =
@@ -413,6 +422,7 @@ int chr2str (char *str, unsigned char c)
   return sprintf (str, "'%c'", c);
 }
 //---------------------------------------------------------------------------
+// Convert a wide character (wchar_t) to a string representation, showing both the character and its escape sequence if it's a control character
 int wchr2str1 (char *str, int i)
 {
  wchar_t wbuf[2];
@@ -464,6 +474,8 @@ int nx_time2str (char *str, uint64_t time)
 }
 
 #else
+// Convert a timestamp (seconds since epoch) to a human-readable date-time string format (e.g.,
+// "Mon, Jan 01 00:00:00 1970")
 int nx_time2str (char *str, uint64_t time)
 {
  struct tm t;
@@ -544,7 +556,7 @@ void fraction (double val, double eps, int &num, int &denum)
   }
 }
 //---------------------------------------------------------------------------
-
+// Convert a floating-point number to a string representation as a fraction
 int d2frcstr (char *str, float__t d, int eps_order)
 {
  int num, denum;

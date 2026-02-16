@@ -1,3 +1,8 @@
+16.02.26 (2.095)
+* String handling has been completely redesigned. Now, when strings are created, a list is created, and memory is 
+  freed from this list at the end. Strings remain in memory even after they are no longer needed. This improves 
+  reliability and freeing, and ensures that a string isn't destroyed before use.
+
 14.02.26 (2.094)
 * Cosmetic changes in sources.
 

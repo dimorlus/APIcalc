@@ -274,11 +274,6 @@ class value
   sval  = nullptr;
  }
 
- inline ~value ()
- {
-  if (sval) free (sval);
-  sval = nullptr;
- }
 
  inline float__t get () { return tag == tvINT ? (float__t)ival : fval; }
 
@@ -307,6 +302,7 @@ class symbol
   name = nullptr;
   next = nullptr;
  }
+ 
 };
 
 const int max_stack_size        = 256;
@@ -317,6 +313,12 @@ const int hash_table_size = 1013;
 typedef void (*complex_func_t) (long double re, long double im, long double &out_re,
                                 long double &out_im);
 
+struct StringNode
+{
+ char *str;        // String pointer to the allocated string
+ StringNode *next; // Next node in the list
+};
+
 class calculator
 {
  private:
@@ -324,6 +326,7 @@ class calculator
  value v_stack[max_stack_size];
  symbol *hash_table[hash_table_size];
  t_operator o_stack[max_stack_size];
+ StringNode *string_list_head;
  int v_sp;
  int o_sp;
  char *buf;
@@ -338,6 +341,10 @@ class calculator
  float__t result_fval;
  float__t result_imval;
  t_value result_tag;
+
+ char *registerString (char *str);
+ void clearAllStrings ();
+ char *dupString (const char *src);
 
  inline unsigned string_hash_function (const char *p);
  symbol *add (t_symbol tag, const char *name, void *func = nullptr);

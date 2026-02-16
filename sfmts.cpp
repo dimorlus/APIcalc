@@ -494,6 +494,9 @@ int nx_time2str (char *str, uint64_t time)
  return (int)strftime (str, 80, "%a, %b %d %H:%M:%S %Y", &t);
 }
 #endif
+//---------------------------------------------------------------------------
+// Convert a floating-point number to a fraction representation (numerator and denominator) within a
+// specified tolerance (epsilon)
 void fraction (double val, double eps, int &num, int &denum)
 {
  int a = 1, b = 1;

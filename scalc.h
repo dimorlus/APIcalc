@@ -81,7 +81,7 @@ class value;
 class symbol;
 
 #pragma pack(push, 1)
-typedef union
+typedef union 
 {
  int options;
  struct
@@ -130,67 +130,69 @@ enum t_value
 
 enum t_operator
 {
- toBEGIN,
- toOPERAND,
- toERROR,
- toEND,
- toLPAR,
- toRPAR,
- toFUNC,
- toPOSTINC,
- toPOSTDEC,
- toFACT,
- toPREINC,
- toPREDEC,
- toPLUS,
- toMINUS,
- toNOT,
- toCOM,
- toPOW,
- toPERCENT,
- toMUL,
- toDIV,
- toMOD,
- toPAR,
- toADD,
- toSUB,
- toASL,
- toASR,
- toLSR,
- toGT,
- toGE,
- toLT,
- toLE,
- toEQ,
- toNE,
- toAND,
- toXOR,
- toOR,
- toSET,
- toSETADD,
- toSETSUB,
- toSETMUL,
- toSETDIV,
- toSETMOD,
- toSETASL,
- toSETASR,
- toSETLSR,
- toSETAND,
- toSETXOR,
- toSETOR,
- toSETPOW,
- toSEMI,
- toCOMMA,
- toTERMINALS
+ toBEGIN,   // toBEGIN must be the first operator in the list
+ toOPERAND, // toOPERAND represents an operand in the expression
+ toERROR,   // toERROR represents an error in the expression
+ toEND,     // toEND represents the end of the expression
+ toLPAR,    // toLPAR represents a left parenthesis '('
+ toRPAR,    // toRPAR represents a right parenthesis ')'
+ toFUNC,    // toFUNC represents a function
+ toPOSTINC, // toPOSTINC represents a post-increment operator
+ toPOSTDEC, // toPOSTDEC represents a post-decrement operator
+ toFACT,    // toFACT represents a factorial operator
+ toPREINC,  // toPREINC represents a pre-increment operator
+ toPREDEC,  // toPREDEC represents a pre-decrement operator
+ toPLUS,    // toPLUS represents an addition operator
+ toMINUS,   // toMINUS represents a subtraction operator
+ toNOT,     // toNOT represents a logical NOT operator
+ toCOM,     // toCOM represents a bitwise complement operator
+ toPOW,     // toPOW represents a power operator
+ toPERCENT, // toPERCENT represents a percentage operator
+ toMUL,     // toMUL represents a multiplication operator
+ toDIV,     // toDIV represents a division operator
+ toMOD,     // toMOD represents a modulo operator
+ toPAR,     // toPAR represents a parenthesis operator
+ toADD,     // toADD represents an addition operator
+ toSUB,     // toSUB represents a subtraction operator
+ toASL,     // toASL represents a arithmetic shift left operator
+ toASR,     // toASR represents a arithmetic shift right operator
+ toLSR,     // toLSR represents a logical shift right operator
+ toGT,      // toGT represents a greater than operator
+ toGE,      // toGE represents a greater than or equal operator
+ toLT,      // toLT represents a less than operator
+ toLE,      // toLE represents a less than or equal operator
+ toEQ,      // toEQ represents an equality operator
+ toNE,      // toNE represents a not equal operator
+ toAND,     // toAND represents a logical AND operator
+ toXOR,     // toXOR represents a logical XOR operator
+ toOR,      // toOR represents a logical OR operator
+ toSET,     // toSET represents a set operator
+ toSETADD,  // toSETADD represents a set addition operator
+ toSETSUB,  // toSETSUB represents a set subtraction operator
+ toSETMUL,  // toSETMUL represents a set multiplication operator
+ toSETDIV,  // toSETDIV represents a set division operator
+ toSETMOD,  // toSETMOD represents a set modulo operator
+ toSETASL,  // toSETASL represents a set arithmetic shift left operator
+ toSETASR,  // toSETASR represents a set arithmetic shift right operator
+ toSETLSR,  // toSETLSR represents a set logical shift right operator
+ toSETAND,  // toSETAND represents a set logical AND operator
+ toSETXOR,  // toSETXOR represents a set logical XOR operator
+ toSETOR,   // toSETOR represents a set logical OR operator
+ toSETPOW,  // toSETPOW represents a set power operator
+ toSEMI,    // toSEMI represents a semicolon operator
+ toCOMMA,   // toCOMMA represents a comma operator
+ toTERMINALS // toTERMINALS must be the last operator in the list and represents the total number of
+             // operators
 };
 
+// Macros to determine if an operator is binary or unary based on its position in the enumeration
 #define BINARY(opd) (opd >= toPOW)
 #define UNARY(opd)  ((opd >= toPOSTINC) && (opd <= toCOM))
 
 enum t_symbol
 {
- tsVARIABLE,
- tsCONSTANT,
+ tsVARIABLE, // tsVARIABLE represents a variable symbol
+ tsCONSTANT, // tsCONSTANT represents a constant symbol
  tsIFUNCF1, // int f(float x)
  tsSFUNCF1, // char* f(float x)
  tsIFUNC1,  // int f(int x)
@@ -252,21 +254,19 @@ enum v_func
 class value
 {
  public:
- t_value tag;
- symbol *var;
- int pos;
- struct
- {
-  int_t ival;
-  float__t fval;
-  float__t imval;
- };
- char *sval;
+ t_value tag; // Type of value
+ symbol *var; // Uses for variables and functions
+ int pos;     // Position in expression for error reporting
+ 
+ int_t ival; // Integer value
+ float__t fval;  // Float value or real part of complex value
+ float__t imval; // Imaginary part of complex value
+ char *sval;     // String value
 
  inline value ()
  {
   tag   = tvINT;
-  var   = nullptr;
+  var   = nullptr; // Uses for variables and functions
   ival  = 0;
   fval  = 0.0;
   imval = 0.0;
@@ -287,12 +287,12 @@ class value
 class symbol
 {
  public:
- t_symbol tag;
- v_func fidx;
- void *func;
- value val;
- char *name;
- symbol *next;
+ t_symbol tag; // Type of symbol
+ v_func fidx;  // Function index
+ void *func;   // Function pointer
+ value val;    // Value associated with the symbol
+ char *name;   // Name of the symbol
+ symbol *next; // Next symbol in the hash table chain
 
  inline symbol ()
  {
@@ -305,11 +305,11 @@ class symbol
  
 };
 
-const int max_stack_size        = 256;
-const int max_expression_length = 1024;
+const int max_stack_size        = 256;  // Maximum size of value and operator stacks
+const int max_expression_length = 1024; // Maximum length of expression
+const int hash_table_size = 1013; // Size of hash table for variables and functions
 
-const int hash_table_size = 1013;
-
+// Function pointer type for complex functions (taking real and imaginary parts as input and output)
 typedef void (*complex_func_t) (long double re, long double im, long double &out_re,
                                 long double &out_im);
 
@@ -322,78 +322,104 @@ struct StringNode
 class calculator
 {
  private:
- int scfg;
- value v_stack[max_stack_size];
- symbol *hash_table[hash_table_size];
- t_operator o_stack[max_stack_size];
- StringNode *string_list_head;
- int v_sp;
- int o_sp;
- char *buf;
- int pos;
+ int scfg; // Syntax configuration flags
+ value v_stack[max_stack_size]; // Value stack for operands
+ symbol *hash_table[hash_table_size]; // Hash table for variables and functions
+ t_operator o_stack[max_stack_size]; // Operator stack
+ StringNode *string_list_head; // Head of the string list
+ int v_sp; // Value stack pointer
+ int o_sp; // Operator stack pointer
+ char *buf; // Buffer for expression parsing
+ int pos;   // Current position in the expression during parsing
  int tmp_var_count;
- char err[80];
- int errpos;
- char c_imaginary;
- bool expr;
- char sres[STRBUF];
- int64_t result_ival;
- float__t result_fval;
- float__t result_imval;
- t_value result_tag;
+ char err[80]; // Error message buffer
+ int errpos;   // Error position
+ char c_imaginary; // Imaginary unit character
+ bool expr;    // Expression flag
+ char sres[STRBUF]; // String result buffer
+ int64_t result_ival; // Integer result
+ float__t result_fval; // Float result
+ float__t result_imval; // Imaginary part of complex result
+ t_value result_tag; // Type of result
 
- char *registerString (char *str);
- void clearAllStrings ();
- char *dupString (const char *src);
+ char *registerString (char *str); // Register a string in the string list and return the registered string pointer
+ void clearAllStrings (); // Clear all strings in the string list
+ char *dupString (const char *src); // Duplicate a string and register it in the string list
 
- inline unsigned string_hash_function (const char *p);
- symbol *add (t_symbol tag, const char *name, void *func = nullptr);
- symbol *add (t_symbol tag, v_func fidx, const char *name, void *func = nullptr);
- symbol *find (const char *name);
- t_operator scan (bool operand, bool percent);
- void error (int pos, const char *msg);
- inline void error (const char *msg) { error (pos - 1, msg); }
- bool assign ();
+ inline unsigned string_hash_function (const char *p); // Hash function for strings
+ symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
+ symbol *add (t_symbol tag, v_func fidx, const char *name,
+              void *func = nullptr); // Add a symbol with function index to the hash table
+ symbol *find (const char *name);    // Find a symbol in the hash table by name
+ t_operator scan (bool operand,
+       bool percent); // Scan the next token in the expression and return its operator type
+ void error (int pos, const char *msg); // Report an error at the given position with the specified message
+ inline void error (const char *msg)
+ {
+  error (pos - 1, msg);
+ } // Report an error at the current position with the specified message
+ bool assign (); // Assign a value to a variable
 
- bool isCMP (char *&fpos);
- int hscanf (char *str, int_t &ival, int &nn);
- int bscanf (char *str, int_t &ival, int &nn);
- int oscanf (char *str, int_t &ival, int &nn);
- int xscanf (char *str, int len, int_t &ival, int &nn);
- float__t dstrtod (char *s, char **endptr);
- float__t tstrtod (char *s, char **endptr);
- void engineering (float__t mul, char *&fpos, float__t &fval);
- void scientific (char *&fpos, float__t &fval);
- void clear_v_stack ();
- void addim (void);
+ bool isCMP (char *&fpos); // Check if the current position is a computing format
+ int hscanf (char *str, int_t &ival,
+             int &nn); // Scan a hexadecimal number from the string and store it in ival, with nn
+                       // being the number of characters processed
+ int bscanf (char *str, int_t &ival, int &nn); // Scan a binary number from the string and store it in ival, 
+                                               //with nn being the number of characters processed
+ int oscanf (char *str, int_t &ival, int &nn); // Scan an octal number from the string and store it in ival, 
+                                               //with nn being the number of characters processed
+ int xscanf (char *str, int len, int_t &ival, int &nn); // Scan a hexadecimal number from the string 
+                                               //with a specified length and store it in ival, with nn being 
+                                               // the number of characters processed
+ float__t dstrtod (char *s, char **endptr); // Convert a string to a double-precision floating-point number
+ float__t tstrtod (char *s, char **endptr); // Convert a string to a long double-precision floating-point number
+ void engineering (float__t mul, char *&fpos, float__t &fval); // Perform engineering notation conversion
+ void scientific (char *&fpos, float__t &fval); // Perform scientific notation conversion
+ void clear_v_stack (); // Clear the value stack
+ void addim (void); // Add imaginary unit
  
  public:
- calculator (int cfg = PAS + SCI + UPCASE);
- inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT) { scfg = cfg; }
- inline int issyntax (void) { return scfg; }
- inline char *error (void) { return err; }
- inline int errps (void) { return errpos; };
- inline char *Sres (void) { return sres; };
- inline char Ichar (void) { return c_imaginary; };
+ calculator (int cfg = PAS + SCI + UPCASE); // Constructor with optional syntax configuration
+   inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)
+   {
+    scfg = cfg;
+   } // Set syntax configuration
+   inline int issyntax (void) { return scfg; } // Get current syntax configuration
+   inline char *error (void) { return err; }   // Get error message
+   inline int errps (void) { return errpos; }; // Get error position
+   inline char *Sres (void) { return sres; };  // Get string result
+   inline char Ichar (void)
+   {
+    return c_imaginary;
+   }; // Get the character used for the imaginary unit
 
- float__t AddConst (const char *name, float__t val);
- float__t AddVar (const char *name, float__t val);
- void addfconst (const char *name, float__t val);
- void addfvar (const char *name, float__t val);
- void addivar (const char *name, int_t val);
- void addlvar (const char *name, float__t fval, int_t ival);
- void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); }
- void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); }
- int varlist (char *buf, int bsize, int *maxlen = nullptr);
- float__t evaluate (char *expr, __int64 *piVal = nullptr, float__t *pimval = nullptr);
+ float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
+ float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
+ void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
+ void addfvar (const char *name, float__t val); // Add a floating-point variable to the calculator
+ void addivar (const char *name, int_t val); // Add an integer variable to the calculator
+ void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
+ void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); } // Add a function to the calculator
+ void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
+ int varlist (char *buf, int bsize,
+              int *maxlen = nullptr); // Get a list of variables in the calculator and store it in the provided
+                          // buffer, with an optional maximum length for variable names
+ float__t
+ evaluate (char *expr, __int64 *piVal = nullptr,
+           float__t *pimval = nullptr); // Evaluate an expression and return the result as a floating-point value,
+                       // with optional pointers to store integer and imaginary results
 
- int print (char *str, int Options, int binwide, int *size = nullptr);
+ int print (char *str, int Options, int binwide,
+            int *size = nullptr); // Print a string representation of the result with specified
+                                  // options and binary width,
 
- ~calculator (void);
+ ~calculator (void); // Destructor to clean up resources
 };
 
-extern bool IsNaN (const double fVal);
-extern bool IsNaNL (const long double ldVal);
-#define isnan(a) (a != a)
+extern bool IsNaN (const double fVal); // Function to check if a double-precision floating-point
+                                       // value is NaN (Not a Number)
+extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision floating-point
+                                              // value is NaN (Not a Number)
+#define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
 
-#endif
+ #endif // scalcH

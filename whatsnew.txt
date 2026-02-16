@@ -1,7 +1,12 @@
+16.02.26 (2.096)
+- Fixed excessive memory allocation for the sum of string values. 
+- Fixed copying of the string result if it is longer than the buffer holding it. The excess is now truncated.
+
 16.02.26 (2.095)
 * String handling has been completely redesigned. Now, when strings are created, a list is created, and memory is 
   freed from this list at the end. Strings remain in memory even after they are no longer needed. This improves 
-  reliability and freeing, and ensures that a string isn't destroyed before use.
+  reliability and freeing, and ensures that a string isn't destroyed before use. This also prevents excessive memory 
+  fragmentation.
 
 14.02.26 (2.094)
 * Cosmetic changes in sources.

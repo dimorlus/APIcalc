@@ -1,3 +1,6 @@
+16.02.26 (2.097)
+- Fixed a bug related to too long lines that caused a crash.
+
 16.02.26 (2.096)
 - Fixed excessive memory allocation for the sum of string values. 
 - Fixed copying of the string result if it is longer than the buffer holding it. The excess is now truncated.

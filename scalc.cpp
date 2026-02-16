@@ -808,7 +808,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        if (sres[0])
         {
          char strcstr[80];
-         sprintf (strcstr, "'%s'", sres);
+         sprintf (strcstr, "'%.64s'", sres);
          bsize += sprintf (str + bsize, "%65.64s S\r\n", strcstr);
          n++;
         }
@@ -2192,7 +2192,6 @@ void calculator::clear_v_stack ()
  // Clear stack before using
  for (int i = 0; i < max_stack_size; ++i)
   {
-   //if (v_stack[i].sval) free (v_stack[i].sval);
    v_stack[i].tag   = tvINT;
    v_stack[i].sval = nullptr;  
    v_stack[i].var   = nullptr;
@@ -2434,6 +2433,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 2].tag == tvSTR))
         {
          int_t new_len = strlen (v_stack[v_sp - 2].sval) + strlen (v_stack[v_sp - 1].sval) + 1;
+         if (new_len > STRBUF-1)
+          {
+           error (v_stack[v_sp - 2].pos, "Resulting string is too long");
+           result_fval = qnan;
+           clear_v_stack ();
+           return qnan;
+          }
           {
            char *new_s = (char *)malloc (new_len);
            if (!new_s)

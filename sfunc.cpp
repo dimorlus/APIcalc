@@ -1091,7 +1091,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        continue;
       }
     }
-   while (c && (i < STRBUF));
+   while (c && (i < STRBUF-2));
    if (!c) sfmt--; // poit to '\0' ???
    if (n < args)
     {

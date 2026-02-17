@@ -1,3 +1,9 @@
+17.02.26 (2.098)
+* Now all intermediate string values are deleted after each expression is evaluated. Before this, the values 
+  of string variables are copied for subsequent use in the new expression. These values are also deleted when 
+  the calculator is closed. This is not of significant importance for the calculator project itself, but it 
+  may be important if the calculator engine is used in the implementation of some scripting language.
+  
 16.02.26 (2.097)
 - Fixed a bug related to too long lines that caused a crash.
 

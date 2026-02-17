@@ -371,10 +371,14 @@ calculator::calculator (int cfg)
 
 calculator::~calculator (void)
 {
+ clearAllStrings ();
+ destroyvars ();
+}
+//---------------------------------------------------------------------------
+void calculator::destroyvars (void) // Free all symbols in the hash table
+{
  symbol *sp;
  symbol *nsp;
-
- clearAllStrings ();
 
  for (int i = 0; i < hash_table_size; i++)
   {
@@ -383,7 +387,14 @@ calculator::~calculator (void)
      do
       {
        nsp = sp->next;
-       free (sp->name);
+#ifdef _STR_VAR_FREE_
+       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
+        {
+         if (sp->val.sval) free (sp->val.sval);
+         sp->val.sval = nullptr;
+        }
+#endif //_STR_VAR_FREE_
+       if (sp->name) free (sp->name);
        sp->name = nullptr;
        delete sp;
        sp            = nsp;
@@ -393,9 +404,28 @@ calculator::~calculator (void)
     }
   }
 }
-//---------------------------------------------------------------------------
 
-char *calculator::registerString (char *str)
+void calculator::dupstrvars (void) // Duplicate string variables in the hash table
+{
+ symbol *sp;
+ for (int i = 0; i < hash_table_size; i++)
+  {
+   if ((sp = hash_table[i]))
+    {
+     do
+      {
+       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
+        {
+         sp->val.sval = strdup (sp->val.sval);
+        }
+       sp = sp->next;
+      }
+     while (sp);
+    }
+  }
+}
+
+char *calculator::registerString (char *str) // Register a string in the string list for later cleanup
  {
  if (str)
   {
@@ -407,7 +437,7 @@ char *calculator::registerString (char *str)
   return str;
  }
 
-void calculator::clearAllStrings ()
+void calculator::clearAllStrings () // Free all registered strings in the string list
  {
   StringNode *node = string_list_head;
   while (node)
@@ -420,7 +450,7 @@ void calculator::clearAllStrings ()
   string_list_head = nullptr;
  }
 
- char *calculator::dupString (const char *src)
+ char *calculator::dupString (const char *src) // Duplicate a string and register it for cleanup
   {
    if (!src) return nullptr;
    size_t len = strlen (src);
@@ -453,7 +483,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      int ep = errpos;
      if (ep < 0) ep = 0;
-     if (ep > 0) ep--; // Перемещаем позицию ошибки на символ перед ней
+     if (ep > 0) ep--; // Move the error position to the character before it
      if ((ep < 64))
       {
        char binstr[80];
@@ -868,7 +898,8 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
  return lineCount;
 }
 
-unsigned calculator::string_hash_function (const char *p)
+// A simple hash function for strings (djb2 by Dan Bernstein)
+unsigned calculator::string_hash_function (const char *p) 
 {
  unsigned h = 0, g;
  while (*p)
@@ -887,6 +918,7 @@ unsigned calculator::string_hash_function (const char *p)
  return h;
 }
 
+// Add a symbol to the hash table, or return the existing symbol if it already exists
 symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func)
 {
  char *uname = strdup (name);
@@ -916,6 +948,8 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
  return sp;
 }
 
+// Add a symbol to the hash table, or return the existing symbol if it already exists (without
+// function index)
 symbol *calculator::add (t_symbol tag, const char *name, void *func)
 {
  char *uname = strdup (name);
@@ -947,6 +981,7 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
  return sp;
 }
 
+// Add a constant to the hash table, or return an error if it already exists
 float__t calculator::AddConst (const char *name, float__t val)
 {
  if (find (name))
@@ -958,12 +993,14 @@ float__t calculator::AddConst (const char *name, float__t val)
  return val;
 }
 
+// Add a variable to the hash table, or return an error if it already exists
 float__t calculator::AddVar (const char *name, float__t val)
 {
  addfvar (name, val);
  return val;
 }
 
+// Find a symbol in the hash table by name, or return nullptr if it doesn't exist
 symbol *calculator::find (const char *name)
 {
  unsigned h = string_hash_function (name) % hash_table_size;
@@ -982,6 +1019,7 @@ symbol *calculator::find (const char *name)
  return nullptr;
 }
 
+// Add a float constant to the hash table
 void calculator::addfconst (const char *name, float__t val)
 {
  symbol *sp   = add (tsCONSTANT, name);
@@ -989,6 +1027,7 @@ void calculator::addfconst (const char *name, float__t val)
  sp->val.fval = val;
 }
 
+// Add a float variable to the hash table
 void calculator::addfvar (const char *name, float__t val)
 {
  symbol *sp   = add (tsVARIABLE, name);
@@ -996,6 +1035,7 @@ void calculator::addfvar (const char *name, float__t val)
  sp->val.fval = val;
 }
 
+// Add an imaginary constant to the hash table (if enabled)
 void calculator::addim ()
 {
 #ifdef _ENABLE_PREIMAGINARY_
@@ -1010,6 +1050,7 @@ void calculator::addim ()
 #endif // _ENABLE_PREIMAGINARY_
 }
 
+// Add an integer constant to the hash table
 void calculator::addivar (const char *name, int_t val)
 {
  symbol *sp   = add (tsCONSTANT, name);
@@ -1017,6 +1058,7 @@ void calculator::addivar (const char *name, int_t val)
  sp->val.ival = val;
 }
 
+// Add an integer variable to the hash table
 void calculator::addlvar (const char *name, float__t fval, int_t ival)
 {
  symbol *sp   = add (tsCONSTANT, name);
@@ -1025,6 +1067,8 @@ void calculator::addlvar (const char *name, float__t fval, int_t ival)
  sp->val.ival = ival;
 }
 
+// Parse a hexadecimal string and convert it to an integer value, returning the number of characters
+// parsed
 int calculator::hscanf (char *str, int_t &ival, int &nn)
 {
  int_t res = 0;
@@ -1056,6 +1100,8 @@ int calculator::hscanf (char *str, int_t &ival, int &nn)
  return 0;
 }
 
+// Parse a binary string and convert it to an integer value, returning the number of characters
+// parsed
 int calculator::bscanf (char *str, int_t &ival, int &nn)
 {
  int_t res = 0;
@@ -1078,6 +1124,8 @@ int calculator::bscanf (char *str, int_t &ival, int &nn)
  return 0;
 }
 
+// Parse an octal string and convert it to an integer value, returning the number of characters
+// parsed
 int calculator::oscanf (char *str, int_t &ival, int &nn)
 {
  int_t res = 0;
@@ -1100,6 +1148,8 @@ int calculator::oscanf (char *str, int_t &ival, int &nn)
  return 0;
 }
 
+// Parse a string that may be hexadecimal, octal, or an escape sequence, and convert it to an
+// integer
 int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
 {
  int_t res = 0;
@@ -1233,6 +1283,7 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
  return 0;
 }
 
+// Parse a string that may contain degrees, minutes, and seconds, and convert it to radians
 float__t calculator::dstrtod (char *s, char **endptr)
 {
  const char cdeg[]     = { '`', '\'', '\"' }; //` - degrees, ' - minutes, " - seconds
@@ -1262,6 +1313,8 @@ float__t calculator::dstrtod (char *s, char **endptr)
  return res;
 }
 
+// Parse a string that may contain centuries, years, weeks, days, hours, minutes, and seconds, and
+// convert it to seconds
 // 1:c1:y1:d1:h1:m1:s  => 189377247661s
 float__t calculator::tstrtod (char *s, char **endptr)
 {
@@ -1298,6 +1351,7 @@ float__t calculator::tstrtod (char *s, char **endptr)
  return res;
 }
 
+// Parse a string that may contain an engineering suffix (k, M, G, etc.) and apply the appropriate
 // https://en.wikipedia.org/wiki/Metric_prefix
 // process expression like 1k56 => 1.56k (maximum 3 digits)
 void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
@@ -1316,6 +1370,7 @@ void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
  fval += (fract * mul) / div;
 }
 
+// Check if the next characters are "B" or "iB" for computing format, and set the CMP flag if found
 bool calculator::isCMP (char *&fpos)
 {
  if (*fpos == 'B')
@@ -1334,6 +1389,7 @@ bool calculator::isCMP (char *&fpos)
  return false;
 }
 
+// Parse a string that may contain a scientific suffix (k, M, G, etc.) and apply the appropriate
 void calculator::scientific (char *&fpos, float__t &fval)
 {
  if (*(fpos - 1) == 'E') fpos--;
@@ -1474,13 +1530,14 @@ void calculator::scientific (char *&fpos, float__t &fval)
   }
 }
 
+// Set an error message with the given position and message text
 void calculator::error (int pos, const char *msg)
 {
  sprintf (err, "Error: %s at %i", msg, pos);
  errpos = pos;
 }
 
-
+// Skip whitespace and parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
 {
  char name[max_expression_length], *np;
@@ -1488,38 +1545,38 @@ t_operator calculator::scan (bool operand, bool percent)
  while (isspace (buf[pos] & 0x7f)) pos += 1;
  switch (buf[pos++])
   {
-  case '\0':
-   return toEND;
+  case '\0': 
+   return toEND; // end of input
   case '(':
    return toLPAR;
   case ')':
    return toRPAR;
   case '+':
-   if (buf[pos] == '+')
+   if (buf[pos] == '+') // (RO) ++ operator
     {
      pos += 1;
      return operand ? toPREINC : toPOSTINC;
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) += operator
     {
      pos += 1;
      return toSETADD;
     }
    return operand ? toPLUS : toADD;
   case '-':
-   if (buf[pos] == '-')
+   if (buf[pos] == '-') // (RO) -- operator
     {
      pos += 1;
      return operand ? toPREDEC : toPOSTDEC;
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) -= operator
     {
      pos += 1;
      return toSETSUB;
     }
    return operand ? toMINUS : toSUB;
   case '!':
-   if (buf[pos] == '=')
+   if (buf[pos] == '=') // (RO) != operator
     {
      pos += 1;
      return toNE;
@@ -1528,16 +1585,16 @@ t_operator calculator::scan (bool operand, bool percent)
   case '~':
    return toCOM;
   case ';':
-   if (buf[pos] == ';')
+   if (buf[pos] == ';') // (RO) ;; operator (comment to end of line)
     {
      pos += 1;
      return toEND;
     } 
    return toSEMI;
   case '*':
-   if (buf[pos] == '*')
+   if (buf[pos] == '*') // (RO) ** or **= operator
     {
-     if (buf[pos + 1] == '=')
+     if (buf[pos + 1] == '=') // (RO) **= operator
       {
        pos += 2;
        return toSETPOW;
@@ -1545,67 +1602,67 @@ t_operator calculator::scan (bool operand, bool percent)
      pos += 1;
      return toPOW;
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) *= operator
     {
      pos += 1;
      return toSETMUL;
     }
    return toMUL;
   case '/':
-   if (buf[pos] == '=')
+   if (buf[pos] == '=') // (RO) /= operator
     {
      pos += 1;
      return toSETDIV;
     }
-   else if (buf[pos] == '/')
+   else if (buf[pos] == '/') // (RO) // operator (parallel resistors)
     {
      pos += 1;
      return toPAR;
     }
    return toDIV;
   case '%':
-   if (buf[pos] == '=')
+   if (buf[pos] == '=') // (RO) %= operator
     {
      pos += 1;
      return toSETMOD;
     }
-   else if (buf[pos] == '%')
+   else if (buf[pos] == '%') // (RO) %% operator (percent)
     {
      pos += 1;
      return toPERCENT;
     }
    return toMOD;
   case '<':
-   if (buf[pos] == '<')
+   if (buf[pos] == '<') // (RO) << or <<= operator
     {
-     if (buf[pos + 1] == '=')
+     if (buf[pos + 1] == '=') // (RO) <<= operator
       {
        pos += 2;
        return toSETASL;
       }
-     else
+     else // (RO) << operator
       {
        pos += 1;
        return toASL;
       }
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) <= operator
     {
      pos += 1;
      return toLE;
     }
-   else if (buf[pos] == '>')
+   else if (buf[pos] == '>') // (RO) <> operator (not equal)
     {
      pos += 1;
      return toNE;
     }
    return toLT;
   case '>':
-   if (buf[pos] == '>')
+   if (buf[pos] == '>') // (RO) >> or >>= operator
     {
-     if (buf[pos + 1] == '>')
+     if (buf[pos + 1] == '>') // (RO) >>> or >>>= operator
       {
-       if (buf[pos + 2] == '=')
+       if (buf[pos + 2] == '=') // (RO) >>>= operator
         {
          pos += 3;
          return toSETLSR;
@@ -1613,25 +1670,25 @@ t_operator calculator::scan (bool operand, bool percent)
        pos += 2;
        return toLSR;
       }
-     else if (buf[pos + 1] == '=')
+     else if (buf[pos + 1] == '=') // (RO) >>= operator
       {
        pos += 2;
        return toSETASR;
       }
-     else
+     else // (RO) >> operator
       {
        pos += 1;
        return toASR;
       }
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) >= operator
     {
      pos += 1;
      return toGE;
     }
    return toGT;
   case '=':
-   if (buf[pos] == '=')
+   if (buf[pos] == '=') // (RO) == operator
     {
      scfg &= ~PAS;
      pos += 1;
@@ -1642,7 +1699,7 @@ t_operator calculator::scan (bool operand, bool percent)
    else
     return toSET;
   case ':':
-   if (buf[pos] == '=')
+   if (buf[pos] == '=') // (RO) := operator
     {
      scfg |= PAS;
      pos += 1;
@@ -1651,24 +1708,24 @@ t_operator calculator::scan (bool operand, bool percent)
    error ("syntax error");
    return toERROR;
   case '&':
-   if (buf[pos] == '&')
+   if (buf[pos] == '&') // (RO) && operator
     {
      pos += 1;
      return toAND;
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) &= operator
     {
      pos += 1;
      return toSETAND;
     }
    return toAND;
   case '|':
-   if (buf[pos] == '|')
+   if (buf[pos] == '|' ) // (RO) || operator
     {
      pos += 1;
      return toOR;
     }
-   else if (buf[pos] == '=')
+   else if (buf[pos] == '=') // (RO) |= operator
     {
      pos += 1;
      return toSETOR;
@@ -1677,7 +1734,7 @@ t_operator calculator::scan (bool operand, bool percent)
   case '^':
    if (scfg & PAS)
     {
-     if (buf[pos] == '=')
+     if (buf[pos] == '=') // (RO) ^= operator
       {
        pos += 1;
        return toSETPOW;
@@ -1686,7 +1743,7 @@ t_operator calculator::scan (bool operand, bool percent)
     }
    else
     {
-     if (buf[pos] == '=')
+     if (buf[pos] == '=') // (RO) ^= operator
       {
        pos += 1;
        return toSETXOR;
@@ -1694,7 +1751,7 @@ t_operator calculator::scan (bool operand, bool percent)
      return toXOR;
     }
   case '#':
-   if (operand)
+   if (operand) // (RO) # gauge simbol
     {
      float__t fval;
      char *fpos;
@@ -1716,7 +1773,7 @@ t_operator calculator::scan (bool operand, bool percent)
     }
    else
     {
-     if (buf[pos] == '=')
+     if (buf[pos] == '=') // (RO) #= operator
       {
        pos += 1;
        return toSETXOR;
@@ -1750,7 +1807,7 @@ t_operator calculator::scan (bool operand, bool percent)
        {
 #ifdef _WCHAR_
 #ifdef _WIN_
-        if (*(ipos + 1) == 'W')
+        if (*(ipos + 1) == 'W') // (RO) wide char constant
          {
           wchar_t wbuf[2];
           char cbuf[2];
@@ -1791,7 +1848,7 @@ t_operator calculator::scan (bool operand, bool percent)
           if (sbuf[0]) scfg |= STR;
           v_stack[v_sp].tag  = tvSTR;
           v_stack[v_sp].ival = 0;
-          v_stack[v_sp].sval = (char *)malloc (STRBUF);
+          v_stack[v_sp].sval = (char *)malloc (sidx+1);
           if (v_stack[v_sp].sval)
            {
             strcpy (v_stack[v_sp].sval, sbuf);
@@ -1884,7 +1941,7 @@ t_operator calculator::scan (bool operand, bool percent)
       if (sbuf[0]) scfg |= STR;
       v_stack[v_sp].tag  = tvSTR;
       v_stack[v_sp].ival = 0;
-      v_stack[v_sp].sval = (char *)malloc (STRBUF);
+      v_stack[v_sp].sval = (char *)malloc (sidx+1);
       if (v_stack[v_sp].sval)
        {
         strcpy (v_stack[v_sp].sval, sbuf);
@@ -2167,7 +2224,9 @@ static int rpr[toTERMINALS] = {
  15                           // COMMA
 };
 
-bool calculator::assign ()
+// Perform assignment operation for the top value on the stack, checking for variable and constant
+// rules. Used for operators like '++', '--', '+=', '-=', etc. that assign to a variable.
+bool calculator::set_op () 
 {
  value &v = v_stack[v_sp - 1];
  if (v.var == nullptr)
@@ -2187,9 +2246,10 @@ bool calculator::assign ()
   }
 }
 
+// Clear the value stack by resetting all entries to default values and 
+// setting the stack pointer to 0
 void calculator::clear_v_stack ()
 {
- // Clear stack before using
  for (int i = 0; i < max_stack_size; ++i)
   {
    v_stack[i].tag   = tvINT;
@@ -2222,22 +2282,23 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  value saved_val;
  bool has_saved_val = false;
 
- expr   = (expression && expression[0]);
- buf    = expression;
- v_sp   = 0;
- o_sp   = 0;
- pos    = 0;
- err[0] = '\0';
- result_fval  = qnan;
- result_imval = 0.0;
- result_ival = 0;   
- clear_v_stack ();
+ expr   = (expression && expression[0]); 
+ buf    = expression; // Set the input buffer to the provided expression
+ v_sp   = 0;// Clear the value stack pointer
+ o_sp   = 0; // Clear the operator stack pointer
+ pos    = 0; // Reset the input buffer position
+ err[0] = '\0'; // Clear the error buffer
+ result_fval  = qnan; // Clear the floating-point result
+ result_imval = 0.0; // Clear the imaginary result
+ result_ival = 0;   // Clear the integer result
+
+ clear_v_stack (); // Clear the value stack before evaluation
 
  if (!expr) return qnan;
 
  o_stack[o_sp++] = toBEGIN;
 
- memset (sres, 0, STRBUF);
+ memset (sres, 0, STRBUF); // Clear the string result buffer
  while (true)
   {
   next_token:
@@ -2333,7 +2394,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
       }
     }
    n_args = 1;
-   while (o_sp && (lpr[o_stack[o_sp - 1]] >= rpr[oper]))
+   while (o_sp && (lpr[o_stack[o_sp - 1]] >= rpr[oper])) 
     {
      t_operator cop = o_stack[--o_sp];
      if ((UNARY (cop) && (v_sp < 1)) || (BINARY (cop) && (v_sp < 2)))
@@ -2395,6 +2456,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            v_stack[0].fval  = 0.0;
            v_stack[0].ival  = 0;
            v_stack[0].tag   = tvINT;
+#ifdef _STR_VAR_FREE_
+           dupstrvars ();      // Duplicate string variables to ensure that the result string is not
+                               // freed when clearing the strings created during evaluation
+           clearAllStrings (); // Free string variables that were created during evaluation to prevent
+                               // memory leaks
+#endif //_STR_VAR_FREE_
            return result_fval;
           }
         }
@@ -2437,7 +2504,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           {
            error (v_stack[v_sp - 2].pos, "Resulting string is too long");
            result_fval = qnan;
-           clear_v_stack ();
            return qnan;
           }
           {
@@ -2491,7 +2557,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETADD)
         {
-         if (!assign ())
+         if (!set_op ())
           {
            result_fval = qnan;
            return qnan;
@@ -2543,7 +2609,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETSUB)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -2597,7 +2663,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETMUL)
         {
-         if (!assign ())
+         if (!set_op ())
           {
            result_fval = qnan;
            return qnan;
@@ -2663,7 +2729,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETDIV)
         {
-         if (!assign ())
+         if (!set_op ())
           {
            result_fval = qnan;
            return qnan;
@@ -2745,7 +2811,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toPERCENT:
+      case toPERCENT: // %
        if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
@@ -2823,7 +2889,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETMOD)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -2883,7 +2949,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETPOW)
         {
-         if (!assign ())
+         if (!set_op ())
           {
            result_fval = qnan;
            return qnan;
@@ -2918,7 +2984,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETAND)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -2953,7 +3019,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETOR)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -2988,7 +3054,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETXOR)
         {
-         if (!assign ())
+         if (!set_op ())
           {
            result_fval = qnan;
            return qnan;
@@ -3023,7 +3089,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETASL)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -3058,7 +3124,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETASR)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -3093,7 +3159,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_sp -= 1;
        if (cop == toSETLSR)
         {
-         if (!assign ()) 
+         if (!set_op ()) 
           {
            result_fval = qnan;
            return qnan;
@@ -3263,7 +3329,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].fval += 1;
         }
-       if (!assign ())
+       if (!set_op ())
         {
          result_fval = qnan;
          return qnan;
@@ -3292,7 +3358,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
         {
          v_stack[v_sp - 1].fval -= 1;
         }
-       if (!assign ()) 
+       if (!set_op ()) 
         {
          result_fval = qnan;
          return qnan;
@@ -3742,14 +3808,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
             default:
              error ("Invalid expression");
-            }
-          }
-         if (cop == toSETADD)
-          {
-           if (!assign ())
-            {
-             result_fval = qnan;
-             return qnan;
             }
           }
          o_sp -= 1;

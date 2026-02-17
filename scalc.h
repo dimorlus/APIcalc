@@ -15,6 +15,8 @@
 
 #include <cstdlib> // for free() function
 
+#define _STR_VAR_FREE_
+
 // RW - set both by calc engine and application
 // WO - set only from application
 // RO - set only by calc engine
@@ -274,7 +276,6 @@ class value
   sval  = nullptr;
  }
 
-
  inline float__t get () { return tag == tvINT ? (float__t)ival : fval; }
 
  inline float__t get_dbl () { return tag == tvINT ? (double)ival : (double)fval; }
@@ -345,6 +346,8 @@ class calculator
  char *registerString (char *str); // Register a string in the string list and return the registered string pointer
  void clearAllStrings (); // Clear all strings in the string list
  char *dupString (const char *src); // Duplicate a string and register it in the string list
+ void destroyvars (void);
+ void dupstrvars (void);
 
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
@@ -358,7 +361,7 @@ class calculator
  {
   error (pos - 1, msg);
  } // Report an error at the current position with the specified message
- bool assign (); // Assign a value to a variable
+ bool set_op (); // Assign a value to a variable
 
  bool isCMP (char *&fpos); // Check if the current position is a computing format
  int hscanf (char *str, int_t &ival,

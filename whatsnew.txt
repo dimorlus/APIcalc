@@ -1,3 +1,5 @@
+20.02.26 (2.1)
+
 19.02.26 (2.099)
 - Memory leak bugs have been fixed.
 - Uninitialized variables are now not allowed (previously, they had a value of 0).

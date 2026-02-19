@@ -4206,9 +4206,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
-             if (v_stack[v_sp - 2].tag == tvSTR)
+             if (v_stack[v_sp - 1].tag == tvSTR)
               {
-               error (v_stack[v_sp - 2].pos, "Illegal string operation");
+               error (v_stack[v_sp - 1].pos, "Illegal string operation");
                result_fval = qnan;
                return qnan;
               }
@@ -4218,9 +4218,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
-             if (v_stack[v_sp - 1].tag != tvSTR)
+             if (v_stack[v_sp - 2].tag != tvSTR)
               {
-               error (v_stack[v_sp - 1].pos, "String operand required");
+               error (v_stack[v_sp - 2].pos, "String operand required");
                result_fval = qnan;
                return qnan;
               }

@@ -66,7 +66,7 @@ float__t Var (void *clc, char *name, float__t x)
  return ((calculator *)clc)->AddVar (name, x);
 }
 
-calculator::calculator (int cfg)
+calculator::calculator (int cfg, symbol *symtab)
 {
  errpos        = 0;
  pos           = 0;
@@ -75,12 +75,19 @@ calculator::calculator (int cfg)
  err[0]        = '\0';
  scfg          = cfg;
  sres[0]       = '\0';
- memset (hash_table, 0, sizeof hash_table);
  memset (v_stack, 0, sizeof v_stack);
  string_list_head = nullptr;
  c_imaginary = 'i';
  // randomize();
  srand (static_cast<unsigned int> (time (nullptr)));
+
+ if (symtab)
+  {
+   // Copy symbols from the provided symbol table
+   return;
+  }
+
+ memset (hash_table, 0, sizeof hash_table);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -394,6 +401,7 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
          sp->val.sval = nullptr;
         }
 #endif //_STR_VAR_FREE_
+       if (sp->tag == tsUFUNCT) free (sp->func);
        if (sp->name) free (sp->name);
        sp->name = nullptr;
        delete sp;
@@ -921,26 +929,24 @@ unsigned calculator::string_hash_function (const char *p)
 // Add a symbol to the hash table, or return the existing symbol if it already exists
 symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func)
 {
- char *uname = strdup (name);
-
- unsigned h = string_hash_function (uname) % hash_table_size;
  symbol *sp;
+ unsigned h = string_hash_function (name) % hash_table_size;
  for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
     {
-     if (stricmp (sp->name, uname) == 0) return sp;
+     if (stricmp (sp->name, name) == 0) return sp;
     }
    else
     {
-     if (strcmp (sp->name, uname) == 0) return sp;
+     if (strcmp (sp->name, name) == 0) return sp;
     }
   }
  sp            = new symbol;
  sp->tag       = tag;
  sp->fidx      = fidx;
  sp->func      = func;
- sp->name      = uname;
+ sp->name      = strdup (name);
  sp->val.tag   = tvINT;
  sp->val.ival  = 0;
  sp->next      = hash_table[h];
@@ -952,25 +958,23 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
 // function index)
 symbol *calculator::add (t_symbol tag, const char *name, void *func)
 {
- char *uname = strdup (name);
-
- unsigned h = string_hash_function (uname) % hash_table_size;
  symbol *sp;
+ unsigned h = string_hash_function (name) % hash_table_size;
  for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
     {
-     if (stricmp (sp->name, uname) == 0) return sp;
+     if (stricmp (sp->name, name) == 0) return sp;
     }
    else
     {
-     if (strcmp (sp->name, uname) == 0) return sp;
+     if (strcmp (sp->name, name) == 0) return sp;
     }
   }
  sp            = new symbol;
  sp->tag       = tag;
  sp->func      = func;
- sp->name      = uname;
+ sp->name      = strdup (name);
  sp->val.tag   = tvINT;
  sp->val.ival  = 0;
  sp->val.fval  = 0;
@@ -1003,8 +1007,8 @@ float__t calculator::AddVar (const char *name, float__t val)
 // Find a symbol in the hash table by name, or return nullptr if it doesn't exist
 symbol *calculator::find (const char *name)
 {
- unsigned h = string_hash_function (name) % hash_table_size;
  symbol *sp;
+ unsigned h = string_hash_function (name) % hash_table_size;
  for (sp = hash_table[h]; sp != nullptr; sp = sp->next)
   {
    if (scfg & UPCASE)
@@ -1019,6 +1023,29 @@ symbol *calculator::find (const char *name)
  return nullptr;
 }
 
+// Add a user-defined function to the hash table, or return an error if it already exists
+symbol *calculator::addUF (const char *name, const char *expr)
+{
+ symbol *sp = find (name);
+ unsigned h = string_hash_function (name) % hash_table_size;
+ if (sp && sp->tag == tsUFUNCT)
+  return sp; // If a user function with the same name already exists, return it
+ if (sp) 
+  return nullptr; // If a symbol with the same name exists but is not a user function, return an error
+ sp            = new symbol;
+ sp->tag       = tsUFUNCT;
+ sp->func      = strdup(expr);
+ sp->name      = strdup(name);
+ sp->val.tag   = tvUFUNCT;
+ sp->val.ival  = 0;
+ sp->val.fval  = 0;
+ sp->val.imval = 0;
+ sp->val.sval  = nullptr;
+ sp->next      = hash_table[h];
+ hash_table[h] = sp;
+
+ return sp;
+}
 // Add a float constant to the hash table
 void calculator::addfconst (const char *name, float__t val)
 {
@@ -1033,6 +1060,17 @@ void calculator::addfvar (const char *name, float__t val)
  symbol *sp   = add (tsVARIABLE, name);
  sp->val.tag  = tvFLOAT;
  sp->val.fval = val;
+}
+
+// Add  variable to the hash table
+void calculator::addvar (const char *name, value &val)
+{
+ symbol *sp   = add (tsVARIABLE, name);
+ sp->val.tag  = val.tag;
+ sp->val.fval = val.fval;
+ sp->val.ival = val.ival;
+ sp->val.imval = val.imval;
+ sp->val.sval = val.sval;
 }
 
 // Add an imaginary constant to the hash table (if enabled)
@@ -1537,6 +1575,15 @@ void calculator::error (int pos, const char *msg)
  errpos = pos;
 }
 
+void calculator::errorf (int pos, const char *fmt, ...)
+{
+ va_list args;
+ va_start(args, fmt);
+ vsprintf(err, fmt, args);
+ va_end(args);
+ errpos = pos;
+}
+
 // Skip whitespace and parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
 {
@@ -1782,6 +1829,78 @@ t_operator calculator::scan (bool operand, bool percent)
     }
   case ',':
    return toCOMMA;
+  case '{':
+   {
+    //User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
+	//1. Find the expression in {}
+	//2. Find the function name in it before (..) -> frq
+	//3. Place the name (frq) in the list of names (symbols), and replace the function 
+    //   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)). 
+    //   If such a name already exists, but not for user defined function, return toERROR.
+    //   If such a name already exists for user defined function, return the existing one.
+    //   its done in addUF function, which is called from here. addUF returns nullptr if there is a
+    //   name conflict, and the new symbol if added successfully or already exists as a user
+    //   function.
+    //4. Place the new type tsUFUNC in the list of names (by addUF function)
+	//5. Return the new type toCONTINUE to continue scanning the expression.     
+    char sbuf[STRBUF];
+    int sidx = 0;
+    char *ipos = buf + pos;
+    while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+    sbuf[sidx] = '\0';
+    if (*ipos == '}')
+     {
+      // extract user function name here and put it as symbol in the hash table
+      char fname[STRBUF];
+      char *fnp;
+      fnp = fname;
+      int spos = 0;
+      while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
+       {
+        *fnp++ = sbuf[spos++] & 0x7f;
+       }
+      if (fnp == fname)
+       {
+        error ("Bad character");
+        return toERROR;
+       }
+      *fnp = '\0';
+      
+      if (fname[0])
+       {
+        // Add user function to symbol table 
+        if (!addUF(fname, &sbuf[spos]))
+         {
+          error ("Duplicate name");
+          return toERROR;
+         }
+       }
+      else
+       {
+        error ("User function name missing");
+        return toERROR;
+       }
+     }
+    else
+     {
+      error ("unmatched brace");
+      return toERROR;
+     }
+    pos = ipos - buf + 1;
+#ifdef _UF_AS_OPERAND_
+    // if used this way, expression in {} is treated as a 0 and {expr};expr syntax is supported for
+    // user functions
+    v_stack[v_sp].tag   = tvINT;
+    v_stack[v_sp].ival  = 0;
+    v_stack[v_sp].pos   = pos;
+    v_stack[v_sp++].var = nullptr;
+    return toOPERAND;
+#else //_UF_AS_OPERAND_
+    // if used this way, expression in {} is treated as a empty and {expr}expr syntax is supported
+    // for user functions  
+    return toCONTINUE;
+#endif //_UF_AS_OPERAND_
+   }
   case '\'':
    {
     int_t ival;
@@ -2316,13 +2435,18 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     }
    else
     {
-     oper = scan (operand, percent);
+     do
+      {
+       oper = scan (operand, percent);
+      }
+     while (oper == toCONTINUE); // Skip semicolons
     }
    if (oper == toERROR)
     {
      result_fval = qnan;
      return qnan;
     }
+   //if (oper == toCONTINUE) goto next_token;
   loper:
    switch (oper)
     {
@@ -2490,6 +2614,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].sval  = nullptr;
        v_sp -= 1;
        break;
+       
+      case toCONTINUE: //{}
+       continue;
 
       case toADD:    // +
       case toSETADD: // +=
@@ -3806,6 +3933,137 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
+            case tsUFUNCT: // user defined function
+              { 
+                //   sym->name -> frq
+                //   (char *)sym->func -> (L, C)1/(2 pi sqrt(L C))
+                //1. When tsUFUNC is found, create a new instance of the calculator class.
+		        //2. Sequentially parse the previously stored string in the name, selecting
+		        //   the names separated by ',' and calling addvar(name, value) for the new 
+                //   calculator, popping value from the stack. And checking that the number 
+                //   of declared parameters matches the number of passed ones.
+		        //3. Call the evaluate method on the new calculator with the remainder after 
+                //   the string parameters equal to 1/(2 pi sqrt(L C))
+		        //4. Push the result onto the stack.
+		        //5. Delete the previously created calculator.
+
+                calculator *pCalculator = new calculator (scfg);
+                if (!pCalculator)
+                 {
+                  error ("Out of memory");
+                  result_fval = qnan;
+                  return qnan;
+                 }
+
+                const char *funcdef = (const char *)sym->func;
+                const char *p = strchr (funcdef, '(');
+                if (!p)
+                 {
+                  error ("No '(' in function definition");
+                  delete pCalculator;
+                  result_fval = qnan;
+                  return qnan;
+                 }
+                p++; // after '('
+
+                int param_count = 0;
+                int arg_idx     = 0;
+                char vbuf[16]; // buffer for variable name, max 15 characters + null terminator
+                while (*p && *p != ')')
+                 {
+                  // Skip spaces
+                  while (*p && isspace (*p)) p++;
+                  // Read variable name
+                  int vi = 0;
+                  while (*p && (isalnum (*p & 0x7f) || *p == '_'))
+                   {
+                    if (vi < (int)sizeof (vbuf) - 1) vbuf[vi++] = *p;
+                    p++;
+                   }
+                  vbuf[vi] = 0;
+                  if (vi == 0)
+                   {
+                    error ("Empty parameter name");
+                    delete pCalculator;
+                    result_fval = qnan;
+                    return qnan;
+                   }
+                  // Add variable
+                  if (arg_idx >= n_args)
+                   {
+                    error ("Too many parameters in function definition");
+                    delete pCalculator;
+                    result_fval = qnan;
+                    return qnan;
+                   }
+                  pCalculator->addvar (vbuf, v_stack[v_sp - n_args + arg_idx]);
+                  arg_idx++;
+
+                  // Skip spaces
+                  while (*p && isspace (*p)) p++;
+                  if (*p == ',')
+                   {
+                    p++;
+                    continue;
+                   }
+                  else if (*p == ')')
+                   {
+                    break;
+                   }
+                  else
+                   {
+                    error ("Invalid character in parameter list");
+                    delete pCalculator;
+                    result_fval = qnan;
+                    return qnan;
+                   }
+                 }
+                if (*p != ')')
+                 {
+                  error ("No closing ')' in function definition");
+                  delete pCalculator;
+                  result_fval = qnan;
+                  return qnan;
+                 }
+                p++; // after ')'
+
+                if (arg_idx != n_args)
+                 {
+                  errorf (v_stack[v_sp - n_args - 1].pos, "Function should take %d argument(s)",
+                          arg_idx);
+                  delete pCalculator;
+                  result_fval = qnan;
+                  return qnan;
+                 }
+
+                // Rest of the string — expression
+                while (*p && isspace (*p)) p++;
+                float_t res = pCalculator->evaluate ((char *)p);
+
+               if (IsNaN (res))
+                 {
+                  errorf (v_stack[v_sp - n_args - 1].pos, "%s", pCalculator->error());
+                  delete pCalculator;
+                  result_fval = qnan;
+                  return qnan;
+                 }
+
+
+                v_stack[v_sp - n_args - 1].fval = pCalculator->get_re_res() ;
+                v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
+                v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
+                v_stack[v_sp - n_args - 1].tag   = tvFLOAT;
+                if (v_stack[v_sp - n_args - 1].imval != 0.0)
+                 v_stack[v_sp - n_args - 1].tag = tvCOMPLEX;
+                else if ((float__t)v_stack[v_sp - n_args - 1].ival
+                         == v_stack[v_sp - n_args - 1].fval)
+                 v_stack[v_sp - n_args - 1].tag = tvINT;
+
+                delete pCalculator;
+                v_sp -= n_args; // pop arguments
+
+             }
+             break;
             default:
              error ("Invalid expression");
             }

@@ -1,3 +1,11 @@
+19.02.26 (2.099)
++ User-defined functions (can be specified in the consts.txt file). {frq(L, C)1/(2 pi sqrt(L C))}
+  Using frq(130u, 2n2), result: 297602.8699774697
+
+$ Possible improvement: Add parameter passing by reference to func(&x). If this is detected, then the variable 
+  x is also created in the main calculator, and after calling evaluate, it must be made consistent. To do this, add
+  methods for accessing the list of symbols by name. 
+  
 17.02.26 (2.098)
 * Now all intermediate string values are deleted after each expression is evaluated. Before this, the values 
   of string variables are copied for subsequent use in the new expression. These values are also deleted when 
@@ -133,6 +141,15 @@
 
 01.10.25 
 + Added complex numbers support.
+
+# Legend.
+	# Comment on this file.
+	+ Feature additions
+	- Bug fixes
+	* Changes
+	! Bug found and not yet fixed
+	$ Not yet implemented feature
+
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 
 VSL (BCB6) https://github.com/dimorlus/fcalc, which, in turn, is based on DOS programs 

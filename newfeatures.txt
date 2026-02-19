@@ -1,0 +1,49 @@
+$ Пользовательские функции (можно прописать в файле consts.txt). {frq(L, C)1/(2 pi sqrt(L C))}
+  Использование frq(130u, 2n2), результат: 297602.8699774697
+  Внутри scan
+	  1. Найти выражение в {}
+	  2. Найти в нем имя функции до (..) -> frq
+	  3. Поместить в список имен (символов) имя (frq), а вместо указателя на функцию строку с параметрами и телом
+		 (L, C)1/(2 pi sqrt(L C)). Если такое имя уже есть - вернуть ошибку toERROR
+	  4. Поместить в список имен новый тип tsUFUNC
+	  5. Вернуть новый тип toCONTINUE для продолжения сканирования выражения.
+  Внутри evaluate
+      1. Когда найдена tsUFUNC создать новый экземпляр класса calculator 
+	  2. Последовательно парсить предварительно сохраненную в имени строку, выделяя
+         разделенные ',' имена и вызывая для нового калькулятора addvar(name, value), доставая value из стека
+         и проверяя соответствие количества объявленных параметров количеству переданных.
+      3. Вызвать метод evaluate у нового калькулятора с остатком после параметров строки 1/(2 pi sqrt(L C))
+      4. Поместить в стек результат.
+	  5. Удалить созданный ранее калькулятор.
+  Внутри destroyvars
+      1. Добавить удаление строки если тип символа tsUFUNC  
+	  
+$  Возможное развитие. Добавить передачу параметров по ссылке func(&x). Если такое обнаруживается, то и в основном
+   калькуляторе создается переменная x и после вызова evaluate надо привести ее в соответствие. Для этого добавить 
+   методы доступа к списку символов по имени. 
+
+
+$ User-defined functions (can be specified in the consts.txt file). {frq(L, C)1/(2 pi sqrt(L C))}
+  Using frq(130u, 2n2), result: 297602.8699774697
+  Inside scan
+	   1. Find the expression in {}
+	   2. Find the function name in it before (..) -> frq
+	   3. Place the name (frq) in the list of names (symbols), and replace the function pointer with a string with 
+		  parameters and body (L, C)1/(2 pi sqrt(L C)). If such a name already exists, return toERROR
+	   4. Place the new type tsUFUNC in the list of names
+	   5. Return the new type toCONTINUE to continue scanning the expression. 
+   Inside evaluate
+		1. When tsUFUNC is found, create a new instance of the calculator class.
+		2. Sequentially parse the previously stored string in the name, selecting
+		   the names separated by ',' and calling addvar(name, value) for the new calculator, popping value from 
+		   the stack. And checking that the number of declared parameters matches the number of passed ones.
+		3. Call the evaluate method on the new calculator with the remainder after the string parameters equal 
+		   to 1/(2 pi sqrt(L C))
+		4. Push the result onto the stack.
+		5. Delete the previously created calculator.
+Inside destroyvars
+        1. Add string deletion if the symbol type is tsUFUNC
+
+$ Possible improvement: Add parameter passing by reference to func(&x). If this is detected, then the variable 
+  x is also created in the main calculator, and after calling evaluate, it must be made consistent. To do this, add
+  methods for accessing the list of symbols by name. 

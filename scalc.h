@@ -15,7 +15,7 @@
 
 #include <cstdlib> // for free() function
 
-#define _STR_VAR_FREE_
+#define _STR_VAR_FREE_ 
 
 // RW - set both by calc engine and application
 // WO - set only from application
@@ -54,7 +54,7 @@
 #define TOP  (1 << 27) // (UI) Always on top
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define OPT  (1 << 29) // (UI) Print options
-
+#define NIV  (1 << 31) // (UI) Not add functions and variables to the hash table (internal use only) 
 
 #define STRBUF 256 // bufer size for string operations
 
@@ -127,7 +127,8 @@ enum t_value
  tvFLOAT,
  tvPERCENT,
  tvCOMPLEX,
- tvSTR
+ tvSTR,
+ tvUFUNCT
 };
 
 enum t_operator
@@ -183,6 +184,7 @@ enum t_operator
  toSETPOW,  // toSETPOW represents a set power operator
  toSEMI,    // toSEMI represents a semicolon operator
  toCOMMA,   // toCOMMA represents a comma operator
+ toCONTINUE, // toCONTINUE represents a continue operator for continue scanning
  toTERMINALS // toTERMINALS must be the last operator in the list and represents the total number of
              // operators
 };
@@ -210,6 +212,7 @@ enum t_symbol
  tsSIFUNC1, // int f(char *s)
  tsVFUNC1,  // void vfunc(value* res, value* arg, int idx)
  tsVFUNC2,  // void vfunc(value* res, value* arg1, value* arg2, int idx)
+ tsUFUNCT,   // User-defined function
  tsNUM
 };
 
@@ -346,17 +349,20 @@ class calculator
  char *registerString (char *str); // Register a string in the string list and return the registered string pointer
  void clearAllStrings (); // Clear all strings in the string list
  char *dupString (const char *src); // Duplicate a string and register it in the string list
- void destroyvars (void);
- void dupstrvars (void);
+ void destroyvars (void); // Destroy all variables in the hash table
+ void dupstrvars (void); // Duplicate string variables in the hash table (used when copying the calculator state)
 
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
  symbol *add (t_symbol tag, v_func fidx, const char *name,
               void *func = nullptr); // Add a symbol with function index to the hash table
  symbol *find (const char *name);    // Find a symbol in the hash table by name
+ symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
+                                                    // with the given name and expression
  t_operator scan (bool operand,
-       bool percent); // Scan the next token in the expression and return its operator type
+                  bool percent); // Scan the next token in the expression and return its operator type
  void error (int pos, const char *msg); // Report an error at the given position with the specified message
+ void errorf (int pos, const char *fmt, ...); // Report an error at the given position with a formatted message
  inline void error (const char *msg)
  {
   error (pos - 1, msg);
@@ -382,22 +388,19 @@ class calculator
  void addim (void); // Add imaginary unit
  
  public:
- calculator (int cfg = PAS + SCI + UPCASE); // Constructor with optional syntax configuration
-   inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)
-   {
-    scfg = cfg;
-   } // Set syntax configuration
-   inline int issyntax (void) { return scfg; } // Get current syntax configuration
-   inline char *error (void) { return err; }   // Get error message
-   inline int errps (void) { return errpos; }; // Get error position
-   inline char *Sres (void) { return sres; };  // Get string result
-   inline char Ichar (void)
-   {
-    return c_imaginary;
-   }; // Get the character used for the imaginary unit
+ calculator (int cfg = PAS + SCI + UPCASE,
+             symbol *symtab = nullptr); // Constructor with optional syntax configuration
+ inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
+ inline int issyntax (void) { return scfg; } // Get current syntax configuration
+ inline char *error (void) { return err; }   // Get error message
+ inline int errps (void) { return errpos; }; // Get error position
+ inline char *Sres (void) { return sres; };  // Get string result
+ inline char Ichar (void) { return c_imaginary;}; // Get the character used for the imaginary unit
 
  float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
  float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
+
+ void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
  void addfvar (const char *name, float__t val); // Add a floating-point variable to the calculator
  void addivar (const char *name, int_t val); // Add an integer variable to the calculator
@@ -407,10 +410,12 @@ class calculator
  int varlist (char *buf, int bsize,
               int *maxlen = nullptr); // Get a list of variables in the calculator and store it in the provided
                           // buffer, with an optional maximum length for variable names
- float__t
- evaluate (char *expr, __int64 *piVal = nullptr,
+ float__t  evaluate (char *expr, __int64 *piVal = nullptr,
            float__t *pimval = nullptr); // Evaluate an expression and return the result as a floating-point value,
                        // with optional pointers to store integer and imaginary results
+ int64_t get_int_res () { return result_ival; };
+ float__t get_re_res () { return result_fval; };
+ float__t get_im_res () { return result_imval; };
 
  int print (char *str, int Options, int binwide,
             int *size = nullptr); // Print a string representation of the result with specified
@@ -425,4 +430,4 @@ extern bool IsNaNL (const long double ldVal); // Function to check if a long dou
                                               // value is NaN (Not a Number)
 #define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
 
- #endif // scalcH
+#endif // scalcH

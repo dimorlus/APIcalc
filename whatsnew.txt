@@ -1,7 +1,9 @@
 19.02.26 (2.099)
-+ User-defined functions (can be specified in the consts.txt file). {frq(L, C)1/(2 pi sqrt(L C))}
+- Memory leak bugs have been fixed.
+- Uninitialized variables are now not allowed (previously, they had a value of 0).
+- The type of function arguments is now checked; for example, you can't call sin on a string.
++ User-defined functions added (can be specified in the consts.txt file). {frq(L, C)1/(2 pi sqrt(L C))}
   Using frq(130u, 2n2), result: 297602.8699774697
-
 $ Possible improvement: Add parameter passing by reference to func(&x). If this is detected, then the variable 
   x is also created in the main calculator, and after calling evaluate, it must be made consistent. To do this, add
   methods for accessing the list of symbols by name. 

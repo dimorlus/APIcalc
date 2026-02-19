@@ -79,6 +79,10 @@ typedef long double float__t;
 #else
 typedef double float__t;
 #endif
+
+constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
+
+
 class value;
 class symbol;
 
@@ -123,6 +127,7 @@ typedef union
 
 enum t_value
 {
+ tvERR,
  tvINT,
  tvFLOAT,
  tvPERCENT,
@@ -346,6 +351,7 @@ class calculator
  float__t result_imval; // Imaginary part of complex result
  t_value result_tag; // Type of result
 
+ 
  char *registerString (char *str); // Register a string in the string list and return the registered string pointer
  void clearAllStrings (); // Clear all strings in the string list
  char *dupString (const char *src); // Duplicate a string and register it in the string list

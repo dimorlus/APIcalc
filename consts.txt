@@ -103,3 +103,87 @@ const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)
 ;; --- Functions ---
 {frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency
 {WWeight(D, R)(ro_cu/re_cu)(pi^2 (D 1m)^4/16)R 1k};;Wire weight in gram
+
+;; --- Mechanics ---
+{speed(s, t) s/t};; Average speed
+{accel(v, t) v/t};; Acceleration
+{kin_e(m, v) (m*v^2)/2};; Kinetic energy
+{pot_e(m, h) m*g0*h};; Potential energy near Earth
+{force(m, a) m*a};; Newton's second law
+{f_grav(m1, m2, r) gn*m1*m2/r^2};; Universal gravitation
+{torque(f, r) f*r};; Torque
+{reynolds(v, d, visc) v*d/visc};; Reynolds number (simplified)
+{fall_t(h) sqrt(2*h/g0)};; Time of fall from height h (no air resistance)
+{fall_v(h) sqrt(2*g0*h)};; Impact velocity from height h
+{v_orbit(r) sqrt(gn*5.972e24/r)};; Orbital velocity (5.972e24 is Earth mass)
+{escape_v(r) sqrt(2*gn*5.972e24/r)};; Escape velocity
+
+;; --- Ballistic ---
+{mach(v, t) v/sqrt(1.4*rg*(t+stdt)/0.02896)};; Mach number (t in Celsius)
+{p_hydro(h, ro) ro*g0*h};; Hydrostatic pressure at depth h
+{v_rms(t, m_mol) sqrt(3*rg*(t+stdt)/m_mol)};; Root-mean-square speed of gas molecules
+
+;; --- Electricity ---
+{ohm_u(i, r) i*r};; Ohm's law (Voltage)
+{p_dc(u, i) u*i};; DC Power
+{p_ac(u, i, pf) u*i*pf};; AC Power (pf = power factor/cos phi)
+{xc(f, c) 1/(tau*f*c)};; Capacitive reactance
+{xl(f, l) tau*f*l};; Inductive reactance
+{res_f(l, c) 1/(tau*sqrt(l*c))};; LC Resonance frequency
+{led_r(vs, vf, if) (vs-vf)/if};; LED resistor calculator
+{f_cap(c, xc) 1/(tau*c*xc)};; Frequency to get specific capacitive reactance
+{f_ind(l, xl) xl/(tau*l)};; Frequency to get specific inductive reactance
+{q_factor(f, l, r) (tau*f*l)/r};; Q-factor of an inductor
+{skin_d(f, ro, u_rel) sqrt(ro/(pi*f*u0*u_rel))};; Skin depth (ro - resistivity)
+{ind_air(n, r, l) (u0 * n^2 * pi * r^2) / l};; Long solenoid inductance (SI)
+{energy_l(l, i) (l * i^2) / 2};; Energy stored in inductor
+{energy_c(c, u) (c * u^2) / 2};; Energy stored in capacitor
+{ant_dipole(f) 143 / (f / 1e6)};; Half-wave dipole length (m) from F (Hz)
+{v_prop(er) c0 / sqrt(er)};; Velocity of light in dielectric
+{z_line(l, c) sqrt(l / c)};; Characteristic impedance of a line
+
+;; --- Optics ---
+{wavelen(f) c0/f};; Wavelength in vacuum
+{freq(wl) c0/wl};; Frequency from wavelength
+{photon_e(wl) (hp*c0)/wl};; Photon energy from wavelength
+{lens(f1, f2) 1/(1/f1 + 1/f2)};; Thin lens equation (combined focal length)
+{db_p(p1, p0) 10*log10(p1/p0)};; Power ratio in decibels
+{db_u(u1, u0) 20*log10(u1/u0)};; Voltage ratio in decibels
+
+;; --- Thermodynamics ---
+{p_gas(n, t, v) (n*rg*t)/v};; Ideal gas law (Pressure)
+{v_gas(n, t, p) (n*rg*t)/p};; Ideal gas law (Volume)
+{c_to_k(c) c + stdt};; Celsius to Kelvin
+{k_to_c(k) k - stdt};; Kelvin to Celsius
+{f_to_c(f) (f-32)*5/9};; Fahrenheit to Celsius
+{t_junc(p, rth, tamb) tamb + p * rth};; Junction temperature (Celsius)
+{p_max(tj, ta, rth) (tj - ta) / rth};; Max power dissipation
+{v_leak(p, ro) sqrt(2 * p / ro)};; Ideal gas leak velocity (Bernoulli)
+{db_dist(db1, d1, d2) db1 - 20 * log10(d2 / d1)};; Sound level change with distance
+
+;; --- Nuclear and particles ---
+{e_mc2(m) m*c0^2};; Mass-energy equivalence
+{de_broglie(m, v) hp/(m*v)};; De Broglie wavelength
+{br_radius(n) a0*n^2};; Bohr orbit radius for hydrogen
+{c_force(q1, q2, r) (1/(4*pi*e0))*(q1*q2/r^2)};; Coulomb force
+{ledwl(vf) (hp*c0)/(vf*qe)};; Wavelength (m) from LED forward voltage
+{vled(wl) (hp*c0)/(wl*qe)};; Expected voltage (V) from wavelength
+{eband(wl) (hp*c0/wl)/ev};; Band gap energy in electron-volts
+{wien_wl(t) 0.002897/t};; Wien's displacement law (peak wavelength from temp)
+
+;; --- Geometry ---
+{area_c(r) pi*r^2};; Circle area
+{vol_sphere(r) (4/3)*pi*r^3};; Sphere volume
+
+;; --- Conversions --
+{mil_to_mm(m) m * 0.0254};; Mil (thou) to mm
+{cmil_to_mm2(cm) cm * 0.0005067};; Circular mil to mm²
+{mm2_to_cmil(mm2) mm2 / 0.0005067};; mm² to Circular mil
+{psi_to_bar(p) p * 0.0689476};; PSI to Bar
+{bar_to_psi(p) p / 0.0689476};; Bar to PSI
+{gpm_to_lpm(g) g * 3.78541};; Gallons per minute to Liters per minute
+{lbft_to_nm(v) v * 1.355818};; Pound-foot to Newton-meter
+{nm_to_lbft(v) v / 1.355818};; Newton-meter to Pound-foot
+{hp_to_kw(p) p * 0.7457};; Mechanical HP to kW
+{r_to_usi(rv) 1/(rv * 0.1761)};; R-value (US) to U-factor (Metric W/m²K)
+

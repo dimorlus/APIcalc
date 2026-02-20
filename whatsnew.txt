@@ -1,4 +1,17 @@
+20.02.26 (2.102)
++ Added numerous user-defined functions to the consts.txt file.
+* User-defined functions can now be overridden. Previously, attempting to override an existing 
+  user-defined function would cause nothing; the new declaration would simply be ignored, with 
+  no errors generated.
++ The help file has been updated to reflect the new features.  
+
+20.02.26 (2.101)
+* Now, when calling a user-defined function, all previously defined constants (but not variables) 
+  are available, including those defined in the consts.txt file in the directory with the calculator 
+  executable file.
+  
 20.02.26 (2.1)
+- Fixed bug with const("name", value) and var("name", value) functions.
 
 19.02.26 (2.099)
 - Memory leak bugs have been fixed.

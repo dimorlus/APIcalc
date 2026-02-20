@@ -1070,7 +1070,15 @@ symbol *calculator::addUF (const char *name, const char *expr)
  symbol *sp = find (name);
  unsigned h = string_hash_function (name) % hash_table_size;
  if (sp && sp->tag == tsUFUNCT)
-  return sp; // If a user function with the same name already exists, return it
+  {
+   //return sp; // If a user function with the same name already exists, return it, ignoring the new
+              // definition. This will be changed in the future to allow redefinition of user
+              // functions, but for now it prevents accidental
+   // redefine user function.
+   if (sp->func) free (sp->func);
+   sp->func = strdup (expr);
+   return sp;
+  }
  if (sp) 
   return nullptr; // If a symbol with the same name exists but is not a user function, return an error
  sp            = new symbol;

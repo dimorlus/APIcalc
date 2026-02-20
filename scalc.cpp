@@ -66,7 +66,7 @@ float__t Var (void *clc, char *name, float__t x)
  return ((calculator *)clc)->AddVar (name, x);
 }
 
-calculator::calculator (int cfg, symbol *symtab)
+calculator::calculator (int cfg, symbol **symtab, int copyMask)
 {
  errpos        = 0;
  pos           = 0;
@@ -81,13 +81,51 @@ calculator::calculator (int cfg, symbol *symtab)
  // randomize();
  srand (static_cast<unsigned int> (time (nullptr)));
 
+   // Copy symbols from the provided symbol table
+   //The function should create a new hashed linked list 
+   // from the existing one, duplicate the names, and create 
+   // copies of string variables that will be deleted in 
+   // the destructor. At the same time, it should allow 
+   // flexible selection of which nodes to copy and which 
+   // not (depending on the value of the tag field). 
+   // All pointers freed in the destructor must be 
+   // recreated; the rest can be copied.
+ memset (hash_table, 0, sizeof hash_table);
  if (symtab)
   {
-   // Copy symbols from the provided symbol table
+   for (int i = 0; i < hash_table_size; i++)
+    {
+     symbol *src = symtab[i];
+     symbol **dst = &hash_table[i];
+
+     while (src)
+      {
+       // Check the mask: tsUFUNCT is always skipped to avoid recursion
+       // Other tags are checked against the copyMask
+       if (src->tag != tsUFUNCT && (copyMask & (1 << src->tag)))
+        {
+         symbol *ns = new symbol;
+         *ns        = *src;  // Copy all fields (tag, fidx, func, val)
+
+         // name always duplicated — destroyvars() frees it using free()
+         ns->name = src->name ? strdup (src->name) : nullptr;
+
+         // val.sval for string variables — duplicate if _STR_VAR_FREE_ is defined
+         if ((src->tag == tsVARIABLE) && (src->val.tag == tvSTR) && src->val.sval)
+          ns->val.sval = strdup (src->val.sval);
+
+         // func for tsUFUNCT is not copied (see condition above),
+         // for other func — pointer to static function, copy as is
+
+         ns->next = nullptr;
+         *dst     = ns;
+         dst      = &ns->next;
+        }
+       src = src->next;
+      }
+    }
    return;
   }
-
- memset (hash_table, 0, sizeof hash_table);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -4322,7 +4360,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 		        //4. Push the result onto the stack.
 		        //5. Delete the previously created calculator.
 
-                calculator *pCalculator = new calculator (scfg);
+                calculator *pCalculator = new calculator (scfg, hash_table);
                 if (!pCalculator)
                  {
                   error ("Out of memory");

@@ -221,6 +221,28 @@ enum t_symbol
  tsNUM
 };
 
+#define MASK_ALL 0xffff
+#define MASK_NONE 0x0000
+#define MASK_VARIABLE (1<< tsVARIABLE) // tsVARIABLE represents a variable symbol
+#define MASK_CONSTANT (1<< tsCONSTANT) // tsCONSTANT represents a constant symbol
+#define MASK_IFUNCF1 (1<< tsIFUNCF1) // tsIFUNCF1 represents an int function with one float argument
+#define MASK_SFUNCF1 (1<< tsSFUNCF1) // tsSFUNCF1 represents a char* function with one float argument
+#define MASK_IFUNC1 (1<< tsIFUNC1) // tsIFUNC1 represents an int function with one int argument
+#define MASK_IFUNC2 (1<< tsIFUNC2) // tsIFUNC2 represents an int function with two int arguments
+#define MASK_FFUNC1 (1<< tsFFUNC1) // tsFFUNC1 represents a float function with one float argument
+#define MASK_CFUNCC1 (1<< tsCFUNCC1) // tsCFUNCC1 represents a complex function with one complex argument
+#define MASK_FFUNCC1 (1<< tsFFUNCC1) // tsFFUNCC1 represents a float function with one complex argument
+#define MASK_FFUNC2 (1<< tsFFUNC2) // tsFFUNC2 represents a float function with two float arguments
+#define MASK_FFUNC3 (1<< tsFFUNC3) // tsFFUNC3 represents a float function with three float arguments
+#define MASK_IFFUNC3 (1<< tsIFFUNC3) // tsIFFUNC3 represents an int function with two float arguments and one int argument
+#define MASK_PFUNCn (1<< tsPFUNCn) // tsPFUNCn represents a printf function with a variable number of arguments
+#define MASK_SFUNCF2 (1<< tsSFUNCF2) // tsSFUNCF2 represents a float function with two float arguments
+#define MASK_SIFUNC1 (1<< tsSIFUNC1) // tsSIFUNC1 represents an int function with one char* argument
+#define MASK_VFUNC1 (1<< tsVFUNC1) // tsVFUNC1 represents a void function with one value argument and one int argument
+#define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
+#define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
+#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 | MASK_IFUNC2 | MASK_FFUNC1 | MASK_CFUNCC1 | MASK_FFUNCC1 | MASK_FFUNC2 | MASK_FFUNC3 | MASK_IFFUNC3 | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 | MASK_VFUNC2)
+
 enum v_func
 {
  vf_abs,
@@ -395,7 +417,8 @@ class calculator
  
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
-             symbol *symtab = nullptr); // Constructor with optional syntax configuration
+             symbol **symtab = nullptr,
+             int mask=MASK_DEFAULT); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
  inline char *error (void) { return err; }   // Get error message

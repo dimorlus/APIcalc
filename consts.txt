@@ -99,3 +99,7 @@ const("pt1000_r0", 1000);; Resistance at 0C (Ohms)
 const("v_sound", 343);; Speed of sound in dry air at 20C (m/s)
 const("v_light", 299792458);; Speed of light in vacuum (m/s) - if not in core
 const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)
+
+;; --- Functions ---
+{frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency
+{WWeight(D, R)(ro_cu/re_cu)(pi^2 (D 1m)^4/16)R 1k};;Wire weight in gram

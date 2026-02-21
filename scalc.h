@@ -15,7 +15,6 @@
 
 #include <cstdlib> // for free() function
 
-#define _STR_VAR_FREE_ 
 
 // RW - set both by calc engine and application
 // WO - set only from application
@@ -58,8 +57,6 @@
 
 #define STRBUF 256 // bufer size for string operations
 
-#define _WCHAR_ // L'c' and 'c'W input format allow
-
 #ifdef __BORLANDC__
 
 #define nullptr NULL
@@ -68,6 +65,7 @@ typedef __int64 int_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 unsigned_t;
 #else //__BORLANDC__
+
 #define _long_double_
 #include <cstdint>
 typedef int64_t int_t;
@@ -445,6 +443,8 @@ class calculator
  int64_t get_int_res () { return result_ival; };
  float__t get_re_res () { return result_fval; };
  float__t get_im_res () { return result_imval; };
+ t_value get_res_tag () { return result_tag; };
+ char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
 
  int print (char *str, int Options, int binwide,
             int *size = nullptr); // Print a string representation of the result with specified

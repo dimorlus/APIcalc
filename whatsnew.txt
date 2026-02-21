@@ -1,3 +1,7 @@
+21.02.26 (2.103)
+- Fixed a bug where user-defined functions did not return a string (only a numeric value).
++ Some new constants and formulas (functions) added to the consts.txt file.
+
 20.02.26 (2.102)
 + Added numerous user-defined functions to the consts.txt file.
 * User-defined functions can now be overridden. Previously, attempting to override an existing 

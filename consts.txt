@@ -1,3 +1,8 @@
+;; This text file must be located in the directory containing the calculator executable. 
+;; It contains declarations of user-defined constants and functions and is loaded during 
+;; calculator startup. This file can be freely edited to add new constants and functions 
+;; or remove existing ones.
+
 ;; --- Density (kg/m3) ---
 const("ro_cu", 8930);; Copper
 const("ro_al", 2700);; Aluminium
@@ -99,6 +104,8 @@ const("pt1000_r0", 1000);; Resistance at 0C (Ohms)
 const("v_sound", 343);; Speed of sound in dry air at 20C (m/s)
 const("v_light", 299792458);; Speed of light in vacuum (m/s) - if not in core
 const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)
+const("visc_water", 1.004e-6);; Kinematic viscosity of water at 20C (m²/s)
+const("visc_air", 1.516e-5);; Kinematic viscosity of air at 20C (m²/s)
 
 ;; --- Functions ---
 {frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency
@@ -117,6 +124,22 @@ const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)
 {fall_v(h) sqrt(2*g0*h)};; Impact velocity from height h
 {v_orbit(r) sqrt(gn*5.972e24/r)};; Orbital velocity (5.972e24 is Earth mass)
 {escape_v(r) sqrt(2*gn*5.972e24/r)};; Escape velocity
+{p_pend(l) tau * sqrt(l / g0)};; Ideal pendulum period (seconds)
+{p_spring(m, k) tau * sqrt(m / k)};; Mass-spring system period (seconds)
+{f_spring(m, k) 1 / (tau * sqrt(m / k))};; Mass-spring frequency (Hz)
+
+;; --- Rotational Dynamics ---
+{v_circ(r, rpm) r * (rpm * tau / 60)};; Linear velocity from RPM (m/s)
+{a_centr(v, r) v^2 / r};; Centripetal acceleration (m/s²)
+{p_rot(torq, rpm) torq * (rpm * tau / 60)};; Rotational power (Watts) from Torque (Nm) and RPM
+
+;; --- Fluids & Pipes ---
+{v_flow(q, d) q / (pi * (d / 2)^2)};; Flow velocity (m/s) from Flow rate (m³/s) and Diameter
+{re_pipe(v, d, visc) v * d / visc};; Reynolds number for pipe flow (visc is kinematic viscosity)
+
+;; --- Material Strength (Simple) ---
+{stress(f, a) f / a};; Mechanical stress (Pa)
+{strain(dl, l) dl / l};; Engineering strain (dimensionless)
 
 ;; --- Ballistic ---
 {mach(v, t) v/sqrt(1.4*rg*(t+stdt)/0.02896)};; Mach number (t in Celsius)

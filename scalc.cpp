@@ -54,7 +54,10 @@
 #endif //__BORLANDC__
 
 #define _WIN_
+#define _WCHAR_ // L'c' and 'c'W input format allow
 #define _ENABLE_PREIMAGINARY_
+#define _STR_VAR_FREE_ 
+
 
 float__t Const (void *clc, char *name, float__t x)
 {
@@ -68,6 +71,12 @@ float__t Var (void *clc, char *name, float__t x)
 
 calculator::calculator (int cfg, symbol **symtab, int copyMask)
 {
+ v_sp         = 0;    // Clear the value stack pointer
+ o_sp         = 0;    // Clear the operator stack pointer
+ result_fval  = qnan; // Clear the floating-point result
+ result_imval = 0.0;  // Clear the imaginary result
+ result_ival  = 0;    // Clear the integer result
+ buf           = nullptr;
  errpos        = 0;
  pos           = 0;
  expr          = false;
@@ -80,17 +89,17 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask)
  c_imaginary = 'i';
  // randomize();
  srand (static_cast<unsigned int> (time (nullptr)));
-
-   // Copy symbols from the provided symbol table
-   //The function should create a new hashed linked list 
-   // from the existing one, duplicate the names, and create 
-   // copies of string variables that will be deleted in 
-   // the destructor. At the same time, it should allow 
-   // flexible selection of which nodes to copy and which 
-   // not (depending on the value of the tag field). 
-   // All pointers freed in the destructor must be 
-   // recreated; the rest can be copied.
  memset (hash_table, 0, sizeof hash_table);
+
+ // Copy symbols from the provided symbol table
+ // The function should create a new hashed linked list 
+ // from the existing one, duplicate the names, and create 
+ // copies of string variables that will be deleted in 
+ // the destructor. At the same time, it should allow 
+ // flexible selection of which nodes to copy and which 
+ // not (depending on the value of the tag field). 
+ // All pointers freed in the destructor must be 
+ // recreated; the rest can be copied.
  if (symtab)
   {
    for (int i = 0; i < hash_table_size; i++)
@@ -598,9 +607,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        dgr2str (cphi, phi);
        sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi,
                 (long double)result_fval, (long double)result_imval, c_imaginary);
-
-       //sprintf (imstr, "%.16Lg%+.16Lg%c", (long double)result_fval, (long double)result_imval,
-       //         c_imaginary);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -1068,19 +1074,24 @@ symbol *calculator::find (const char *name)
 symbol *calculator::addUF (const char *name, const char *expr)
 {
  symbol *sp = find (name);
- unsigned h = string_hash_function (name) % hash_table_size;
+ 
  if (sp && sp->tag == tsUFUNCT)
   {
-   //return sp; // If a user function with the same name already exists, return it, ignoring the new
-              // definition. This will be changed in the future to allow redefinition of user
-              // functions, but for now it prevents accidental
    // redefine user function.
-   if (sp->func) free (sp->func);
-   sp->func = strdup (expr);
+   if (sp->func)
+    {
+     if (strcmp ((char*)sp->func, expr) == 0)
+      return sp; // If the existing function is the same as the new one, return it
+     free (sp->func);
+     sp->func = strdup (expr);
+    }
    return sp;
   }
  if (sp) 
   return nullptr; // If a symbol with the same name exists but is not a user function, return an error
+
+ // If no existing symbol is found, add the new user function to the hash table
+ unsigned h    = string_hash_function (name) % hash_table_size;
  sp            = new symbol;
  sp->tag       = tsUFUNCT;
  sp->func      = strdup(expr);
@@ -2635,7 +2646,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            v_stack[0].imval = 0.0;
            v_stack[0].fval  = 0.0;
            v_stack[0].ival  = 0;
-           v_stack[0].tag   = tvINT;
+           v_stack[0].tag   = tvERR;
 #ifdef _STR_VAR_FREE_
            dupstrvars ();      // Duplicate string variables to ensure that the result string is not
                                // freed when clearing the strings created during evaluation
@@ -3993,7 +4004,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 2;
              break;
 
-            case tsIFUNCF1: // int f(float x)
+            case tsIFUNCF1: // int f(float x) (wrgb() function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4017,7 +4028,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
-            case tsSFUNCF1: // char* f(float x)
+            case tsSFUNCF1: // str f(float x) (winf())
              if (n_args != 1)
               {
                error (v_stack[v_sp - 2].pos, "Function should take one argument");
@@ -4050,7 +4061,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
-            case tsIFUNC1: // int f(int x)
+            case tsIFUNC1: // int f(int x) (int() function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4075,7 +4086,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
-            case tsIFUNC2: // int f(int x, int y)
+            case tsIFUNC2: // int f(int x, int y) (invmod() function)
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
@@ -4100,7 +4111,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 2;
              break;
 
-            case tsIFFUNC3: // f(double, double, int)
+            case tsIFFUNC3: // int f(double, double, int)
+                            // looks like never used, but keep it for compatibility with old
+                            // versions
              if (n_args != 3)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
@@ -4129,7 +4142,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 3;
              break;
 
-            case tsFFUNC1: // float f(float x)
+            case tsFFUNC1: // float f(float x) (sin(x) function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4155,7 +4168,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
-            case tsFFUNC2: // float f(float x, float y)
+            case tsFFUNC2: // float f(float x, float y) (atan2(), pow() functions)
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
@@ -4181,7 +4194,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 2;
              break;
 
-            case tsFFUNC3: // float f(float x, float y, float z)
+            case tsFFUNC3: // float f(float x, float y, float z) (vout() function)
              if (n_args != 3)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
@@ -4211,7 +4224,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 3;
              break;
 
-            case tsPFUNCn: // f(str, ...)
+            case tsPFUNCn: // f(str, ...) ( prn(...) function)
              if (n_args < 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one or more arguments");
@@ -4239,7 +4252,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= n_args;
              break;
 
-            case tsSFUNCF2: // f(str, x)
+            case tsSFUNCF2: // float f(str, x) (const())
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
@@ -4278,7 +4291,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 2;
              break;
 
-            case tsSIFUNC1: // int f(char *str)
+            case tsSIFUNC1: // int f(char *str) (datatime() function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4296,7 +4309,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_stack[v_sp - 2].tag = tvINT;
              v_sp -= 1;
              break;
-            case tsCFUNCC1: // f(x + iy)
+            case tsCFUNCC1: // complex f(x + iy)
+                            // looks like never used, but keep it for compatibility with old
+                            // versions
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4329,6 +4344,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              break;
 
             case tsFFUNCC1: // float f(x + iy)
+                            // looks like never used, but keep it for compatibility with old
+                            // versions
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -4476,7 +4493,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   return qnan;
                  }
 
-
                 v_stack[v_sp - n_args - 1].fval = pCalculator->get_re_res() ;
                 v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
                 v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
@@ -4487,9 +4503,15 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                          == v_stack[v_sp - n_args - 1].fval)
                  v_stack[v_sp - n_args - 1].tag = tvINT;
 
+                if (pCalculator->get_res_tag() == tvSTR)
+                 {
+                  v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
+                  v_stack[v_sp - n_args - 1].tag  = tvSTR;
+                  scfg |= STR;
+                 }
+
                 delete pCalculator;
                 v_sp -= n_args; // pop arguments
-
              }
              break;
             default:

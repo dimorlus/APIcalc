@@ -1,3 +1,6 @@
+21.02.26 (2.105)
+* Now during installation you are prompted to overwrite the cosnts.txt file.
+
 21.02.26 (2.103)
 - Fixed a bug where user-defined functions did not return a string (only a numeric value).
 + Some new constants and formulas (functions) added to the consts.txt file.

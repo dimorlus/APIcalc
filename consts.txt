@@ -212,6 +212,7 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 ;; --- Geometry ---
 {area_c(r) pi*r^2};; Circle area
 {vol_sphere(r) (4/3)*pi*r^3};; Sphere volume
+{uran_feed(Mp, xp) xf:=0.0071; xt:=0.002; Mp * (xp - xt) / (xf - xt)};;Uranium enrichment Mp-enriched mass, xp-enriched level, xt - tails, xf - nature U235 level. Return uranium needs
 
 ;; --- Conversions --
 {mil_to_mm(m) m * 0.0254};; Mil (thou) to mm

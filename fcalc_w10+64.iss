@@ -34,7 +34,7 @@ Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}";Components: program; Flags:i
 Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}";Components: ccalc; Flags:ignoreversion
 Source: "fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
-Source: "consts.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: "consts.txt"; DestDir: "{app}"; Flags: confirmoverwrite uninsneveruninstall; Permissions: users-modify
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist

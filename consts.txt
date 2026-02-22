@@ -112,12 +112,78 @@ const("ro_air_stp", 1.293);; Air density at 0C, 101.325kPa (kg/m3)
 const("visc_water", 1.004e-6);; Kinematic viscosity of water at 20C (m²/s)
 const("visc_air", 1.516e-5);; Kinematic viscosity of air at 20C (m²/s)
 
+;; --- Heat & Thermodynamics ---
+const("c_water", 4186);; Specific heat of water (J/kg*K)
+const("c_air", 1005);; Specific heat of air (J/kg*K)
+const("rho_air", 1.225);; Air density at sea level (kg/m3)
+
+;; --- Nukes ---
 const("m_crit_u235", 52);; Critical mass U-235 (kg)
 const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 
 ;; --- Functions ---
 {frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency
 {WWeight(D, R)(ro_cu/re_cu)(pi^2 (D 1m)^4/16)R 1k};;Wire weight in gram
+
+
+;; --- Transformers and chokes --
+;; --- Core & Inductance ---
+{Lcoil(N, Ae, Lm, mu) u0*mu*N^2*Ae/Lm};; Inductance (H)
+{n_from_l(L, mu, Ae, Lm) sqrt((L*Lm)/(u0*mu*Ae))};; Required turns N for target L
+{Wcore(Bmax, Ae, Le, mu) (0.5*Bmax^2*Ae*Le)/(u0*mu)};; Energy stored in core (J)
+{gap_l(N, Ae, L) (u0*Ae*N^2)/L};; Approx air gap (m) for target L (ignoring mu)
+
+;; --- Voltage & Induction ---
+{Ucoil(f, N, Bmax, Ae) 4.44*f*N*Bmax*Ae};; Max RMS voltage (V)
+{Bcoil(V, f, N, Ae) V/(4.44*f*N*Ae)};; Magnetic induction (Tl)
+{nv_iron(Ae, f) 1/(4.44*f*Ae*1.2)};; Turns per volt (Iron, Bmax=1.2Tl)
+{nv_ferr(Ae, f) 1/(4.44*f*Ae*0.3)};; Turns per volt (Ferrite, Bmax=0.3Tl)
+
+;; --- Current & Power ---
+{i_rms(D_wire, JJ) cs(D_wire)*JJ};; Max current (A) for diam D and density JJ
+{i_max(N, Bmax, Lm, mu) (Bmax*Lm)/(u0*mu*N)};; Saturation current (A)
+{p_core(f, Bmax, JJ, Ae, An, Ku) 4.44*f*Bmax*JJ*Ae*An*Ku};; Core power capacity (W)
+
+;; --- Physical & Copper losses ---
+{res_coil(N, L_turn, D_wire) ro_cu*(N*L_turn)/cs(D_wire)};; DC Resistance (Ohm)
+{m_coil(N, L_turn, D_wire) ro_cu_dens*(N*L_turn)*cs(D_wire)};; Copper mass (kg)
+
+;; --- High Frequency Extras ---
+{skin_d(f) 0.0661 / sqrt(f)};; Skin depth for Copper at 20C (meters)
+{d_max_hf(f) 2 * 0.0661 / sqrt(f)};; Max recommended wire diameter for freq f
+
+;; --- Waveguide & Cable Basics ---
+{v_prop(er) c0 / sqrt(er)};; Phase velocity in dielectric
+{beta_w(f, er) (tau * f) / v_prop(er)};; Phase constant (beta)
+{wave_len(f, er) v_prop(er) / f};; Wavelength in medium
+
+;; --- Impedance & Reflection ---
+;; --- Complex Impedance ---
+{z_l(l, f) i * tau * f * l};; Inductive impedance (Zl = jωL)
+{z_c(c, f) 1 / (i * tau * f * c)};; Capacitive impedance (Zc = 1/jωC)
+{gamma_z(zl, z0) (zl - z0) / (zl + z0)};; Reflection coefficient (complex)
+{swr_g(g) (1 + abs(g)) / (1 - abs(g))};; SWR from complex Gamma
+{z_in(z0, zl, bl) z0 * (zl + j*z0*tan(bl)) / (z0 + j*zl*tan(bl))};; Input impedance of line
+{p_max_match(vg, rg) abs(vg)^2 / (4 * real(rg))};; Max power transfer to matched load
+{f_res(l, c) 1 / (tau * sqrt(l * c))};; Resonant frequency (Hz)
+{q_ser(l, c, r) sqrt(l / c) / r};; Q-factor of series RLC
+{q_par(l, c, r) r / sqrt(l / c)};; Q-factor of parallel RLC
+
+;; --- 3 phase ---
+const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
+{u_line(u_ph) u_ph * sqrt(3)};; Line voltage from phase voltage
+{i_delta(i_line) i_line / sqrt(3)};; Phase current in delta connection
+
+;; --- Polar to Complex ---
+{polar(m, a) m * exp(j * a)};; Input as magnitude and angle (radians or with `)
+
+;; --- THD & Distorted Power ---
+{i_total(i_fund, thd) i_fund * sqrt(1 + thd^2)};; Total RMS current with THD
+{pf_dist(cos_phi, thd) cos_phi / sqrt(1 + thd^2)};; PF considering harmonics
+
+; --- dBm ---
+{dbm(w) db(w / 1m)};; Convert Watts to dBm
+{adbm(dbm) adb(dbm) * 1m};; Convert dBm to Watts
 
 ;; --- Mechanics ---
 {speed(s, t) s/t};; Average speed
@@ -191,6 +257,8 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 {p_max(tj, ta, rth) (tj - ta) / rth};; Max power dissipation
 {v_leak(p, ro) sqrt(2 * p / ro)};; Ideal gas leak velocity (Bernoulli)
 {db_dist(db1, d1, d2) db1 - 20 * log10(d2 / d1)};; Sound level change with distance
+{heat_p(m, dt, t) (m * c_water * dt) / t};; Power (W) to heat mass M by DT in time T
+{air_flow_p(p, dt) p / (c_air * rho_air * dt)};; Required air flow (m3/s) for power P
 
 ;; --- Nuclear and particles ---
 {e_mc2(m) m*c0^2};; Mass-energy equivalence

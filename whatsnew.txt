@@ -1,3 +1,6 @@
+22.02.26 (2.106)
++ Added numerous user-defined functions to the consts.txt file.
+
 21.02.26 (2.105)
 * Now during installation you are prompted to overwrite the cosnts.txt file.
 

@@ -26,6 +26,7 @@ private:
     HWND m_hExpressionEdit;
     HWND m_hResultEdit;
     HWND m_hComboBox;
+    HWND m_hHelpWindow;   // HWND of the CHM help window (nullptr if closed)
     HMENU m_hMenu;
     
     calculator* m_pCalculator;

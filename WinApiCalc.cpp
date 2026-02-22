@@ -77,7 +77,7 @@ static long double ColorFunction (long double x);
 
 WinApiCalc::WinApiCalc ()
     : m_hInst (nullptr), m_hWnd (nullptr), m_hExpressionEdit (nullptr), m_hResultEdit (nullptr),
-      m_hComboBox (nullptr), m_hMenu (nullptr), m_pCalculator (nullptr),
+      m_hComboBox (nullptr), m_hHelpWindow (nullptr), m_hMenu (nullptr), m_pCalculator (nullptr),
       m_options (NRM | FRC) // Default flags from SOW
       ,
       m_binWidth (64), m_fontSize (-12) // Default font size in pixels (negative value) - font(12)

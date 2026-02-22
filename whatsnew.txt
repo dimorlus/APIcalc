@@ -1,4 +1,4 @@
-22.02.26 (2.106)
+22.02.26 (2.107)
 + Added numerous user-defined functions to the consts.txt file.
 
 21.02.26 (2.105)

@@ -181,7 +181,7 @@ const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
 {i_total(i_fund, thd) i_fund * sqrt(1 + thd^2)};; Total RMS current with THD
 {pf_dist(cos_phi, thd) cos_phi / sqrt(1 + thd^2)};; PF considering harmonics
 
-; --- dBm ---
+;; --- dBm ---
 {dbm(w) db(w / 1m)};; Convert Watts to dBm
 {adbm(dbm) adb(dbm) * 1m};; Convert dBm to Watts
 

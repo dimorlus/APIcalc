@@ -125,6 +125,23 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 {frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency
 {WWeight(D, R)(ro_cu/re_cu)(pi^2 (D 1m)^4/16)R 1k};;Wire weight in gram
 
+;; --- Electricity ---
+{ohm_u(i, r) i*r};; Ohm's law (Voltage)
+{p_dc(u, i) u*i};; DC Power
+{p_ac(u, i, pf) u*i*pf};; AC Power (pf = power factor/cos phi)
+{xc(f, c) 1/(tau*f*c)};; Capacitive reactance
+{xl(f, l) tau*f*l};; Inductive reactance
+{f_cap(c, xc) 1/(tau*c*xc)};; Frequency to get specific capacitive reactance
+{f_ind(l, xl) xl/(tau*l)};; Frequency to get specific inductive reactance
+{res_f(l, c) 1/(tau*sqrt(l*c))};; LC Resonance frequency
+{led_r(vs, vf, if) (vs-vf)/if};; LED resistor calculator
+{q_factor(f, l, r) (tau*f*l)/r};; Q-factor of an inductor
+{ind_air(n, r, l) (u0 * n^2 * pi * r^2) / l};; Long solenoid inductance (SI)
+{energy_l(l, i) (l * i^2) / 2};; Energy stored in inductor
+{energy_c(c, u) (c * u^2) / 2};; Energy stored in capacitor
+{ant_dipole(f) 143 / (f / 1e6)};; Half-wave dipole length (m) from F (Hz)
+{v_prop(er) c0 / sqrt(er)};; Velocity of light in dielectric
+{z_line(l, c) sqrt(l / c)};; Characteristic impedance of a line
 
 ;; --- Transformers and chokes --
 ;; --- Core & Inductance ---
@@ -146,11 +163,11 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 
 ;; --- Physical & Copper losses ---
 {res_coil(N, L_turn, D_wire) ro_cu*(N*L_turn)/cs(D_wire)};; DC Resistance (Ohm)
-{m_coil(N, L_turn, D_wire) ro_cu_dens*(N*L_turn)*cs(D_wire)};; Copper mass (kg)
+{m_coil(N, L_turn, D_wire) ro_cu*(N*L_turn)*cs(D_wire)};; Copper mass (kg)
 
 ;; --- High Frequency Extras ---
-{skin_d(f) 0.0661 / sqrt(f)};; Skin depth for Copper at 20C (meters)
-{d_max_hf(f) 2 * 0.0661 / sqrt(f)};; Max recommended wire diameter for freq f
+{skin_d(f) 0.0661k / sqrt(f)};; Skin depth for Copper at 20C (mm)
+{d_max_hf(f) 2k * 0.0661 / sqrt(f)};; Max recommended wire diameter in mm for freq f
 
 ;; --- Waveguide & Cable Basics ---
 {v_prop(er) c0 / sqrt(er)};; Phase velocity in dielectric
@@ -170,7 +187,7 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 {q_par(l, c, r) r / sqrt(l / c)};; Q-factor of parallel RLC
 
 ;; --- 3 phase ---
-const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
+const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 {u_line(u_ph) u_ph * sqrt(3)};; Line voltage from phase voltage
 {i_delta(i_line) i_line / sqrt(3)};; Phase current in delta connection
 
@@ -184,6 +201,8 @@ const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
 ;; --- dBm ---
 {dbm(w) db(w / 1m)};; Convert Watts to dBm
 {adbm(dbm) adb(dbm) * 1m};; Convert dBm to Watts
+{db_p(p1, p0) 10*log10(p1/p0)};; Power ratio in decibels
+{db_u(u1, u0) 20*log10(u1/u0)};; Voltage ratio in decibels
 
 ;; --- Mechanics ---
 {speed(s, t) s/t};; Average speed
@@ -220,32 +239,12 @@ const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
 {p_hydro(h, ro) ro*g0*h};; Hydrostatic pressure at depth h
 {v_rms(t, m_mol) sqrt(3*rg*(t+stdt)/m_mol)};; Root-mean-square speed of gas molecules
 
-;; --- Electricity ---
-{ohm_u(i, r) i*r};; Ohm's law (Voltage)
-{p_dc(u, i) u*i};; DC Power
-{p_ac(u, i, pf) u*i*pf};; AC Power (pf = power factor/cos phi)
-{xc(f, c) 1/(tau*f*c)};; Capacitive reactance
-{xl(f, l) tau*f*l};; Inductive reactance
-{res_f(l, c) 1/(tau*sqrt(l*c))};; LC Resonance frequency
-{led_r(vs, vf, if) (vs-vf)/if};; LED resistor calculator
-{f_cap(c, xc) 1/(tau*c*xc)};; Frequency to get specific capacitive reactance
-{f_ind(l, xl) xl/(tau*l)};; Frequency to get specific inductive reactance
-{q_factor(f, l, r) (tau*f*l)/r};; Q-factor of an inductor
-{skin_d(f, ro, u_rel) sqrt(ro/(pi*f*u0*u_rel))};; Skin depth (ro - resistivity)
-{ind_air(n, r, l) (u0 * n^2 * pi * r^2) / l};; Long solenoid inductance (SI)
-{energy_l(l, i) (l * i^2) / 2};; Energy stored in inductor
-{energy_c(c, u) (c * u^2) / 2};; Energy stored in capacitor
-{ant_dipole(f) 143 / (f / 1e6)};; Half-wave dipole length (m) from F (Hz)
-{v_prop(er) c0 / sqrt(er)};; Velocity of light in dielectric
-{z_line(l, c) sqrt(l / c)};; Characteristic impedance of a line
 
 ;; --- Optics ---
 {wavelen(f) c0/f};; Wavelength in vacuum
 {freq(wl) c0/wl};; Frequency from wavelength
 {photon_e(wl) (hp*c0)/wl};; Photon energy from wavelength
 {lens(f1, f2) 1/(1/f1 + 1/f2)};; Thin lens equation (combined focal length)
-{db_p(p1, p0) 10*log10(p1/p0)};; Power ratio in decibels
-{db_u(u1, u0) 20*log10(u1/u0)};; Voltage ratio in decibels
 
 ;; --- Thermodynamics ---
 {p_gas(n, t, v) (n*rg*t)/v};; Ideal gas law (Pressure)
@@ -253,6 +252,7 @@ const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
 {c_to_k(c) c + stdt};; Celsius to Kelvin
 {k_to_c(k) k - stdt};; Kelvin to Celsius
 {f_to_c(f) (f-32)*5/9};; Fahrenheit to Celsius
+
 {t_junc(p, rth, tamb) tamb + p * rth};; Junction temperature (Celsius)
 {p_max(tj, ta, rth) (tj - ta) / rth};; Max power dissipation
 {v_leak(p, ro) sqrt(2 * p / ro)};; Ideal gas leak velocity (Bernoulli)
@@ -269,18 +269,20 @@ const("a_phase", exp(120deg * j));; Phase shift operator (120 degrees)
 {vled(wl) (hp*c0)/(wl*qe)};; Expected voltage (V) from wavelength
 {eband(wl) (hp*c0/wl)/ev};; Band gap energy in electron-volts
 {wien_wl(t) 0.002897/t};; Wien's displacement law (peak wavelength from temp)
+
 ;; --- Particles & Radiation ---
 {e_photon(wl) (hp * c0) / wl};; Photon energy (Joules)
 {ev_to_wl(v) (hp * c0) / (v * qe)};; eV to wavelength (m)
 {wl_to_ev(wl) (hp * c0) / (wl * qe)};; wavelength (m) to eV
 
 ;; --- Nuclear Logistics ---
+{uran_feed(Mp, xp) xf:=0.0071; xt:=0.002; Mp * (xp - xt) / (xf - xt)};;Uranium enrichment Mp-enriched mass, xp-enriched level, xt - tails, xf - nature U235 level. Return uranium needs
+
+;; --- Geometry ---
 {v_mass(m, ro) m / ro};; Volume from mass and density
 {sphere_r(v) (3 * v / (4 * pi))^(1/3)};; Radius of a sphere from volume
-;; --- Geometry ---
 {area_c(r) pi*r^2};; Circle area
 {vol_sphere(r) (4/3)*pi*r^3};; Sphere volume
-{uran_feed(Mp, xp) xf:=0.0071; xt:=0.002; Mp * (xp - xt) / (xf - xt)};;Uranium enrichment Mp-enriched mass, xp-enriched level, xt - tails, xf - nature U235 level. Return uranium needs
 
 ;; --- Conversions --
 {mil_to_mm(m) m * 0.0254};; Mil (thou) to mm

@@ -62,10 +62,14 @@ void LogKeyEvent (const char *location, int key, bool ctrlPressed = false)
 // Global pointer for pseudo-functions access
 static WinApiCalc *g_pCalcInstance = nullptr;
 
+// Static member for low-level keyboard hook (Esc closes CHM help)
+HHOOK WinApiCalc::s_hKeyboardHook = nullptr;
+
 // Global variable for variables dialog edit control
 static HWND g_hVariablesEdit = nullptr;
 
 // Forward declarations for pseudo-functions
+static BOOL CALLBACK FindHtmlServerProc (HWND hwnd, LPARAM lParam); // CHM content pane finder
 static long double MenuFunction (long double x);
 static long double HelpFunction (long double x);
 static long double OpacityFunction (long double x);
@@ -554,6 +558,18 @@ LRESULT CALLBACK WinApiCalc::WndProc (HWND hWnd, UINT message, WPARAM wParam, LP
      g_pApp->OnDestroy ();
     }
    PostQuitMessage (0);
+   break;
+  case WM_TIMER:
+   if (wParam == WM_APP + 101) // CHM focus timer
+    {
+     KillTimer (hWnd, WM_APP + 101);
+     if (g_pApp && g_pApp->m_hHelpWindow && IsWindow (g_pApp->m_hHelpWindow))
+      {
+       HWND hHtmlPane = nullptr;
+       EnumChildWindows (g_pApp->m_hHelpWindow, FindHtmlServerProc, (LPARAM)&hHtmlPane);
+       if (hHtmlPane) SetFocus (hHtmlPane);
+      }
+    }
    break;
   case WM_DELAYED_CLEAR_HISTORY:
    if (g_pApp && !g_pApp->m_isColorWindowOpen)
@@ -2618,6 +2634,48 @@ void WinApiCalc::ResizeWindow ()
  UpdateLayout ();
 }
 
+// Helper: enumerate child windows to find "Internet Explorer_Server" (HTML content pane)
+static BOOL CALLBACK FindHtmlServerProc (HWND hwnd, LPARAM lParam)
+{
+ char cls[64] = {};
+ GetClassNameA (hwnd, cls, sizeof (cls));
+ if (strcmp (cls, "Internet Explorer_Server") == 0)
+  {
+   *(HWND *)lParam = hwnd;
+   return FALSE; // stop enumeration
+  }
+ return TRUE;
+}
+
+// Low-level keyboard hook: intercepts Esc while CHM help window is the foreground window
+LRESULT CALLBACK WinApiCalc::KeyboardHookProc (int nCode, WPARAM wParam, LPARAM lParam)
+{
+ if (nCode == HC_ACTION && wParam == WM_KEYDOWN)
+  {
+   KBDLLHOOKSTRUCT *pKbd = (KBDLLHOOKSTRUCT *)lParam;
+   if (pKbd->vkCode == VK_ESCAPE && g_pCalcInstance)
+    {
+     HWND hFg = GetForegroundWindow ();
+     HWND hHelp = g_pCalcInstance->m_hHelpWindow;
+     // Check if the foreground window is the CHM window or a child of it
+     if (hHelp && IsWindow (hHelp)
+         && (hFg == hHelp || IsChild (hHelp, hFg)))
+      {
+       HtmlHelpA (nullptr, nullptr, HH_CLOSE_ALL, 0);
+       g_pCalcInstance->m_hHelpWindow = nullptr;
+       // Remove the hook
+       if (s_hKeyboardHook)
+        {
+         UnhookWindowsHookEx (s_hKeyboardHook);
+         s_hKeyboardHook = nullptr;
+        }
+       return 1; // Swallow the Esc key
+      }
+    }
+  }
+ return CallNextHookEx (s_hKeyboardHook, nCode, wParam, lParam);
+}
+
 void WinApiCalc::ShowHelp ()
 {
  // First, try to open the CHM file
@@ -2636,7 +2694,16 @@ void WinApiCalc::ShowHelp ()
      HWND helpWindow = HtmlHelpA (m_hWnd, helpPath, HH_DISPLAY_TOPIC, 0);
      if (helpWindow != nullptr)
       {
-       // CHM file opened successfully
+       // CHM file opened successfully - save handle so Esc can close it
+        m_hHelpWindow = helpWindow;
+        // Install low-level keyboard hook to catch Esc in CHM window
+        if (!s_hKeyboardHook)
+         {
+          s_hKeyboardHook = SetWindowsHookExA (WH_KEYBOARD_LL, KeyboardHookProc,
+                                               GetModuleHandleA (nullptr), 0);
+         }
+        // Set a short timer to move focus to the HTML content pane
+        SetTimer (m_hWnd, WM_APP + 101, 300, nullptr);
        return;
       }
     }

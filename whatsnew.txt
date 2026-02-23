@@ -1,4 +1,5 @@
-22.02.26 (2.107)
+23.02.26 (2.107)
+* The help window now closes when you press Esc.
 + Added numerous user-defined functions to the consts.txt file.
 
 21.02.26 (2.105)

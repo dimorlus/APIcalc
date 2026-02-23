@@ -38,8 +38,8 @@ private:
     int m_opacity;
     bool m_menuVisible;
     bool m_uiReady;         // Flag to indicate UI is fully initialized
-    int m_windowX;          // Позиция окна X
-    int m_windowY;          // Позиция окна Y
+    int m_windowX;          // Position X of the window
+    int m_windowY;          // Position Y of the window
     bool m_isUpdatingHistory; // Flag to suppress notifications during history updates
     bool m_suppressInteractive; // Flag to suppress interactive features (like color popup) during startup
     bool m_isWine;          // Flag indicating if running under Wine
@@ -66,6 +66,10 @@ private:
     WNDPROC m_originalEditProc;
     WNDPROC m_originalResultEditProc;
     WNDPROC m_originalComboBoxProc;
+
+    // Low-level keyboard hook for CHM help window (Esc to close)
+    static HHOOK s_hKeyboardHook;
+    static LRESULT CALLBACK KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 public:
     WinApiCalc();
@@ -151,8 +155,8 @@ public:
     int GetCharHeight();
     int GetControlHeight(); // Calculate proper height for edit controls
     int CalculateOptimalWidth(int charCount = 70);
-    int CalculateContentBasedWidth(); // Новая функция для расчета на основе содержимого
-    int CalculateCurrentResultWidth(); // Измерение ширины текущего результата
+    int CalculateContentBasedWidth(); // New function to calculate width based on content
+    int CalculateCurrentResultWidth(); // Measure the width of the current result
     void UpdateFont();
     int MeasureTextHeightForWidth(const std::string &text, int width);
     bool IsWine() const { return m_isWine; }

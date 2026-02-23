@@ -78,7 +78,11 @@ typedef long double float__t;
 typedef double float__t;
 #endif
 
+#ifdef __BORLANDC__
+const float__t qnan = 0.0 / 0.0;
+#else
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
+#endif
 
 
 class value;

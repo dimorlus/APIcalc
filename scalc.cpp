@@ -4483,7 +4483,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
                 // Rest of the string — expression
                 while (*p && isspace (*p)) p++;
-                float_t res = pCalculator->evaluate ((char *)p);
+                float__t res = pCalculator->evaluate ((char *)p);
 
                if (IsNaN (res))
                  {

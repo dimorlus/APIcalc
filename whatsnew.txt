@@ -1,3 +1,6 @@
+24.02.26 (2.108)
++ User-defined functions can now be nested (up to 5 times).
+
 23.02.26 (2.107)
 * The help window now closes when you press Esc.
 + Added numerous user-defined functions to the consts.txt file.

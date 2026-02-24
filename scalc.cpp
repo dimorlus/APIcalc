@@ -69,8 +69,9 @@ float__t Var (void *clc, char *name, float__t x)
  return ((calculator *)clc)->AddVar (name, x);
 }
 
-calculator::calculator (int cfg, symbol **symtab, int copyMask)
+calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 {
+ this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
  v_sp         = 0;    // Clear the value stack pointer
  o_sp         = 0;    // Clear the operator stack pointer
  result_fval  = qnan; // Clear the floating-point result
@@ -111,7 +112,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask)
       {
        // Check the mask: tsUFUNCT is always skipped to avoid recursion
        // Other tags are checked against the copyMask
-       if (src->tag != tsUFUNCT && (copyMask & (1 << src->tag)))
+       // if (src->tag != tsUFUNCT && (copyMask & (1 << src->tag)))
+       if ((copyMask & (1 << src->tag)))
         {
          symbol *ns = new symbol;
          *ns        = *src;  // Copy all fields (tag, fidx, func, val)
@@ -123,8 +125,10 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask)
          if ((src->tag == tsVARIABLE) && (src->val.tag == tvSTR) && src->val.sval)
           ns->val.sval = strdup (src->val.sval);
 
-         // func for tsUFUNCT is not copied (see condition above),
+                  // func for tsUFUNCT is not copied (see condition above),
          // for other func — pointer to static function, copy as is
+         if (src->tag == tsUFUNCT) 
+             ns->func = strdup((char *)src->func);
 
          ns->next = nullptr;
          *dst     = ns;
@@ -2451,7 +2455,7 @@ void calculator::clear_v_stack ()
 
 float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
 {
- char var_name[16];
+ char var_name[MAXOP]; // maximum length of operator or function name
  bool operand            = true;
  bool percent            = false;
  int n_args              = 0;
@@ -2464,6 +2468,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  #else
  
  #endif
+
  t_operator saved_oper   = toBEGIN;
  value saved_val;
  bool has_saved_val = false;
@@ -2477,6 +2482,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  result_fval  = qnan; // Clear the floating-point result
  result_imval = 0.0; // Clear the imaginary result
  result_ival = 0;   // Clear the integer result
+
+ if (deep > MAXSTK)
+  {
+   error (pos, "Too deep recursion");
+   return qnan;
+  }
 
  clear_v_stack (); // Clear the value stack before evaluation
 
@@ -4385,7 +4396,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 		        //4. Push the result onto the stack.
 		        //5. Delete the previously created calculator.
 
-                calculator *pCalculator = new calculator (scfg, hash_table);
+                calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
                 if (!pCalculator)
                  {
                   error ("Out of memory");
@@ -4406,7 +4417,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
                 int param_count = 0;
                 int arg_idx     = 0;
-                char vbuf[16]; // buffer for variable name, max 15 characters + null terminator
+                char vbuf[MAXOP]; // buffer for variable name, max 15 characters + null terminator
                 while (*p && *p != ')')
                  {
                   // Skip spaces
@@ -4493,7 +4504,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   return qnan;
                  }
 
-                v_stack[v_sp - n_args - 1].fval = pCalculator->get_re_res() ;
+                v_stack[v_sp - n_args - 1].fval  = pCalculator->get_re_res () ;
                 v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
                 v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
                 v_stack[v_sp - n_args - 1].tag   = tvFLOAT;

@@ -53,9 +53,10 @@
 #define TOP  (1 << 27) // (UI) Always on top
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define OPT  (1 << 29) // (UI) Print options
-#define NIV  (1 << 31) // (UI) Not add functions and variables to the hash table (internal use only) 
 
 #define STRBUF 256 // bufer size for string operations
+#define MAXOP  16  // maximum length of operator or function name
+#define MAXSTK 5   // maximum stack depth
 
 #ifdef __BORLANDC__
 
@@ -243,7 +244,11 @@ enum t_symbol
 #define MASK_VFUNC1 (1<< tsVFUNC1) // tsVFUNC1 represents a void function with one value argument and one int argument
 #define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
 #define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
-#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 | MASK_IFUNC2 | MASK_FFUNC1 | MASK_CFUNCC1 | MASK_FFUNCC1 | MASK_FFUNC2 | MASK_FFUNC3 | MASK_IFFUNC3 | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 | MASK_VFUNC2)
+//#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 | MASK_IFUNC2 | MASK_FFUNC1 | MASK_CFUNCC1 | MASK_FFUNCC1 | MASK_FFUNC2 | MASK_FFUNC3 | MASK_IFFUNC3 | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 | MASK_VFUNC2)
+#define MASK_DEFAULT                                                                               \
+ (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 | MASK_IFUNC2 | MASK_FFUNC1            \
+  | MASK_CFUNCC1 | MASK_FFUNCC1 | MASK_FFUNC2 | MASK_FFUNC3 | MASK_IFFUNC3 | MASK_PFUNCn           \
+  | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 | MASK_VFUNC2 | MASK_UFUNCT)
 
 enum v_func
 {
@@ -356,6 +361,7 @@ class calculator
 {
  private:
  int scfg; // Syntax configuration flags
+ int deep; // Current stack depth
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
@@ -420,7 +426,8 @@ class calculator
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,
-             int mask=MASK_DEFAULT); // Constructor with optional syntax configuration
+             int mask=MASK_DEFAULT,
+             int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
  inline char *error (void) { return err; }   // Get error message

@@ -58,6 +58,10 @@
 #define _ENABLE_PREIMAGINARY_
 #define _STR_VAR_FREE_ 
 
+// Macros to determine if an operator is binary or unary based on its position in the enumeration
+#define BINARY(opd) (opd >= toPOW)
+#define UNARY(opd)  ((opd >= toPOSTINC) && (opd <= toCOM))
+
 
 float__t Const (void *clc, char *name, float__t x)
 {
@@ -524,6 +528,7 @@ void calculator::clearAllStrings () // Free all registered strings in the string
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
+// Print the result of the calculation into the provided string buffer with formatting options
 int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
@@ -2374,6 +2379,8 @@ t_operator calculator::scan (bool operand, bool percent)
   }
 }
 
+// Left precedence for operators, used to determine when to push operators onto the stack during
+// expression evaluation. Higher values indicate higher precedence.
 static int lpr[toTERMINALS] = {
  2,  0,  0,  0,              // BEGIN, OPERAND, ERROR, END,
  4,  4,                      // LPAR, RPAR
@@ -2394,6 +2401,8 @@ static int lpr[toTERMINALS] = {
  10                          // COMMA
 };
 
+// Right precedence for operators, used to determine when to pop operators from the stack during
+// expression evaluation. Higher values indicate higher precedence.
 static int rpr[toTERMINALS] = {
  0,   0,  0,  1,              // BEGIN, OPERAND, ERROR, END,
  110, 3,                      // LPAR, RPAR
@@ -2453,6 +2462,9 @@ void calculator::clear_v_stack ()
  v_sp = 0;
 }
 
+// Evaluate the given expression and return the result as a floating-point value. The expression is
+// parsed and evaluated according to the rules defined in the calculator class,
+// using operator precedence
 float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
 {
  char var_name[MAXOP]; // maximum length of operator or function name
@@ -4122,37 +4134,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 2;
              break;
 
-            case tsIFFUNC3: // int f(double, double, int)
-                            // looks like never used, but keep it for compatibility with old
-                            // versions
-             if (n_args != 3)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)
-                  || (v_stack[v_sp - 3].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 3].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR)
-                 || (v_stack[v_sp - 3].tag == tvSTR))
-              {
-               error (v_stack[v_sp - 3].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             v_stack[v_sp - 4].ival = (*(int_t (*) (double, double, int_t))sym->func) (
-                 v_stack[v_sp - 3].get_dbl (), v_stack[v_sp - 2].get_dbl (),
-                 v_stack[v_sp - 1].get_int ());
-             v_stack[v_sp - 4].tag = tvINT;
-             v_sp -= 3;
-             break;
-
             case tsFFUNC1: // float f(float x) (sin(x) function)
              if (n_args != 1)
               {
@@ -4318,67 +4299,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_stack[v_sp - 2].ival
                  = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
              v_stack[v_sp - 2].tag = tvINT;
-             v_sp -= 1;
-             break;
-            case tsCFUNCC1: // complex f(x + iy)
-                            // looks like never used, but keep it for compatibility with old
-                            // versions
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             {
-              long double re = v_stack[v_sp - 1].fval;
-              long double im = v_stack[v_sp - 1].imval;
-              long double out_re, out_im;
-              ((complex_func_t)sym->func) (re, im, out_re, out_im);
-              v_stack[v_sp - 2].fval  = out_re;
-              v_stack[v_sp - 2].imval = out_im;
-              v_stack[v_sp - 2].tag   = tvCOMPLEX;
-             }
-             v_sp -= 1;
-             break;
-
-            case tsFFUNCC1: // float f(x + iy)
-                            // looks like never used, but keep it for compatibility with old
-                            // versions
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             v_stack[v_sp - 2].fval = (*(float__t (*) (float__t, float__t))sym->func) (
-                 v_stack[v_sp - 1].fval, v_stack[v_sp - 1].imval);
-             v_stack[v_sp - 2].tag = tvFLOAT;
              v_sp -= 1;
              break;
 

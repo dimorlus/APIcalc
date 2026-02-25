@@ -56,7 +56,7 @@
 
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  16  // maximum length of operator or function name
-#define MAXSTK 5   // maximum stack depth
+#define MAXSTK 10  // maximum stack depth
 
 #ifdef __BORLANDC__
 

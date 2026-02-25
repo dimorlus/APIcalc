@@ -32,6 +32,10 @@
 
 #endif //__BORLANDC__
 
+#ifdef _ENABLE_DEBUG_LOG_
+#include <fstream>
+#endif
+
 #include "scalc.h"
 #include "sfmts.h"
 #include "sfunc.h"
@@ -61,6 +65,24 @@
 // Macros to determine if an operator is binary or unary based on its position in the enumeration
 #define BINARY(opd) (opd >= toPOW)
 #define UNARY(opd)  ((opd >= toPOSTINC) && (opd <= toCOM))
+
+#ifdef _ENABLE_DEBUG_LOG_
+// Debug logging function
+void DebugLog (const char *format, ...)
+{
+ va_list args;
+ va_start (args, format);
+ char message[1024];
+ vsnprintf (message, sizeof (message), format, args);
+ va_end (args);
+
+ static std::ofstream debugFile ("debug_stack.txt", std::ios::app);
+ debugFile << message << std::endl;
+ debugFile.flush ();
+}
+#else // Stub function when debug logging is disabled
+#define DebugLog(x, ...) ((void)0)
+#endif // _ENABLE_DEBUG_LOG_
 
 
 float__t Const (void *clc, char *name, float__t x)
@@ -2497,7 +2519,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
  if (deep > MAXSTK)
   {
-   error (pos, "Too deep recursion");
+   errorf (pos, "Too deep (%d) recursion.", deep);
    return qnan;
   }
 
@@ -4319,7 +4341,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                 calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
                 if (!pCalculator)
                  {
-                  error ("Out of memory");
+                  errorf (pos, "Out of memory");
                   result_fval = qnan;
                   return qnan;
                  }
@@ -4328,7 +4350,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                 const char *p = strchr (funcdef, '(');
                 if (!p)
                  {
-                  error ("No '(' in function definition");
+                  errorf (pos, "No '(' in function definition");
                   delete pCalculator;
                   result_fval = qnan;
                   return qnan;
@@ -4352,7 +4374,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   vbuf[vi] = 0;
                   if (vi == 0)
                    {
-                    error ("Empty parameter name");
+                    errorf (v_stack[v_sp - n_args + arg_idx].pos, "Empty parameter name");
                     delete pCalculator;
                     result_fval = qnan;
                     return qnan;
@@ -4360,14 +4382,15 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   // Add variable
                   if (arg_idx >= n_args)
                    {
-                    error ("Too many parameters in function definition");
+                    errorf (v_stack[v_sp - n_args + arg_idx].pos, 
+                        "Too many parameters in function definition");
                     delete pCalculator;
                     result_fval = qnan;
                     return qnan;
                    }
                   if (((v_stack[v_sp - n_args + arg_idx].tag == tvERR)))
                    {
-                    error (v_stack[v_sp - n_args + arg_idx].pos, "Undefined operand");
+                    errorf (v_stack[v_sp - n_args + arg_idx].pos, "Undefined operand");
                     delete pCalculator;
                     result_fval = qnan;
                     return qnan;
@@ -4388,7 +4411,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                    }
                   else
                    {
-                    error ("Invalid character in parameter list");
+                    errorf (v_stack[v_sp - n_args + arg_idx].pos, 
+                            "Invalid character in parameter list");
                     delete pCalculator;
                     result_fval = qnan;
                     return qnan;
@@ -4396,7 +4420,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                  }
                 if (*p != ')')
                  {
-                  error ("No closing ')' in function definition");
+                  errorf (v_stack[v_sp - n_args + arg_idx].pos, "No closing ')' in function definition");
                   delete pCalculator;
                   result_fval = qnan;
                   return qnan;

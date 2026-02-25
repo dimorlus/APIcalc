@@ -1,5 +1,10 @@
+24.02.26 (2.109)
+* The allowed nesting depth has been increased; user-defined functions can be nested (up to 10 times).
+* Cosmetic changes to error messages.
+
 24.02.26 (2.108)
 + User-defined functions can now be nested (up to 5 times).
+* Removed unused code.
 
 23.02.26 (2.107)
 * The help window now closes when you press Esc.

@@ -2,7 +2,7 @@
 
 [Русская версия / Russian version](Readme_ru.md)
 
-A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, and complex numbers.
+A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, user-defined functions, and loading custom constants from a file.
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder VCL (BCB6) [fcalc](https://github.com/dimorlus/fcalc), which, in turn, is based on DOS programs and [Ccalc](http://www.garret.ru/ccalc.zip) sources that have been heavily reworked since then.
 
@@ -41,6 +41,8 @@ Command-line calculator for scripts, automation, and terminal use.
 * **Variables Dialog**: View and manage calculation variables
 * **Customizable Options**: Case sensitivity, forced float mode, ESC minimization, opacity control
 * **Implicit Multiplication**: Optionally omit multiplication operator in common cases
+* **User-Defined Functions**: Define and nest custom functions (up to 10 levels deep)
+* **Custom Constants File**: Load user-defined constants and functions from `consts.txt`
 
 ### CLI Version (ccalc)
 
@@ -63,6 +65,7 @@ ccalc "sin(pi/4)"
 ccalc "0xFF + 0b1010" /HEX+ /BIN+
 ccalc "2k5" /SCI+              # 2500 with scientific notation
 ccalc "2+3i" /NRM+              # Complex numbers
+ccalc "2+3i" /CPX+              # Complex numbers in polar form
 
 # Show help
 ccalc "help(0)"                 # Overview
@@ -92,12 +95,64 @@ ccalc "help(7)"                 # Options
 * **Logarithmic**: ln (natural log), log (base 10)
 * **Other**: sqrt, exp, abs, floor, ceil, round
 
+### Utility Functions
+
+* **pol**: Convert to polar coordinates
+* **const("name", value)**: Define a named constant programmatically
+* **var("name", value)**: Define a named variable programmatically
+* **wrgb, trgb**: Color-related utility functions
+* **winf**: Display information in a window
+* **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
+* **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
+* **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
+* **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
+  ```
+  polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
+  polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
+  ```
+  This function is defined in `consts.txt` as a user-defined function: `{polar(m, a) m * exp(j * a)}`
+
 ### **Complex Number Support**
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
-* Complex numbers can be entered in the form `a+bi` (e.g., `1+2i`, `3-4i`).
+* Complex numbers can be entered in the form `a+bi` or `a+ib` (e.g., `1+2i`, `1+i2`, `3-4i`).
 * Functions like `sin`, `cos`, `exp`, `abs`, etc., work with both real and complex arguments.
 * The result is displayed in the form `a+bi` if the imaginary part is nonzero.
+* The `~` operator on a complex number returns its **complex conjugate** (negates the imaginary part). On integers, `~` performs bitwise NOT.
+* When the result is complex, it is displayed in **both rectangular and polar forms** for convenience:
+  ```
+  ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j
+  ```
+  Polar form notation: `|modulus|(degrees`minutes'seconds")`
+
+### User-Defined Functions
+
+User-defined functions can be specified inline or loaded from `consts.txt`:
+
+```
+{frq(L, C)  1/(2*pi*sqrt(L*C))}
+```
+
+Then use them in expressions:
+
+```
+frq(130u, 2n2)    # Result: 297602.87 Hz
+```
+
+**Key properties:**
+
+* Functions can be nested up to **10 levels** deep.
+* When a user-defined function is called, all previously defined constants (including those from `consts.txt`) are available inside it, but not variables.
+* User-defined functions can be **overridden** by re-declaring them (previously, re-declarations were silently ignored).
+* Type checking is enforced on function arguments — for example, you cannot call `sin` on a string.
+
+### Comments
+
+Use the `;;` operator for inline comments:
+
+```
+2+2 ;; This is a comment
+```
 
 ### Constants
 
@@ -157,12 +212,16 @@ ccalc "help(7)"                 # Options
 * **daylight**: Daylight saving time flag
 * **tz**: Current timezone with DST
 
+#### User Constants File (consts.txt)
+
+Place a `consts.txt` file in the same directory as the calculator executable to automatically load custom constants, variables, and user-defined functions at startup. The file supports all the same syntax as the calculator's expression input, including `const(...)`, `var(...)`, and function definitions `{name(args) expression}`. All predefined constants are available inside user-defined functions loaded from this file.
+
 ## Output Formats
 
 * Scientific
 * Normalized
 * Fraction
-* Computing
+* Computing (uses KiB for binary multiples; KB is also accepted as input)
 * Integer
 * Unsigned
 * Hexadecimal
@@ -170,14 +229,30 @@ ccalc "help(7)"                 # Options
 * Binary (configurable width)
 * Character
 * Wide Character
-* Date/Time
+* Date/Time (supports `:w` weeks input format)
 * Unix Timestamp
-* Degrees
+* Degrees (supports gon and turns in addition to degrees/minutes/seconds)
 * String
 * Inch
+* Temperature in Fahrenheit (`75F` format for input/output)
 * Auto
+* CPX (complex numbers in polar form)
+
+### Engineering / Scientific Suffixes
+
+Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (10³⁰), **R** (10²⁷) and their lowercase counterparts **q** (10⁻³⁰), **r** (10⁻²⁷) are also supported.
+
+For complex numbers, suffixes apply independently to both the real and imaginary parts in output:
+```
+polar(10k, 30`20'40")  →  8.63k+5.052ki
+```
+Here `k` is applied separately to the real part (`8.63k`) and the imaginary part (`5.052k`), followed by `i`.
+
+In engineering and normalized formats, the suffix order is based on the **modulus**. If the real or imaginary part differs from the modulus by three or more orders of magnitude, it is considered negligible and displayed as zero.
 
 ## Usage
+
+> **Note**: This README covers the main features, but for a complete reference — including all functions, constants, formats, and options — consult the built-in help. In the GUI version press **F1**, in the CLI version run `ccalc "help(0)"` for an overview and `ccalc "help(n)"` for specific topics. The help is concise and sometimes shows only an example, but covers everything.
 
 1. Type mathematical expressions in the input field
 2. Results are calculated automatically as you type
@@ -189,18 +264,22 @@ ccalc "help(7)"                 # Options
 ### Example Expressions
 
 ```
-2 + 3 \* 4
+2 + 3 * 4
 sin(pi/2)
 sqrt(16) + log(100)
-2^3 \* e
+2^3 * e
 (5 + 3) / (2 - 1)
 
+# Resonant frequency and wave resistance:
+L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", f, Rw)
+# Returns: f:297.6kHz, Rw:243.1Ohm
+
 # With Implicit Multiplication enabled:
-2sin(pi/2)          # Same as 2 \* sin(pi/2) = 2
-3(4+5)              # Same as 3 \* (4+5) = 27
-(1+2)(3+4)          # Same as (1+2) \* (3+4) = 21
-2PI                 # Same as 2 \* PI ≈ 6.28 (uppercase PI to avoid pico suffix)
-3e                  # Same as 3 \* e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
+2sin(pi/2)          # Same as 2 * sin(pi/2) = 2
+3(4+5)              # Same as 3 * (4+5) = 27
+(1+2)(3+4)          # Same as (1+2) * (3+4) = 21
+2PI                 # Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
+3e                  # Same as 3 * e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
 ```
 
 ### Implicit Multiplication
@@ -246,6 +325,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * **Ctrl+C**: Copy result to clipboard
 * **Ctrl+V**: Paste from clipboard to expression
 * **F1**: Show help contents
+* **Esc**: Close help window / minimize main window (if ESC minimized option is enabled)
 
 ## Menu Options
 
@@ -284,6 +364,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * Visual Studio 2019 or later
 * Windows SDK 10.0 or later
 * C++17 standard
+* BCB6 (Borland C++ Builder 6) compilation option is also available for the calculator engine
 
 ### Building GUI Version (WinApiCalc)
 
@@ -335,6 +416,7 @@ APICalc/
 ├── sfunc.cpp/h          # Math functions (shared)
 ├── WinApiCalc.cpp/h     # GUI application
 ├── WinApiCalc.rc        # GUI resources
+├── consts.txt           # User-defined constants and functions (loaded at startup)
 ├── ccalc/               # CLI version
 │   ├── ccalc.cpp/h      # CLI main
 │   ├── help.cpp         # Help system

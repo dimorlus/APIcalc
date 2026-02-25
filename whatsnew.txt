@@ -1,6 +1,10 @@
-24.02.26 (2.109)
+$ solve(expr(x), x)
+$ integral(expr(x), x, from, to, tol)
+
+25.02.26 (2.109)
 * The allowed nesting depth has been increased; user-defined functions can be nested (up to 10 times).
 * Cosmetic changes to error messages.
+* README.md updated.
 
 24.02.26 (2.108)
 + User-defined functions can now be nested (up to 5 times).

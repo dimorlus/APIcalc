@@ -221,6 +221,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  add (tsVFUNC2, vf_cplx, "cmplx", (void *)vfunc2);
  add (tsVFUNC2, vf_cplx, "cplx", (void *)vfunc2);
  add (tsVFUNC2, vf_cplx, "cpx", (void *)vfunc2);
+ add (tsVFUNC2, vf_polar, "polar", (void *)vfunc2);
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
 
@@ -1684,7 +1685,8 @@ void calculator::errorf (int pos, const char *fmt, ...)
  errpos = pos;
 }
 
-
+// Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
+// expr -> x(2x+2)-2, x:=0
 float__t calculator::Solve (const char *expr)
 {
  if (expr && *expr)
@@ -1694,15 +1696,15 @@ float__t calculator::Solve (const char *expr)
    char nvar[MAXOP];
    char *p = sexpr;
    float__t vvar = qnan;
-   // copy all characters from expr to sexpr until the first ',' or end of string is reached or
-   // buffer limit is reached
+   // copy all characters from expr (i. e. 'x(2x+2)-2' ) to sexpr until the first ',' or 
+   // end of string is reached or  buffer limit is reached
    while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1))
     {
      *p++ = *expr++;
     }
    *p = '\0'; // null-terminate the string
-   // copy the remaining characters from expr to svar (if any) until the end of string is reached or
-   // buffer limit is reached
+   // copy the remaining characters (i. e. 'x:=0' ) from expr to svar (if any) until the end 
+   // of string is reached or buffer limit is reached
    if (*expr == ',')
     {
      expr++;
@@ -1726,10 +1728,12 @@ float__t calculator::Solve (const char *expr)
    if (isnan(result) || pCalculator->err[0])
     {
      errorf (pos, "%s", pCalculator->err);
+     delete pCalculator;
      result_fval = qnan;
+     return qnan;
     }
 
-    char *lv = (char *)pCalculator->get_last_var ();
+   char *lv = (char *)pCalculator->get_last_var ();
    strcpy (nvar, lv);
    vvar = result;
 
@@ -1748,6 +1752,7 @@ float__t calculator::Solve (const char *expr)
        {
         errorf (pos, "%s", pCalculator->err[0] ? pCalculator->err : "Error evaluating expression");
         result_fval = qnan;
+        delete pCalculator;
         return qnan;
        }
 
@@ -1769,6 +1774,7 @@ float__t calculator::Solve (const char *expr)
        {
         errorf (pos, "Error evaluating derivative");
         result_fval = qnan;
+        delete pCalculator;
         return qnan;
        }
 
@@ -1785,6 +1791,7 @@ float__t calculator::Solve (const char *expr)
        {
         errorf (pos, "Solution diverged");
         result_fval = qnan;
+        delete pCalculator;
         return qnan;
        }
 
@@ -1802,6 +1809,7 @@ float__t calculator::Solve (const char *expr)
      {
       errorf (pos, "No solution found");
       result_fval = qnan;
+      delete pCalculator;
       return qnan;
      }
    }
@@ -2612,7 +2620,7 @@ t_operator calculator::scan (bool operand, bool percent)
 static int lpr[toTERMINALS] = {
  2,  0,  0,  0,              // BEGIN, OPERAND, ERROR, END,
  4,  4,                      // LPAR, RPAR
- 5,  98, 98, 98,             // FUNC, POSTINC, POSTDEC, FACT
+ 5,  5, 98, 98, 98,          // FUNC, SOLVE, POSTINC, POSTDEC, FACT
  98, 98, 98, 98, 98, 98,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
  90,                         // POW,
  80, 80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
@@ -2634,7 +2642,7 @@ static int lpr[toTERMINALS] = {
 static int rpr[toTERMINALS] = {
  0,   0,  0,  1,              // BEGIN, OPERAND, ERROR, END,
  110, 3,                      // LPAR, RPAR
- 120, 99, 99, 99,             // FUNC, POSTINC, POSTDEC, FACT
+ 120, 120, 99, 99, 99,        // FUNC, SOLVE, POSTINC, POSTDEC, FACT
  99,  99, 99, 99, 99, 99,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
  95,                          // POW,
  80,  80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
@@ -4193,7 +4201,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
 
              if (isnan(result))
               {
-               error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
+               //error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
                result_fval = qnan;
                return qnan;
               }

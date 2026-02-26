@@ -143,60 +143,60 @@ enum t_value // t_value represents the type of a value in the calculator
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
- toBEGIN,   // toBEGIN must be the first operator in the list
- toOPERAND, // toOPERAND represents an operand in the expression
- toERROR,   // toERROR represents an error in the expression
- toEND,     // toEND represents the end of the expression
- toLPAR,    // toLPAR represents a left parenthesis '('
- toRPAR,    // toRPAR represents a right parenthesis ')'
- toFUNC,    // toFUNC represents a function
- toSOLVE,   // toSOLVE represents a solve operator for solving equations
- toPOSTINC, // toPOSTINC represents a post-increment operator
- toPOSTDEC, // toPOSTDEC represents a post-decrement operator
- toFACT,    // toFACT represents a factorial operator
- toPREINC,  // toPREINC represents a pre-increment operator
- toPREDEC,  // toPREDEC represents a pre-decrement operator
- toPLUS,    // toPLUS represents an addition operator
- toMINUS,   // toMINUS represents a subtraction operator
- toNOT,     // toNOT represents a logical NOT operator
- toCOM,     // toCOM represents a bitwise complement operator
- toPOW,     // toPOW represents a power operator
- toPERCENT, // toPERCENT represents a percentage operator
- toMUL,     // toMUL represents a multiplication operator
- toDIV,     // toDIV represents a division operator
- toMOD,     // toMOD represents a modulo operator
- toPAR,     // toPAR represents a parenthesis operator
- toADD,     // toADD represents an addition operator
- toSUB,     // toSUB represents a subtraction operator
- toASL,     // toASL represents a arithmetic shift left operator
- toASR,     // toASR represents a arithmetic shift right operator
- toLSR,     // toLSR represents a logical shift right operator
- toGT,      // toGT represents a greater than operator
- toGE,      // toGE represents a greater than or equal operator
- toLT,      // toLT represents a less than operator
- toLE,      // toLE represents a less than or equal operator
- toEQ,      // toEQ represents an equality operator
- toNE,      // toNE represents a not equal operator
- toAND,     // toAND represents a logical AND operator
- toXOR,     // toXOR represents a logical XOR operator
- toOR,      // toOR represents a logical OR operator
- toSET,     // toSET represents a set operator
- toSETADD,  // toSETADD represents a set addition operator
- toSETSUB,  // toSETSUB represents a set subtraction operator
- toSETMUL,  // toSETMUL represents a set multiplication operator
- toSETDIV,  // toSETDIV represents a set division operator
- toSETMOD,  // toSETMOD represents a set modulo operator
- toSETASL,  // toSETASL represents a set arithmetic shift left operator
- toSETASR,  // toSETASR represents a set arithmetic shift right operator
- toSETLSR,  // toSETLSR represents a set logical shift right operator
- toSETAND,  // toSETAND represents a set logical AND operator
- toSETXOR,  // toSETXOR represents a set logical XOR operator
- toSETOR,   // toSETOR represents a set logical OR operator
- toSETPOW,  // toSETPOW represents a set power operator
- toSEMI,    // toSEMI represents a semicolon operator
- toCOMMA,   // toCOMMA represents a comma operator
- toCONTINUE, // toCONTINUE represents a continue operator for continue scanning
- toTERMINALS // toTERMINALS must be the last operator in the list and represents the total number of
+ toBEGIN,   // 0  toBEGIN must be the first operator in the list
+ toOPERAND, // 1  toOPERAND represents an operand in the expression
+ toERROR,   // 2  toERROR represents an error in the expression
+ toEND,     // 3  toEND represents the end of the expression
+ toLPAR,    // 4  toLPAR represents a left parenthesis '('
+ toRPAR,    // 5  toRPAR represents a right parenthesis ')'
+ toFUNC,    // 6  toFUNC represents a function
+ toSOLVE,   // 7  toSOLVE represents a solve operator for solving equations
+ toPOSTINC, // 8  toPOSTINC represents a post-increment operator
+ toPOSTDEC, // 9  toPOSTDEC represents a post-decrement operator
+ toFACT,    // 10  toFACT represents a factorial operator
+ toPREINC,  // 11 toPREINC represents a pre-increment operator
+ toPREDEC,  // 12 toPREDEC represents a pre-decrement operator
+ toPLUS,    // 13 toPLUS represents an addition operator
+ toMINUS,   // 14 toMINUS represents a subtraction operator
+ toNOT,     // 15 toNOT represents a logical NOT operator
+ toCOM,     // 16 toCOM represents a bitwise complement operator
+ toPOW,     // 17 toPOW represents a power operator
+ toPERCENT, // 18 toPERCENT represents a percentage operator
+ toMUL,     // 19 toMUL represents a multiplication operator
+ toDIV,     // 20 toDIV represents a division operator
+ toMOD,     // 21 toMOD represents a modulo operator
+ toPAR,     // 22 toPAR represents a parenthesis operator
+ toADD,     // 23 toADD represents an addition operator
+ toSUB,     // 24 toSUB represents a subtraction operator
+ toASL,     // 25 toASL represents a arithmetic shift left operator
+ toASR,     // 26 toASR represents a arithmetic shift right operator
+ toLSR,     // 27 toLSR represents a logical shift right operator
+ toGT,      // 28 toGT represents a greater than operator
+ toGE,      // 29 toGE represents a greater than or equal operator
+ toLT,      // 30 toLT represents a less than operator
+ toLE,      // 31 toLE represents a less than or equal operator
+ toEQ,      // 32 toEQ represents an equality operator
+ toNE,      // 33 toNE represents a not equal operator
+ toAND,     // 34 toAND represents a logical AND operator
+ toXOR,     // 35 toXOR represents a logical XOR operator
+ toOR,      // 36 toOR represents a logical OR operator
+ toSET,     // 37 toSET represents a set operator
+ toSETADD,  // 38 toSETADD represents a set addition operator
+ toSETSUB,  // 39 toSETSUB represents a set subtraction operator
+ toSETMUL,  // 40 toSETMUL represents a set multiplication operator
+ toSETDIV,  // 41 toSETDIV represents a set division operator
+ toSETMOD,  // 42 toSETMOD represents a set modulo operator
+ toSETASL,  // 43 toSETASL represents a set arithmetic shift left operator
+ toSETASR,  // 44 toSETASR represents a set arithmetic shift right operator
+ toSETLSR,  // 45 toSETLSR represents a set logical shift right operator
+ toSETAND,  // 46 toSETAND represents a set logical AND operator
+ toSETXOR,  // 47 toSETXOR represents a set logical XOR operator
+ toSETOR,   // 48 toSETOR represents a set logical OR operator
+ toSETPOW,  // 49 toSETPOW represents a set power operator
+ toSEMI,    // 50 toSEMI represents a semicolon operator
+ toCOMMA,   // 51 toCOMMA represents a comma operator
+ toCONTINUE, // 52 toCONTINUE represents a continue operator for continue scanning
+ toTERMINALS // 53 toTERMINALS must be the last operator in the list and represents the total number of
              // operators
 };
 
@@ -280,6 +280,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_re,
  vf_im,
  vf_cplx,
+ vf_polar,
 
  vf_num
 };

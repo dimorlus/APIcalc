@@ -1988,6 +1988,13 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
       out_im = re2;
      }
      break;
+    case vf_polar:
+     {
+      out_re = re1*cos(re2);
+      out_im = re1*sin(re2);
+     }
+     break;
+
     }
    res->fval  = out_re;
    res->imval = out_im;
@@ -2021,6 +2028,16 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
       res->ival  = (int64_t)res->fval;
       return;
      }
+    case vf_polar:
+     {
+
+      res->fval  = arg1->get () * cos(arg2->get ());
+      res->imval = arg1->get () * sin (arg2->get ());
+      res->tag   = tvCOMPLEX;
+      res->ival  = (int64_t)res->fval;
+      return;
+     }
+
     }
    res->imval = 0;
    res->tag   = tvFLOAT;

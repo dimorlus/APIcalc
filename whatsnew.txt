@@ -1,4 +1,7 @@
-+ solve(expr(x), x)
++ solve(expr, var:=est) where expr is the left side of the equation, expr(var)=0, est is the first 
+  approximation of the root. Used Newton-Raphson method.
+  solve(x(2x+2)-2, x:=0) -> 0.6180339887500326
+  solve(x(2x+2)-2, x:=-1) -> -1.61803398875005
 $ integral(expr(x), x, from, to, tol)
 
 25.02.26 (2.109)

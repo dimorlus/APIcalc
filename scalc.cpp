@@ -166,6 +166,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
    return;
   }
 
+ add (tsSOLVE, "solve", nullptr);
+
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
 
@@ -1682,6 +1684,139 @@ void calculator::errorf (int pos, const char *fmt, ...)
  errpos = pos;
 }
 
+
+float__t calculator::Solve (const char *expr)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char svar[STRBUF];
+   char nvar[MAXOP];
+   char *p = sexpr;
+   float__t vvar = qnan;
+   // copy all characters from expr to sexpr until the first ',' or end of string is reached or
+   // buffer limit is reached
+   while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1))
+    {
+     *p++ = *expr++;
+    }
+   *p = '\0'; // null-terminate the string
+   // copy the remaining characters from expr to svar (if any) until the end of string is reached or
+   // buffer limit is reached
+   if (*expr == ',')
+    {
+     expr++;
+     p = svar;
+     while (*expr && (p - svar < STRBUF - 1))
+      {
+       *p++ = *expr++;
+      }
+     *p = '\0'; // null-terminate the string
+    }
+
+   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
+   if (!pCalculator)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return qnan;
+    }
+
+   float__t result = pCalculator->evaluate (svar);
+   if (isnan(result) || pCalculator->err[0])
+    {
+     errorf (pos, "%s", pCalculator->err);
+     result_fval = qnan;
+    }
+
+    char *lv = (char *)pCalculator->get_last_var ();
+   strcpy (nvar, lv);
+   vvar = result;
+
+   {
+    // Newton-Raphson iteration
+    const float__t tol = 1e-12L;
+    const int maxIter  = 100;
+    float__t x         = vvar;
+    bool converged     = false;
+
+    for (int i = 0; i < maxIter; i++)
+     {
+      pCalculator->addfvar (nvar, x);
+      float__t fx = pCalculator->evaluate (sexpr);
+      if (isnan (fx) || pCalculator->err[0])
+       {
+        errorf (pos, "%s", pCalculator->err[0] ? pCalculator->err : "Error evaluating expression");
+        result_fval = qnan;
+        return qnan;
+       }
+
+      if (fabsl (fx) < tol)
+       {
+        converged = true;
+        vvar      = x;
+        break;
+       }
+
+      // Numerical derivative (central difference)
+      float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for long double
+      pCalculator->addfvar (nvar, x + delta);
+      float__t fxp = pCalculator->evaluate (sexpr);
+      pCalculator->addfvar (nvar, x - delta);
+      float__t fxm = pCalculator->evaluate (sexpr);
+
+      if (isnan (fxp) || isnan (fxm))
+       {
+        errorf (pos, "Error evaluating derivative");
+        result_fval = qnan;
+        return qnan;
+       }
+
+      float__t fp = (fxp - fxm) / (2.0L * delta);
+      if (fabsl (fp) < tol)
+       {
+        // Derivative is close to zero - try to shift
+        x += delta * 1000.0L;
+        continue;
+       }
+
+      float__t x_new = x - fx / fp;
+      if (isnan (x_new) || isinf (x_new))
+       {
+        errorf (pos, "Solution diverged");
+        result_fval = qnan;
+        return qnan;
+       }
+
+      if (fabsl (x_new - x) < tol * (1.0L + fabsl (x)))
+       {
+        converged = true;
+        vvar      = x_new;
+        break;
+       }
+
+      x = x_new;
+     }
+
+    if (!converged)
+     {
+      errorf (pos, "No solution found");
+      result_fval = qnan;
+      return qnan;
+     }
+   }
+
+   delete pCalculator;
+   return vvar;
+  }
+ else
+  {
+   errorf (0, "empty expression");
+   return qnan;
+  }
+ return qnan;
+}
+
 // Skip whitespace and parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
 {
@@ -2389,6 +2524,77 @@ t_operator calculator::scan (bool operand, bool percent)
      error ("stack overflow");
      return toERROR;
     }
+   if (sym && sym->tag == tsSOLVE)
+    {
+     // solve (x(2x+2)-2,x:=0)
+     // extract expression in () after the function name, and put it as string in the symbol table,
+     // and return toSOLVE to indicate that this is a solve function with expression in its funct
+     // field. The actual solving will be done when the operator is executed, and the expression
+     // will be parsed and evaluated at that time. This allows for recursive solving and user
+     // defined functions that can call solve.
+     char sbuf[STRBUF];
+     int sidx   = 0;
+     char *ipos = buf + pos;
+     // skip whitespace
+     while (isspace (*ipos & 0x7f)) ipos++;
+
+     if (*ipos == '(') ipos++;
+     else
+      {
+       error ("missing opening parenthesis for solve expression");
+       return toERROR;
+      }
+
+     while (*ipos && (*ipos != ',') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+     if (*ipos == ',') // expression must be followed by comma and variable assignment (e.g. x:=0)
+                       // for solve function
+      {
+       // copy rest of the expression after comma to ')' to the function field of the symbol, and it
+       // will be parsed and evaluated when the operator is executed
+       int parenthesis_count = 0;
+       while (*ipos && (parenthesis_count > 0 || *ipos != ')') && (sidx < STRBUF - 1))
+        {
+         if (*ipos == '(') parenthesis_count++;
+         else if (*ipos == ')') parenthesis_count--;
+         sbuf[sidx++] = *ipos++;
+        }
+       sbuf[sidx] = '\0';
+
+       if (parenthesis_count == 0 && *ipos == ')')
+        {
+         sym->func = strdup (sbuf);
+         if (!sym->func)
+          {
+           error ("memory allocation failed");
+           return toERROR;
+          }
+         registerString ((char *)sym->func);
+         pos = ipos - buf + 1;
+         v_stack[v_sp].tag = tvSOLVE;
+         v_stack[v_sp].sval = nullptr;
+         v_stack[v_sp].var  = sym;
+         v_stack[v_sp].pos  = pos;
+         v_stack[v_sp++].ival = 0;
+        
+         return toSOLVE;
+        }
+       else
+        {
+         error ("unmatched parenthesis in solve expression");
+         return toERROR;
+        }
+      }
+     else
+      {
+       error ("missing comma and variable assignment");
+       return toERROR;
+      }
+    }
+   else if (sym && sym->tag == tsVARIABLE)
+   {
+     strcpy (lastvar, sym->name);
+   }
+
    if (sym)
     {
      v_stack[v_sp]       = sym->val;
@@ -3972,6 +4178,34 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          v_stack[v_sp - 1].tag  = tvINT;
         }
        v_stack[v_sp - 1].var = nullptr;
+       break;
+
+      case toSOLVE:
+       {
+        symbol *sym = v_stack[v_sp - 1].var;
+        if (sym)
+         {
+          switch (sym->tag)
+           {
+           case tsSOLVE:
+            {
+             float__t result = Solve((char *)sym->func);
+
+             if (isnan(result))
+              {
+               error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
+               result_fval = qnan;
+               return qnan;
+              }
+             v_stack[v_sp - 1].fval = result;
+             v_stack[v_sp - 1].tag  = tvFLOAT;
+            }
+            break;
+           }
+         }
+        
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toRPAR: // )

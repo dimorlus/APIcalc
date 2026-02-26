@@ -1,4 +1,4 @@
-$ solve(expr(x), x)
++ solve(expr(x), x)
 $ integral(expr(x), x, from, to, tol)
 
 25.02.26 (2.109)

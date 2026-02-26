@@ -137,7 +137,8 @@ enum t_value // t_value represents the type of a value in the calculator
  tvPERCENT,
  tvCOMPLEX,
  tvSTR,
- tvUFUNCT
+ tvUFUNCT,
+ tvSOLVE
 };
 
 enum t_operator // t_operator represents the type of an operator in the calculator
@@ -149,6 +150,7 @@ enum t_operator // t_operator represents the type of an operator in the calculat
  toLPAR,    // toLPAR represents a left parenthesis '('
  toRPAR,    // toRPAR represents a right parenthesis ')'
  toFUNC,    // toFUNC represents a function
+ toSOLVE,   // toSOLVE represents a solve operator for solving equations
  toPOSTINC, // toPOSTINC represents a post-increment operator
  toPOSTDEC, // toPOSTDEC represents a post-decrement operator
  toFACT,    // toFACT represents a factorial operator
@@ -215,6 +217,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsVFUNC1,  // void vfunc(value* res, value* arg, int idx)
  tsVFUNC2,  // void vfunc(value* res, value* arg1, value* arg2, int idx)
  tsUFUNCT,   // User-defined function
+ tsSOLVE,    // Solve operator for solving equations
  tsNUM
 };
 
@@ -235,6 +238,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
 #define MASK_VFUNC1 (1<< tsVFUNC1) // tsVFUNC1 represents a void function with one value argument and one int argument
 #define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
 #define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
+#define MASK_SOLVE  (1 << tsSOLVE)  // tsSOLVE represents a solve operator for solving equations
 #define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 \
                     | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
                     | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
@@ -364,6 +368,8 @@ class calculator // calculator represents the main class for the expression calc
  char c_imaginary; // Imaginary unit character
  bool expr;    // Expression flag
  char sres[STRBUF]; // String result buffer
+ char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
+
  int64_t result_ival; // Integer result
  float__t result_fval; // Float result
  float__t result_imval; // Imaginary part of complex result
@@ -408,6 +414,8 @@ class calculator // calculator represents the main class for the expression calc
  void clear_v_stack (); // Clear the value stack
  void addim (void); // Add imaginary unit
  
+ float__t Solve (const char *expr); // Solve an equation given by the expression and return the
+                                    // solution as a floating-point value
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,
@@ -436,6 +444,8 @@ class calculator // calculator represents the main class for the expression calc
  float__t  evaluate (char *expr, __int64 *piVal = nullptr,
            float__t *pimval = nullptr); // Evaluate an expression and return the result as a floating-point value,
                        // with optional pointers to store integer and imaginary results
+ inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 
+                                                       //expression  
  int64_t get_int_res () { return result_ival; };
  float__t get_re_res () { return result_fval; };
  float__t get_im_res () { return result_imval; };

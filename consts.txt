@@ -192,7 +192,7 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 {i_delta(i_line) i_line / sqrt(3)};; Phase current in delta connection
 
 ;; --- Polar to Complex ---
-{polar(m, a) m * exp(j * a)};; Input as magnitude and angle (radians or with `)
+;;{polar(m, a) m * exp(j * a)};; Input as magnitude and angle (radians or with `)
 
 ;; --- THD & Distorted Power ---
 {i_total(i_fund, thd) i_fund * sqrt(1 + thd^2)};; Total RMS current with THD

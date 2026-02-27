@@ -1718,7 +1718,7 @@ float__t calculator::Solve (const char *expr)
      *p = '\0'; // null-terminate the string
     }
 
-   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
+   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
    if (!pCalculator)
     {
      errorf (pos, "Out of memory");
@@ -2035,7 +2035,7 @@ float__t calculator::Integr (const char *expr)
     if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
    *p = '\0'; // null-terminate the string
 
-   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
+   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
    if (!pCalculator)
     {
      errorf (pos, "Out of memory");
@@ -2082,6 +2082,217 @@ float__t calculator::Integr (const char *expr)
    return result;
   }
  return qnan; // placeholder for actual integration result
+}
+
+t_operator calculator::iscan (symbol *sym)
+{
+ if (sym && sym->tag == tsINTEGR)
+  {
+   // integr (x(2x+2)-2,0,10,x)
+   // extract expression in () after the function name, and put it as string in the symbol
+   // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
+   // its funct field. The actual solving will be done when the operator is executed, and the
+   // expression will be parsed and evaluated at that time. This allows for recursive solving
+   // and user defined functions that can call solve.
+   char sbuf[STRBUF];
+   int sidx              = 0;
+   int comma_count       = 0;
+   int parenthesis_count = 1;
+
+   char *ipos = buf + pos;
+   if (*ipos == ')')
+    {
+     pos++;
+     return toRPAR;
+    }
+   else if (*ipos == '\0')
+    return toEND; // end of input
+
+   // skip whitespace befor '('
+   while (isspace (*ipos & 0x7f)) ipos++;
+
+   if (*ipos == '(')
+    ipos++;
+   else
+    {
+     error ("missing opening parenthesis for integral expression");
+     return toERROR;
+    }
+
+   while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+    {
+     if (*ipos == ',')
+      comma_count++;
+     else if (*ipos == '(')
+      parenthesis_count++;
+     else if (*ipos == ')')
+      parenthesis_count--;
+     sbuf[sidx++] = *ipos++;
+    }
+   if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
+
+   if (parenthesis_count == 0 && comma_count == 3)
+    {
+     char *sval = strdup (sbuf);
+     if (!sval)
+      {
+       error ("memory allocation failed");
+       return toERROR;
+      }
+     registerString (sval);
+     pos                  = ipos - buf;
+     v_stack[v_sp].tag    = tvINTEGR;
+     v_stack[v_sp].sval   = sval;
+     v_stack[v_sp].var    = sym;
+     v_stack[v_sp].pos    = pos;
+     v_stack[v_sp++].ival = 0;
+     return toOPERAND;
+    }
+   else
+    {
+     if (parenthesis_count)
+      error ("unmatched parenthesis in integral expression");
+     else
+      error ("incorrect number of arguments in integral expression");
+     return toERROR;
+    }
+  }
+ return toERROR;
+}
+
+
+t_operator calculator::sscan (symbol *sym)
+{
+ // solve (x(2x+2)-2,x:=0)
+ // extract expression in () after the function name, and put it as string in the symbol table,
+ // and return toSOLVE to indicate that this is a solve function with expression in its funct
+ // field. The actual solving will be done when the operator is executed, and the expression
+ // will be parsed and evaluated at that time. This allows for recursive solving and user
+ // defined functions that can call solve.
+ if (sym && sym->tag == tsSOLVE)
+  {
+   char sbuf[STRBUF];
+   int sidx   = 0;
+   char *ipos = buf + pos;
+
+   if (*ipos == ')')
+    {
+     pos++;
+     return toRPAR;
+    }
+   else if (*ipos == '\0')
+    return toEND; // end of input
+   // skip whitespace
+   while (isspace (*ipos & 0x7f)) ipos++;
+
+   while (*ipos && (*ipos != ',') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+   if (*ipos == ',') // expression must be followed by comma and variable assignment
+                     // (e.g. x:=0) for solve function
+    {
+     // copy rest of the expression after comma to ')' to the function field of the symbol, and it
+     // will be parsed and evaluated when the operator is executed
+     int parenthesis_count = 0;
+     while (*ipos && (parenthesis_count > 0 || *ipos != ')') && (sidx < STRBUF - 1))
+      {
+       if (*ipos == '(')
+        parenthesis_count++;
+       else if (*ipos == ')')
+        parenthesis_count--;
+       sbuf[sidx++] = *ipos++;
+      }
+     sbuf[sidx] = '\0';
+
+     if (parenthesis_count == 0 && *ipos == ')')
+      {
+       char *sval = strdup (sbuf);
+       if (!sval)
+        {
+         error ("memory allocation failed");
+         return toERROR;
+        }
+       registerString (sval);
+
+       pos                  = ipos - buf;
+       v_stack[v_sp].tag    = tvSOLVE;
+       v_stack[v_sp].sval   = sval;
+       v_stack[v_sp].var    = sym;
+       v_stack[v_sp].pos    = pos;
+       v_stack[v_sp].fval   = qnan;
+       v_stack[v_sp].imval  = 0;
+       v_stack[v_sp++].ival = 0;
+       return toOPERAND;
+      }
+     else
+      {
+       error ("unmatched parenthesis in solve expression");
+       return toERROR;
+      }
+    }
+  }
+ else if (sym && sym->tag == tsINTEGR)
+  {
+   // integr (x(2x+2)-2,0,10,x)
+   // extract expression in () after the function name, and put it as string in the symbol
+   // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
+   // its funct field. The actual solving will be done when the operator is executed, and the
+   // expression will be parsed and evaluated at that time. This allows for recursive solving
+   // and user defined functions that can call solve.
+   char sbuf[STRBUF];
+   int sidx              = 0;
+   int comma_count       = 0;
+   int parenthesis_count = 1;
+
+   char *ipos = buf + pos;
+   if (*ipos == ')')
+    {
+     pos++;
+     return toRPAR;
+    }
+   else if (*ipos == '\0')
+    return toEND; // end of input
+
+   // skip whitespace befor '('
+   while (isspace (*ipos & 0x7f)) ipos++;
+
+   while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+    {
+     if (*ipos == ',')
+      comma_count++;
+     else if (*ipos == '(')
+      parenthesis_count++;
+     else if (*ipos == ')')
+      parenthesis_count--;
+     sbuf[sidx++] = *ipos++;
+    }
+   if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
+
+   if (parenthesis_count == 0 && comma_count == 3)
+    {
+     char *sval = strdup (sbuf);
+     if (!sval)
+      {
+       error ("memory allocation failed");
+       return toERROR;
+      }
+     registerString (sval);
+     pos                  = ipos - buf-1;
+     v_stack[v_sp].tag    = tvINTEGR;
+     v_stack[v_sp].sval   = sval;
+     v_stack[v_sp].var    = sym;
+     v_stack[v_sp].pos    = pos;
+     v_stack[v_sp++].ival = 0;
+     return toOPERAND;
+    }
+   else
+    {
+     if (parenthesis_count)
+      error ("unmatched parenthesis in integral expression");
+     else
+      error ("incorrect number of arguments in integral expression");
+     return toERROR;
+    }
+  }
+ return toERROR;
 }
 
 // Skip whitespace and parse the next operator from the input buffer, returning the operator type
@@ -2792,132 +3003,6 @@ t_operator calculator::scan (bool operand, bool percent)
      return toERROR;
     }
 
-   if (sym && sym->tag == tsSOLVE)
-    {
-     // solve (x(2x+2)-2,x:=0)
-     // extract expression in () after the function name, and put it as string in the symbol table,
-     // and return toSOLVE to indicate that this is a solve function with expression in its funct
-     // field. The actual solving will be done when the operator is executed, and the expression
-     // will be parsed and evaluated at that time. This allows for recursive solving and user
-     // defined functions that can call solve.
-     char sbuf[STRBUF];
-     int sidx   = 0;
-     char *ipos = buf + pos;
-     // skip whitespace
-     while (isspace (*ipos & 0x7f)) ipos++;
-
-     if (*ipos == '(') ipos++;
-     else
-      {
-       error ("missing opening parenthesis for solve expression");
-       return toERROR;
-      }
-
-     while (*ipos && (*ipos != ',') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
-     if (*ipos == ',') // expression must be followed by comma and variable assignment 
-                       // (e.g. x:=0) for solve function
-      {
-       // copy rest of the expression after comma to ')' to the function field of the symbol, and it
-       // will be parsed and evaluated when the operator is executed
-       int parenthesis_count = 0;
-       while (*ipos && (parenthesis_count > 0 || *ipos != ')') && (sidx < STRBUF - 1))
-        {
-         if (*ipos == '(') parenthesis_count++;
-         else if (*ipos == ')') parenthesis_count--;
-         sbuf[sidx++] = *ipos++;
-        }
-       sbuf[sidx] = '\0';
-
-       if (parenthesis_count == 0 && *ipos == ')')
-        {
-         sym->func = strdup (sbuf);
-         if (!sym->func)
-          {
-           error ("memory allocation failed");
-           return toERROR;
-          }
-         registerString ((char *)sym->func);
-         pos = ipos - buf + 1;
-         v_stack[v_sp].tag = tvSOLVE;
-         v_stack[v_sp].sval = nullptr;
-         v_stack[v_sp].var  = sym;
-         v_stack[v_sp].pos  = pos;
-         v_stack[v_sp++].ival = 0;
-         return toSOLVE;
-        }
-       else
-        {
-         error ("unmatched parenthesis in solve expression");
-         return toERROR;
-        }
-      }
-     else
-      {
-       error ("missing comma and variable assignment");
-       return toERROR;
-      }
-    }
-
-   if (sym && sym->tag == tsINTEGR)
-    {
-     // integr (x(2x+2)-2,0,10,x)
-     // extract expression in () after the function name, and put it as string in the symbol
-     // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
-     // its funct field. The actual solving will be done when the operator is executed, and the
-     // expression will be parsed and evaluated at that time. This allows for recursive solving
-     // and user defined functions that can call solve.
-     char sbuf[STRBUF];
-     int sidx   = 0;
-     int comma_count = 0;
-     int parenthesis_count = 1;
-
-     char *ipos = buf + pos;
-     // skip whitespace befor '('
-     while (isspace (*ipos & 0x7f)) ipos++;
-
-     if (*ipos == '(') ipos++;
-     else
-      {
-       error ("missing opening parenthesis for integral expression");
-       return toERROR;
-      }
-
-     while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
-      {
-       if (*ipos == ',') comma_count++;
-       else 
-       if (*ipos == '(') parenthesis_count++;
-       else 
-       if (*ipos == ')') parenthesis_count--;
-       sbuf[sidx++] = *ipos++;
-      }
-     if (sidx && sbuf[sidx - 1] == ')')
-     sbuf[sidx-1] = '\0';
-
-     if (parenthesis_count == 0 && comma_count == 3) 
-      {
-       sym->func = strdup (sbuf);
-       if (!sym->func)
-        {
-         error ("memory allocation failed");
-         return toERROR;
-        }
-       registerString ((char *)sym->func);
-       pos = ipos - buf; 
-       v_stack[v_sp].tag    = tvINTEGR;
-       v_stack[v_sp].sval   = nullptr;
-       v_stack[v_sp].var    = sym;
-       v_stack[v_sp].pos    = pos;
-       v_stack[v_sp++].ival = 0;
-       return toSOLVE;
-      }
-     else
-      {
-        if (parenthesis_count) error ("unmatched parenthesis in solve expression");
-        else error ("incorrect number of arguments in integral expression");
-        return toERROR;
-      }
-    }
 
    if (sym)
     {
@@ -2925,6 +3010,10 @@ t_operator calculator::scan (bool operand, bool percent)
      v_stack[v_sp]       = sym->val;
      v_stack[v_sp].pos   = pos;
      v_stack[v_sp++].var = sym;
+     if (sym->tag == tsINTEGR) return toSOLVE;
+     else
+     if (sym->tag == tsSOLVE) return toSOLVE;
+     else
      return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
     }
    else
@@ -3063,9 +3152,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  memset (sres, 0, STRBUF); // Clear the string result buffer
  while (true)
   {
-  next_token:
-   int op_pos = pos;
+ next_token:
    t_operator oper;
+   int op_pos = pos;
+   
    if (has_saved_val)
     {
      v_stack[v_sp++] = saved_val;
@@ -3080,6 +3170,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     {
      do
       {
+       if (o_sp > 1 && v_sp &&
+           o_stack[o_sp-1] == toLPAR && 
+           o_stack[o_sp-2] == toSOLVE) 
+        oper = sscan (v_stack[v_sp - 1].var);
+       else
        oper = scan (operand, percent);
       }
      while (oper == toCONTINUE); // Skip semicolons
@@ -3089,7 +3184,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
      result_fval = qnan;
      return qnan;
     }
-   //if (oper == toCONTINUE) goto next_token;
+   //if (oper == toSOLVE) operand = true;  
   loper:
    switch (oper)
     {
@@ -3108,14 +3203,15 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     }
    if (!operand)
     {
-     if (!BINARY (oper) && oper != toEND && oper != toPOSTINC && oper != toPOSTDEC && oper != toRPAR
-         && oper != toFACT)
+     if (!BINARY (oper) && oper != toEND && 
+         oper != toPOSTINC && oper != toPOSTDEC && 
+         oper != toRPAR  && oper != toFACT)
       {
        if (scfg & IMUL)
         {
          // Implicit multiplication: cases like 2sin(x), 3(4+5), (1+2)(3+4)
          // Allow only if next token is: FUNC, LPAR, or OPERAND (not after scientific suffix)
-         if (oper == toFUNC || oper == toLPAR || oper == toOPERAND)
+         if (oper == toSOLVE || oper == toFUNC || oper == toLPAR || oper == toOPERAND)
           {
            saved_oper = oper;
            if (oper != toLPAR && v_sp > 0)
@@ -3147,7 +3243,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
     }
    else
     {
-     if (oper == toOPERAND)
+     if ((oper == toOPERAND))
       {
        operand = false;
        n_args += 1;
@@ -4505,46 +4601,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
        v_stack[v_sp - 1].var = nullptr;
        break;
 
-      case toSOLVE:
-       {
-        symbol *sym = v_stack[v_sp - 1].var;
-        if (sym)
-         {
-          switch (sym->tag)
-           {
-           case tsSOLVE:
-            {
-             float__t result = Solve((char *)sym->func);
-
-             if (isnan(result))
-              {
-               //error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 1].fval = result;
-             v_stack[v_sp - 1].tag  = tvFLOAT;
-            }
-            break;
-           case tsINTEGR:
-            {
-             float__t result = Integr ((char *)sym->func);
-
-             if (isnan (result))
-              {
-               // error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 1].fval = result;
-             v_stack[v_sp - 1].tag  = tvFLOAT;
-            }
-            break;
-           }
-         }
-        
-        v_stack[v_sp - 1].var = nullptr;
-       }
+      case toSOLVE: // solve function without '('
+       error ("'(' expected");
+       result_fval = qnan;
+       return qnan;
        break;
 
       case toRPAR: // )
@@ -4563,6 +4623,71 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          error ("')' expected");
          result_fval = qnan;
          return qnan;
+        }
+
+       if (o_stack[o_sp - 1] == toSOLVE)
+        {
+         symbol *sym = v_stack[v_sp - n_args - 1].var;
+         if (sym)
+          {
+           switch (sym->tag)
+            {
+            case tsSOLVE: // float f(str equation)
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvSOLVE)
+               {
+                const char *equation   = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result        = Solve (equation);
+                v_stack[v_sp - 2].fval = result;
+                v_stack[v_sp - 2].imval = 0.0;
+                v_stack[v_sp - 2].ival  = (int_t)result;
+                v_stack[v_sp - 2].tag  = tvFLOAT;
+                v_sp -= 1;
+               }
+              else
+               {
+                error (v_stack[v_sp - 1].pos, "Expression expected");
+                result_fval = qnan;
+                return qnan;
+               }
+             }
+             break;
+            case tsINTEGR: // float f(str equation)
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvINTEGR)
+               {
+                const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result         = Integr (equation);
+                v_stack[v_sp - 2].fval  = result;
+                v_stack[v_sp - 2].imval = 0.0;
+                v_stack[v_sp - 2].ival  = (int_t)result;
+                v_stack[v_sp - 2].tag   = tvFLOAT;
+                v_sp -= 1;
+               }
+              else
+               {
+                error (v_stack[v_sp - 1].pos, "Expression expected");
+                result_fval = qnan;
+                return qnan;
+               }
+             }
+             break;
+            }
+           o_sp -= 1;
+           n_args = 1;
+          }
         }
 
        if (o_stack[o_sp - 1] == toFUNC)

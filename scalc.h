@@ -152,17 +152,17 @@ enum t_operator // t_operator represents the type of an operator in the calculat
  toRPAR,    // 5  toRPAR represents a right parenthesis ')'
  toFUNC,    // 6  toFUNC represents a function
  toSOLVE,   // 7  toSOLVE represents a solve operator for solving equations
- toPOSTINC, // 8  toPOSTINC represents a post-increment operator
- toPOSTDEC, // 9  toPOSTDEC represents a post-decrement operator
- toFACT,    // 10  toFACT represents a factorial operator
- toPREINC,  // 11 toPREINC represents a pre-increment operator
- toPREDEC,  // 12 toPREDEC represents a pre-decrement operator
- toPLUS,    // 13 toPLUS represents an addition operator
- toMINUS,   // 14 toMINUS represents a subtraction operator
+ toPOSTINC, // 8  toPOSTINC represents a post-increment (v++) operator
+ toPOSTDEC, // 9  toPOSTDEC represents a post-decrement (v--) operator
+ toFACT,    // 10 toFACT represents a factorial 'n!' operator
+ toPREINC,  // 11 toPREINC represents a pre-increment (++v) operator
+ toPREDEC,  // 12 toPREDEC represents a pre-decrement (--v) operator
+ toPLUS,    // 13 toPLUS represents an '+v' operator
+ toMINUS,   // 14 toMINUS represents a '-v' operator
  toNOT,     // 15 toNOT represents a logical NOT operator
- toCOM,     // 16 toCOM represents a bitwise complement operator
- toPOW,     // 17 toPOW represents a power operator
- toPERCENT, // 18 toPERCENT represents a percentage operator
+ toCOM,     // 16 toCOM represents a bitwise complement '~' operator
+ toPOW,     // 17 toPOW represents a power '^' operator
+ toPERCENT, // 18 toPERCENT represents a percentage '%' operator
  toMUL,     // 19 toMUL represents a multiplication operator
  toDIV,     // 20 toDIV represents a division operator
  toMOD,     // 21 toMOD represents a modulo operator
@@ -220,6 +220,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsUFUNCT,   // User-defined function
  tsSOLVE,    // Solve operator for solving equations
  tsINTEGR,   // Integration operator for numerical integration
+ tsFSOLVE,
  tsNUM
 };
 
@@ -400,6 +401,8 @@ class calculator // calculator represents the main class for the expression calc
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
+ t_operator iscan (symbol *sym);
+ t_operator sscan (symbol *sym);
  t_operator scan (bool operand,
                   bool percent); // Scan the next token in the expression and return its operator type
  void error (int pos, const char *msg); // Report an error at the given position with the specified message

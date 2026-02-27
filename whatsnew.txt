@@ -1,3 +1,9 @@
+27.02.26 (2.111)
++ The parser for solve and integral has been completely redesigned. They can now be used as 
+  operands in complex expressions. For example, you can write sqrt(integral(sin(x)^2, 0, 2*pi, x)).
++ Now, previously declared variables can be passed to solve and integral. 
+  You can write time:=2*pi;sqrt((1/time)integral(sin(x)^2, 0, time, x)) -> 0.7071067811865472
+
 27.02.26 (2.110)
 + solve(expr, var:=est) where expr is the left side of the equation, expr(var)=0, est is the first 
   approximation of the root. Used Newton-Raphson method.

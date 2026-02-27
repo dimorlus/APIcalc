@@ -55,7 +55,7 @@
 #define OPT  (1 << 29) // (UI) Print options (CLI only)
 
 #define STRBUF 256 // bufer size for string operations
-#define MAXOP  16  // maximum length of operator or function name
+#define MAXOP  64  // maximum length of operator or function name
 #define MAXSTK 10  // maximum stack depth
 
 #ifdef __BORLANDC__
@@ -138,7 +138,8 @@ enum t_value // t_value represents the type of a value in the calculator
  tvCOMPLEX,
  tvSTR,
  tvUFUNCT,
- tvSOLVE
+ tvSOLVE,
+ tvINTEGR
 };
 
 enum t_operator // t_operator represents the type of an operator in the calculator
@@ -204,20 +205,21 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
 {
  tsVARIABLE, // tsVARIABLE represents a variable symbol
  tsCONSTANT, // tsCONSTANT represents a constant symbol
- tsIFUNCF1, // int f(float x)
- tsSFUNCF1, // char* f(float x)
- tsIFUNC1,  // int f(int x)
- tsIFUNC2,  // int f(int x, int y)
- tsFFUNC1,  // float f(float x)
- tsFFUNC2,  // float f(float x, float y)
- tsFFUNC3,  // float f(float x, float y, float z)
- tsPFUNCn,  // int printf(char *format, ...)
+ tsIFUNCF1,  // int f(float x)
+ tsSFUNCF1,  // char* f(float x)
+ tsIFUNC1,   // int f(int x)
+ tsIFUNC2,   // int f(int x, int y)
+ tsFFUNC1,   // float f(float x)
+ tsFFUNC2,   // float f(float x, float y)
+ tsFFUNC3,   // float f(float x, float y, float z)
+ tsPFUNCn,   // int printf(char *format, ...)
  tsSFUNCF2,  // float const(char *name, float value)
- tsSIFUNC1, // int f(char *s)
- tsVFUNC1,  // void vfunc(value* res, value* arg, int idx)
- tsVFUNC2,  // void vfunc(value* res, value* arg1, value* arg2, int idx)
+ tsSIFUNC1,  // int f(char *s)
+ tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
+ tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
  tsUFUNCT,   // User-defined function
  tsSOLVE,    // Solve operator for solving equations
+ tsINTEGR,   // Integration operator for numerical integration
  tsNUM
 };
 
@@ -348,6 +350,14 @@ struct StringNode // StringNode represents a node in a linked list of strings us
  StringNode *next; // Next node in the list
 };
 
+struct GKResult
+{
+ float__t value;
+ float__t error;
+ bool ok;
+};
+
+
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic
@@ -417,6 +427,24 @@ class calculator // calculator represents the main class for the expression calc
  
  float__t Solve (const char *expr); // Solve an equation given by the expression and return the
                                     // solution as a floating-point value
+
+ float__t gkEval (calculator *pCalc, char *sexpr, const char *svar,
+                  float__t x); // Evaluate a function for a given expression, variable name, and
+                               // variable value, and return the result as a floating-point value
+ GKResult gkPanel (calculator *pCalc, char *sexpr, const char *svar, float__t a, float__t b);
+ GKResult gkAdaptive (calculator *pCalc, 
+                     char *sexpr, 
+                     const char *svar, 
+                     float__t a,
+                     float__t b, 
+                     float__t tol, 
+                     int depth, 
+                     int maxDepth, 
+                     int &callCount, 
+                     int maxCalls);
+
+ float__t Integr (const char *expr); // Integrate an equation given by the expression and return the
+                                    // result as a floating-point value
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,

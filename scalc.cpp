@@ -167,6 +167,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
   }
 
  add (tsSOLVE, "solve", nullptr);
+ add (tsINTEGR, "integr", nullptr);
+ add (tsINTEGR, "integral", nullptr);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -1825,6 +1827,263 @@ float__t calculator::Solve (const char *expr)
  return qnan;
 }
 
+
+// Gauss-Kronrod G7/K15 adaptive quadrature
+// C++98 compatible (BCB6 / VS2022)
+//
+// K15 nodes (positive half, index 0 = center node = 0.0)
+// G7 uses nodes at indices 0, 2, 4, 6  (every other K15 node)
+
+static const float__t GK_NODES[8] = {
+ 0.0L,
+ 0.20778495500789846760L,
+ 0.40584515137739716691L,
+ 0.58608723546769113029L,
+ 0.74153118559939443986L,
+ 0.86486442335976907279L,
+ 0.94910791234275852453L,
+ 0.99145537112081263921L,
+};
+
+// K15 weights: index i corresponds to nodes +-GK_NODES[i]
+// (index 0 has no symmetry — centre point)
+static const float__t K15_WEIGHTS[8] = {
+ 0.20948214108472782801L, 0.20443294007529889241L, 0.19035057806478540991L, 0.16900472663926790283L,
+ 0.14065325971552591875L, 0.10479001032224928880L, 0.06309209262997855329L, 0.02293532201052922497L,
+};
+
+// G7 weights: 4 values for nodes at GK_NODES[0,2,4,6]
+static const float__t G7_WEIGHTS[4] = {
+ 0.41795918367346938776L,
+ 0.38183005050511894495L,
+ 0.27970539148927664160L,
+ 0.12948496616886732340L,
+};
+
+// G7 node indices into GK_NODES[]
+static const int G7_IDX[4] = { 0, 2, 4, 6 };
+
+// ---------------------------------------------------------------------------
+
+// Evaluate f(x) = sexpr with variable svar set to x in child calculator
+// Returns qnan on any error
+float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, float__t x)
+{
+ pCalc->addfvar (svar, x);
+ float__t val = pCalc->evaluate (sexpr);
+ if (pCalc->err[0]) return qnan;
+ return val;
+}
+
+// Single G7/K15 panel on [a, b], no recursion
+GKResult calculator::gkPanel (calculator *pCalc, char *sexpr, const char *svar, float__t a,
+                              float__t b)
+{
+ GKResult res    = { 0.0L, 0.0L, true };
+ float__t center = (a + b) / 2.0L;
+ float__t half   = (b - a) / 2.0L;
+
+ // f values at all 15 points: fL[i] = f(center - half*node[i])
+ //                            fR[i] = f(center + half*node[i])
+ // index 0: fL[0] == fR[0] == f(center)
+ float__t fL[8], fR[8];
+ fL[0] = fR[0] = gkEval (pCalc, sexpr, svar, center);
+ if (isnan (fL[0]))
+  {
+   res.ok = false;
+   return res;
+  }
+
+ for (int i = 1; i < 8; i++)
+  {
+   fL[i] = gkEval (pCalc, sexpr, svar, center - half * GK_NODES[i]);
+   if (isnan (fL[i]))
+    {
+     res.ok = false;
+     return res;
+    }
+   fR[i] = gkEval (pCalc, sexpr, svar, center + half * GK_NODES[i]);
+   if (isnan (fR[i]))
+    {
+     res.ok = false;
+     return res;
+    }
+  }
+
+ // K15: sum over all 8 node pairs (index 0 counted once)
+ float__t k15 = K15_WEIGHTS[0] * fL[0];
+ for (int i = 1; i < 8; i++) k15 += K15_WEIGHTS[i] * (fL[i] + fR[i]);
+ k15 *= half;
+
+ // G7: sum over node indices 0, 2, 4, 6
+ float__t g7 = G7_WEIGHTS[0] * fL[0];
+ for (int i = 1; i < 4; i++)
+  {
+   int idx = G7_IDX[i];
+   g7 += G7_WEIGHTS[i] * (fL[idx] + fR[idx]);
+  }
+ g7 *= half;
+
+ res.value = k15;
+ res.error = fabsl (k15 - g7);
+ return res;
+}
+
+// Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
+//GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
+//                                 float__t b, float__t tol, int depth, int maxDepth)
+//{
+// GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
+// if (!res.ok) return res;
+//
+// if (res.error <= tol || depth >= maxDepth) return res;
+//
+// float__t mid     = (a + b) / 2.0L;
+// float__t halfTol = tol / 2.0L;
+//
+// GKResult left  = gkAdaptive (pCalc, sexpr, svar, a, mid, halfTol, depth + 1, maxDepth);
+// GKResult right = gkAdaptive (pCalc, sexpr, svar, mid, b, halfTol, depth + 1, maxDepth);
+//
+// if (!left.ok || !right.ok)
+//  {
+//   GKResult bad = { qnan, qnan, false };
+//   return bad;
+//  }
+//
+// GKResult combined;
+// combined.value = left.value + right.value;
+// combined.error = left.error + right.error;
+// combined.ok    = true;
+// return combined;
+//}
+
+// Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
+GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
+                                 float__t b,
+                                 float__t tol, // not divided!
+                                 int depth, int maxDepth,
+                                 int &callCount, 
+                                 int maxCalls)
+{
+ if (++callCount > maxCalls) // hard stop
+  {
+   GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
+   res.ok       = true;
+   return res;
+  }
+
+ GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
+ if (!res.ok) return res;
+
+ if (res.error <= tol || depth >= maxDepth) return res;
+
+ float__t mid = (a + b) / 2.0L;
+
+ GKResult left  = gkAdaptive (pCalc, sexpr, svar, a, mid, tol, depth + 1, maxDepth, callCount, maxCalls);
+ GKResult right = gkAdaptive (pCalc, sexpr, svar, mid, b, tol, depth + 1, maxDepth, callCount, maxCalls);
+
+ if (!left.ok || !right.ok)
+  {
+   GKResult bad = { qnan, qnan, false };
+   return bad;
+  }
+
+ GKResult combined;
+ combined.value = left.value + right.value;
+ combined.error = left.error + right.error;
+ combined.ok    = true;
+ return combined;
+}
+
+
+// integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
+// expr -> sin(x)/x, x
+float__t calculator::Integr (const char *expr)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char sfrom[MAXOP];
+   char sto[MAXOP];
+   char svar[STRBUF];
+
+   float__t vfrom = qnan;
+   float__t vto   = qnan;
+   float__t vx    = qnan;
+   float__t fvx   = qnan;
+   float__t result = 0;
+   int callCount   = 0;
+
+   char *p = sexpr;
+   
+   // copy all characters from expr (i. e. 'sin(x)/x' ) to sexpr until the first ',' or
+   // end of string is reached or  buffer limit is reached
+   while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
+   *p = '\0'; // null-terminate the string
+   if (*expr == ',') expr++; // skip the comma
+   p  = sfrom;
+   while (*expr && (*expr != ',') && (p - sfrom < STRBUF - 1)) *p++ = *expr++;
+   *p = '\0'; // null-terminate the string
+   if (*expr == ',') expr++; // skip the comma
+   p  = sto;
+   while (*expr && (*expr != ',') && (p - sto < STRBUF - 1)) *p++ = *expr++;
+   *p = '\0'; // null-terminate the string
+   if (*expr == ',') expr++; // skip the comma
+   p  = svar;
+   while (isspace (*expr & 0x7f)) expr++;
+   while (*expr && (*expr != ',') && (p - svar < STRBUF - 1)) 
+    if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
+   *p = '\0'; // null-terminate the string
+
+   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
+   if (!pCalculator)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return qnan;
+    }
+
+   vfrom = pCalculator->evaluate (sfrom);
+   if (isnan (vfrom) || pCalculator->err[0])
+    {
+     errorf (pos, "%s", pCalculator->err);
+     result_fval = qnan;
+     delete pCalculator;
+     return qnan;
+    }
+   vto = pCalculator->evaluate (sto);
+   if (isnan (vto) || pCalculator->err[0])
+    {
+     errorf (pos, "%s", pCalculator->err);
+     result_fval = qnan;
+     delete pCalculator;
+     return qnan;
+    }
+
+   GKResult gkresult = gkAdaptive (pCalculator,
+                                   sexpr,        // expression 
+                                   svar,         // variable name ("x")
+                                   vfrom,        // lower limit
+                                   vto,          // upper limit
+                                   1e-10L,       // tolerance
+                                   0,            // initial depth
+                                   20,           // maximum depth
+                                   callCount,    // call count
+                                   1000);        // maximum calls
+   if (!gkresult.ok)
+    {
+     errorf (pos, "Integration failed");
+     result_fval = qnan;
+     delete pCalculator;
+     return qnan;
+    }
+   result = gkresult.value;
+   delete pCalculator;
+   return result;
+  }
+ return qnan; // placeholder for actual integration result
+}
+
 // Skip whitespace and parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
 {
@@ -2532,6 +2791,7 @@ t_operator calculator::scan (bool operand, bool percent)
      error ("stack overflow");
      return toERROR;
     }
+
    if (sym && sym->tag == tsSOLVE)
     {
      // solve (x(2x+2)-2,x:=0)
@@ -2554,8 +2814,8 @@ t_operator calculator::scan (bool operand, bool percent)
       }
 
      while (*ipos && (*ipos != ',') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
-     if (*ipos == ',') // expression must be followed by comma and variable assignment (e.g. x:=0)
-                       // for solve function
+     if (*ipos == ',') // expression must be followed by comma and variable assignment 
+                       // (e.g. x:=0) for solve function
       {
        // copy rest of the expression after comma to ')' to the function field of the symbol, and it
        // will be parsed and evaluated when the operator is executed
@@ -2583,7 +2843,6 @@ t_operator calculator::scan (bool operand, bool percent)
          v_stack[v_sp].var  = sym;
          v_stack[v_sp].pos  = pos;
          v_stack[v_sp++].ival = 0;
-        
          return toSOLVE;
         }
        else
@@ -2598,13 +2857,71 @@ t_operator calculator::scan (bool operand, bool percent)
        return toERROR;
       }
     }
-   else if (sym && sym->tag == tsVARIABLE)
-   {
-     strcpy (lastvar, sym->name);
-   }
+
+   if (sym && sym->tag == tsINTEGR)
+    {
+     // integr (x(2x+2)-2,0,10,x)
+     // extract expression in () after the function name, and put it as string in the symbol
+     // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
+     // its funct field. The actual solving will be done when the operator is executed, and the
+     // expression will be parsed and evaluated at that time. This allows for recursive solving
+     // and user defined functions that can call solve.
+     char sbuf[STRBUF];
+     int sidx   = 0;
+     int comma_count = 0;
+     int parenthesis_count = 1;
+
+     char *ipos = buf + pos;
+     // skip whitespace befor '('
+     while (isspace (*ipos & 0x7f)) ipos++;
+
+     if (*ipos == '(') ipos++;
+     else
+      {
+       error ("missing opening parenthesis for integral expression");
+       return toERROR;
+      }
+
+     while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+      {
+       if (*ipos == ',') comma_count++;
+       else 
+       if (*ipos == '(') parenthesis_count++;
+       else 
+       if (*ipos == ')') parenthesis_count--;
+       sbuf[sidx++] = *ipos++;
+      }
+     if (sidx && sbuf[sidx - 1] == ')')
+     sbuf[sidx-1] = '\0';
+
+     if (parenthesis_count == 0 && comma_count == 3) 
+      {
+       sym->func = strdup (sbuf);
+       if (!sym->func)
+        {
+         error ("memory allocation failed");
+         return toERROR;
+        }
+       registerString ((char *)sym->func);
+       pos = ipos - buf; 
+       v_stack[v_sp].tag    = tvINTEGR;
+       v_stack[v_sp].sval   = nullptr;
+       v_stack[v_sp].var    = sym;
+       v_stack[v_sp].pos    = pos;
+       v_stack[v_sp++].ival = 0;
+       return toSOLVE;
+      }
+     else
+      {
+        if (parenthesis_count) error ("unmatched parenthesis in solve expression");
+        else error ("incorrect number of arguments in integral expression");
+        return toERROR;
+      }
+    }
 
    if (sym)
     {
+     if (sym->tag == tsVARIABLE) strcpy (lastvar, sym->name);
      v_stack[v_sp]       = sym->val;
      v_stack[v_sp].pos   = pos;
      v_stack[v_sp++].var = sym;
@@ -2622,7 +2939,7 @@ static int lpr[toTERMINALS] = {
  4,  4,                      // LPAR, RPAR
  5,  5, 98, 98, 98,          // FUNC, SOLVE, POSTINC, POSTDEC, FACT
  98, 98, 98, 98, 98, 98,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
- 90,                         // POW,
+ 99,                         // POW,
  80, 80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
  70, 70,                     // ADD, SUB,
  60, 60, 60,                 // ASL, ASR, LSR,
@@ -2644,7 +2961,7 @@ static int rpr[toTERMINALS] = {
  110, 3,                      // LPAR, RPAR
  120, 120, 99, 99, 99,        // FUNC, SOLVE, POSTINC, POSTDEC, FACT
  99,  99, 99, 99, 99, 99,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
- 95,                          // POW,
+ 100,                         // POW,
  80,  80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
  70,  70,                     // ADD, SUB,
  60,  60, 60,                 // ASL, ASR, LSR,
@@ -4202,6 +4519,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (isnan(result))
               {
                //error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
+               result_fval = qnan;
+               return qnan;
+              }
+             v_stack[v_sp - 1].fval = result;
+             v_stack[v_sp - 1].tag  = tvFLOAT;
+            }
+            break;
+           case tsINTEGR:
+            {
+             float__t result = Integr ((char *)sym->func);
+
+             if (isnan (result))
+              {
+               // error (v_stack[v_sp - 1].pos, "Failed to solve the equation");
                result_fval = qnan;
                return qnan;
               }

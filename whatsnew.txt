@@ -1,3 +1,8 @@
+28.02.26 (2.112)
+* Added a test calculation of the integrand at the initial point to check the syntax and correctness 
+  of expressions. Some syntax errors caused the integral calculator to get stuck in a loop.
++ The polar(r, fi) function is hopefully now removed from consts.txt (it's now built-in).
+
 27.02.26 (2.111)
 + The parser for solve and integral has been completely redesigned. They can now be used as 
   operands in complex expressions. For example, you can write sqrt(integral(sin(x)^2, 0, 2*pi, x)).

@@ -1929,33 +1929,7 @@ GKResult calculator::gkPanel (calculator *pCalc, char *sexpr, const char *svar, 
  return res;
 }
 
-// Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
-//GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
-//                                 float__t b, float__t tol, int depth, int maxDepth)
-//{
-// GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
-// if (!res.ok) return res;
-//
-// if (res.error <= tol || depth >= maxDepth) return res;
-//
-// float__t mid     = (a + b) / 2.0L;
-// float__t halfTol = tol / 2.0L;
-//
-// GKResult left  = gkAdaptive (pCalc, sexpr, svar, a, mid, halfTol, depth + 1, maxDepth);
-// GKResult right = gkAdaptive (pCalc, sexpr, svar, mid, b, halfTol, depth + 1, maxDepth);
-//
-// if (!left.ok || !right.ok)
-//  {
-//   GKResult bad = { qnan, qnan, false };
-//   return bad;
-//  }
-//
-// GKResult combined;
-// combined.value = left.value + right.value;
-// combined.error = left.error + right.error;
-// combined.ok    = true;
-// return combined;
-//}
+
 
 // Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
 GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
@@ -2031,7 +2005,7 @@ float__t calculator::Integr (const char *expr)
    if (*expr == ',') expr++; // skip the comma
    p  = svar;
    while (isspace (*expr & 0x7f)) expr++;
-   while (*expr && (*expr != ',') && (p - svar < STRBUF - 1)) 
+   while (*expr && (*expr != ')') && (p - svar < STRBUF - 1)) 
     if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
    *p = '\0'; // null-terminate the string
 
@@ -2059,6 +2033,20 @@ float__t calculator::Integr (const char *expr)
      delete pCalculator;
      return qnan;
     }
+
+   {
+    pCalculator->addfvar (svar, vfrom);
+    float__t fvx = pCalculator->evaluate (sexpr); // evaluate the function for 
+                                //the syntax check before starting the integration
+                                         
+    if (isnan (fvx) || pCalculator->err[0])
+     {
+      errorf (pos, "%s", pCalculator->err);
+      result_fval = qnan;
+      delete pCalculator;
+      return qnan;
+     }
+   }
 
    GKResult gkresult = gkAdaptive (pCalculator,
                                    sexpr,        // expression 

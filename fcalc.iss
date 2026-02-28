@@ -35,9 +35,9 @@ Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}"; Components: ccalc
 Source: ".\Release\fcalc.exe"; DestDir: "{app}"; Components: program; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: ".\ccalc\bin\Win32\Release\ccalc.exe"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion; Check: not Is64BitInstallMode
 ; Help file for both architectures
-Source: "fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
-Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
-Source: "consts.txt"; DestDir: "{app}"; Flags: confirmoverwrite uninsneveruninstall; Permissions: users-modify
+Source: ".\fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
+Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\consts.txt"; DestDir: "{app}"; Flags: confirmoverwrite uninsneveruninstall; Permissions: users-modify
 
 ; Visual C++ Redistributables
 Source: ".\Redistr\VC_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: Is64BitInstallMode

@@ -403,7 +403,8 @@ class calculator // calculator represents the main class for the expression calc
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
- t_operator sscan (symbol *sym);
+ t_operator sscan (symbol *sym); // Scan body of the solve, integr and diff 
+
  t_operator scan (bool operand,
                   bool percent); // Scan the next token in the expression and return its operator type
  void error (int pos, const char *msg); // Report an error at the given position with the specified message

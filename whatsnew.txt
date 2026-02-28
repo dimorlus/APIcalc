@@ -1,6 +1,10 @@
+28.02.26 (2.114)
+* Now sqrt(-1) returns |1|(90`0'0") 0+1i, not |1|(-90`0'0") 0-1i as before.
+* Rewritten body scans for the solve, integral, and diff operators. Duplicate code removed.
+
 28.02.26 (2.113)
 + Added numeric differentiation using central difference method diff(expr(var), point, var).
-+ sqrt, log, ln, asos, asin, pow (and also operator ^) now check the operands and call the 
++ sqrt, log, ln, acos, asin, pow (and also operator ^) now check the operands and call the 
   complex version if the real function is not defined, for example sqrt(-1) now immediately 
   returns the complex result, and not NaN, as before.
   

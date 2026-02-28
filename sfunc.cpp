@@ -16,7 +16,7 @@
 #include "sfmts.h"
 #include "sfunc.h"
 
-#define M_PI_2l 1.5707963267948966192313216916398
+#define M_PI_2l 1.5707963267948966192313216916398L
 #define nullptr NULL
 
 #else
@@ -40,9 +40,9 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
-#define M_PI    3.1415926535897932384626433832795
-#define M_PI_2l 1.5707963267948966192313216916398
-#define M_E     2.7182818284590452353602874713527
+#define M_PI    3.1415926535897932384626433832795L
+#define M_PI_2l 1.5707963267948966192313216916398L
+#define M_E     2.7182818284590452353602874713527L
 #endif
 
 int_t To_int (int_t val)
@@ -1776,12 +1776,14 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
+
 // Square root of a complex number: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
 void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
  long double r   = hypotl (x, y);
- long double phi = atan2l (y, x);
+ //long double phi = atan2l (y, x);
+ long double phi = (y == 0.0 && x < 0.0) ? 3.14159265358979323846L : atan2l (y, x);
  r               = sqrtl (r);
  re              = r * cosl (phi / 2);
  im              = r * sinl (phi / 2);

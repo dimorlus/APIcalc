@@ -43,16 +43,16 @@
 #include "ver.h"
 
 #ifdef __BORLANDC__
-#define M_PI_2l 1.5707963267948966192313216916398
-#define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
+#define M_PI_2l 1.5707963267948966192313216916398L
+#define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
 #pragma warn -8004 // assigned a value that is never used
 
 #else //__BORLANDC__
 
-#define M_PI    3.1415926535897932384626433832795
-#define M_PI_2l 1.5707963267948966192313216916398
-#define M_E     2.7182818284590452353602874713527
-#define PHI     1.6180339887498948482045868343656 //(1+sqrt(5))/2 golden ratio
+#define M_PI    3.1415926535897932384626433832795L
+#define M_PI_2l 1.5707963267948966192313216916398L
+#define M_E     2.7182818284590452353602874713527L
+#define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
 #pragma warning(disable : 4996) // 'function': was declared deprecated
 #pragma warning(disable : 4244) // 'argument': conversion from 'type1' to 'type2', possible loss of data
 #endif //__BORLANDC__
@@ -1549,25 +1549,25 @@ void calculator::scientific (char *&fpos, float__t &fval)
   case 'Q':
    fpos++;
    if (isCMP (fpos))
-    fval *= 1.267650600228229401496703205376e+30; // 2**100
+    fval *= 1.267650600228229401496703205376e+30L; // 2**100
    else engineering (1e30, fpos, fval);
    break;
   case 'R':
    fpos++;
    if (isCMP (fpos))
-    fval *= 1.237940039285380274899124224e+27; // 2**90
+    fval *= 1.237940039285380274899124224e+27L; // 2**90
    else engineering (1e27, fpos, fval);
    break;
   case 'Y':
    fpos++;
    if (isCMP (fpos))
-    fval *= 1.208925819614629174706176e+24; // 2**80
+    fval *= 1.208925819614629174706176e+24L; // 2**80
    else engineering (1e24, fpos, fval);
    break;
   case 'Z':
    fpos++;
    if (isCMP (fpos))
-    fval *= 1.180591620717411303424e+21; // 2**70
+    fval *= 1.180591620717411303424e+21L; // 2**70
    else engineering (1e21, fpos, fval);
    break;
   case 'E':
@@ -1939,8 +1939,6 @@ GKResult calculator::gkPanel (calculator *pCalc, char *sexpr, const char *svar, 
  return res;
 }
 
-
-
 // Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
 GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
                                  float__t b,
@@ -1978,7 +1976,6 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  combined.ok    = true;
  return combined;
 }
-
 
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // expr -> sin(x)/x, x
@@ -2160,105 +2157,92 @@ float__t calculator::Diff (const char *expr)
   return qnan; 
 }
 
+// solve (x(2x+2)-2,x:=0)
+// integr (x(2x+2)-2,0,10,x)
+// diff (x(2x+2)-2, 0, x)
+// extract expression in () after the function name, and put it as string in the symbol table,
+// put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
+// and return toOPERAND or toERROR if something wrong.
 t_operator calculator::sscan (symbol *sym)
 {
- // solve (x(2x+2)-2,x:=0)
- // extract expression in () after the function name, and put it as string in the symbol table, 
- // put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
- // and return toOPERAND
- if (sym && sym->tag == tsSOLVE)
+ char sbuf[STRBUF];
+ int sidx              = 0;
+ int comma_count       = 0;
+ int parenthesis_count = 1;
+
+ char *ipos = buf + pos;
+ if (*ipos == ')')
   {
-   char sbuf[STRBUF];
-   int sidx   = 0;
-   char *ipos = buf + pos;
+   pos++;
+   return toRPAR;
+  }
+ else 
+ if (*ipos == '\0') return toEND; // end of input
 
-   if (*ipos == ')')
+ // skip whitespace befor '('
+ while (isspace (*ipos & 0x7f)) ipos++;
+
+ while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+  {
+   if (*ipos == ',') comma_count++;
+   else 
+   if (*ipos == '(') parenthesis_count++;
+   else 
+   if (*ipos == ')') parenthesis_count--;
+   sbuf[sidx++] = *ipos++;
+  }
+ if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
+ sbuf[STRBUF - 1] = '\0'; // null-terminate the string
+
+ if (sym)
+  {
+   if (sym->tag == tsSOLVE)
     {
-     pos++;
-     return toRPAR;
-    }
-   else if (*ipos == '\0')
-    return toEND; // end of input
-   // skip whitespace
-   while (isspace (*ipos & 0x7f)) ipos++;
-
-   while (*ipos && (*ipos != ',') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
-   if (*ipos == ',') // expression must be followed by comma and variable assignment
-                     // (e.g. x:=0) for solve function
-    {
-     // copy rest of the expression after comma to ')' to the function field of the symbol, and it
-     // will be parsed and evaluated when the operator is executed
-     int parenthesis_count = 0;
-     while (*ipos && (parenthesis_count > 0 || *ipos != ')') && (sidx < STRBUF - 1))
+     if (parenthesis_count == 0 && comma_count == 1)
       {
-       if (*ipos == '(')
-        parenthesis_count++;
-       else if (*ipos == ')')
-        parenthesis_count--;
-       sbuf[sidx++] = *ipos++;
-      }
-     sbuf[sidx] = '\0';
-
-     if (parenthesis_count == 0 && *ipos == ')')
-      {
-       char *sval = strdup (sbuf);
-       if (!sval)
-        {
-         error ("memory allocation failed");
-         return toERROR;
-        }
-       registerString (sval);
-
-       pos                  = ipos - buf;
-       v_stack[v_sp].tag    = tvSOLVE;
-       v_stack[v_sp].sval   = sval;
-       v_stack[v_sp].var    = sym;
-       v_stack[v_sp].pos    = pos;
-       v_stack[v_sp].fval   = qnan;
-       v_stack[v_sp].imval  = 0;
-       v_stack[v_sp++].ival = 0;
-       return toOPERAND;
+       v_stack[v_sp].tag = tvSOLVE;
       }
      else
       {
-       error ("unmatched parenthesis in solve expression");
+       if (parenthesis_count)
+        error ("unmatched parenthesis in solve expression");
+       else
+        error ("wrong number of arguments in solve expression");
        return toERROR;
       }
     }
-  }
- else if (sym && sym->tag == tsINTEGR)
-  {
-   // integr (x(2x+2)-2,0,10,x)
-   char sbuf[STRBUF];
-   int sidx              = 0;
-   int comma_count       = 0;
-   int parenthesis_count = 1;
-
-   char *ipos = buf + pos;
-   if (*ipos == ')')
+   else 
+   if (sym->tag == tsINTEGR)
     {
-     pos++;
-     return toRPAR;
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvINTEGR;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in integral expression");
+       else
+        error ("wrong number of arguments in integral expression");
+       return toERROR;
+      }
     }
-   else if (*ipos == '\0')
-    return toEND; // end of input
-
-   // skip whitespace befor '('
-   while (isspace (*ipos & 0x7f)) ipos++;
-
-   while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+   else 
+   if (sym->tag == tsDIFF)
     {
-     if (*ipos == ',')
-      comma_count++;
-     else if (*ipos == '(')
-      parenthesis_count++;
-     else if (*ipos == ')')
-      parenthesis_count--;
-     sbuf[sidx++] = *ipos++;
+     if (parenthesis_count == 0 && comma_count == 2)
+      {
+       v_stack[v_sp].tag = tvDIFF;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in diff");
+       else
+        error ("wrong number of arguments in diff");
+       return toERROR;
+      }
     }
-   if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
-
-   if (parenthesis_count == 0 && comma_count == 3)
     {
      char *sval = strdup (sbuf);
      if (!sval)
@@ -2267,88 +2251,27 @@ t_operator calculator::sscan (symbol *sym)
        return toERROR;
       }
      registerString (sval);
-     pos                  = ipos - buf-1;
-     v_stack[v_sp].tag    = tvINTEGR;
+
+     pos                  = ipos - buf - 1;
      v_stack[v_sp].sval   = sval;
      v_stack[v_sp].var    = sym;
      v_stack[v_sp].pos    = pos;
+     v_stack[v_sp].fval   = qnan;
+     v_stack[v_sp].imval  = 0;
      v_stack[v_sp++].ival = 0;
      return toOPERAND;
     }
-   else
-    {
-     if (parenthesis_count)
-      error ("unmatched parenthesis in integral expression");
-     else
-      error ("incorrect number of arguments in integral expression");
-     return toERROR;
-    }
   }
- else if (sym && sym->tag == tsDIFF)
- {
-  // diff (x(2x+2)-2, 0, x)
-  char sbuf[STRBUF];
-  int sidx              = 0;
-  int comma_count       = 0;
-  int parenthesis_count = 1;
-  char *ipos = buf + pos;
-  if (*ipos == ')')
-   {
-    pos++;
-    return toRPAR;
-   }
-  else if (*ipos == '\0')
-   return toEND; // end of input
-
-  // skip whitespace befor '('
-  while (isspace (*ipos & 0x7f)) ipos++;
-  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
-   {
-    if (*ipos == ',')
-     comma_count++;
-    else if (*ipos == '(')
-     parenthesis_count++;
-    else if (*ipos == ')')
-     parenthesis_count--;
-    sbuf[sidx++] = *ipos++;
-   }
-  if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
-  if (parenthesis_count == 0 && comma_count == 2)
-   {
-    char *sval = strdup (sbuf);
-    if (!sval)
-     {
-      error ("memory allocation failed");
-      return toERROR;
-     }
-    registerString (sval);
-    pos                  = ipos - buf-1;
-    v_stack[v_sp].tag    = tvDIFF;
-    v_stack[v_sp].sval   = sval;
-    v_stack[v_sp].var    = sym;
-    v_stack[v_sp].pos    = pos;
-    v_stack[v_sp++].ival = 0;
-    return toOPERAND;
-   }
-  else
-   {
-    if (parenthesis_count)
-     error ("unmatched parenthesis in diff");
-    else
-     error ("incorrect number of arguments in diff");
-    return toERROR;
-   }
- }
-
  return toERROR;
 }
 
-// Skip whitespace and parse the next operator from the input buffer, returning the operator type
+
+// parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
 {
  char name[max_expression_length], *np;
 
- while (isspace (buf[pos] & 0x7f)) pos += 1;
+ while (isspace (buf[pos] & 0x7f)) pos += 1; // skip whitespace
  switch (buf[pos++])
   {
   case '\0': 

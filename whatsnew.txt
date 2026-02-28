@@ -1,3 +1,9 @@
+28.02.26 (2.113)
++ Added numeric differentiation using central difference method diff(expr(var), point, var).
++ sqrt, log, ln, asos, asin, pow (and also operator ^) now check the operands and call the 
+  complex version if the real function is not defined, for example sqrt(-1) now immediately 
+  returns the complex result, and not NaN, as before.
+  
 28.02.26 (2.112)
 * Added a test calculation of the integrand at the initial point to check the syntax and correctness 
   of expressions. Some syntax errors caused the integral calculator to get stuck in a loop.

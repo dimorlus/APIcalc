@@ -122,3 +122,6 @@ void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__
 
 void vfunc(value* res, value* arg, int idx);
 void vfunc2(value* res, value* arg1, value* arg2, int idx);
+bool is_complex2 (value *arg1, value *arg2, int idx);
+bool is_complex1 (value *arg, int idx);
+

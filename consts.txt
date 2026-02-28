@@ -194,6 +194,11 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 ;; --- Polar to Complex ---
 ;;{polar(m, a) m * exp(j * a)};; Input as magnitude and angle (radians or with `)
 
+;; --- Square equation roots --- 
+{d_sqe(a, b, c) b^2 - 4 * a * c};; Discriminant
+{r1_sqe(a, b, c) (-b + sqrt(d_sqe(a, b, c))) / (2 * a)};; First root
+{r2_sqe(a, b, c) (-b - sqrt(d_sqe(a, b, c))) / (2 * a)};; Second root
+
 ;; --- THD & Distorted Power ---
 {i_total(i_fund, thd) i_fund * sqrt(1 + thd^2)};; Total RMS current with THD
 {pf_dist(cos_phi, thd) cos_phi / sqrt(1 + thd^2)};; PF considering harmonics

@@ -139,7 +139,8 @@ enum t_value // t_value represents the type of a value in the calculator
  tvSTR,
  tvUFUNCT,
  tvSOLVE,
- tvINTEGR
+ tvINTEGR,
+ tvDIFF
 };
 
 enum t_operator // t_operator represents the type of an operator in the calculator
@@ -220,6 +221,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsUFUNCT,   // User-defined function
  tsSOLVE,    // Solve operator for solving equations
  tsINTEGR,   // Integration operator for numerical integration
+ tsDIFF,     // Differentiation operator for numerical differentiation
  tsFSOLVE,
  tsNUM
 };
@@ -401,7 +403,6 @@ class calculator // calculator represents the main class for the expression calc
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
- t_operator iscan (symbol *sym);
  t_operator sscan (symbol *sym);
  t_operator scan (bool operand,
                   bool percent); // Scan the next token in the expression and return its operator type
@@ -448,6 +449,7 @@ class calculator // calculator represents the main class for the expression calc
 
  float__t Integr (const char *expr); // Integrate an equation given by the expression and return the
                                     // result as a floating-point value
+ float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,

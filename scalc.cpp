@@ -169,6 +169,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  add (tsSOLVE, "solve", nullptr);
  add (tsINTEGR, "integr", nullptr);
  add (tsINTEGR, "integral", nullptr);
+ add (tsDIFF, "diff", nullptr);
+ add (tsDIFF, "derivative", nullptr);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -1767,14 +1769,22 @@ float__t calculator::Solve (const char *expr)
 
       // Numerical derivative (central difference)
       float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for long double
+
       pCalculator->addfvar (nvar, x + delta);
       float__t fxp = pCalculator->evaluate (sexpr);
+      if (isnan (fxp) || pCalculator->err[0])
+       {
+        errorf (pos, "%s", pCalculator->err);
+        result_fval = qnan;
+        delete pCalculator;
+        return qnan;
+       }
+
       pCalculator->addfvar (nvar, x - delta);
       float__t fxm = pCalculator->evaluate (sexpr);
-
-      if (isnan (fxp) || isnan (fxm))
+      if (isnan (fxm) || pCalculator->err[0])
        {
-        errorf (pos, "Error evaluating derivative");
+        errorf (pos, "%s", pCalculator->err);
         result_fval = qnan;
         delete pCalculator;
         return qnan;
@@ -1983,7 +1993,6 @@ float__t calculator::Integr (const char *expr)
 
    float__t vfrom = qnan;
    float__t vto   = qnan;
-   float__t vx    = qnan;
    float__t fvx   = qnan;
    float__t result = 0;
    int callCount   = 0;
@@ -1996,11 +2005,11 @@ float__t calculator::Integr (const char *expr)
    *p = '\0'; // null-terminate the string
    if (*expr == ',') expr++; // skip the comma
    p  = sfrom;
-   while (*expr && (*expr != ',') && (p - sfrom < STRBUF - 1)) *p++ = *expr++;
+   while (*expr && (*expr != ',') && (p - sfrom < MAXOP - 1)) *p++ = *expr++;
    *p = '\0'; // null-terminate the string
    if (*expr == ',') expr++; // skip the comma
    p  = sto;
-   while (*expr && (*expr != ',') && (p - sto < STRBUF - 1)) *p++ = *expr++;
+   while (*expr && (*expr != ',') && (p - sto < MAXOP - 1)) *p++ = *expr++;
    *p = '\0'; // null-terminate the string
    if (*expr == ',') expr++; // skip the comma
    p  = svar;
@@ -2072,91 +2081,91 @@ float__t calculator::Integr (const char *expr)
  return qnan; // placeholder for actual integration result
 }
 
-t_operator calculator::iscan (symbol *sym)
+// Numerical differentiation using central difference
+// diff(expr(x), point, x) diff(sin(x)/x, 0.01, x)
+float__t calculator::Diff (const char *expr)
 {
- if (sym && sym->tag == tsINTEGR)
+ if (expr && *expr)
   {
-   // integr (x(2x+2)-2,0,10,x)
-   // extract expression in () after the function name, and put it as string in the symbol
-   // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
-   // its funct field. The actual solving will be done when the operator is executed, and the
-   // expression will be parsed and evaluated at that time. This allows for recursive solving
-   // and user defined functions that can call solve.
-   char sbuf[STRBUF];
-   int sidx              = 0;
-   int comma_count       = 0;
-   int parenthesis_count = 1;
+     char sexpr[STRBUF];
+     char sfrom[MAXOP];
+     char svar[STRBUF];
 
-   char *ipos = buf + pos;
-   if (*ipos == ')')
-    {
-     pos++;
-     return toRPAR;
-    }
-   else if (*ipos == '\0')
-    return toEND; // end of input
+     float__t x  = qnan;
+     float__t fvx    = qnan;
+     float__t result = 0;
 
-   // skip whitespace befor '('
-   while (isspace (*ipos & 0x7f)) ipos++;
+     char *p = sexpr;
 
-   if (*ipos == '(')
-    ipos++;
-   else
-    {
-     error ("missing opening parenthesis for integral expression");
-     return toERROR;
-    }
+     // copy all characters from expr (i. e. 'sin(x)/x' ) to sexpr until the first ',' or
+     // end of string is reached or  buffer limit is reached
+     while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
+     *p = '\0';                // null-terminate the string
+     if (*expr == ',') expr++; // skip the comma
+     p = sfrom;
+     while (*expr && (*expr != ',') && (p - sfrom < MAXOP - 1)) *p++ = *expr++;
+     *p = '\0';                // null-terminate the string
+     if (*expr == ',') expr++; // skip the comma
+     p = svar;
+     while (isspace (*expr & 0x7f)) expr++;
+     while (*expr && (*expr != ')') && (p - svar < STRBUF - 1))
+      if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
+     *p = '\0'; // null-terminate the string
 
-   while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
-    {
-     if (*ipos == ',')
-      comma_count++;
-     else if (*ipos == '(')
-      parenthesis_count++;
-     else if (*ipos == ')')
-      parenthesis_count--;
-     sbuf[sidx++] = *ipos++;
-    }
-   if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
-
-   if (parenthesis_count == 0 && comma_count == 3)
-    {
-     char *sval = strdup (sbuf);
-     if (!sval)
+     calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+     if (!pCalculator)
       {
-       error ("memory allocation failed");
-       return toERROR;
+       errorf (pos, "Out of memory");
+       result_fval = qnan;
+       return qnan;
       }
-     registerString (sval);
-     pos                  = ipos - buf;
-     v_stack[v_sp].tag    = tvINTEGR;
-     v_stack[v_sp].sval   = sval;
-     v_stack[v_sp].var    = sym;
-     v_stack[v_sp].pos    = pos;
-     v_stack[v_sp++].ival = 0;
-     return toOPERAND;
-    }
-   else
-    {
-     if (parenthesis_count)
-      error ("unmatched parenthesis in integral expression");
-     else
-      error ("incorrect number of arguments in integral expression");
-     return toERROR;
-    }
-  }
- return toERROR;
-}
 
+     x = pCalculator->evaluate (sfrom);
+     if (isnan (x) || pCalculator->err[0])
+      {
+       errorf (pos, "%s", pCalculator->err);
+       result_fval = qnan;
+       delete pCalculator;
+       return qnan;
+      }
+
+     // Numerical derivative (central difference)
+     float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for long double
+
+     pCalculator->addfvar (svar, x + delta);
+     float__t fxp = pCalculator->evaluate (sexpr);
+     if (isnan (fxp) || pCalculator->err[0])
+      {
+       errorf (pos, "%s", pCalculator->err);
+       result_fval = qnan;
+       delete pCalculator;
+       return qnan;
+      }
+
+     pCalculator->addfvar (svar, x - delta);
+     float__t fxm = pCalculator->evaluate (sexpr);
+     if (isnan (fxm) || pCalculator->err[0])
+      {
+       errorf (pos, "%s", pCalculator->err);
+       result_fval = qnan;
+       delete pCalculator;
+       return qnan;
+      }
+
+     float__t fp = (fxp - fxm) / (2.0L * delta);
+
+     delete pCalculator;
+     return fp;
+    }
+  return qnan; 
+}
 
 t_operator calculator::sscan (symbol *sym)
 {
  // solve (x(2x+2)-2,x:=0)
- // extract expression in () after the function name, and put it as string in the symbol table,
- // and return toSOLVE to indicate that this is a solve function with expression in its funct
- // field. The actual solving will be done when the operator is executed, and the expression
- // will be parsed and evaluated at that time. This allows for recursive solving and user
- // defined functions that can call solve.
+ // extract expression in () after the function name, and put it as string in the symbol table, 
+ // put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
+ // and return toOPERAND
  if (sym && sym->tag == tsSOLVE)
   {
    char sbuf[STRBUF];
@@ -2220,11 +2229,6 @@ t_operator calculator::sscan (symbol *sym)
  else if (sym && sym->tag == tsINTEGR)
   {
    // integr (x(2x+2)-2,0,10,x)
-   // extract expression in () after the function name, and put it as string in the symbol
-   // table, and return toSOLVE to indicate that this is a solve/integr function with expression in
-   // its funct field. The actual solving will be done when the operator is executed, and the
-   // expression will be parsed and evaluated at that time. This allows for recursive solving
-   // and user defined functions that can call solve.
    char sbuf[STRBUF];
    int sidx              = 0;
    int comma_count       = 0;
@@ -2280,6 +2284,62 @@ t_operator calculator::sscan (symbol *sym)
      return toERROR;
     }
   }
+ else if (sym && sym->tag == tsDIFF)
+ {
+  // diff (x(2x+2)-2, 0, x)
+  char sbuf[STRBUF];
+  int sidx              = 0;
+  int comma_count       = 0;
+  int parenthesis_count = 1;
+  char *ipos = buf + pos;
+  if (*ipos == ')')
+   {
+    pos++;
+    return toRPAR;
+   }
+  else if (*ipos == '\0')
+   return toEND; // end of input
+
+  // skip whitespace befor '('
+  while (isspace (*ipos & 0x7f)) ipos++;
+  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+   {
+    if (*ipos == ',')
+     comma_count++;
+    else if (*ipos == '(')
+     parenthesis_count++;
+    else if (*ipos == ')')
+     parenthesis_count--;
+    sbuf[sidx++] = *ipos++;
+   }
+  if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
+  if (parenthesis_count == 0 && comma_count == 2)
+   {
+    char *sval = strdup (sbuf);
+    if (!sval)
+     {
+      error ("memory allocation failed");
+      return toERROR;
+     }
+    registerString (sval);
+    pos                  = ipos - buf-1;
+    v_stack[v_sp].tag    = tvDIFF;
+    v_stack[v_sp].sval   = sval;
+    v_stack[v_sp].var    = sym;
+    v_stack[v_sp].pos    = pos;
+    v_stack[v_sp++].ival = 0;
+    return toOPERAND;
+   }
+  else
+   {
+    if (parenthesis_count)
+     error ("unmatched parenthesis in diff");
+    else
+     error ("incorrect number of arguments in diff");
+    return toERROR;
+   }
+ }
+
  return toERROR;
 }
 
@@ -2999,6 +3059,8 @@ t_operator calculator::scan (bool operand, bool percent)
      v_stack[v_sp].pos   = pos;
      v_stack[v_sp++].var = sym;
      if (sym->tag == tsINTEGR) return toSOLVE;
+     else
+     if (sym->tag == tsDIFF) return toSOLVE;
      else
      if (sym->tag == tsSOLVE) return toSOLVE;
      else
@@ -3829,7 +3891,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else if (((v_stack[v_sp - 2].tag == tvCOMPLEX) || (v_stack[v_sp - 1].tag == tvCOMPLEX))
-                  || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
+                  || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0))
+                  || is_complex2 (&v_stack[v_sp - 2], &v_stack[v_sp - 1], vf_pow))
           {
            long double x1 = v_stack[v_sp - 2].get ();
            long double y1 = v_stack[v_sp - 2].imval; // x1 + i*y1
@@ -4658,6 +4721,32 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                {
                 const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
                 float__t result         = Integr (equation);
+                v_stack[v_sp - 2].fval  = result;
+                v_stack[v_sp - 2].imval = 0.0;
+                v_stack[v_sp - 2].ival  = (int_t)result;
+                v_stack[v_sp - 2].tag   = tvFLOAT;
+                v_sp -= 1;
+               }
+              else
+               {
+                error (v_stack[v_sp - 1].pos, "Expression expected");
+                result_fval = qnan;
+                return qnan;
+               }
+             }
+             break;
+            case tsDIFF: // float f(str equation)
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvDIFF)
+               {
+                const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result         = Diff (equation);
                 v_stack[v_sp - 2].fval  = result;
                 v_stack[v_sp - 2].imval = 0.0;
                 v_stack[v_sp - 2].ival  = (int_t)result;

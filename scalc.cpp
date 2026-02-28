@@ -2196,7 +2196,7 @@ t_operator calculator::sscan (symbol *sym)
 
  if (sym)
   {
-   if (sym->tag == tsSOLVE)
+   if (sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
     {
      if (parenthesis_count == 0 && comma_count == 1)
       {
@@ -2212,7 +2212,7 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
    else 
-   if (sym->tag == tsINTEGR)
+   if (sym->tag == tsINTEGR) // integr (x(2x+2)-2,0,10,x)
     {
      if (parenthesis_count == 0 && comma_count == 3)
       {
@@ -2228,7 +2228,7 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
    else 
-   if (sym->tag == tsDIFF)
+   if (sym->tag == tsDIFF) // diff (x(2x+2)-2, 0, x)
     {
      if (parenthesis_count == 0 && comma_count == 2)
       {

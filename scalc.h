@@ -152,7 +152,7 @@ enum t_operator // t_operator represents the type of an operator in the calculat
  toLPAR,    // 4  toLPAR represents a left parenthesis '('
  toRPAR,    // 5  toRPAR represents a right parenthesis ')'
  toFUNC,    // 6  toFUNC represents a function
- toSOLVE,   // 7  toSOLVE represents a solve operator for solving equations
+ toSOLVE,   // 7  toSOLVE represents a solve, integr and diff function
  toPOSTINC, // 8  toPOSTINC represents a post-increment (v++) operator
  toPOSTDEC, // 9  toPOSTDEC represents a post-decrement (v--) operator
  toFACT,    // 10 toFACT represents a factorial 'n!' operator
@@ -222,7 +222,6 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSOLVE,    // Solve operator for solving equations
  tsINTEGR,   // Integration operator for numerical integration
  tsDIFF,     // Differentiation operator for numerical differentiation
- tsFSOLVE,
  tsNUM
 };
 
@@ -244,6 +243,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
 #define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
 #define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
 #define MASK_SOLVE  (1 << tsSOLVE)  // tsSOLVE represents a solve operator for solving equations
+#define MASK_INTEGR (1 << tsINTEGR) // tsINTEGR represents an integration operator for numerical integration
+#define MASK_DIFF   (1 << tsDIFF) // tsDIFF represents a differentiation operator for numerical differentiation
 #define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 \
                     | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
                     | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
@@ -251,41 +252,41 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
- vf_abs,
- vf_pol,
+ vf_abs, // Absolute value function
+ vf_pol, // Polar coordinates function
 
- vf_sin,
- vf_cos,
- vf_tan,
- vf_cot,
+ vf_sin, // Sine function
+ vf_cos, // Cosine function
+ vf_tan, // Tangent function
+ vf_cot, // Cotangent function
 
- vf_sinh,
- vf_cosh,
- vf_tanh,
- vf_ctnh,
+ vf_sinh, // Hyperbolic sine function
+ vf_cosh, // Hyperbolic cosine function
+ vf_tanh, // Hyperbolic tangent function
+ vf_ctnh, // Hyperbolic cotangent function
 
- vf_asin,
- vf_acos,
- vf_atan,
- vf_acot,
+ vf_asin, // Arcsine function
+ vf_acos, // Arccosine function
+ vf_atan, // Arctangent function
+ vf_acot, // Arccotangent function
 
- vf_asinh,
- vf_acosh,
- vf_atanh,
- vf_acoth,
+ vf_asinh, // Arcsine hyperbolic sine function
+ vf_acosh, // Arccosine hyperbolic cosine function
+ vf_atanh, // Arctangent hyperbolic tangent function
+ vf_acoth, // Arccotangent hyperbolic cotangent function
 
- vf_exp,
- vf_log,
- vf_sqrt,
+ vf_exp, // Exponential function
+ vf_log, // Natural logarithm function
+ vf_sqrt, // Square root function
 
- vf_pow,
- vf_rootn,
- vf_logn,
+ vf_pow, // Power function
+ vf_rootn, // N-th root function
+ vf_logn,  // Logarithm with specified base function
 
- vf_re,
- vf_im,
- vf_cplx,
- vf_polar,
+ vf_re, // Real part of a complex number function
+ vf_im, // Imaginary part of a complex number function
+ vf_cplx, // Complex number construction function
+ vf_polar, // Polar coordinates construction function
 
  vf_num
 };

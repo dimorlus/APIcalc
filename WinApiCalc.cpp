@@ -412,6 +412,72 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc (HWND hWnd, UINT message, WP
     }
   }
 
+ // Replace standard context menu with a custom one
+ if (message == WM_CONTEXTMENU && pThis)
+  {
+   // Build Format submenu (mirrors the main menu's Format popup, with checkmarks)
+   int opts = pThis->m_options;
+   auto fmtFlag = [&](int flag) -> UINT { return MF_STRING | (opts & flag ? MF_CHECKED : MF_UNCHECKED); };
+
+   HMENU hFmtSub = CreatePopupMenu ();
+   AppendMenuA (hFmtSub, fmtFlag (SCI),  ID_FORMAT_SCIENTIFIC, "Scientific");
+   AppendMenuA (hFmtSub, fmtFlag (NRM),  ID_FORMAT_NORMALIZED, "Normalized");
+   AppendMenuA (hFmtSub, fmtFlag (FRC),  ID_FORMAT_FRACTION,   "Fraction");
+   AppendMenuA (hFmtSub, fmtFlag (CMP),  ID_FORMAT_COMPUTING,  "Computing");
+   AppendMenuA (hFmtSub, fmtFlag (IGR),  ID_FORMAT_INTEGER,    "Integer");
+   AppendMenuA (hFmtSub, fmtFlag (UNS),  ID_FORMAT_UNSIGNED,   "Unsigned");
+   AppendMenuA (hFmtSub, fmtFlag (HEX),  ID_FORMAT_HEX,        "Hex");
+   AppendMenuA (hFmtSub, fmtFlag (OCT),  ID_FORMAT_OCTAL,      "Octal");
+   AppendMenuA (hFmtSub, fmtFlag (FBIN), ID_FORMAT_BINARY,     "Binary");
+   AppendMenuA (hFmtSub, fmtFlag (CHR),  ID_FORMAT_CHAR,       "Char");
+   AppendMenuA (hFmtSub, fmtFlag (WCH),  ID_FORMAT_WIDECHAR,   "Wide char");
+   AppendMenuA (hFmtSub, fmtFlag (DAT),  ID_FORMAT_DATETIME,   "Date time");
+   AppendMenuA (hFmtSub, fmtFlag (UTM),  ID_FORMAT_UNIXTIME,   "Unix time");
+   AppendMenuA (hFmtSub, fmtFlag (DEG),  ID_FORMAT_DEGREESE,   "Degreese");
+   AppendMenuA (hFmtSub, fmtFlag (FRH),  ID_FORMAT_FRH,        "Temperature");
+   AppendMenuA (hFmtSub, fmtFlag (STR),  ID_FORMAT_STRING,     "String");
+   AppendMenuA (hFmtSub, fmtFlag (FRI),  ID_FORMAT_INCH,       "Inch");
+   AppendMenuA (hFmtSub, MF_STRING,      ID_FORMAT_ALL,        "All");
+
+   // Determine if there is a non-empty selection (to enable/disable Copy)
+   DWORD selStart = 0, selEnd = 0;
+   SendMessageA (hWnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+   bool hasSelection = (selEnd > selStart);
+
+   // Build the top-level popup
+   HMENU hMenu = CreatePopupMenu ();
+   AppendMenuA (hMenu, MF_STRING | (hasSelection ? 0 : MF_GRAYED), WM_COPY, "Copy");
+   AppendMenuA (hMenu, MF_SEPARATOR, 0, nullptr);
+   AppendMenuA (hMenu, MF_STRING | MF_POPUP, (UINT_PTR)hFmtSub, "Format...");
+
+   // Determine the screen position
+   int xPos = GET_X_LPARAM (lParam);
+   int yPos = GET_Y_LPARAM (lParam);
+   if (xPos == -1 && yPos == -1) // keyboard-invoked
+    {
+     RECT rc;
+     GetWindowRect (hWnd, &rc);
+     xPos = rc.left + 4;
+     yPos = rc.top + 4;
+    }
+
+   int cmd = TrackPopupMenu (hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_LEFTALIGN,
+                             xPos, yPos, 0, hWnd, nullptr);
+
+   DestroyMenu (hMenu); // also destroys hFmtSub as a child
+
+   if (cmd == WM_COPY)
+    {
+     SendMessageA (hWnd, WM_COPY, 0, 0);
+    }
+   else if (cmd != 0)
+    {
+     // Forward format selection to the main window command handler
+     PostMessageA (pThis->m_hWnd, WM_COMMAND, MAKEWPARAM (cmd, 0), 0);
+    }
+   return 0;
+  }
+
  if (pThis && pThis->m_originalResultEditProc)
   {
    return CallWindowProcA (pThis->m_originalResultEditProc, hWnd, message, wParam, lParam);

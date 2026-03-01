@@ -1,3 +1,8 @@
+01.03.26 (2.115)
+* The local menu in the output field has been changed. It now includes Copy (if something 
+  is selected) and the Format... submenu. This allows you to quickly change output formats 
+  when the main menu is hidden by calling menu(0).
+  
 28.02.26 (2.114)
 * Now sqrt(-1) returns |1|(90`0'0") 0+1i, not |1|(-90`0'0") 0-1i as before.
 * Rewritten body scans for the solve, integral, and diff operators. Duplicate code removed.

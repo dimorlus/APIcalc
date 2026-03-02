@@ -35,7 +35,8 @@ Source: ".\ccalc\bin\Win32\Release\ccalc.exe"; DestDir: "{app}"; Components: cca
 ; Help file for both architectures
 Source: "fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversion
 Source: "ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
-Source: "consts.txt"; DestDir: "{app}"; Flags: confirmoverwrite uninsneveruninstall; Permissions: users-modify
+Source: "consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 ; Visual C++ Redistributables
 Source: ".\Redistr\VC_redist.x86.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: not Is64BitInstallMode
@@ -66,6 +67,7 @@ Name: "{group}\Uninstall"; Filename: "{app}\unins000.exe"
 Name: "{userdesktop}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}"; Components: program
 ; Ярлык для редактирования констант
 Name: "{group}\Edit Constants"; Filename: "notepad.exe"; Parameters: "{app}\consts.txt"; WorkingDir: "{app}"; IconFilename: "shell32.dll"; IconIndex: 69
+Name: "{group}\Edit User Constants"; Filename: "notepad.exe"; Parameters: "{app}\user.txt"; WorkingDir: "{app}"; IconFilename: "shell32.dll"; IconIndex: 69
 
 [Run]
 ; Install VC++ Redistributable silently before main installation

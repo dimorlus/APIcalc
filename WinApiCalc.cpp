@@ -649,6 +649,59 @@ LRESULT CALLBACK WinApiCalc::WndProc (HWND hWnd, UINT message, WPARAM wParam, LP
  return 0;
 }
 
+void WinApiCalc::LoadConts (char *errMsg, int &lineNum, const char *Fname)
+{
+ // Load user consts from consts.txt
+char exePath[MAX_PATH];
+//char errMsg[512] = { 0 };
+//int lineNum      = 0;
+
+if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
+ {
+  char *lastSlash = strrchr (exePath, '\\');
+  if (lastSlash)
+   {
+    *(lastSlash + 1) = '\0'; // Truncate to directory
+    strcat_s (exePath, Fname);
+
+    FILE *f = nullptr;
+    if (fopen_s (&f, exePath, "r") == 0 && f)
+     {
+      char line[1024];
+      while (fgets (line, sizeof (line), f))
+       {
+        lineNum++;
+        // Skip empty or comment lines (simple check)
+        bool hasContent = false;
+        for (char *p = line; *p; ++p)
+         {
+          if (!isspace ((unsigned char)*p))
+           {
+            hasContent = true;
+            break;
+           }
+         }
+        if (!hasContent) continue;
+
+        // Evaluate line
+        float__t result = m_pCalculator->evaluate (line);
+        if (isnan (result))
+         {
+          // Error
+          char msg[128];
+          snprintf (msg, sizeof (msg), "Error in %s line: %d", Fname, lineNum);
+          snprintf (errMsg, sizeof (errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", msg, line,
+                    m_pCalculator->error ());
+          break;
+         }
+       }
+      fclose (f);
+     }
+   }
+ }
+}
+
+
 void WinApiCalc::OnCreate ()
 {
  // Initialize calculator engine
@@ -686,53 +739,10 @@ void WinApiCalc::OnCreate ()
   }
 
  // Load user consts from consts.txt
- char exePath[MAX_PATH];
- char errMsg[512] = {0};
+ char errMsg[512] = { 0 };
  int lineNum      = 0;
-
- if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
-  {
-   char *lastSlash = strrchr (exePath, '\\');
-   if (lastSlash)
-    {
-     *(lastSlash + 1) = '\0'; // Truncate to directory
-     strcat_s (exePath, "consts.txt");
-
-     FILE *f = nullptr;
-     if (fopen_s (&f, exePath, "r") == 0 && f)
-      {
-       char line[1024];
-       while (fgets (line, sizeof (line), f))
-        {
-         lineNum++;
-         // Skip empty or comment lines (simple check)
-         bool hasContent = false;
-         for (char *p = line; *p; ++p)
-          {
-           if (!isspace ((unsigned char)*p))
-            {
-             hasContent = true;
-             break;
-            }
-          }
-         if (!hasContent) continue;
-
-         // Evaluate line
-         float__t result = m_pCalculator->evaluate (line);
-         if (isnan (result))
-          {
-           // Error
-           char msg[128];
-           snprintf(msg, sizeof(msg), "Error in consts.txt line: %d", lineNum); 
-           snprintf(errMsg, sizeof(errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", 
-                    msg, line, m_pCalculator->error());
-           break;
-          }
-        }
-       fclose (f);
-      }
-    }
-  }
+ LoadConts (errMsg, lineNum , "consts.txt");
+ LoadConts (errMsg, lineNum, "user.txt");
 
  // Get internal Edit control from ComboBox
  COMBOBOXINFO cbi = { sizeof (COMBOBOXINFO) };

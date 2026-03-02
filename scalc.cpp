@@ -47,6 +47,10 @@
 #define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
 #pragma warn -8004 // assigned a value that is never used
 
+#include <float.h>
+int isinf_f(float x) { return x < -FLT_MAX || x > FLT_MAX; }
+int isinf_d(double x) { return x < -DBL_MAX || x > DBL_MAX; }
+int isinf_l(long double x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 #else //__BORLANDC__
 
 #define M_PI    3.1415926535897932384626433832795L
@@ -81,7 +85,9 @@ void DebugLog (const char *format, ...)
  debugFile.flush ();
 }
 #else // Stub function when debug logging is disabled
+#ifndef __BORLANDC__
 #define DebugLog(x, ...) ((void)0)
+#endif //__BORLANDC__
 #endif // _ENABLE_DEBUG_LOG_
 
 
@@ -1768,8 +1774,12 @@ float__t calculator::Solve (const char *expr)
        }
 
       // Numerical derivative (central difference)
+      #ifdef __BORLANDC__
+      float__t ax = fabsl (x);
+      float__t delta = ((ax>1.0L)?ax:1.0L) * 1.5e-10L; // slightly smaller for long double
+      #else
       float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for long double
-
+      #endif
       pCalculator->addfvar (nvar, x + delta);
       float__t fxp = pCalculator->evaluate (sexpr);
       if (isnan (fxp) || pCalculator->err[0])
@@ -1799,7 +1809,11 @@ float__t calculator::Solve (const char *expr)
        }
 
       float__t x_new = x - fx / fp;
+      #ifdef __BORLANDC__
+      if (isnan (x_new) || isinf_l (x_new))
+      #else
       if (isnan (x_new) || isinf (x_new))
+      #endif
        {
         errorf (pos, "Solution diverged");
         result_fval = qnan;
@@ -2127,7 +2141,12 @@ float__t calculator::Diff (const char *expr)
       }
 
      // Numerical derivative (central difference)
+     #ifdef __BORLANDC__
+     float__t ax = fabsl (x);
+     float__t delta = ((ax>1.0L)?ax:1.0L) * 1.5e-10L; // slightly smaller for long double
+     #else
      float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for long double
+     #endif
 
      pCalculator->addfvar (svar, x + delta);
      float__t fxp = pCalculator->evaluate (sexpr);
@@ -2973,7 +2992,6 @@ t_operator calculator::scan (bool operand, bool percent)
      error ("stack overflow");
      return toERROR;
     }
-
 
    if (sym)
     {

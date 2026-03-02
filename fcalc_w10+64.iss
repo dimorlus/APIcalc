@@ -34,7 +34,8 @@ Source: ".\x64\Release\fcalc.exe"; DestDir: "{app}";Components: program; Flags:i
 Source: ".\ccalc\bin\x64\Release\ccalc.exe"; DestDir: "{app}";Components: ccalc; Flags:ignoreversion
 Source: ".\fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
-Source: ".\consts.txt"; DestDir: "{app}"; Flags: confirmoverwrite uninsneveruninstall; Permissions: users-modify
+Source: ".\consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist
@@ -62,6 +63,7 @@ Name: "{group}\Uninstall"; Filename: "{app}\unins000.exe"
 Name: "{userdesktop}\fcalc"; Filename: "{app}\fcalc.exe"; WorkingDir: "{app}";Components: program
 ; Ярлык для редактирования констант
 Name: "{group}\Edit Constants"; Filename: "notepad.exe"; Parameters: "{app}\consts.txt"; WorkingDir: "{app}"; IconFilename: "shell32.dll"; IconIndex: 69
+Name: "{group}\Edit User Constants"; Filename: "notepad.exe"; Parameters: "{app}\user.txt"; WorkingDir: "{app}"; IconFilename: "shell32.dll"; IconIndex: 69
 
 [Run]
 Filename: "{app}\fcalc.exe"; Description: "Launch application"; Flags: postinstall nowait skipifsilent unchecked

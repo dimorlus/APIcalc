@@ -474,9 +474,9 @@ class calculator // calculator represents the main class for the expression calc
  void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
  void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
- int varlist (char *buf, int bsize,
-              int *maxlen = nullptr); // Get a list of variables in the calculator and store it in the provided
-                          // buffer, with an optional maximum length for variable names
+ int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
+              int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
+                          
  float__t  evaluate (char *expr, __int64 *piVal = nullptr,
            float__t *pimval = nullptr); // Evaluate an expression and return the result as a floating-point value,
                        // with optional pointers to store integer and imaginary results

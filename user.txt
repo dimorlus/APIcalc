@@ -1,0 +1,5 @@
+;; This text file must be located in the directory containing the calculator executable. 
+;; It contains declarations of user-defined constants and functions and is loaded during 
+;; calculator startup. This file can be freely edited to add new constants and functions 
+;; or remove existing ones. It not change when a new version is installed.
+

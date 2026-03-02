@@ -1,3 +1,7 @@
+02.03.26 (2.116)
++ Now, in addition to the consts.txt file, the user.txt file is read when the program is
+  launched, which, unlike consts.txt, does not change when a new version is installed.
+
 01.03.26 (2.115)
 * The local menu in the output field has been changed. It now includes Copy (if something 
   is selected) and the Format... submenu. This allows you to quickly change output formats 

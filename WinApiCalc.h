@@ -96,6 +96,8 @@ public:
     void SetPendingColor(uint32_t color);
     void ProcessPendingColor();
 
+    void LoadConts (char *errMsg, int &lineNum, const char *Fname);
+
     // Message handlers
     void OnCreate();
     void OnSize(int width, int height);

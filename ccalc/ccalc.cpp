@@ -301,7 +301,7 @@ float__t fhelp (float__t x)
  return x;
 }
 
-void load_user_constants (calculator &calc)
+void load_user_constants (calculator &calc, const char *Fname)
 {// Load user consts from consts.txt
  char exePath[MAX_PATH];
  int lineNum      = 0;
@@ -312,7 +312,7 @@ void load_user_constants (calculator &calc)
    if (lastSlash)
     {
      *(lastSlash + 1) = '\0'; // Truncate to directory
-     strcat_s (exePath, "consts.txt");
+     strcat_s (exePath, Fname);
 
      FILE *f = nullptr;
      if (fopen_s (&f, exePath, "r") == 0 && f)
@@ -339,7 +339,7 @@ void load_user_constants (calculator &calc)
           {
            // Error
            char msg[128];
-           snprintf (msg, sizeof (msg), "Error in consts.txt line: %d", lineNum);
+           snprintf (msg, sizeof (msg), "Error in %s line: %d", Fname, lineNum);
            snprintf (errMsg, sizeof (errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", msg, line,
                      calc.error ());
            break;
@@ -444,7 +444,9 @@ int main ()
 
  calc.addfn ("help", (void *)(float__t (*) (float__t))fhelp);
 
- load_user_constants (calc);
+ load_user_constants (calc, "consts.txt");
+ load_user_constants (calc, "user.txt");
+
  if (errMsg[0] != '\0')
   {
    std::cerr << errMsg << std::endl;

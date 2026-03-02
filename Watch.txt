@@ -1,0 +1,25 @@
++		buf	0x00000078146fbcf0 "menu(0)"	char *
++		v_stack[v_sp-2]	{tag=tvERR (0) var=0x0000000000000000 <NULL> pos=0 ...}	value
++		v_stack[v_sp-1]	{tag=-1697809184 var=0x000002099acd4d40 {tag=-1697743344 fidx=521 func=0x000002099acd7bf0 ...} pos=0 ...}	value
++		v_stack[v_sp - 3]	{tag=tvERR (0) var=0x0000000000000000 <NULL> pos=0 ...}	value
+		o_sp	0	int
+		v_sp	0	int
+		pos	0	int
+		oper	identifier "oper" is undefined	
+		buf[pos]	109 'm'	char
++		o_stack	0x000002099aced5f0 {toBEGIN (0), toBEGIN (0), toBEGIN (0), toBEGIN (0), toBEGIN (0), toBEGIN (0), toBEGIN (0), ...}	t_operator[256]
+		baseWidth	identifier "baseWidth" is undefined	
+		result,x	identifier "result" is undefined	
++		sres	0x000002099aceda66 ""	char[256]
+		printBuf	identifier "printBuf" is undefined	
+		o_stack[o_sp]	toBEGIN (0)	t_operator
+		cop	identifier "cop" is undefined	
++		v_stack[v_sp - 2].sval	0x14009f196bbd57b0 <Error reading characters of string.>	char *
++		v_stack[0]	{tag=tvERR (0) var=0x0000000000000000 <NULL> pos=0 ...}	value
+		sym	identifier "sym" is undefined	
+		sp	identifier "sp" is undefined	
+		(char*)sp->func	identifier "sp" is undefined	
+		deep	1	int
+		o_stack[o_sp - 1]	521	t_operator
+		buf[pos]	109 'm'	char
++		buf	0x00000078146fbcf0 "menu(0)"	char *

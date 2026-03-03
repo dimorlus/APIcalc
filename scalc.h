@@ -220,6 +220,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
  tsUFUNCT,   // User-defined function
  tsSOLVE,    // Solve operator for solving equations
+ tsCALC,     // Calculate operator for evaluating expressions
  tsINTEGR,   // Integration operator for numerical integration
  tsDIFF,     // Differentiation operator for numerical differentiation
  tsNUM
@@ -431,8 +432,8 @@ class calculator // calculator represents the main class for the expression calc
  void clear_v_stack (); // Clear the value stack
  void addim (void); // Add imaginary unit
  
- float__t Solve (const char *expr); // Solve an equation given by the expression and return the
-                                    // solution as a floating-point value
+ float__t Solve (const char *expr, t_symbol tag); // Solve an equation given by the expression and
+                                                  // return the solution as a floating-point value
 
  float__t gkEval (calculator *pCalc, char *sexpr, const char *svar,
                   float__t x); // Evaluate a function for a given expression, variable name, and

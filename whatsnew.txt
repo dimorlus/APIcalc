@@ -1,3 +1,10 @@
+03.03.26 (2.117)
++ Added the calc(expr, var:=val) function to the solve(expr, var:=val) function for 
+  quick and easy calculation of the expression for selecting the initial approximation 
+  for solve.
+  calc(x(2x+2)-2, x:=-1) -> -2
+  solve(x(2x+2)-2, x:=-1) -> -1.61803398875005
+  
 02.03.26 (2.116)
 + Now, in addition to the consts.txt file, the user.txt file is read when the program is
   launched, which, unlike consts.txt, does not change when a new version is installed.

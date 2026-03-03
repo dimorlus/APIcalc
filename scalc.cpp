@@ -173,6 +173,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
   }
 
  add (tsSOLVE, "solve", nullptr);
+ add (tsCALC, "calc", nullptr);
  add (tsINTEGR, "integr", nullptr);
  add (tsINTEGR, "integral", nullptr);
  add (tsDIFF, "diff", nullptr);
@@ -1697,7 +1698,7 @@ void calculator::errorf (int pos, const char *fmt, ...)
 
 // Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
 // expr -> x(2x+2)-2, x:=0
-float__t calculator::Solve (const char *expr)
+float__t calculator::Solve (const char *expr, t_symbol tag)
 {
  if (expr && *expr)
   {
@@ -1747,6 +1748,7 @@ float__t calculator::Solve (const char *expr)
    strcpy (nvar, lv);
    vvar = result;
 
+   if (tag == tsSOLVE)
    {
     // Newton-Raphson iteration
     const float__t tol = 1e-12L;
@@ -1838,6 +1840,19 @@ float__t calculator::Solve (const char *expr)
       delete pCalculator;
       return qnan;
      }
+   }
+   if (tag == tsCALC)
+   {
+    pCalculator->addfvar (nvar, vvar);
+    float__t fx = pCalculator->evaluate (sexpr);
+    if (isnan (fx) || pCalculator->err[0])
+     {
+      errorf (pos, "%s", pCalculator->err[0] ? pCalculator->err : "Error evaluating expression");
+      result_fval = qnan;
+      delete pCalculator;
+      return qnan;
+     }
+    vvar = fx;
    }
 
    delete pCalculator;
@@ -2215,7 +2230,8 @@ t_operator calculator::sscan (symbol *sym)
 
  if (sym)
   {
-   if (sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
+   if ((sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
+    || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
     {
      if (parenthesis_count == 0 && comma_count == 1)
       {
@@ -3004,6 +3020,8 @@ t_operator calculator::scan (bool operand, bool percent)
      if (sym->tag == tsDIFF) return toSOLVE;
      else
      if (sym->tag == tsSOLVE) return toSOLVE;
+     else 
+     if (sym->tag == tsCALC)  return toSOLVE;
      else
      return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
     }
@@ -4625,6 +4643,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            switch (sym->tag)
             {
             case tsSOLVE: // float f(str equation)
+            case tsCALC: 
              {
               if (n_args != 1)
                {
@@ -4634,8 +4653,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                }
               if (v_stack[v_sp - 1].tag == tvSOLVE)
                {
-                const char *equation   = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                float__t result        = Solve (equation);
+                const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result = Solve (equation, sym->tag);
                 v_stack[v_sp - 2].fval = result;
                 v_stack[v_sp - 2].imval = 0.0;
                 v_stack[v_sp - 2].ival  = (int_t)result;

@@ -144,6 +144,9 @@ enum t_value // t_value represents the type of a value in the calculator
  tvDIFF
 };
 
+#define MAX_R 7
+#define MAX_C 7
+
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
  toBEGIN,   // 0  toBEGIN must be the first operator in the list

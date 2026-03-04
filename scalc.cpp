@@ -492,6 +492,13 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
          sp->val.sval = nullptr;
         }
 #endif //_STR_VAR_FREE_
+
+       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+        {
+         if (sp->val.mval) free (sp->val.mval);
+         sp->val.mval = nullptr;
+        }
+
        if (sp->tag == tsUFUNCT) free (sp->func);
        if (sp->name) free (sp->name);
        sp->name = nullptr;
@@ -504,6 +511,7 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
   }
 }
 
+// todo: add matrix variable duplication
 void calculator::dupstrvars (void) // Duplicate string variables in the hash table
 {
  symbol *sp;
@@ -524,6 +532,7 @@ void calculator::dupstrvars (void) // Duplicate string variables in the hash tab
   }
 }
 
+// todo: add matrix variable 
 char *calculator::registerString (char *str) // Register a string in the string list for later cleanup
  {
  if (str)
@@ -536,7 +545,8 @@ char *calculator::registerString (char *str) // Register a string in the string 
   return str;
  }
 
-void calculator::clearAllStrings () // Free all registered strings in the string list
+// todo: add matrix variable cleanup if needed
+ void calculator::clearAllStrings () // Free all registered strings in the string list
  {
   StringNode *node = string_list_head;
   while (node)
@@ -549,6 +559,7 @@ void calculator::clearAllStrings () // Free all registered strings in the string
   string_list_head = nullptr;
  }
 
+ // todo: add matrix variable duplication if needed
  char *calculator::dupString (const char *src) // Duplicate a string and register it for cleanup
   {
    if (!src) return nullptr;
@@ -2302,25 +2313,252 @@ t_operator calculator::sscan (symbol *sym)
 }
 
 //[(a11,a12,...);(a21,a22,...);...]
+// Matrix parser for calculator
+// Called with pos pointing to char after '['
+// Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
+// buf and pos are class fields, dscan() advances pos automatically
+// Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful, 
+// or toERROR if there is a syntax error.
 t_operator calculator::sqbraces(void)
 {
- return toERROR; // not implemented yet
+ int rows    = 0;
+ int cols    = 0;
+ int curCols = 0;
+ char *ipos  = buf + pos;
+ // ----------------------------------------------------------------
+ // PASS 1: count rows and columns, check consistency
+ // ----------------------------------------------------------------
+
+ while (isspace (*ipos & 0x7f)) ipos++;
+
+ while (*ipos)
+ {
+   if (*ipos == ']') break;
+   if (*ipos != '(')
+   {
+    error ("Expected '(' at the beginning of a row");
+    return toERROR;
+   }
+   ipos++; // skip '('
+   rows++;
+   if (rows > MAX_R)
+    {
+     error ("Too many rows in matrix");
+     return toERROR;
+    }
+   curCols = 0;
+   while (isspace (*ipos & 0x7f)) ipos++;
+   while (*ipos && *ipos != ')' && *ipos != ']')
+   {
+    while (isspace (*ipos & 0x7f)) ipos++;
+    if (*ipos == '(')
+     {
+      error ("Nested parentheses are not allowed in matrix rows");
+      return toERROR;
+     }
+    // skip one token: optional sign + number chars until delimiter
+    bool hasChars = false;
+    if (*ipos == '+' || *ipos == '-') ipos++;
+    while (isspace (*ipos & 0x7f)) ipos++; // skip whitespace after optional sign
+    while (*ipos && *ipos != ',' && *ipos != ')' && *ipos != ' ' && *ipos != '\t')
+     {
+      if (*ipos == '(')
+       {
+        error ("Nested parentheses are not allowed in matrix rows");
+        return toERROR;
+       }
+      hasChars = true;
+      ipos++;
+     }
+    if (!hasChars)
+     {
+      error ("Empty matrix element");
+      return toERROR;
+     }
+    curCols++;
+    if (curCols > MAX_C)
+     {
+      error ("Too many columns in matrix");
+      return toERROR;
+     }
+    while (isspace (*ipos & 0x7f)) ipos++;
+    if (*ipos == ',') ipos++; // skip comma
+    while (isspace (*ipos & 0x7f)) ipos++;
+   }
+   if (*ipos != ')')
+    {
+     error ("Expected ')' at the end of a row");
+     return toERROR;
+    }
+   ipos++; // skip ')'
+   if (rows == 1)
+    {
+     cols = curCols;
+     if (cols == 0)
+      {
+       error ("No columns found in the first row");
+       return toERROR;
+      }
+    }
+   else if (curCols != cols)
+    {
+     error ("Inconsistent number of columns in matrix rows");
+     return toERROR;
+    }
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (*ipos == ';')
+    {
+     ipos++; // skip semicolon
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+   else if (*ipos != ']' && *ipos != '\0')
+    {
+     error ("Expected ';' between rows or ']' at the end of the matrix");
+     return toERROR;
+    }
+ }
+ if (*ipos != ']')
+  {
+   error ("Expected ']' at the end of the matrix");
+   return toERROR;
+  }
+ if (rows == 0 || cols == 0)
+  {
+   error ("Empty matrix");
+   return toERROR;
+  }
+ // ----------------------------------------------------------------
+ // PASS 2: allocate and fill using dscan()
+ // ----------------------------------------------------------------
+ float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+ if (!mval)
+  {
+   error ("Memory allocation failed for matrix");
+   return toERROR;
+  }
+ //memset (mval, 0, rows * cols * sizeof (float__t)); // initialize to zero
+ // initialize mval to qnan to detect unfilled elements in case of errors
+ for (int i = 0; i < rows * cols; i++) mval[i] = qnan;
+
+ ipos = buf + pos; // reset ipos to the beginning of the matrix for the second pass 
+
+ while (isspace (*ipos & 0x7f)) ipos++;
+ for (int r = 0; r < rows; r++)
+  {
+   if (*ipos != '(')
+    {
+     error ("Expected '(' at the beginning of a row");
+     free(mval);
+     return toERROR;
+    }
+   ipos++; // skip '('
+   while (isspace (*ipos & 0x7f)) ipos++;
+   for (int c = 0; c < cols; c++)
+    {
+     // use dscan to parse the number, which advances ipos
+     t_value tag;
+     float__t fval;
+     bool percent = false;
+     bool negative = false;
+     if (*ipos == '-')
+      {
+       negative = true;
+       ipos++;
+      }
+     else if (*ipos == '+')
+      {
+       ipos++;
+      }
+     while (isspace (*ipos & 0x7f)) ipos++; // skip whitespace after optional sign
+
+     pos = ipos - buf+1;
+     if (dscan (true, percent) != toOPERAND)
+      {
+       error ("Invalid number in matrix");
+       free(mval);
+       return toERROR;
+      }
+     ipos = buf + pos;
+     tag = v_stack[v_sp - 1].tag;
+     if (tag == tvINT || tag == tvFLOAT)
+      {
+       fval = v_stack[--v_sp].fval; // get the parsed value from the stack
+       if (negative) fval = -fval;
+       mval[r * cols + c] = fval;   // store in row-major order
+      }
+     else
+      {
+       error ("Expected a number in matrix");
+       free(mval);
+       return toERROR;
+      }
+     while (isspace (*ipos & 0x7f)) ipos++;
+     if (c < cols - 1)
+      {
+       if (*ipos != ',')
+        {
+         error ("Expected ',' between matrix elements");
+         free(mval);
+         return toERROR;
+        }
+       ipos++; // skip comma
+       while (isspace (*ipos & 0x7f)) ipos++;
+      }
+    }
+   if (*ipos != ')')
+    {
+     error ("Expected ')' at the end of a row");
+     free(mval);
+     return toERROR;
+    }
+   ipos++; // skip ')'
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (r < rows - 1)
+    {
+     if (*ipos != ';')
+      {
+       error ("Expected ';' between rows");
+       free(mval);
+       return toERROR;
+      }
+     ipos++; // skip semicolon
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+  }
+
+ registerString ((char *)mval); // register the allocated matrix pointer as a string to be freed later
+ pos                  = ipos - buf+1;
+ v_stack[v_sp].sval   = nullptr;
+ v_stack[v_sp].var    = nullptr;
+ v_stack[v_sp].pos    = pos;
+ v_stack[v_sp].fval   = qnan;
+ v_stack[v_sp].imval  = 0;
+ v_stack[v_sp].ival   = 0;
+ v_stack[v_sp].tag    = tvMATRIX;
+ v_stack[v_sp].mrows  = rows;
+ v_stack[v_sp].mcols  = cols;
+ v_stack[v_sp].mval   = mval;
+ v_sp++;
+ return toOPERAND;
+
+ //return toERROR; // not implemented yet
 }
 
-t_operator calculator::braces (void)
+
+// User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
+// 1. Find the expression in {}
+// 2. Find the function name in it before (..) -> frq
+// 3. Place the name (frq) in the list of names (symbols), and replace the function
+//   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)).
+//   If such a name already exists, but not for user defined function, return toERROR.
+//   If such a name already exists for user defined function, return the existing one.
+//   its done in addUF function, which is called from here. addUF returns nullptr if there is a
+//   name conflict, and the new symbol if added successfully or already exists as a user
+//   function.
+// 4. Place the new type tsUFUNC in the list of names (by addUF function)
+// 5. Return the new type toCONTINUE to continue scanning the expression.
+t_operator calculator::braces (void) //{...}
 {
- // User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
- // 1. Find the expression in {}
- // 2. Find the function name in it before (..) -> frq
- // 3. Place the name (frq) in the list of names (symbols), and replace the function
- //   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)).
- //   If such a name already exists, but not for user defined function, return toERROR.
- //   If such a name already exists for user defined function, return the existing one.
- //   its done in addUF function, which is called from here. addUF returns nullptr if there is a
- //   name conflict, and the new symbol if added successfully or already exists as a user
- //   function.
- // 4. Place the new type tsUFUNC in the list of names (by addUF function)
- // 5. Return the new type toCONTINUE to continue scanning the expression.
  char sbuf[STRBUF];
  int sidx   = 0;
  char *ipos = buf + pos;
@@ -2380,6 +2618,7 @@ t_operator calculator::braces (void)
 #endif //_UF_AS_OPERAND_
 }
 
+//"...." or '...'
 t_operator calculator::dqscan (char qc) // scan a string literal in double quotes, e.g. "Hello, World!"
 // todo: consider escape sequences in string literals (e.g. "Line 1\nLine 2"), currently not
 // supported. 
@@ -2801,7 +3040,8 @@ t_operator calculator::scan (bool operand, bool percent)
    return toCOMMA;
   case '{':
    return braces ();
-   
+  case '[':
+   return sqbraces (); 
   case '\'':
    {
     int_t ival;

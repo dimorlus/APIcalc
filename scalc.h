@@ -137,6 +137,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvPERCENT,
  tvCOMPLEX,
  tvSTR,
+ tvMATRIX,
  tvUFUNCT,
  tvSOLVE,
  tvINTEGR,
@@ -304,6 +305,9 @@ class value // value represents a value in the calculator, which can be an integ
  float__t fval;  // Float value or real part of complex value
  float__t imval; // Imaginary part of complex value
  char *sval;     // String value
+ uint8_t mrows;  // Number of rows in matrix
+ uint8_t mcols;  // Number of columns in matrix
+ float__t *mval; // Matrix value (pointer to array of floats)
 
  inline value ()
  {
@@ -314,6 +318,9 @@ class value // value represents a value in the calculator, which can be an integ
   imval = 0.0;
   pos   = 0;
   sval  = nullptr;
+  mrows = 0;
+  mcols = 0;
+  mval  = nullptr;
  }
 
  inline float__t get () { return tag == tvINT ? (float__t)ival : fval; }
@@ -407,6 +414,15 @@ class calculator // calculator represents the main class for the expression calc
                                                     // with the given name and expression
  t_operator sscan (symbol *sym); // Scan body of the solve, integr and diff 
 
+ t_operator sqbraces (void); // Scan [..] matrix/vector constructor 
+
+ t_operator braces (void);    // Scan the expression for parentheses and return the operator type of
+                              // the next token after the parentheses
+ t_operator dqscan (char qc); // Scan the double quote string in the expression and return its operator
+                           // type, used for main scan
+ t_operator dscan (bool operand,
+                   bool percent); // Scan the digits in the expression and return its operator type,
+                          // used for main scan
  t_operator scan (bool operand,
                   bool percent); // Scan the next token in the expression and return its operator type
  void error (int pos, const char *msg); // Report an error at the given position with the specified message

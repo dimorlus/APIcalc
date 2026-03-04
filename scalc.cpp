@@ -148,7 +148,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
        if ((copyMask & (1 << src->tag)))
         {
          symbol *ns = new symbol;
-         *ns        = *src;  // Copy all fields (tag, fidx, func, val)
+         *ns = *src;  // Copy all fields (tag, fidx, func, val)
 
          // name always duplicated — destroyvars() frees it using free()
          ns->name = src->name ? strdup (src->name) : nullptr;
@@ -163,8 +163,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
              ns->func = strdup((char *)src->func);
 
          ns->next = nullptr;
-         *dst     = ns;
-         dst      = &ns->next;
+         *dst = ns;
+         dst = &ns->next;
         }
        src = src->next;
       }
@@ -313,20 +313,20 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("ptt", 0.0254 / 72); // Point (m)
 
  // Mass 
- addfconst ("lb", 0.45359237); // Pound (kg)
- addfconst ("oz", 0.028349523125); // Ounce (kg)
- addfconst ("st", 6.35029318);      // Stone (kg)
+ addfconst ("lb", 0.45359237L); // Pound (kg)
+ addfconst ("oz", 0.028349523125L); // Ounce (kg)
+ addfconst ("st", 6.35029318L);      // Stone (kg)
  addfconst ("gr", 0.001);          // Gram (kg)
  addfconst ("kg", 1.0);          // Kilogram (kg)
 
 // Volume
- addfconst ("gal", 0.003785411784); // US Gallon (m³)
- addfconst ("qt", 0.000946352946);  // US Quart (m³)
- addfconst ("pt", 0.000473176473);  // US Pint (m³)
- addfconst ("cup", 0.0002365882365); // US Cup (m³)
- addfconst ("floz", 2.95735295625e-5); // US Fluid Ounce (m³)
- addfconst ("tbsp", 1.478676478125e-5); // US Tablespoon (m³) 
- addfconst ("tsp", 4.92892159375e-6);   // US Teaspoon (m³)
+ addfconst ("gal", 0.003785411784L); // US Gallon (m³)
+ addfconst ("qt", 0.000946352946L);  // US Quart (m³)
+ addfconst ("pt", 0.000473176473L);  // US Pint (m³)
+ addfconst ("cup", 0.0002365882365L); // US Cup (m³)
+ addfconst ("floz", 2.95735295625e-5L); // US Fluid Ounce (m³)
+ addfconst ("tbsp", 1.478676478125e-5L); // US Tablespoon (m³) 
+ addfconst ("tsp", 4.92892159375e-6L);   // US Teaspoon (m³)
  addfconst ("lt", 0.001);               // liters (m³)
  addfconst ("ml", 0.000001);            // milliliters (m³)
  addfconst ("cc", 0.000001);            // milliliters (m³)
@@ -348,13 +348,13 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("gev", 1.602176634e-10); // Gigaelectronvolt (J)
 
  // Power
- addfconst ("hps", 745.69987158227022); // Horsepower (W)
- addfconst ("bhp", 745.69987158227022); // Brake horsepower (W) 
+ addfconst ("hps", 745.69987158227022L); // Horsepower (W)
+ addfconst ("bhp", 745.69987158227022L); // Brake horsepower (W) 
  
  // Pressure
  addfconst ("atm", 101325.0);          // Standard atmosphere (Pa)
  addfconst ("bar", 100000.0);          // Bar (Pa)
- addfconst ("psi", 6894.757293168361); // Pound-force per square inch (Pa)
+ addfconst ("psi", 6894.757293168361L); // Pound-force per square inch (Pa)
 
  // Speed
  addfconst ("kmh", 0.277777778); // Kilometers per hour to meters per second
@@ -415,9 +415,9 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("a0", 5.29177210903e-11); // Bohr radius (m)
 
  // Astronomical constants
- addfconst ("au", 1.495978707e11);     // Astronomical unit (m)
- addfconst ("ly", 9.4607304725808e15); // Light year (m)
- addfconst ("pc", 3.0856775814914e16); // Parsec (m)
+ addfconst ("au", 1.495978707e11L);     // Astronomical unit (m)
+ addfconst ("ly", 9.4607304725808e15L); // Light year (m)
+ addfconst ("pc", 3.0856775814914e16L); // Parsec (m)
  addfconst ("g0", 9.80665);            // Standard gravity (m/s²)
 
  // Additional constants
@@ -442,14 +442,14 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("uvc", 190e-9);
 
  // Integer Limits:
- addlvar ("max32", 2147483647.0, 0x7fffffff);
- addlvar ("maxint", 2147483647.0, 0x7fffffff);
- addlvar ("maxu32", 4294967295.0, 0xffffffff);
- addlvar ("maxuint", 4294967295.0, 0xffffffff);
- addlvar ("max64", 9223372036854775807.0, 0x7fffffffffffffffull);
- addlvar ("maxlong", 9223372036854775807.0, 0x7fffffffffffffffull);
- addlvar ("maxu64", 18446744073709551615.0, 0xffffffffffffffffull);
- addlvar ("maxulong", 18446744073709551615.0, 0xffffffffffffffffull);
+ addlvar ("max32", 2147483647.0L, 0x7fffffff);
+ addlvar ("maxint", 2147483647.0L, 0x7fffffff);
+ addlvar ("maxu32", 4294967295.0L, 0xffffffff);
+ addlvar ("maxuint", 4294967295.0L, 0xffffffff);
+ addlvar ("max64", 9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlvar ("maxlong", 9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlvar ("maxu64", 18446744073709551615.0L, 0xffffffffffffffffull);
+ addlvar ("maxulong", 18446744073709551615.0L, 0xffffffffffffffffull);
 
  // System
  //  Get system timezone information
@@ -1151,6 +1151,7 @@ symbol *calculator::addUF (const char *name, const char *expr)
 
  return sp;
 }
+
 // Add a float constant to the hash table
 void calculator::addfconst (const char *name, float__t val)
 {
@@ -1468,13 +1469,13 @@ float__t calculator::dstrtod (char *s, char **endptr)
 // 1:c1:y1:d1:h1:m1:s  => 189377247661s
 float__t calculator::tstrtod (char *s, char **endptr)
 {
- const float__t dms[] = { (60.0 * 60.0 * 60.0 * 24.0 * 365.25 * 100.0),
-                          (60.0 * 60.0 * 24.0 * 365.25),
-                          (60.0 * 60.0 * 24.0 * 7),
-                          (60.0 * 60.0 * 24.0),
-                          (60.0 * 60.0),
-                          60.0,
-                          1.0 };
+ const float__t dms[] = { (60.0L * 60.0 * 60.0 * 24.0 * 365.25 * 100.0),
+                          (60.0L * 60.0 * 24.0 * 365.25),
+                          (60.0L * 60.0 * 24.0 * 7),
+                          (60.0L * 60.0 * 24.0),
+                          (60.0L * 60.0),
+                          60.0L,
+                          1.0L };
  const char cdt[]     = { 'c', 'y', 'w', 'd', 'h', 'm', 's' };
  float__t res         = 0;
  float__t d;
@@ -2287,7 +2288,7 @@ t_operator calculator::sscan (symbol *sym)
       }
      registerString (sval);
 
-     pos                  = ipos - buf - 1;
+     pos = ipos - buf - 1;
      v_stack[v_sp].sval   = sval;
      v_stack[v_sp].var    = sym;
      v_stack[v_sp].pos    = pos;
@@ -2300,6 +2301,258 @@ t_operator calculator::sscan (symbol *sym)
  return toERROR;
 }
 
+//[(a11,a12,...);(a21,a22,...);...]
+t_operator calculator::sqbraces(void)
+{
+
+}
+
+t_operator calculator::braces (void)
+{
+ // User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
+ // 1. Find the expression in {}
+ // 2. Find the function name in it before (..) -> frq
+ // 3. Place the name (frq) in the list of names (symbols), and replace the function
+ //   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)).
+ //   If such a name already exists, but not for user defined function, return toERROR.
+ //   If such a name already exists for user defined function, return the existing one.
+ //   its done in addUF function, which is called from here. addUF returns nullptr if there is a
+ //   name conflict, and the new symbol if added successfully or already exists as a user
+ //   function.
+ // 4. Place the new type tsUFUNC in the list of names (by addUF function)
+ // 5. Return the new type toCONTINUE to continue scanning the expression.
+ char sbuf[STRBUF];
+ int sidx   = 0;
+ char *ipos = buf + pos;
+ while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+ sbuf[sidx] = '\0';
+ if (*ipos == '}')
+  {
+   // extract user function name here and put it as symbol in the hash table
+   char fname[STRBUF];
+   char *fnp;
+   fnp      = fname;
+   int spos = 0;
+   while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
+    {
+     *fnp++ = sbuf[spos++] & 0x7f;
+    }
+   if (fnp == fname)
+    {
+     error ("Bad character");
+     return toERROR;
+    }
+   *fnp = '\0';
+
+   if (fname[0])
+    {
+     // Add user function to symbol table
+     if (!addUF (fname, &sbuf[spos]))
+      {
+       error ("Duplicate name");
+       return toERROR;
+      }
+    }
+   else
+    {
+     error ("User function name missing");
+     return toERROR;
+    }
+  }
+ else
+  {
+   error ("unmatched brace");
+   return toERROR;
+  }
+ pos = ipos - buf + 1;
+#ifdef _UF_AS_OPERAND_
+ // if used this way, expression in {} is treated as a 0 and {expr};expr syntax is supported for
+ // user functions
+ v_stack[v_sp].tag   = tvINT;
+ v_stack[v_sp].ival  = 0;
+ v_stack[v_sp].pos   = pos;
+ v_stack[v_sp++].var = nullptr;
+ return toOPERAND;
+#else  //_UF_AS_OPERAND_
+ // if used this way, expression in {} is treated as a empty and {expr}expr syntax is supported
+ // for user functions
+ return toCONTINUE;
+#endif //_UF_AS_OPERAND_
+}
+
+t_operator calculator::dqscan (char qc) // scan a string literal in double quotes, e.g. "Hello, World!"
+// todo: consider escape sequences in string literals (e.g. "Line 1\nLine 2"), currently not
+// supported. 
+//"Hello! ""World""" -> Hello! "World"
+{
+ char *ipos;
+ char sbuf[STRBUF];
+ int sidx = 0;
+ ipos = buf + pos;
+ while (*ipos && (*ipos != qc) && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+ sbuf[sidx] = '\0';
+ if (*ipos == qc)
+  {
+   if (sbuf[0]) scfg |= STR;
+   v_stack[v_sp].tag  = tvSTR;
+   v_stack[v_sp].ival = 0;
+   v_stack[v_sp].sval = (char *)malloc (sidx + 1);
+   if (v_stack[v_sp].sval)
+    {
+     strcpy (v_stack[v_sp].sval, sbuf);
+     registerString (v_stack[v_sp].sval);
+    }
+   pos = ipos - buf + 1;
+   v_stack[v_sp].pos   = pos;
+   v_stack[v_sp++].var = nullptr;
+   return toOPERAND;
+  }
+ else
+  {
+   error ("bad char constant");
+   return toERROR;
+  }
+}
+
+// Scan a number in various formats: decimal, hex (0x or $), octal (0o), binary (0b), or with
+// backslash for base prefix
+t_operator calculator::dscan (bool operand, bool percent)
+ {
+  int_t ival     = 0;
+  float__t fval  = 0;
+  float__t sfval = 0;
+  int ierr       = 0, ferr;
+  char *ipos, *fpos, *sfpos;
+  int n = 0;
+
+  if (buf[pos - 1] == '\\')
+   {
+    ierr = xscanf (buf + pos, 1, ival, n);
+    ipos = buf + pos + n;
+    scfg |= ESC;
+   }
+  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
+   {
+    ierr = bscanf (buf + pos + 1, ival, n);
+    ipos = buf + pos + n + 1;
+    scfg |= fBIN;
+   }
+  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
+   {
+    ierr = oscanf (buf + pos + 1, ival, n);
+    ipos = buf + pos + n + 1;
+    scfg |= OCT;
+   }
+  else if (buf[pos - 1] == '$')
+   {
+    ierr = hscanf (buf + pos, ival, n);
+    ipos = buf + pos + n;
+    scfg |= HEX;
+   }
+  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
+   {
+    ierr = hscanf (buf + pos + 1, ival, n);
+    ipos = buf + pos + n + 1;
+    scfg |= HEX;
+   }
+  else
+   {
+    errno = 0;
+#ifdef __BORLANDC__
+    ival = strtol (buf + pos - 1, &ipos, 10);
+#else
+    ival = strtoll (buf + pos - 1, &ipos, 10);
+#endif
+    ierr = errno;
+   }
+  errno = 0;
+#ifdef __BORLANDC__
+  sfval = fval = strtod (buf + pos - 1, &fpos);
+#else
+  sfval = fval = strtold (buf + pos - 1, &fpos);
+#endif
+  sfpos = fpos;
+
+  v_stack[v_sp].tag = tvFLOAT;
+
+  //` - degrees, ' - minutes, " - seconds
+  if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
+   fval = dstrtod (buf + pos - 1, &fpos);
+  else if (*fpos == ':')
+   fval = tstrtod (buf + pos - 1, &fpos);
+  else if (scfg & (ENG | SCI | FRI))
+   scientific (fpos, fval);
+  if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
+   {
+    fpos++;
+    if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS))
+     fval = -(-fval - 32.0) * 5.0 / 9.0;
+    else
+     fval = (fval - 32.0) * 5.0 / 9.0;
+   }
+  if (operand && percent && (*fpos == '%'))
+   {
+    fpos++;
+    v_stack[v_sp].tag = tvPERCENT;
+   }
+  if ((*fpos == 'i') || (*fpos == 'j'))
+   {
+    c_imaginary = *fpos;
+    fpos++;
+    scfg |= CPX;
+    v_stack[v_sp].tag = tvCOMPLEX;
+   }
+  if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
+   { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
+    fpos              = sfpos;
+    fval              = sfval;
+    v_stack[v_sp].tag = tvFLOAT;
+   }
+
+  if (v_stack[v_sp].tag == tvCOMPLEX)
+   {
+    v_stack[v_sp].imval = fval;
+    v_stack[v_sp].fval  = 0;
+   }
+  else
+   {
+    v_stack[v_sp].fval  = fval;
+    v_stack[v_sp].imval = 0;
+   }
+  pos = fpos - buf;
+
+  if (v_stack[v_sp].tag == tvFLOAT)
+   {
+    ferr = errno;
+    if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\')))
+     {
+      pos = fpos - buf + 1;
+      error ("bad numeric constant");
+      return toERROR;
+     }
+    if (ierr && ferr)
+     {
+      error ("bad numeric constant");
+      return toERROR;
+     }
+    if (v_sp == max_stack_size)
+     {
+      error ("stack overflow");
+      return toERROR;
+     }
+    if (!ierr && ipos >= fpos && (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
+     {
+      if (scfg & FFLOAT) v_stack[v_sp].tag = tvFLOAT;
+      else v_stack[v_sp].tag = tvINT;
+      v_stack[v_sp].ival = ival;
+      v_stack[v_sp].fval = (float__t)ival;
+      pos = ipos - buf;
+     }
+   }
+  v_stack[v_sp].pos   = pos;
+  v_stack[v_sp++].var = nullptr;
+  return toOPERAND;
+ }
 
 // parse the next operator from the input buffer, returning the operator type
 t_operator calculator::scan (bool operand, bool percent)
@@ -2521,10 +2774,10 @@ t_operator calculator::scan (bool operand, bool percent)
      char *fpos;
      if (buf[pos])
       {
-       fval                = Awg (strtod (buf + pos, &fpos));
+       fval = Awg (strtod (buf + pos, &fpos));
+       pos = fpos - buf;
        v_stack[v_sp].tag   = tvFLOAT;
        v_stack[v_sp].fval  = fval;
-       pos                 = fpos - buf;
        v_stack[v_sp].pos   = pos;
        v_stack[v_sp++].var = nullptr;
        return toOPERAND;
@@ -2547,77 +2800,8 @@ t_operator calculator::scan (bool operand, bool percent)
   case ',':
    return toCOMMA;
   case '{':
-   {
-    //User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
-	//1. Find the expression in {}
-	//2. Find the function name in it before (..) -> frq
-	//3. Place the name (frq) in the list of names (symbols), and replace the function 
-    //   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)). 
-    //   If such a name already exists, but not for user defined function, return toERROR.
-    //   If such a name already exists for user defined function, return the existing one.
-    //   its done in addUF function, which is called from here. addUF returns nullptr if there is a
-    //   name conflict, and the new symbol if added successfully or already exists as a user
-    //   function.
-    //4. Place the new type tsUFUNC in the list of names (by addUF function)
-	//5. Return the new type toCONTINUE to continue scanning the expression.     
-    char sbuf[STRBUF];
-    int sidx = 0;
-    char *ipos = buf + pos;
-    while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
-    sbuf[sidx] = '\0';
-    if (*ipos == '}')
-     {
-      // extract user function name here and put it as symbol in the hash table
-      char fname[STRBUF];
-      char *fnp;
-      fnp = fname;
-      int spos = 0;
-      while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
-       {
-        *fnp++ = sbuf[spos++] & 0x7f;
-       }
-      if (fnp == fname)
-       {
-        error ("Bad character");
-        return toERROR;
-       }
-      *fnp = '\0';
-      
-      if (fname[0])
-       {
-        // Add user function to symbol table 
-        if (!addUF(fname, &sbuf[spos]))
-         {
-          error ("Duplicate name");
-          return toERROR;
-         }
-       }
-      else
-       {
-        error ("User function name missing");
-        return toERROR;
-       }
-     }
-    else
-     {
-      error ("unmatched brace");
-      return toERROR;
-     }
-    pos = ipos - buf + 1;
-#ifdef _UF_AS_OPERAND_
-    // if used this way, expression in {} is treated as a 0 and {expr};expr syntax is supported for
-    // user functions
-    v_stack[v_sp].tag   = tvINT;
-    v_stack[v_sp].ival  = 0;
-    v_stack[v_sp].pos   = pos;
-    v_stack[v_sp++].var = nullptr;
-    return toOPERAND;
-#else //_UF_AS_OPERAND_
-    // if used this way, expression in {} is treated as a empty and {expr}expr syntax is supported
-    // for user functions  
-    return toCONTINUE;
-#endif //_UF_AS_OPERAND_
-   }
+   return braces ();
+   
   case '\'':
    {
     int_t ival;
@@ -2674,37 +2858,12 @@ t_operator calculator::scan (bool operand, bool percent)
        }
       else
        {
-        char sbuf[STRBUF];
-        int sidx = 0;
-        ipos     = buf + pos;
-        while (*ipos && (*ipos != '\'') && (sidx < STRBUF)) sbuf[sidx++] = *ipos++;
-        sbuf[sidx] = '\0';
-        if (*ipos == '\'')
-         {
-          if (sbuf[0]) scfg |= STR;
-          v_stack[v_sp].tag  = tvSTR;
-          v_stack[v_sp].ival = 0;
-          v_stack[v_sp].sval = (char *)malloc (sidx+1);
-          if (v_stack[v_sp].sval)
-           {
-            strcpy (v_stack[v_sp].sval, sbuf);
-            registerString (v_stack[v_sp].sval);
-           }
-          pos                 = ipos - buf + 1;
-          v_stack[v_sp].pos   = pos;
-          v_stack[v_sp++].var = nullptr;
-          return toOPERAND;
-         }
-        else
-         {
-          error ("bad char constant");
-          return toERROR;
-         }
+        return dqscan ('\'');
        }
      }
+    pos = ipos - buf;
     v_stack[v_sp].tag   = tvINT;
     v_stack[v_sp].ival  = ival;
-    pos                 = ipos - buf;
     v_stack[v_sp].pos   = pos;
     v_stack[v_sp++].var = nullptr;
     return toOPERAND;
@@ -2753,9 +2912,9 @@ t_operator calculator::scan (bool operand, bool percent)
           return toERROR;
          }
        }
+      pos = ipos - buf;
       v_stack[v_sp].tag   = tvINT;
       v_stack[v_sp].ival  = ival;
-      pos                 = ipos - buf;
       v_stack[v_sp].pos   = pos;
       v_stack[v_sp++].var = nullptr;
       return toOPERAND;
@@ -2765,35 +2924,8 @@ t_operator calculator::scan (bool operand, bool percent)
 #endif /*_WIN_*/
 #endif /*_WCHAR_*/
   case '"':
-   {
-    char *ipos;
-    char sbuf[STRBUF];
-    int sidx = 0;
-    ipos     = buf + pos;
-    while (*ipos && (*ipos != '"') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
-    sbuf[sidx] = '\0';
-    if (*ipos == '"')
-     {
-      if (sbuf[0]) scfg |= STR;
-      v_stack[v_sp].tag  = tvSTR;
-      v_stack[v_sp].ival = 0;
-      v_stack[v_sp].sval = (char *)malloc (sidx+1);
-      if (v_stack[v_sp].sval)
-       {
-        strcpy (v_stack[v_sp].sval, sbuf);
-        registerString (v_stack[v_sp].sval);
-       }
-      pos                 = ipos - buf + 1;
-      v_stack[v_sp].pos   = pos;
-      v_stack[v_sp++].var = nullptr;
-      return toOPERAND;
-     }
-    else
-     {
-      error ("bad char constant");
-      return toERROR;
-     }
-   }
+   return dqscan ('"');
+   
 #ifdef _ENABLE_PREIMAGINARY_
  case 'i': 
  case 'j':
@@ -2846,143 +2978,7 @@ t_operator calculator::scan (bool operand, bool percent)
   case '9':
   case '\\':
   case '$':
-   {
-    int_t ival     = 0;
-    float__t fval  = 0;
-    float__t sfval = 0;
-    int ierr       = 0, ferr;
-    char *ipos, *fpos, *sfpos;
-    int n = 0;
-
-    if (buf[pos - 1] == '\\')
-     {
-      ierr = xscanf (buf + pos, 1, ival, n);
-      ipos = buf + pos + n;
-      scfg |= ESC;
-     }
-    else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
-     {
-      ierr = bscanf (buf + pos + 1, ival, n);
-      ipos = buf + pos + n + 1;
-      scfg |= fBIN;
-     }
-    else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
-     {
-      ierr = oscanf (buf + pos + 1, ival, n);
-      ipos = buf + pos + n + 1;
-      scfg |= OCT;
-     }
-    else if (buf[pos - 1] == '$')
-     {
-      ierr = hscanf (buf + pos, ival, n);
-      ipos = buf + pos + n;
-      scfg |= HEX;
-     }
-    else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
-     {
-      ierr = hscanf (buf + pos + 1, ival, n);
-      ipos = buf + pos + n + 1;
-      scfg |= HEX;
-     }
-    else
-     {
-      errno = 0;
-      #ifdef __BORLANDC__
-      ival = strtol (buf + pos - 1, &ipos, 10);
-      #else
-      ival = strtoll (buf + pos - 1, &ipos, 10);
-      #endif
-      ierr = errno;
-     }
-    errno = 0;
-    #ifdef __BORLANDC__
-    sfval = fval = strtod (buf + pos - 1, &fpos);
-    #else
-    sfval = fval = strtold (buf + pos - 1, &fpos);
-    #endif
-    sfpos = fpos;
-
-    v_stack[v_sp].tag = tvFLOAT;
-
-    //` - degrees, ' - minutes, " - seconds
-    if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
-     fval = dstrtod (buf + pos - 1, &fpos);
-    else 
-    if (*fpos == ':') fval = tstrtod (buf + pos - 1, &fpos);
-    else 
-    if (scfg & (ENG | SCI | FRI)) scientific (fpos, fval);
-    if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
-     {
-      fpos++;
-      if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS))
-       fval = -(-fval - 32.0) * 5.0 / 9.0;
-      else
-       fval = (fval - 32.0) * 5.0 / 9.0;
-     }
-    if (operand && percent && (*fpos == '%'))
-     {
-      fpos++;
-      v_stack[v_sp].tag = tvPERCENT;
-     }
-    if ((*fpos == 'i') || (*fpos == 'j'))
-     {
-      c_imaginary = *fpos;
-      fpos++;
-      scfg |= CPX;
-      v_stack[v_sp].tag = tvCOMPLEX;
-     }
-    if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
-     { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
-      fpos = sfpos;
-      fval = sfval;
-      v_stack[v_sp].tag = tvFLOAT;
-     }
-     
-    if (v_stack[v_sp].tag == tvCOMPLEX)
-     {
-      v_stack[v_sp].imval = fval;
-      v_stack[v_sp].fval  = 0;
-     }
-    else
-     {
-      v_stack[v_sp].fval  = fval;
-      v_stack[v_sp].imval = 0;
-     }
-    pos = fpos - buf;
-
-    if (v_stack[v_sp].tag == tvFLOAT)
-     {
-      ferr = errno;
-      if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\')))
-       {
-        pos = fpos - buf + 1;
-        error ("bad numeric constant");
-        return toERROR;
-       }
-      if (ierr && ferr)
-       {
-        error ("bad numeric constant");
-        return toERROR;
-       }
-      if (v_sp == max_stack_size)
-       {
-        error ("stack overflow");
-        return toERROR;
-       }
-      if (!ierr && ipos >= fpos && 
-          (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
-       {
-        if (scfg & FFLOAT) v_stack[v_sp].tag = tvFLOAT;
-        else v_stack[v_sp].tag = tvINT;
-        v_stack[v_sp].ival = ival;
-        v_stack[v_sp].fval = (float__t)ival;
-        pos                = ipos - buf;
-       }
-     }
-    v_stack[v_sp].pos   = pos;
-    v_stack[v_sp++].var = nullptr;
-    return toOPERAND;
-   }
+   return dscan (operand, percent);
   default:
   def:
    pos -= 1;

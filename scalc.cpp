@@ -2304,7 +2304,7 @@ t_operator calculator::sscan (symbol *sym)
 //[(a11,a12,...);(a21,a22,...);...]
 t_operator calculator::sqbraces(void)
 {
-
+ return toERROR; // not implemented yet
 }
 
 t_operator calculator::braces (void)

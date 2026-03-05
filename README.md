@@ -2,7 +2,7 @@
 
 [Русская версия / Russian version](Readme_ru.md)
 
-A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, user-defined functions, and loading custom constants from a file.
+A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder VCL (BCB6) [fcalc](https://github.com/dimorlus/fcalc), which, in turn, is based on DOS programs and [Ccalc](http://www.garret.ru/ccalc.zip) sources that have been heavily reworked since then.
 
@@ -42,7 +42,9 @@ Command-line calculator for scripts, automation, and terminal use.
 * **Customizable Options**: Case sensitivity, forced float mode, ESC minimization, opacity control
 * **Implicit Multiplication**: Optionally omit multiplication operator in common cases
 * **User-Defined Functions**: Define and nest custom functions (up to 10 levels deep)
-* **Custom Constants File**: Load user-defined constants and functions from `consts.txt`
+* **Custom Constants File**: Load user-defined constants and functions from `consts.txt` and `user.txt`
+* **Matrix Support**: Full matrix arithmetic up to 7×7, including inverse, determinant, transpose
+* **Numerical Methods**: Equation solving (`solve`), integration (`integr`), differentiation (`diff`), summation (`sum`)
 
 ### CLI Version (ccalc)
 
@@ -88,6 +90,8 @@ ccalc "help(7)"                 # Options
 * Modulo (%), Power (^)
 * Parentheses for grouping
 
+> **Note**: Unary minus has lower priority than power: `-1^2 = -(1^2) = -1`, not `(-1)^2 = 1`. Use parentheses when needed: `(-1)^2 = 1`.
+
 ### Mathematical Functions
 
 * **Trigonometric**: sin, cos, tan, asin, acos, atan
@@ -110,11 +114,42 @@ ccalc "help(7)"                 # Options
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
   polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
   ```
-  This function is defined in `consts.txt` as a user-defined function: `{polar(m, a) m * exp(j * a)}`
+  This function is built-in (previously defined in `consts.txt`).
+
+* **solve(expr, var:=estimate)**: Find root of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
+  ```
+  solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
+  solve(x*(2x+2)-2, x:=-1)  →  -1.61803398875005
+  ```
+  Can be used as an operand in complex expressions: `sqrt(solve(...))`.
+
+* **calc(expr, var:=val)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
+  ```
+  calc(x*(2x+2)-2, x:=-1)  →  -2
+  ```
+
+* **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
+  ```
+  integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
+  integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
+  ```
+  Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
+
+* **diff(expr, point, var)**: Numerical differentiation using central difference method:
+  ```
+  diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
+  ```
+
+* **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
+  ```
+  sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
+  sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
+  ```
 
 ### **Complex Number Support**
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
+* Functions like `sqrt`, `log`, `ln`, `asin`, `acos`, `pow` and operator `^` automatically switch to the complex version when the real result is undefined — for example `sqrt(-1)` returns `|1|(90`0'0") 0+1i` instead of NaN.
 * Complex numbers can be entered in the form `a+bi` or `a+ib` (e.g., `1+2i`, `1+i2`, `3-4i`).
 * Functions like `sin`, `cos`, `exp`, `abs`, etc., work with both real and complex arguments.
 * The result is displayed in the form `a+bi` if the imaginary part is nonzero.
@@ -152,6 +187,82 @@ Use the `;;` operator for inline comments:
 
 ```
 2+2 ;; This is a comment
+```
+
+### Matrix Support
+
+Matrices up to 7×7 are supported. Matrix syntax:
+
+```
+[(a11, a12, ...); (a21, a22, ...); ...]
+```
+
+Each row is enclosed in `()`, rows are separated by `;`, the whole matrix is enclosed in `[]`. Elements are plain numbers (SI suffixes supported, no expressions):
+
+```
+[(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)]
+```
+
+When the result is a matrix, it is displayed in engineering format, one row per line:
+
+```
+[(     1,      2,      3);
+ (     4,      5,      6);
+ (     7,      8,      9)]
+```
+
+Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise.
+
+#### Matrix Operations
+
+**Binary operators** (where `M` = matrix, `s` = scalar):
+
+| Expression | Result | Notes |
+|-----------|--------|-------|
+| `M + M` | matrix | element-wise, dimensions must match |
+| `M - M` | matrix | element-wise |
+| `M * M` | matrix | true matrix multiplication |
+| `M + s`, `s + M` | matrix | scalar added to each element |
+| `M - s`, `s - M` | matrix | |
+| `M * s`, `s * M` | matrix | scalar multiplication |
+| `M / s` | matrix | divide each element by scalar |
+| `s / M` | matrix | divide scalar by each element |
+| `M ^ n` | matrix | integer power n≥0, square matrix only |
+| `M == M`, `M != M` | 0 or 1 | all elements equal? |
+| `M // s`, `M // M` | matrix | parallel resistors, element-wise |
+
+**Unary operators:**
+
+| Expression | Result | Notes |
+|-----------|--------|-------|
+| `-M` | matrix | negate all elements |
+| `~M` | matrix | transpose (rows ↔ columns) |
+| `!M` | matrix | matrix inverse (square matrix only) |
+
+#### Matrix Functions
+
+| Function | Returns | Notes |
+|---------|---------|-------|
+| `tr(M)` | scalar | trace — sum of diagonal elements |
+| `det(M)` | scalar | determinant, square matrix only |
+| `norm(M)` | scalar | Frobenius norm √(Σ aᵢⱼ²) |
+| `abs(M)` | matrix | element-wise absolute value |
+
+#### Matrix Examples
+
+```
+A := [(1,2,3);(4,5,6);(7,8,9)]
+D := [(1,2);(3,4)]
+
+A + 2            →  [(3,4,5);(6,7,8);(9,10,11)]
+A * 2            →  [(2,4,6);(8,10,12);(14,16,18)]
+~A               →  [(1,4,7);(2,5,8);(3,6,9)]     ;; transpose
+D^2              →  [(7,10);(15,22)]
+!D               →  [(-2,1);(1.5,-0.5)]           ;; inverse
+D * !D           →  [(1,0);(0,1)]                 ;; identity
+tr(A)            →  15
+det(D)           →  -2
+norm(D)          →  5.477225575051661
 ```
 
 ### Constants
@@ -212,9 +323,14 @@ Use the `;;` operator for inline comments:
 * **daylight**: Daylight saving time flag
 * **tz**: Current timezone with DST
 
-#### User Constants File (consts.txt)
+#### User Constants Files
 
-Place a `consts.txt` file in the same directory as the calculator executable to automatically load custom constants, variables, and user-defined functions at startup. The file supports all the same syntax as the calculator's expression input, including `const(...)`, `var(...)`, and function definitions `{name(args) expression}`. All predefined constants are available inside user-defined functions loaded from this file.
+Place these files in the same directory as the calculator executable to automatically load custom constants, variables, and user-defined functions at startup:
+
+* **`consts.txt`** — loaded at startup, **overwritten** when a new version is installed. Use for built-in and shared definitions.
+* **`user.txt`** — loaded at startup, **never overwritten** by installer. Use for personal constants and functions that should survive updates.
+
+Both files support the same syntax: `const(...)`, `var(...)`, and function definitions `{name(args) expression}`. All predefined constants are available inside user-defined functions loaded from these files.
 
 ## Output Formats
 
@@ -326,6 +442,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * **Ctrl+V**: Paste from clipboard to expression
 * **F1**: Show help contents
 * **Esc**: Close help window / minimize main window (if ESC minimized option is enabled)
+* **Right-click on output field**: Context menu with Copy and Format submenu — allows quick format changes even when the main menu is hidden (`menu(0)` mode)
 
 ## Menu Options
 
@@ -416,7 +533,8 @@ APICalc/
 ├── sfunc.cpp/h          # Math functions (shared)
 ├── WinApiCalc.cpp/h     # GUI application
 ├── WinApiCalc.rc        # GUI resources
-├── consts.txt           # User-defined constants and functions (loaded at startup)
+├── consts.txt           # Built-in user constants and functions (overwritten on update)
+├── user.txt             # Personal user constants and functions (never overwritten)
 ├── ccalc/               # CLI version
 │   ├── ccalc.cpp/h      # CLI main
 │   ├── help.cpp         # Help system

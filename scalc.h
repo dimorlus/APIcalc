@@ -220,14 +220,24 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsPFUNCn,   // int printf(char *format, ...)
  tsSFUNCF2,  // float const(char *name, float value)
  tsSIFUNC1,  // int f(char *s)
+ tsFFUNCM,   // float f(matrix M)
+ tsMFUNCM,   // matrix f(matrix M)
  tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
  tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
  tsUFUNCT,   // User-defined function
  tsSOLVE,    // Solve operator for solving equations
  tsCALC,     // Calculate operator for evaluating expressions
  tsINTEGR,   // Integration operator for numerical integration
+ tsSUM,      // Summation operator for numerical summation
  tsDIFF,     // Differentiation operator for numerical differentiation
  tsNUM
+};
+
+enum t_mresult
+{
+ mrDONE,    // represents a successful result
+ mrSKIP,    // represents a result that indicates to skip the current operation or iteration
+ mrERROR,   // represents an error result
 };
 
 #define MASK_ALL 0xffff
@@ -330,6 +340,7 @@ class value // value represents a value in the calculator, which can be an integ
  inline float__t get_dbl () { return tag == tvINT ? (double)ival : (double)fval; }
  inline int_t get_int () { return tag == tvINT ? ival : (int_t)fval; }
  inline char *get_str () { return tag == tvSTR ? sval : nullptr; }
+ inline bool is_scalar () { return tag == tvINT || tag == tvFLOAT; }
 };
 
 class symbol // symbol represents a symbol in the calculator, which can be a variable, constant, or
@@ -396,10 +407,15 @@ class calculator // calculator represents the main class for the expression calc
  char sres[STRBUF]; // String result buffer
  char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
 
+ uint8_t res_cols;
+ uint8_t res_rows;
+ float__t *res_mval; // Matrix result (pointer to array of floats)
+
  int64_t result_ival; // Integer result
  float__t result_fval; // Float result
  float__t result_imval; // Imaginary part of complex result
  t_value result_tag; // Type of result
+
 
  
  char *registerString (char *str); // Register a string in the string list and return the registered string pointer
@@ -469,9 +485,27 @@ class calculator // calculator represents the main class for the expression calc
                      int &callCount, 
                      int maxCalls);
 
- float__t Integr (const char *expr); // Integrate an equation given by the expression and return the
-                                    // result as a floating-point value
+ float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
+                  t_symbol tag);    // result as a floating-point value
+                                    
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
+
+
+ float__t *mxAlloc (int rows, int cols);
+ bool mxElemOp (value &res, value &left, value &right, int op);
+ bool mxScalarOp (value &res, value &mx, float__t scalar, int op, bool scalar_left);
+ bool mxMatMul (value &res, value &left, value &right);
+
+ bool mxGaussJordan (float__t *aug, int n, float__t &det);
+ float__t *mxMakeAug (value &M);
+ bool mxInv (value &res, value &M);
+ bool mxAbs (value &res, value &M);
+ bool mxNeg (value &res, value &M);
+ bool mxTranspose (value &res, value &M);
+
+ t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
+ t_mresult matrixuno (value &res, value &left, t_operator cop);
+
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,
@@ -486,6 +520,10 @@ class calculator // calculator represents the main class for the expression calc
 
  float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
  float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
+
+ float__t mxTrace (value &M);
+ float__t mxDet (value &M);
+ float__t mxNorm (value &M);
 
  void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator

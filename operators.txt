@@ -1,0 +1,43 @@
+      case toADD:    // +
+      case toSETADD: // +=
+      case toSUB:    // -
+      case toSETSUB: // -=
+      case toMUL:    // *
+      case toSETMUL: // *=
+      case toDIV:    // /
+      case toSETDIV: // /=
+      case toPAR: // // parallel resistors
+      case toPERCENT: // %
+      case toMOD:    // %
+      case toSETMOD: // %=
+      case toPOW:    // ** ^
+      case toSETPOW: // **= ^=
+      case toOR:    // |
+      case toSETOR: // |=
+      case toXOR:    // ^
+      case toSETXOR: // ^=
+      case toASL:    // <<
+      case toSETASL: // <<=
+      case toASR:    // >>
+      case toSETASR: // >>=
+      case toLSR:    // >>> (logical shift right)
+      case toSETLSR: // >>>=
+      case toEQ: // ==
+      case toNE: // !=, <>
+      case toGT: // >
+      case toGE: // >=
+      case toLT: // <
+      case toLE: // <=
+      case toPREINC: //++v
+      case toPREDEC: // --v
+      case toPOSTINC: // v++
+      case toPOSTDEC: // v--
+      case toFACT: // n!
+      case toSET: // =, :=
+      case toNOT: // !
+      case toMINUS: // -v
+      case toPLUS: //+v
+      case toCOM: // ~
+
+
+         float__t elem = res_mval[i * res_cols + j];

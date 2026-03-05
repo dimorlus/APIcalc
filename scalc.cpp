@@ -101,11 +101,32 @@ float__t Var (void *clc, char *name, float__t x)
  return ((calculator *)clc)->AddVar (name, x);
 }
 
+float__t Det (void *clc, value &M)
+{
+ return ((calculator *)clc)->mxDet (M);
+}
+
+float__t Trace (void *clc, value &M)
+{
+ return ((calculator *)clc)->mxTrace (M);
+}
+
+float__t Norm (void *clc, value &M)
+{
+ return ((calculator *)clc)->mxNorm (M);
+}
+
+
 calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 {
  this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
  v_sp         = 0;    // Clear the value stack pointer
  o_sp         = 0;    // Clear the operator stack pointer
+
+ res_cols      = 0;    // Clear the result columns count
+ res_rows      = 0;    // Clear the result rows count
+ res_mval      = nullptr; // Clear the matrix result pointer
+
  result_fval  = qnan; // Clear the floating-point result
  result_imval = 0.0;  // Clear the imaginary result
  result_ival  = 0;    // Clear the integer result
@@ -176,8 +197,17 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  add (tsCALC, "calc", nullptr);
  add (tsINTEGR, "integr", nullptr);
  add (tsINTEGR, "integral", nullptr);
+ add (tsSUM, "sum", nullptr);
+
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
+
+ add (tsFFUNCM, "det", (void *)Det);
+ add (tsFFUNCM, "trace", (void *)Trace);
+ add (tsFFUNCM, "tr", (void *)Trace);
+ add (tsFFUNCM, "norm", (void *)Norm);
+
+
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -471,6 +501,7 @@ calculator::~calculator (void)
 {
  clearAllStrings ();
  destroyvars ();
+ if (res_mval) free (res_mval);
 }
 //---------------------------------------------------------------------------
 void calculator::destroyvars (void) // Free all symbols in the hash table
@@ -493,11 +524,11 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
         }
 #endif //_STR_VAR_FREE_
 
-       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
-        {
-         if (sp->val.mval) free (sp->val.mval);
-         sp->val.mval = nullptr;
-        }
+       //if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+       // {
+       //  if (sp->val.mval) free (sp->val.mval);
+       //  sp->val.mval = nullptr;
+       // }
 
        if (sp->tag == tsUFUNCT) free (sp->func);
        if (sp->name) free (sp->name);
@@ -646,6 +677,43 @@ int calculator::print (char *str, int Options, int binwide, int *size)
   }
  else
   {
+   if (result_tag == tvMATRIX)
+    {
+//     char mstr[80];
+//     matrix_to_str (mstr, result_mval);
+//     bsize += sprintf (str + bsize, "%65.64s M\r\n", mstr);
+//     n++;
+     char mstr[80];
+     char *cp = mstr;
+
+     for (int i = 0; i < res_rows; i++)
+      {
+       char *cp = mstr;
+       //cp += sprintf (cp, "(");
+       if (i > 0) cp += sprintf (cp, " (");
+       else  cp += sprintf (cp, "[(");
+       for (int j = 0; j < res_cols; j++)
+        {
+         char elemstr[20];
+         float__t elem = res_mval[i * res_cols + j];
+         d2scistr (elemstr, elem);
+         if (j < res_cols - 1)
+          cp += sprintf (cp, "%6.6s, ", elemstr);
+         else
+          {
+           if (i == res_rows - 1)
+            cp += sprintf (cp, "%6.6s)]", elemstr);
+           else
+            cp += sprintf (cp, "%6.6s); ", elemstr);
+          }
+        }  
+       if (i == res_rows - 1) cp += sprintf (cp, " ");
+       bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
+       n++;
+      }
+     if (size) *size = bsize;
+     return n;
+    }
    // (WO) Forced float
    if (Options & FFLOAT)
     {
@@ -2020,7 +2088,7 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
 
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // expr -> sin(x)/x, x
-float__t calculator::Integr (const char *expr)
+float__t calculator::Integr (const char *expr, t_symbol tag)
 {
  if (expr && *expr)
   {
@@ -2081,38 +2149,53 @@ float__t calculator::Integr (const char *expr)
      return qnan;
     }
 
-   {
-    pCalculator->addfvar (svar, vfrom);
-    float__t fvx = pCalculator->evaluate (sexpr); // evaluate the function for 
-                                //the syntax check before starting the integration
-                                         
-    if (isnan (fvx) || pCalculator->err[0])
-     {
-      errorf (pos, "%s", pCalculator->err);
-      result_fval = qnan;
-      delete pCalculator;
-      return qnan;
-     }
-   }
-
-   GKResult gkresult = gkAdaptive (pCalculator,
-                                   sexpr,        // expression 
-                                   svar,         // variable name ("x")
-                                   vfrom,        // lower limit
-                                   vto,          // upper limit
-                                   1e-10L,       // tolerance
-                                   0,            // initial depth
-                                   20,           // maximum depth
-                                   callCount,    // call count
-                                   1000);        // maximum calls
-   if (!gkresult.ok)
+   if (tag == tsINTEGR)
     {
-     errorf (pos, "Integration failed");
-     result_fval = qnan;
-     delete pCalculator;
-     return qnan;
+     {
+      pCalculator->addfvar (svar, vfrom);
+      float__t fvx
+          = pCalculator->evaluate (sexpr); // evaluate the function for
+                                           // the syntax check before starting the integration
+
+      if (isnan (fvx) || pCalculator->err[0])
+       {
+        errorf (pos, "%s", pCalculator->err);
+        result_fval = qnan;
+        delete pCalculator;
+        return qnan;
+       }
+     }
+
+     GKResult gkresult = gkAdaptive (pCalculator,
+                                     sexpr,     // expression
+                                     svar,      // variable name ("x")
+                                     vfrom,     // lower limit
+                                     vto,       // upper limit
+                                     1e-10L,    // tolerance
+                                     0,         // initial depth
+                                     20,        // maximum depth
+                                     callCount, // call count
+                                     1000);     // maximum calls
+     if (!gkresult.ok)
+      {
+       errorf (pos, "Integration failed");
+       result_fval = qnan;
+       delete pCalculator;
+       return qnan;
+      }
+     result = gkresult.value;
     }
-   result = gkresult.value;
+   else if (tag == tsSUM)
+    {
+     // summation not implemented yet
+     errorf (pos, "Summation not implemented yet");
+     result = qnan;
+    }
+   else
+    {
+     errorf (pos, "Unknown tag");
+     result = qnan;
+    }
    delete pCalculator;
    return result;
   }
@@ -2259,7 +2342,7 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
    else 
-   if (sym->tag == tsINTEGR) // integr (x(2x+2)-2,0,10,x)
+   if (sym->tag == tsINTEGR || sym->tag == tsSUM) // integr (x(2x+2)-2,0,10,x)
     {
      if (parenthesis_count == 0 && comma_count == 3)
       {
@@ -3251,6 +3334,8 @@ t_operator calculator::scan (bool operand, bool percent)
      v_stack[v_sp]       = sym->val;
      v_stack[v_sp].pos   = pos;
      v_stack[v_sp++].var = sym;
+     if (sym->tag == tsSUM) return toSOLVE;
+     else 
      if (sym->tag == tsINTEGR) return toSOLVE;
      else
      if (sym->tag == tsDIFF) return toSOLVE;
@@ -3349,6 +3434,887 @@ void calculator::clear_v_stack ()
  v_sp = 0;
 }
 
+#ifdef _COMMENT_
+// Perform matrix operations for binary operators like +, -, *, /, etc. on matrix operands  
+t_mresult calculator::matrixbin (value &res, value &left, value &right, t_operator cop)
+{
+ if (left.tag != tvMATRIX && right.tag != tvMATRIX) return mrSKIP; // not a matrix operation
+ switch (cop)
+  {
+  case toADD:     // +
+  case toSETADD:  // +=
+   {
+    if (left.is_scalar () && right.tag == tvMATRIX) 
+     {
+      // scalar addition to matrix
+      int rows       = right.mrows;
+      int cols       = right.mcols;
+      float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+      if (!mval)
+       {
+        error ("Memory allocation failed for matrix");
+        return mrERROR;
+       }
+      registerString ((char *)mval); // register the allocated matrix pointer 
+                                     //as a string to be freed later
+      for (int i = 0; i < rows * cols; i++) mval[i] = left.fval + right.mval[i];
+      res.tag   = tvMATRIX;
+      res.mcols = cols;
+      res.mrows = rows;
+      res.mval  = mval;
+      return mrDONE;
+     }
+    else if (right.is_scalar() && left.tag == tvMATRIX)
+     {
+      // matrix addition to scalar 
+      int rows       = left.mrows;
+      int cols       = left.mcols;
+      float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+      if (!mval)
+       {
+        error ("Memory allocation failed for matrix");
+        return mrERROR;
+       }
+      registerString ((char *)mval); // register the allocated matrix pointer 
+                                     //as a string to be freed later
+      for (int i = 0; i < rows * cols; i++) mval[i] = right.fval + left.mval[i];
+      res.tag   = tvMATRIX;
+      res.mcols = cols;
+      res.mrows = rows;
+      res.mval  = mval;
+      return mrDONE;
+     }
+    else
+     {
+      // matrix addition
+     }
+   };
+   break;
+  case toSUB:     // -
+  case toSETSUB:  // -=
+  case toMUL:     // *
+  case toSETMUL:  // *=
+  case toDIV:     // /
+  case toSETDIV:  // /=
+  case toPAR:     // // parallel resistors
+  case toPERCENT: // %
+  case toMOD:     // %
+  case toSETMOD:  // %=
+  case toPOW:     // ** ^
+  case toSETPOW:  // **= ^=
+  case toOR:      // |
+  case toSETOR:   // |=
+  case toXOR:     // ^
+  case toSETXOR:  // ^=
+  case toASL:     // <<
+  case toSETASL:  // <<=
+  case toASR:     // >>
+  case toSETASR:  // >>=
+  case toLSR:     // >>> (logical shift right)
+  case toSETLSR:  // >>>=
+  case toEQ:      // ==
+  case toNE:      // !=, <>
+  case toGT:      // >
+  case toGE:      // >=
+  case toLT:      // <
+  case toLE:      // <=
+  case toPREINC:  //++v
+  case toPREDEC:  // --v
+  case toPOSTINC: // v++
+  case toPOSTDEC: // v--
+  case toFACT:    // n!
+  case toSET:     // =, :=
+  case toNOT:     // !
+  case toMINUS:   // -v
+  case toPLUS:    //+v
+  case toCOM:     // ~
+   break;
+  };
+ return mrSKIP; // not implemented yet
+}
+
+t_mresult calculator::matrixuno (value &res, value &left, t_operator cop)
+{
+ switch (cop)
+  {
+  case toADD:     // +
+  case toSETADD:  // +=
+  case toSUB:     // -
+  case toSETSUB:  // -=
+  case toMUL:     // *
+  case toSETMUL:  // *=
+  case toDIV:     // /
+  case toSETDIV:  // /=
+  case toPAR:     // // parallel resistors
+  case toPERCENT: // %
+  case toMOD:     // %
+  case toSETMOD:  // %=
+  case toPOW:     // ** ^
+  case toSETPOW:  // **= ^=
+  case toOR:      // |
+  case toSETOR:   // |=
+  case toXOR:     // ^
+  case toSETXOR:  // ^=
+  case toASL:     // <<
+  case toSETASL:  // <<=
+  case toASR:     // >>
+  case toSETASR:  // >>=
+  case toLSR:     // >>> (logical shift right)
+  case toSETLSR:  // >>>=
+  case toEQ:      // ==
+  case toNE:      // !=, <>
+  case toGT:      // >
+  case toGE:      // >=
+  case toLT:      // <
+  case toLE:      // <=
+  case toPREINC:  //++v
+  case toPREDEC:  // --v
+  case toPOSTINC: // v++
+  case toPOSTDEC: // v--
+  case toFACT:    // n!
+  case toSET:     // =, :=
+  case toNOT:     // !
+  case toMINUS:   // -v
+  case toPLUS:    //+v
+  case toCOM:     // ~
+   break;
+  };
+ return mrSKIP; // not implemented yet
+}
+#endif /*_COMMENT_*/
+
+// matrixbin: binary operations, matrixuno: unary operations
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+// Allocate a new matrix rows*cols, register for auto-free
+// Returns NULL on failure (error already set)
+float__t *calculator::mxAlloc (int rows, int cols)
+{
+ float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+ if (!mval)
+  {
+   error ("Memory allocation failed for matrix");
+   return NULL;
+  }
+ registerString ((char *)mval);
+ return mval;
+}
+
+// Fill res from left op right, element-wise, both must be same-size matrices
+// op: 0=add, 1=sub, 2=mul, 3=div
+bool calculator::mxElemOp (value &res, value &left, value &right, int op)
+{
+ if (left.mrows != right.mrows || left.mcols != right.mcols)
+  {
+   error ("Matrix dimensions must match");
+   return false;
+  }
+ int rows       = left.mrows;
+ int cols       = left.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ switch (op)
+  {
+  case 0:
+   for (int i = 0; i < n; i++) mval[i] = left.mval[i] + right.mval[i];
+   break;
+  case 1:
+   for (int i = 0; i < n; i++) mval[i] = left.mval[i] - right.mval[i];
+   break;
+  case 2:
+   for (int i = 0; i < n; i++) mval[i] = left.mval[i] * right.mval[i];
+   break;
+  case 3:
+   for (int i = 0; i < n; i++) mval[i] = left.mval[i] / right.mval[i];
+   break;
+  }
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// Fill res from matrix op scalar or scalar op matrix
+// side: 0 = matrix op scalar, 1 = scalar op matrix
+bool calculator::mxScalarOp (value &res, value &mx, float__t scalar, int op, bool scalar_left)
+{
+ int rows       = mx.mrows;
+ int cols       = mx.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ switch (op)
+  {
+  case 0: // add: scalar+M == M+scalar
+   for (int i = 0; i < n; i++) mval[i] = mx.mval[i] + scalar;
+   break;
+  case 1: // sub: M-scalar vs scalar-M
+   if (scalar_left)
+    for (int i = 0; i < n; i++) mval[i] = scalar - mx.mval[i];
+   else
+    for (int i = 0; i < n; i++) mval[i] = mx.mval[i] - scalar;
+   break;
+  case 2: // mul: scalar*M == M*scalar
+   for (int i = 0; i < n; i++) mval[i] = mx.mval[i] * scalar;
+   break;
+  case 3: // div: M/scalar vs scalar/M (element-wise)
+   if (scalar_left)
+    for (int i = 0; i < n; i++) mval[i] = scalar / mx.mval[i];
+   else
+    for (int i = 0; i < n; i++) mval[i] = mx.mval[i] / scalar;
+   break;
+  }
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// True matrix multiplication: res = left * right
+bool calculator::mxMatMul (value &res, value &left, value &right)
+{
+ if (left.mcols != right.mrows)
+  {
+   error ("Matrix dimensions incompatible for multiplication");
+   return false;
+  }
+ int rows       = left.mrows;
+ int cols       = right.mcols;
+ int inner      = left.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ for (int r = 0; r < rows; r++)
+  for (int c = 0; c < cols; c++)
+   {
+    float__t sum = 0.0L;
+    for (int k = 0; k < inner; k++) sum += left.mval[r * inner + k] * right.mval[k * cols + c];
+    mval[r * cols + c] = sum;
+   }
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+// Matrix scalar and matrix->matrix functions
+// All use class fields: error(), mxAlloc(), registerString()
+// Scalar results return float__t (qnan on error)
+// Matrix results: bool fn(value &res, value &M) — false on error
+
+// ---------------------------------------------------------------------------
+// INTERNAL: Gauss-Jordan elimination on a square matrix
+// Computes inverse and determinant simultaneously.
+// aug[n][2n] = [M | I], modified in place.
+// Returns true on success, false if singular.
+// det is accumulated during elimination.
+// ---------------------------------------------------------------------------
+bool calculator::mxGaussJordan (float__t *aug, int n, float__t &det)
+{
+ det = 1.0L;
+ for (int col = 0; col < n; col++)
+  {
+   // find pivot row (partial pivoting for numerical stability)
+   int pivot_row = -1;
+   float__t best = 0.0L;
+   for (int row = col; row < n; row++)
+    {
+     float__t v = fabsl (aug[row * 2 * n + col]);
+     if (v > best)
+      {
+       best      = v;
+       pivot_row = row;
+      }
+    }
+   if (pivot_row < 0 || best < 1e-15L)
+    {
+     det = 0.0L;
+     error ("Matrix is singular");
+     return false;
+    }
+   // swap rows
+   if (pivot_row != col)
+    {
+     for (int k = 0; k < 2 * n; k++)
+      {
+       float__t tmp               = aug[col * 2 * n + k];
+       aug[col * 2 * n + k]       = aug[pivot_row * 2 * n + k];
+       aug[pivot_row * 2 * n + k] = tmp;
+      }
+     det = -det; // row swap flips sign of determinant
+    }
+   // accumulate determinant
+   float__t pivot = aug[col * 2 * n + col];
+   det *= pivot;
+   // scale pivot row
+   for (int k = 0; k < 2 * n; k++) aug[col * 2 * n + k] /= pivot;
+   // eliminate column in all other rows
+   for (int row = 0; row < n; row++)
+    {
+     if (row == col) continue;
+     float__t factor = aug[row * 2 * n + col];
+     if (factor == 0.0L) continue;
+     for (int k = 0; k < 2 * n; k++) aug[row * 2 * n + k] -= factor * aug[col * 2 * n + k];
+    }
+  }
+ return true;
+}
+
+// ---------------------------------------------------------------------------
+// INTERNAL: build augmented matrix [M | I] for Gauss-Jordan
+// Returns allocated float__t[n * 2n] or NULL on error
+// ---------------------------------------------------------------------------
+float__t *calculator::mxMakeAug (value &M)
+{
+ int n         = M.mrows; // must be square, caller checks
+ float__t *aug = (float__t *)malloc (n * 2 * n * sizeof (float__t));
+ if (!aug)
+  {
+   error ("Memory allocation failed");
+   return NULL;
+  }
+ for (int r = 0; r < n; r++)
+  {
+   for (int c = 0; c < n; c++) aug[r * 2 * n + c] = M.mval[r * n + c];          // left half: M
+   for (int c = 0; c < n; c++) aug[r * 2 * n + n + c] = (r == c) ? 1.0L : 0.0L; // right half: I
+  }
+ return aug;
+}
+
+// ---------------------------------------------------------------------------
+// SCALAR FUNCTIONS
+// ---------------------------------------------------------------------------
+
+// tr(M) — trace: sum of diagonal elements, defined for any matrix (min dimension)
+float__t calculator::mxTrace (value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("tr: argument must be a matrix");
+   return qnan;
+  }
+ int n        = (M.mrows < M.mcols) ? M.mrows : M.mcols;
+ float__t sum = 0.0L;
+ for (int i = 0; i < n; i++) sum += M.mval[i * M.mcols + i];
+ return sum;
+}
+
+// det(M) — determinant, square matrix only
+float__t calculator::mxDet (value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("det: argument must be a matrix");
+   return qnan;
+  }
+ if (M.mrows != M.mcols)
+  {
+   error ("det: matrix must be square");
+   return qnan;
+  }
+ int n = M.mrows;
+ // special cases for speed
+ if (n == 1) return M.mval[0];
+ if (n == 2) return M.mval[0] * M.mval[3] - M.mval[1] * M.mval[2];
+ float__t *aug = mxMakeAug (M);
+ if (!aug) return qnan;
+ float__t det = 1.0L;
+ bool ok      = mxGaussJordan (aug, n, det);
+ free (aug);
+ return ok ? det : qnan;
+}
+
+// norm(M) — Frobenius norm: sqrt(sum of squares of all elements)
+float__t calculator::mxNorm (value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("norm: argument must be a matrix");
+   return qnan;
+  }
+ float__t sum = 0.0L;
+ int n        = M.mrows * M.mcols;
+ for (int i = 0; i < n; i++) sum += M.mval[i] * M.mval[i];
+ return sqrtl (sum);
+}
+
+// ---------------------------------------------------------------------------
+// MATRIX -> MATRIX FUNCTIONS
+// ---------------------------------------------------------------------------
+
+// mxInv: inverse matrix via Gauss-Jordan, result stored in res
+// Used for both inv(M) function and !M operator
+bool calculator::mxInv (value &res, value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("inv: argument must be a matrix");
+   return false;
+  }
+ if (M.mrows != M.mcols)
+  {
+   error ("inv: matrix must be square");
+   return false;
+  }
+ int n = M.mrows;
+ // special case 1x1
+ if (n == 1)
+  {
+   if (fabsl (M.mval[0]) < 1e-15L)
+    {
+     error ("inv: matrix is singular");
+     return false;
+    }
+   float__t *mval = mxAlloc (1, 1);
+   if (!mval) return false;
+   mval[0]   = 1.0L / M.mval[0];
+   res.tag   = tvMATRIX;
+   res.mrows = 1;
+   res.mcols = 1;
+   res.mval  = mval;
+   return true;
+  }
+ float__t *aug = mxMakeAug (M);
+ if (!aug) return false;
+ float__t det = 1.0L;
+ if (!mxGaussJordan (aug, n, det))
+  {
+   free (aug);
+   return false; // error already set by mxGaussJordan
+  }
+ // extract right half of aug -> result
+ float__t *mval = mxAlloc (n, n);
+ if (!mval)
+  {
+   free (aug);
+   return false;
+  }
+ for (int r = 0; r < n; r++)
+  for (int c = 0; c < n; c++) mval[r * n + c] = aug[r * 2 * n + n + c];
+ free (aug);
+ res.tag   = tvMATRIX;
+ res.mrows = n;
+ res.mcols = n;
+ res.mval  = mval;
+ return true;
+}
+
+// mxAbs: element-wise absolute value
+bool calculator::mxAbs (value &res, value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("abs: argument must be a matrix");
+   return false;
+  }
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ for (int i = 0; i < n; i++) mval[i] = fabsl (M.mval[i]);
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// mxNeg: element-wise negation (unary minus) — also in matrixuno, here for completeness
+bool calculator::mxNeg (value &res, value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("neg: argument must be a matrix");
+   return false;
+  }
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ for (int i = 0; i < n; i++) mval[i] = -M.mval[i];
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// mxTranspose: transpose — also in matrixuno via ~, here for completeness
+bool calculator::mxTranspose (value &res, value &M)
+{
+ if (M.tag != tvMATRIX)
+  {
+   error ("transpose: argument must be a matrix");
+   return false;
+  }
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (cols, rows); // note swapped dimensions
+ if (!mval) return false;
+ for (int r = 0; r < rows; r++)
+  for (int c = 0; c < cols; c++) mval[c * rows + r] = M.mval[r * cols + c];
+ res.tag   = tvMATRIX;
+ res.mrows = cols;
+ res.mcols = rows;
+ res.mval  = mval;
+ return true;
+}
+
+// ---------------------------------------------------------------------------
+// FUNCTION DISPATCH — call from your function handler
+// Scalar results: return float__t
+// Matrix results: return bool, result in res
+// ---------------------------------------------------------------------------
+//
+// In your evaluate/function handler, something like:
+//
+//  if (strcmp(fname, "tr") == 0)
+//   {
+//    result_fval = mxTrace(v_stack[v_sp-1]);
+//    v_sp--;
+//    return toOPERAND; // scalar result
+//   }
+//  else if (strcmp(fname, "det") == 0)
+//   {
+//    result_fval = mxDet(v_stack[v_sp-1]);
+//    v_sp--;
+//    return toOPERAND;
+//   }
+//  else if (strcmp(fname, "norm") == 0)
+//   {
+//    result_fval = mxNorm(v_stack[v_sp-1]);
+//    v_sp--;
+//    return toOPERAND;
+//   }
+//  else if (strcmp(fname, "inv") == 0)
+//   {
+//    value tmp = v_stack[v_sp-1];
+//    v_sp--;
+//    if (!mxInv(v_stack[v_sp], tmp)) return toERROR;
+//    v_sp++;
+//    return toOPERAND;
+//   }
+//  else if (strcmp(fname, "abs") == 0 && v_stack[v_sp-1].tag == tvMATRIX)
+//   {
+//    value tmp = v_stack[v_sp-1];
+//    v_sp--;
+//    if (!mxAbs(v_stack[v_sp], tmp)) return toERROR;
+//    v_sp++;
+//    return toOPERAND;
+//   }
+//
+// For !M operator (toNOT unary):
+//  if (v_stack[v_sp-1].tag == tvMATRIX)
+//   {
+//    value tmp = v_stack[v_sp-1];
+//    v_sp--;
+//    if (!mxInv(v_stack[v_sp], tmp)) return toERROR; // or mrERROR in matrixuno
+//    v_sp++;
+//   }
+
+// ---------------------------------------------------------------------------
+// matrixbin — binary operations
+// ---------------------------------------------------------------------------
+t_mresult calculator::matrixbin (value &res, value &left, value &right, t_operator cop)
+{
+ if (left.tag != tvMATRIX && right.tag != tvMATRIX) return mrSKIP; // not a matrix operation
+
+ bool lm = (left.tag == tvMATRIX);
+ bool rm = (right.tag == tvMATRIX);
+ bool ls = left.is_scalar ();
+ bool rs = right.is_scalar ();
+
+ switch (cop)
+  {
+  // ---- ADD ----
+  case toADD:
+  case toSETADD:
+   if (lm && rm)
+    {
+     if (!mxElemOp (res, left, right, 0)) return mrERROR;
+    }
+   else if (lm)
+    {
+     if (!mxScalarOp (res, left, right.fval, 0, false)) return mrERROR;
+    }
+   else
+    {
+     if (!mxScalarOp (res, right, left.fval, 0, true)) return mrERROR;
+    }
+   return mrDONE;
+
+  // ---- SUB ----
+  case toSUB:
+  case toSETSUB:
+   if (lm && rm)
+    {
+     if (!mxElemOp (res, left, right, 1)) return mrERROR;
+    }
+   else if (lm)
+    {
+     if (!mxScalarOp (res, left, right.fval, 1, false)) return mrERROR;
+    }
+   else
+    {
+     if (!mxScalarOp (res, right, left.fval, 1, true)) return mrERROR;
+    }
+   return mrDONE;
+
+  // ---- MUL ----
+  case toMUL:
+  case toSETMUL:
+   if (lm && rm)
+    {
+     if (!mxMatMul (res, left, right)) return mrERROR;
+    }
+   else if (lm)
+    {
+     if (!mxScalarOp (res, left, right.fval, 2, false)) return mrERROR;
+    }
+   else
+    {
+     if (!mxScalarOp (res, right, left.fval, 2, true)) return mrERROR;
+    }
+   return mrDONE;
+
+  // ---- DIV ----
+  case toDIV:
+  case toSETDIV:
+   if (lm && rm)
+    {
+     error ("Matrix/matrix division is not defined (use inv())");
+     return mrERROR;
+    }
+   else if (lm)
+    {
+     if (!mxScalarOp (res, left, right.fval, 3, false)) return mrERROR;
+    }
+   else
+    {
+     if (!mxScalarOp (res, right, left.fval, 3, true)) return mrERROR;
+    }
+   return mrDONE;
+
+  // ---- POW ----
+  case toPOW:
+  case toSETPOW:
+   // M^n — repeated multiplication, only integer n, square matrix
+   if (lm && rs)
+    {
+     if (left.mrows != left.mcols)
+      {
+       error ("Matrix power requires a square matrix");
+       return mrERROR;
+      }
+     long long n = (long long)right.fval;
+     if ((float__t)n != right.fval || n < 0)
+      {
+       error ("Matrix power requires a non-negative integer exponent");
+       return mrERROR;
+      }
+     // start with identity matrix
+     // deep copy of left before we start writing to res
+     // (res and left may alias the same v_stack entry)
+     int sz           = left.mrows;
+     int sz2          = sz * sz;
+     float__t *curbuf = (float__t *)malloc (sz2 * sizeof (float__t));
+     if (!curbuf)
+      {
+       error ("Memory allocation failed");
+       return mrERROR;
+      }
+     memcpy (curbuf, left.mval, sz2 * sizeof (float__t));
+     value cur = left;
+     cur.mval  = curbuf; // cur now has its own independent copy
+
+     // start with identity matrix
+     float__t *mval = mxAlloc (sz, sz);
+     if (!mval)
+      {
+       free (curbuf);
+       return mrERROR;
+      }
+     for (int r = 0; r < sz; r++)
+      for (int c = 0; c < sz; c++) mval[r * sz + c] = (r == c) ? 1.0L : 0.0L;
+     res.tag   = tvMATRIX;
+     res.mrows = sz;
+     res.mcols = sz;
+     res.mval  = mval;
+
+     for (long long i = 0; i < n; i++)
+      {
+       float__t *tmpbuf = (float__t *)malloc (sz2 * sizeof (float__t));
+       if (!tmpbuf)
+        {
+         free (curbuf);
+         error ("Memory allocation failed");
+         return mrERROR;
+        }
+       memcpy (tmpbuf, res.mval, sz2 * sizeof (float__t));
+       value tmp = res;
+       tmp.mval  = tmpbuf;
+       if (!mxMatMul (res, tmp, cur))
+        {
+         free (tmpbuf);
+         free (curbuf);
+         return mrERROR;
+        }
+       free (tmpbuf);
+      }
+     free (curbuf);
+     return mrDONE;
+    }
+   error ("Matrix power: left must be matrix, right must be non-negative integer scalar");
+   return mrERROR;
+
+  // ---- parallel resistors M//M or M//scalar ----
+  case toPAR:
+   if (lm && rm)
+    {
+     // element-wise: (a*b)/(a+b)
+     if (left.mrows != right.mrows || left.mcols != right.mcols)
+      {
+       error ("Matrix dimensions must match for // operator");
+       return mrERROR;
+      }
+     int rows       = left.mrows;
+     int cols       = left.mcols;
+     float__t *mval = mxAlloc (rows, cols);
+     if (!mval) return mrERROR;
+     for (int i = 0; i < rows * cols; i++)
+      mval[i] = (left.mval[i] * right.mval[i]) / (left.mval[i] + right.mval[i]);
+     res.tag   = tvMATRIX;
+     res.mrows = rows;
+     res.mcols = cols;
+     res.mval  = mval;
+     return mrDONE;
+    }
+   else if (lm && rs)
+    {
+     int rows       = left.mrows;
+     int cols       = left.mcols;
+     float__t *mval = mxAlloc (rows, cols);
+     if (!mval) return mrERROR;
+     for (int i = 0; i < rows * cols; i++)
+      mval[i] = (left.mval[i] * right.fval) / (left.mval[i] + right.fval);
+     res.tag   = tvMATRIX;
+     res.mrows = rows;
+     res.mcols = cols;
+     res.mval  = mval;
+     return mrDONE;
+    }
+   else if (ls && rm)
+    {
+     int rows       = right.mrows;
+     int cols       = right.mcols;
+     float__t *mval = mxAlloc (rows, cols);
+     if (!mval) return mrERROR;
+     for (int i = 0; i < rows * cols; i++)
+      mval[i] = (left.fval * right.mval[i]) / (left.fval + right.mval[i]);
+     res.tag   = tvMATRIX;
+     res.mrows = rows;
+     res.mcols = cols;
+     res.mval  = mval;
+     return mrDONE;
+    }
+   return mrSKIP;
+
+  // ---- comparison, bitwise, shifts — not defined for matrices ----
+  case toEQ:
+  case toNE:
+  case toGT:
+  case toGE:
+  case toLT:
+  case toLE:
+  case toAND:
+  case toOR:
+  case toXOR:
+  case toASL:
+  case toASR:
+  case toLSR:
+  case toSETOR:
+  case toSETXOR:
+  case toSETASL:
+  case toSETASR:
+  case toSETLSR:
+   error ("Operation not defined for matrices");
+   return mrERROR;
+
+  default:
+   break;
+  }
+ return mrSKIP;
+}
+
+// ---------------------------------------------------------------------------
+// matrixuno — unary operations
+// ---------------------------------------------------------------------------
+t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
+{
+ if (operand.tag != tvMATRIX) return mrSKIP;
+
+ int rows = operand.mrows;
+ int cols = operand.mcols;
+ int n    = rows * cols;
+
+ switch (cop)
+  {
+  // ---- unary minus ----
+  case toMINUS:
+   {
+    float__t *mval = mxAlloc (rows, cols);
+    if (!mval) return mrERROR;
+    for (int i = 0; i < n; i++) mval[i] = -operand.mval[i];
+    res.tag   = tvMATRIX;
+    res.mrows = rows;
+    res.mcols = cols;
+    res.mval  = mval;
+    return mrDONE;
+   }
+
+  // ---- unary plus — no-op ----
+  case toPLUS:
+   res = operand;
+   return mrDONE;
+
+  // ---- ~ transpose (for real matrix = conjugate transpose) ----
+  case toCOM:
+   {
+    float__t *mval = mxAlloc (cols, rows); // note: transposed dimensions
+    if (!mval) return mrERROR;
+    for (int r = 0; r < rows; r++)
+     for (int c = 0; c < cols; c++) mval[c * rows + r] = operand.mval[r * cols + c];
+    res.tag   = tvMATRIX;
+    res.mrows = cols; // transposed
+    res.mcols = rows;
+    res.mval  = mval;
+    return mrDONE;
+   }
+
+  // ---- ! logical not — not defined ----
+  case toNOT:
+   {
+    if (!mxInv (res, operand)) return mrERROR; 
+    res.tag   = tvMATRIX;
+    return mrDONE;
+   }
+
+  default:
+   error ("not defined for matrices");
+   return mrERROR;
+   break;
+  }
+ return mrSKIP;
+}
+
+
 // Evaluate the given expression and return the result as a floating-point value. The expression is
 // parsed and evaluated according to the rules defined in the calculator class,
 // using operator precedence
@@ -3377,6 +4343,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  v_sp   = 0;// Clear the value stack pointer
  o_sp   = 0; // Clear the operator stack pointer
  pos    = 0; // Reset the input buffer position
+ t_mresult mr = mrERROR; // Initialize matrix result to error
  err[0] = '\0'; // Clear the error buffer
  result_fval  = qnan; // Clear the floating-point result
  result_imval = 0.0; // Clear the imaginary result
@@ -3389,6 +4356,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
   }
 
  clear_v_stack (); // Clear the value stack before evaluation
+ res_cols = 0;       // Clear the result columns count
+ res_rows = 0;       // Clear the result rows count
+ if (res_mval) free (res_mval); // Free any previously allocated matrix result
+ res_mval = nullptr; // Clear the matrix result pointer
 
  if (!expr) return qnan;
 
@@ -3535,6 +4506,24 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_tag   = v_stack[0].tag;
          if (piVal) *piVal = v_stack[0].ival;
          if (pimval) *pimval = v_stack[0].imval;
+
+         if (v_stack[0].tag == tvMATRIX)
+          {
+           res_cols = v_stack[0].mcols;
+           res_rows = v_stack[0].mrows;
+           res_mval = (float__t *)malloc (res_cols * res_rows * sizeof (float__t));
+           if (!res_mval)
+            {
+             error ("Memory allocation failed for matrix result");
+             result_fval = qnan;
+             return qnan;
+            }
+           memcpy (res_mval, v_stack[0].mval, res_cols * res_rows * sizeof (float__t)); 
+           v_stack[0].mval = nullptr; // Prevent freeing the matrix result in clear_v_stack
+           result_fval     = 0;
+           return 0; // Matrix result is not a single numeric value, return 0
+          }
+
          if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == 0.0))
           {
            result_ival = v_stack[0].ival;
@@ -3616,6 +4605,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
+
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else
        if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
          v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
@@ -3697,6 +4701,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else
        if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
@@ -3755,6 +4773,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
+
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else
        if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
         {
          v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
@@ -3815,7 +4848,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
+
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
          result_fval = qnan;
@@ -3886,7 +4933,21 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
+       
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
          result_fval = qnan;
@@ -3965,7 +5026,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4010,7 +5084,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4065,7 +5152,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
          result_fval = qnan;
@@ -4132,7 +5232,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4173,7 +5286,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4214,7 +5340,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4255,7 +5394,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4296,7 +5448,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4337,7 +5502,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4377,7 +5555,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival == v_stack[v_sp - 1].ival;
         }
@@ -4403,7 +5594,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival != v_stack[v_sp - 1].ival;
         }
@@ -4429,7 +5633,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4460,7 +5677,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4491,7 +5721,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4522,7 +5765,20 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_sp -= 1;
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
          error (v_stack[v_sp - 2].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4553,7 +5809,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4588,7 +5856,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4623,7 +5903,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4659,7 +5951,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4695,7 +5999,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4756,7 +6072,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
          error (v_stack[v_sp - 1].pos, "Illegal complex operation");
          result_fval = qnan;
@@ -4787,7 +6115,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvSTR))
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvSTR))
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
          result_fval = qnan;
@@ -4807,7 +6147,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if ((v_stack[v_sp - 1].tag == tvSTR))
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvSTR))
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
          result_fval = qnan;
@@ -4824,7 +6176,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
-       if (v_stack[v_sp - 1].tag == tvSTR)
+       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+       if (mr == mrERROR)
+        {
+         error (v_stack[v_sp - 2].pos, "Matrix operation error");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if (mr == mrDONE)
+        {
+         v_stack[v_sp - 1].var = nullptr;
+         break;
+        }
+       else if (v_stack[v_sp - 1].tag == tvSTR)
         {
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
          result_fval = qnan;
@@ -4906,6 +6270,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              }
              break;
             case tsINTEGR: // float f(str equation)
+            case tsSUM:
              {
               if (n_args != 1)
                {
@@ -4916,7 +6281,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
               if (v_stack[v_sp - 1].tag == tvINTEGR)
                {
                 const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                float__t result         = Integr (equation);
+                float__t result         = Integr (equation, sym->tag);
                 v_stack[v_sp - 2].fval  = result;
                 v_stack[v_sp - 2].imval = 0.0;
                 v_stack[v_sp - 2].ival  = (int_t)result;
@@ -4970,6 +6335,31 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           {
            switch (sym->tag)
             {
+            case tsFFUNCM:
+             if (n_args != 1)
+              {
+               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (((v_stack[v_sp - 1].tag == tvERR)))
+              {
+               error (v_stack[v_sp - 1].pos, "Undefined operand");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (v_stack[v_sp - 1].tag != tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Matrix operand required");
+               result_fval = qnan;
+               return qnan;
+              }
+             v_stack[v_sp - 2].fval
+                 = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
+             v_stack[v_sp - 2].tag = tvFLOAT;
+             v_sp -= 1;
+             break;
+
             case tsVFUNC1: // float or complex f(x|z)
              if (n_args != 1)
               {
@@ -4989,6 +6379,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
+
 
              ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                             sym->fidx);
@@ -5011,6 +6409,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
               {
                error (v_stack[v_sp - 2].pos, "Illegal string operation");
+               result_fval = qnan;
+               return qnan;
+              }
+
+             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
+              {
+               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
                result_fval = qnan;
                return qnan;
               }
@@ -5039,6 +6444,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
              v_stack[v_sp - 2].ival = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
              v_stack[v_sp - 2].tag  = tvINT;
              v_sp -= 1;
@@ -5060,6 +6471,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (v_stack[v_sp - 1].tag == tvSTR)
               {
                error (v_stack[v_sp - 1].pos, "Illegal string operation");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
                result_fval = qnan;
                return qnan;
               }
@@ -5096,6 +6513,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
              v_stack[v_sp - 2].ival
                  = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
              v_stack[v_sp - 2].tag = tvINT;
@@ -5121,6 +6544,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+
+             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
+              {
+               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
+
              v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
                  v_stack[v_sp - 2].get_int (), v_stack[v_sp - 1].get_int ());
              v_stack[v_sp - 3].tag = tvINT;
@@ -5143,6 +6574,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              if (v_stack[v_sp - 1].tag == tvSTR)
               {
                error (v_stack[v_sp - 1].pos, "Illegal string operation");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
                result_fval = qnan;
                return qnan;
               }
@@ -5172,6 +6609,12 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
+              {
+               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
 
              v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
                  v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
@@ -5197,6 +6640,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                  || (v_stack[v_sp - 3].tag == tvSTR))
               {
                error (v_stack[v_sp - 3].pos, "Illegal string operation");
+               result_fval = qnan;
+               return qnan;
+              }
+             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX)
+                 || (v_stack[v_sp - 3].tag == tvMATRIX))
+              {
+               error (v_stack[v_sp - 3].pos, "Illegal matrix operation");
                result_fval = qnan;
                return qnan;
               }
@@ -5262,6 +6712,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                result_fval = qnan;
                return qnan;
               }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
+
              if (v_stack[v_sp - 2].tag != tvSTR)
               {
                error (v_stack[v_sp - 2].pos, "String operand required");

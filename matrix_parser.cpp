@@ -207,3 +207,31 @@ Matrix *calculator::parseMatrix()
     pos++; // skip ']' — pos now points to char after ']'
     return m;
 }
+
+
+bool negative = false;
+if (*ipos == '-') { negative = true; ipos++; }
+else if (*ipos == '+') { ipos++; }
+while (isspace(*ipos & 0x7f)) ipos++; // на случай "- 3"
+
+pos = ipos - buf + 1;
+if (dscan(true, percent) != toOPERAND)
+{
+    error("Invalid number in matrix");
+    free(mval);
+    return toERROR;
+}
+ipos = buf + pos;
+tag = v_stack[v_sp - 1].tag;
+if (tag == tvINT || tag == tvFLOAT)
+{
+    fval = v_stack[--v_sp].fval;
+    if (negative) fval = -fval;        // применяем знак
+    mval[r * cols + c] = fval;
+}
+
+if (*ipos == '+' || *ipos == '-') ipos++;
+while (isspace(*ipos & 0x7f)) ipos++; // <- добавить
+while (*ipos && *ipos != ',' && ...)
+
+

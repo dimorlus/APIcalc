@@ -227,6 +227,17 @@ int d2scistr (char *str, float__t d)
        dd *= 1000;
        if (rng < quecto) break;
       }
+     // fix rounding: %.4g may round dd up to 1000
+     if (dd >= 999.95L && rng < quetta)
+      {
+       dd /= 1000.0L;
+       rng++;
+      }
+     else if (dd <= -999.95L && rng < quetta)
+      {
+       dd /= 1000.0L;
+       rng++;
+      }
     }
    if (d < 0) dd = -dd;
 #ifdef _long_double_

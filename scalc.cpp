@@ -692,23 +692,26 @@ int calculator::print (char *str, int Options, int binwide, int *size)
   {
    if (result_tag == tvMATRIX)
     {
-//     char mstr[80];
-//     matrix_to_str (mstr, result_mval);
-//     bsize += sprintf (str + bsize, "%65.64s M\r\n", mstr);
-//     n++;
-     char mstr[80];
-     char *cp = mstr;
+     // compute Frobenius norm for threshold
+     float__t norm = 0.0L;
+     int nm        = res_rows * res_cols;
+     for (int i = 0; i < nm; i++) norm += res_mval[i] * res_mval[i];
+     norm               = sqrtl (norm);
+     float__t threshold = norm * 1e-9L;
 
+     char mstr[80];
      for (int i = 0; i < res_rows; i++)
       {
        char *cp = mstr;
-       //cp += sprintf (cp, "(");
-       if (i > 0) cp += sprintf (cp, " (");
-       else  cp += sprintf (cp, "[(");
+       if (i > 0)
+        cp += sprintf (cp, " (");
+       else
+        cp += sprintf (cp, "[(");
        for (int j = 0; j < res_cols; j++)
         {
          char elemstr[20];
          float__t elem = res_mval[i * res_cols + j];
+         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
          d2scistr (elemstr, elem);
          if (j < res_cols - 1)
           cp += sprintf (cp, "%6.6s, ", elemstr);
@@ -719,7 +722,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
            else
             cp += sprintf (cp, "%6.6s); ", elemstr);
           }
-        }  
+        }
        if (i == res_rows - 1) cp += sprintf (cp, " ");
        bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
        n++;
@@ -727,6 +730,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      if (size) *size = bsize;
      return n;
     }
+   
    // (WO) Forced float
    if (Options & FFLOAT)
     {

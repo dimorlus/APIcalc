@@ -1,3 +1,4 @@
+05.03.26 (2.118)
 + Added matrix format (up to 7x7) [(a11,a12,...);(a21,a22,...);...]. For example
   [(-1k, 2m, 3M);(4, 5u, 6n);(7p, 8G, 9)]. 
 
@@ -67,6 +68,9 @@
   
 - Left priority of raising to a power has been changed, now -1^2 = -1, and not 1, as 
   before, but -2^-2 = -0.25, not an error as from 2.110.  
++ Added sum function sum(expr(x), from, to, x) 
+  sum(1/x!,20,0,x)-e -> 0
+  
 03.03.26 (2.117)
 + Added the calc(expr, var:=val) function to the solve(expr, var:=val) function for 
   quick and easy calculation of the expression for selecting the initial approximation 

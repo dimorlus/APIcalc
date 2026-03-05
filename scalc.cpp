@@ -2210,9 +2210,48 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
     }
    else if (tag == tsSUM)
     {
-     // summation not implemented yet
-     errorf (pos, "Summation not implemented yet");
-     result = qnan;
+     float__t fvx = 0.0;
+     if (vfrom > vto)
+      {
+       do
+        {
+         pCalculator->addfvar (svar, vfrom);
+         fvx += pCalculator->evaluate (sexpr); // evaluate the function for
+                                               // the syntax check before starting the integration
+
+         if (isnan (fvx) || pCalculator->err[0])
+          {
+           errorf (pos, "%s", pCalculator->err);
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
+          }
+         vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
+                       // step sizes
+        }
+       while (vfrom >= vto);
+      }
+     else
+      {
+       do
+        {
+         pCalculator->addfvar (svar, vfrom);
+         fvx += pCalculator->evaluate (sexpr); // evaluate the function for
+                                               // the syntax check before starting the integration
+
+         if (isnan (fvx) || pCalculator->err[0])
+          {
+           errorf (pos, "%s", pCalculator->err);
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
+          }
+         vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
+                       // step sizes
+        }
+       while (vfrom <= vto);
+      }
+     result = fvx;
     }
    else
     {
@@ -4016,6 +4055,56 @@ t_mresult calculator::matrixbin (value &res, value &left, value &right, t_operat
   // ---- comparison, bitwise, shifts — not defined for matrices ----
   case toEQ:
   case toNE:
+   if (lm && rm)
+    {
+     if (left.mrows != right.mrows || left.mcols != right.mcols)
+      {
+       error ("Matrix dimensions must match for comparison");
+       return mrERROR;
+      }
+     int n      = left.mrows * left.mcols;
+     bool equal = true;
+     for (int i = 0; i < n; i++)
+      if (left.mval[i] != right.mval[i])
+       {
+        equal = false;
+        break;
+       }
+     res.tag  = tvINT;
+     res.ival = (cop == toEQ) ? (equal ? 1 : 0) : (equal ? 0 : 1);
+     return mrDONE;
+    }
+   else if (lm && rs)
+    {
+     // A==scalar: true if ALL elements equal scalar
+     int n      = left.mrows * left.mcols;
+     bool equal = true;
+     for (int i = 0; i < n; i++)
+      if (left.mval[i] != right.fval)
+       {
+        equal = false;
+        break;
+       }
+     res.tag  = tvINT;
+     res.ival = (cop == toEQ) ? (equal ? 1 : 0) : (equal ? 0 : 1);
+     return mrDONE;
+    }
+   else if (ls && rm)
+    {
+     // scalar==A: same
+     int n      = right.mrows * right.mcols;
+     bool equal = true;
+     for (int i = 0; i < n; i++)
+      if (right.mval[i] != left.fval)
+       {
+        equal = false;
+        break;
+       }
+     res.tag  = tvINT;
+     res.ival = (cop == toEQ) ? (equal ? 1 : 0) : (equal ? 0 : 1);
+     return mrDONE;
+    }
+   return mrSKIP;
   case toGT:
   case toGE:
   case toLT:

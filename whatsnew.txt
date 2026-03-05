@@ -58,6 +58,8 @@
 	det(A)  -> 0                              ;; singular!
 	norm(A) -> 16.881943016134134             ;; Frobenius norm
 	norm(D) -> 5.477225575051661
+	2-A     -> [(1,0,-1);(-2,-3,-4);(-5,-6,-7)]
+	abs(2-A)-> [(1, 0, 1);(2, 3, 4);(5, 6, 7)] 
   If the result is of matrix type, the output field displays a matrix in engineering format 
   instead of strings in various formats.
                                       [(     1,      2,      3); 

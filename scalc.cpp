@@ -6265,6 +6265,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                return qnan;
               }
 
+             if (sym->fidx == vf_abs && v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               mxAbs (v_stack[v_sp - 2], v_stack[v_sp - 1]);
+               v_stack[v_sp - 2].tag = tvMATRIX;
+               v_sp -= 1;
+               break;
+              }
+
              if (v_stack[v_sp - 1].tag == tvMATRIX)
               {
                error (v_stack[v_sp - 1].pos, "Illegal matrix operation");

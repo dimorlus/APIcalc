@@ -401,6 +401,7 @@ class calculator // calculator represents the main class for the expression calc
  int pos;   // Current position in the expression during parsing
  int tmp_var_count;
  char err[80]; // Error message buffer
+ char mxerr[80]; // Error message buffer for matrix operations
  int errpos;   // Error position
  char c_imaginary; // Imaginary unit character
  bool expr;    // Expression flag
@@ -505,7 +506,7 @@ class calculator // calculator represents the main class for the expression calc
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);
-
+ void mxerror (const char *msg);
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,

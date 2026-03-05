@@ -3377,7 +3377,7 @@ static int lpr[toTERMINALS] = {
  4,  4,                      // LPAR, RPAR
  5,  5, 98, 98, 98,          // FUNC, SOLVE, POSTINC, POSTDEC, FACT
  98, 98, 98, 98, 98, 98,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
- 99,                         // POW,
+ 95,                         // POW,
  80, 80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
  70, 70,                     // ADD, SUB,
  60, 60, 60,                 // ASL, ASR, LSR,
@@ -6140,6 +6140,14 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
               }
              v_stack[v_sp - 2].fval
                  = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
+
+             if (isnan (v_stack[v_sp - 2].fval) || mxerr[0])
+              {
+               if (mxerr[0]) errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+               else error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
+               result_fval = qnan;
+               return qnan;
+              }
              v_stack[v_sp - 2].tag = tvFLOAT;
              v_sp -= 1;
              break;

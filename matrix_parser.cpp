@@ -234,4 +234,4 @@ if (*ipos == '+' || *ipos == '-') ipos++;
 while (isspace(*ipos & 0x7f)) ipos++; // <- добавить
 while (*ipos && *ipos != ',' && ...)
 
-
+float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));

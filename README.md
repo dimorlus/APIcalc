@@ -57,7 +57,7 @@ Command-line calculator for scripts, automation, and terminal use.
 
 #### CLI Usage
 
-```bash
+```
 # Basic calculations (always use quotes!)
 ccalc "2+2"
 ccalc "sqrt(3^2+4^2)"
@@ -88,9 +88,43 @@ ccalc "help(7)"                 # Options
 
 * Addition (+), Subtraction (-), Multiplication (\*), Division (/)
 * Modulo (%), Power (^)
+* Percentage (% and %%)
 * Parentheses for grouping
+* ; to separate expressions
 
 > **Note**: Unary minus has lower priority than power: `-1^2 = -(1^2) = -1`, not `(-1)^2 = 1`. Use parentheses when needed: `(-1)^2 = 1`.
+
+### Percentage Operations
+
+The `%` operator in `x op y%` computes `y%` as a percentage **of the left operand** `x`, then applies the operation:
+
+```
+x op y%  →  x op (x * y / 100)
+```
+
+This matches the behaviour of most pocket calculators:
+
+```
+72 - 20%          →  57.6      (72 - 72*0.20 = 72*0.80)
+200 + 10%         →  220       (200 + 200*0.10)
+100 * 10%         →  1000      (100 * 100*0.10 = 100*10)
+500 * 5%          →  12500     (500 * 500*0.05 = 500*25)
+1 / 2%            →  50        (1 / 1*0.02 = 1/0.02)
+```
+
+Chained percentage operations use the result of the previous operation as the new base:
+
+```
+72 - 20% + 5%     →  60.48     (57.6 + 57.6*0.05)
+```
+
+The `%%` operator is the **reverse percentage**: how many percent is `x` relative to `y` as a change from `y`:
+
+```
+x %% y  →  (x / y - 1) * 100
+
+57.6 %% 72        →  -20       (57.6 is 20% less than 72)
+```
 
 ### Mathematical Functions
 
@@ -105,7 +139,7 @@ ccalc "help(7)"                 # Options
 * **const("name", value)**: Define a named constant programmatically
 * **var("name", value)**: Define a named variable programmatically
 * **wrgb, trgb**: Color-related utility functions
-* **winf**: Display information in a window
+* **winf**: Returns a string describing the portion of the spectrum of a given wavelength
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
@@ -127,7 +161,6 @@ ccalc "help(7)"                 # Options
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
   ```
-
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
   ```
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
@@ -247,6 +280,8 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 | `det(M)` | scalar | determinant, square matrix only |
 | `norm(M)` | scalar | Frobenius norm √(Σ aᵢⱼ²) |
 | `abs(M)` | matrix | element-wise absolute value |
+| `dot(A, B)` | scalar | dot product of two vectors (1×N or N×1), any length |
+| `cross(A, B)` | vector | cross product of two 3-element vectors (1×3 or 3×1) |
 
 #### Matrix Examples
 
@@ -263,6 +298,19 @@ D * !D           →  [(1,0);(0,1)]                 ;; identity
 tr(A)            →  15
 det(D)           →  -2
 norm(D)          →  5.477225575051661
+
+;; vectors (row or column):
+dot([(1,2,3)], [(4,5,6)])          →  32
+dot([(3,4)], [(3,4)])              →  25     ;; = norm^2
+cross([(1,0,0)], [(0,1,0)])        →  [(0,0,1)]
+cross([(1,2,3)], [(4,-1,2)])       →  [(7,10,-9)]
+dot(cross([(1,2,3)],[(4,-1,2)]), [(1,2,3)]) →  0  ;; cross product ⊥ both inputs
+```
+
+### Strings
+You can enter a string, assign a string value to a variable, and perform string concatenation.
+```
+S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 
 ```
 
 ### Constants
@@ -346,13 +394,11 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 * Character
 * Wide Character
 * Date/Time (supports `:w` weeks input format)
-* Unix Timestamp
+* Unix Time
 * Degrees (supports gon and turns in addition to degrees/minutes/seconds)
+* Temperature in Fahrenheit (`75F` format for input/output)
 * String
 * Inch
-* Temperature in Fahrenheit (`75F` format for input/output)
-* Auto
-* CPX (complex numbers in polar form)
 
 ### Engineering / Scientific Suffixes
 
@@ -372,10 +418,10 @@ In engineering and normalized formats, the suffix order is based on the **modulu
 
 1. Type mathematical expressions in the input field
 2. Results are calculated automatically as you type
-3. Press Enter to add calculations to history
+3. Pressing enter places the current value of the input line in the history (if it is not already there), and in the input line - the result of the calculation as a real or complex number, or a matrix (this does not apply to string operations).
 4. Use the history dropdown to recall previous calculations
 5. Copy results with Ctrl+C or paste expressions with Ctrl+V
-6. Access format options and binary width settings via the Calc menu
+6. Access format options and binary width settings via the Calc menu or local menu jf the output panel
 
 ### Example Expressions
 
@@ -387,8 +433,8 @@ sqrt(16) + log(100)
 (5 + 3) / (2 - 1)
 
 # Resonant frequency and wave resistance:
-L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", f, Rw)
-# Returns: f:297.6kHz, Rw:243.1Ohm
+L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", f, Rw);;Resonant circuit
+# Result: f:297.6kHz, Rw:243.1Ohm
 
 # With Implicit Multiplication enabled:
 2sin(pi/2)          # Same as 2 * sin(pi/2) = 2
@@ -406,6 +452,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 2. **Number before parenthesis**: `3(4+5)` → `3 \* (4+5)`
 3. **Parenthesis after parenthesis**: `(1+2)(3+4)` → `(1+2) \* (3+4)`
 4. **Number before variable/constant**: `2PI` → `2 \* PI` (uppercase recommended)
+5. **Space instead of \* **: `2 3 → 2\*3`
 
 **Important notes about scientific suffixes and imaginary unit:**
 
@@ -438,6 +485,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * **Ctrl+N**: Clear input field
 * **Ctrl+Shift++**: Increase window opacity
 * **Ctrl+Shift+-**: Decrease window opacity
+* **Ctrl++/-**: Change font size
 * **Ctrl+C**: Copy result to clipboard
 * **Ctrl+V**: Paste from clipboard to expression
 * **F1**: Show help contents
@@ -459,22 +507,6 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * Binary width submenu: Select binary display width (8, 16, 24, 32, 48, 64 bits)
 * View variables: Open variables dialog
 * Exit: Close application
-
-### Edit
-
-* Copy: Copy current result
-* Paste: Paste text into expression field
-* Clear History: Remove all history items
-
-### View
-
-* Standard Mode: Basic calculator interface
-* Scientific Mode: Extended scientific functions
-
-### Help
-
-* Help Contents: Open CHM help file (F1)
-* About: Application information
 
 ## Build Requirements
 
@@ -549,4 +581,4 @@ Place your CHM help file as `fcalc.chm` in the same directory as the executable 
 
 ## License
 
-Copyright (C) 2024. All rights reserved.
+Copyright (C) 2026. All rights reserved.

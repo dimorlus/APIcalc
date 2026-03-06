@@ -221,7 +221,9 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSFUNCF2,  // float const(char *name, float value)
  tsSIFUNC1,  // int f(char *s)
  tsFFUNCM,   // float f(matrix M)
+ tsFFUNCM2,  // float f(matrix A, matrix B)
  tsMFUNCM,   // matrix f(matrix M)
+ tsMFUNCM2,  // matrix f(matrix A, matrix B)
  tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
  tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
  tsUFUNCT,   // User-defined function
@@ -525,6 +527,8 @@ class calculator // calculator represents the main class for the expression calc
  float__t mxTrace (value &M);
  float__t mxDet (value &M);
  float__t mxNorm (value &M);
+ bool mxDot (value &res, value &A, value &B);
+ bool mxCross (value &res, value &A, value &B);
 
  void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator

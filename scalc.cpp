@@ -116,6 +116,15 @@ float__t Norm (void *clc, value &M)
  return ((calculator *)clc)->mxNorm (M);
 }
 
+bool Dot (void *clc, value &res, value &A, value &B)
+{
+ return ((calculator *)clc)->mxDot (res, A, B);
+}
+
+bool Cross (void *clc, value &res, value &A, value &B)
+{
+ return ((calculator *)clc)->mxCross (res, A, B);
+}
 
 calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 {
@@ -206,6 +215,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  add (tsFFUNCM, "trace", (void *)Trace);
  add (tsFFUNCM, "tr", (void *)Trace);
  add (tsFFUNCM, "norm", (void *)Norm);
+ add (tsMFUNCM2, "dot", (void *)Dot);
+ add (tsMFUNCM2, "cross", (void *)Cross);
 
 
 
@@ -4021,6 +4032,72 @@ bool calculator::mxTranspose (value &res, value &M)
  return true;
 }
 
+// mxDot: dot product of two vectors (1xN or Nx1)
+// Returns scalar result in res.fval
+bool calculator::mxDot (value & res, value & A, value & B)
+{
+ if (A.tag != tvMATRIX || B.tag != tvMATRIX)
+  {
+   mxerror ("dot: both arguments must be matrices");
+   return false;
+  }
+ // both must be vectors (one dimension == 1) and same total size
+ bool aVec = (A.mrows == 1 || A.mcols == 1);
+ bool bVec = (B.mrows == 1 || B.mcols == 1);
+ if (!aVec || !bVec)
+  {
+   mxerror ("dot: arguments must be vectors (1xN or Nx1)");
+   return false;
+  }
+ int na = A.mrows * A.mcols;
+ int nb = B.mrows * B.mcols;
+ if (na != nb)
+  {
+   mxerror ("dot: vector sizes must match");
+   return false;
+  }
+ float__t sum = 0.0L;
+ for (int i = 0; i < na; i++) sum += A.mval[i] * B.mval[i];
+ res.tag   = tvFLOAT;
+ res.fval  = sum;
+ res.imval = 0.0L;
+ return true;
+}
+
+// mxCross: cross product of two 3D vectors (1x3 or 3x1)
+// Result is a vector of the same shape as A
+bool calculator::mxCross (value & res, value & A, value & B)
+{
+ if (A.tag != tvMATRIX || B.tag != tvMATRIX)
+  {
+   mxerror ("cross: both arguments must be matrices");
+   return false;
+  }
+ bool aVec = (A.mrows == 1 || A.mcols == 1);
+ bool bVec = (B.mrows == 1 || B.mcols == 1);
+ if (!aVec || !bVec)
+  {
+   mxerror ("cross: arguments must be vectors (1x3 or 3x1)");
+   return false;
+  }
+ int na = A.mrows * A.mcols;
+ int nb = B.mrows * B.mcols;
+ if (na != 3 || nb != 3)
+  {
+   error ("cross: cross product requires 3-element vectors");
+   return false;
+  }
+ float__t *mval = mxAlloc (A.mrows, A.mcols); // same shape as A
+ if (!mval) return false;
+ mval[0]   = A.mval[1] * B.mval[2] - A.mval[2] * B.mval[1];
+ mval[1]   = A.mval[2] * B.mval[0] - A.mval[0] * B.mval[2];
+ mval[2]   = A.mval[0] * B.mval[1] - A.mval[1] * B.mval[0];
+ res.tag   = tvMATRIX;
+ res.mrows = A.mrows;
+ res.mcols = A.mcols;
+ res.mval  = mval;
+ return true;
+}
 // ---------------------------------------------------------------------------
 // matrixbin — binary operations
 // ---------------------------------------------------------------------------
@@ -6421,6 +6498,42 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
+            case tsMFUNCM2:
+             {
+              if (n_args != 2)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+               {
+                error (v_stack[v_sp - 2].pos, "Undefined operand");
+                result_fval = qnan;
+                return qnan;
+               }
+
+              if (v_stack[v_sp - 1].tag != tvMATRIX || v_stack[v_sp - 2].tag != tvMATRIX)
+               {
+                error (v_stack[v_sp - 2].pos, "Matrix operand required");
+                result_fval = qnan;
+                return qnan;
+               }
+
+              bool res = ((bool (*) (void *, value &, value &, value &))sym->func) (
+                  (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2], v_stack[v_sp - 1]);
+              if (!res || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
+                result_fval = qnan;
+                return qnan;
+               }
+              v_sp -= 2;
+             }
+             break;
             case tsVFUNC1: // float or complex f(x|z)
              if (n_args != 1)
               {
@@ -6465,7 +6578,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
             case tsVFUNC2: // float or complex f(x|z,y|z)
              if (n_args != 2)
               {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
                result_fval = qnan;
                return qnan;
               }

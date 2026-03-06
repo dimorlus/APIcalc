@@ -616,7 +616,81 @@ char *calculator::registerString (char *str) // Register a string in the string 
 
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-// Print the result of the calculation into the provided string buffer with formatting options
+// Print matrix result in a formatted way, with an option for a new line
+// and an optional pointer to store the size of the output
+int calculator::mxprint (char *str, bool nl, int *size)
+{
+ int n     = 0;
+ int bsize = 0;
+ if (result_tag == tvMATRIX)
+  {
+   // compute Frobenius norm for threshold
+   float__t norm = 0.0L;
+   int nm = res_rows * res_cols;
+   for (int i = 0; i < nm; i++) norm += res_mval[i] * res_mval[i];
+   norm = sqrtl (norm);
+   float__t threshold = norm * 1e-9L;
+
+   char mstr[80];
+   for (int i = 0; i < res_rows; i++)
+    {
+     char *cp = mstr;
+     if (nl)
+      {
+       if (i > 0) cp += sprintf (cp, " (");
+       else cp += sprintf (cp, "[(");
+       for (int j = 0; j < res_cols; j++)
+        {
+         char elemstr[20];
+         float__t elem = res_mval[i * res_cols + j];
+         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
+         d2scistr (elemstr, elem);
+         if (j < res_cols - 1) cp += sprintf (cp, "%6.6s, ", elemstr);
+         else
+          {
+           if (i == res_rows - 1)
+            cp += sprintf (cp, "%6.6s)]", elemstr);
+           else
+            cp += sprintf (cp, "%6.6s); ", elemstr);
+          }
+        }
+       if (i == res_rows - 1) cp += sprintf (cp, " ");
+       bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
+       n++;
+      }
+     else
+     {
+       if (i > 0) cp += sprintf (cp, "(");
+       else cp += sprintf (cp, "[(");
+       for (int j = 0; j < res_cols; j++)
+        {
+         char elemstr[20];
+         float__t elem = res_mval[i * res_cols + j];
+         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
+         d2scistr (elemstr, elem);
+         if (j < res_cols - 1)
+          cp += sprintf (cp, "%s, ", elemstr);
+         else
+          {
+           if (i == res_rows - 1)
+            cp += sprintf (cp, "%s)]", elemstr);
+           else
+            cp += sprintf (cp, "%s); ", elemstr);
+          }
+        }
+       
+       bsize += sprintf (str + bsize, "%s", mstr);
+       n++;
+
+     }
+    }
+   if (size) *size += bsize;
+   return n;
+  }
+ return n;
+}
+
+  // Print the result of the calculation into the provided string buffer with formatting options
 int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
@@ -687,7 +761,10 @@ int calculator::print (char *str, int Options, int binwide, int *size)
   }
  else
   {
-   if (result_tag == tvMATRIX)
+   if (result_tag == tvMATRIX) 
+    {
+     n += mxprint (str, true, &bsize);
+#ifdef _COMMENT_
     {
      // compute Frobenius norm for threshold
      float__t norm = 0.0L;
@@ -724,6 +801,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
        n++;
       }
+#endif //_COMMENT_
      if (size) *size = bsize;
      return n;
     }

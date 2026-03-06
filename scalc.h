@@ -550,6 +550,8 @@ class calculator // calculator represents the main class for the expression calc
  int print (char *str, int Options, int binwide,
             int *size = nullptr); // Print a string representation of the result with specified
                                   // options and binary width,
+ int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
+              int *size = nullptr); // and an optional pointer to store the size of the output 
 
  ~calculator (void); // Destructor to clean up resources
 };

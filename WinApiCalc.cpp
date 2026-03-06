@@ -1156,15 +1156,25 @@ void WinApiCalc::OnEnterPressed ()
        return; // Don't replace on error
       }
 
-     // Format result as %.16Lg as specified in SOW
-     char resultStr[64];
-     if (imVal == 0)
-      sprintf_s (resultStr, "%.16Lg", fVal);
+     if (m_pCalculator->get_res_tag() == tvMATRIX)
+      {
+       char resultStr[256];
+       m_pCalculator->mxprint (resultStr, false);
+       // Put result in expression field
+       SetWindowTextA (m_hExpressionEdit, resultStr);
+      }
      else
-      sprintf_s (resultStr, "%.16Lg%+.16Lg%c", fVal, imVal, m_pCalculator->Ichar ());
+      {
+       // Format result as %.16Lg as specified in SOW
+       char resultStr[64];
+       if (imVal == 0)
+        sprintf_s (resultStr, "%.16Lg", fVal);
+       else
+        sprintf_s (resultStr, "%.16Lg%+.16Lg%c", fVal, imVal, m_pCalculator->Ichar ());
 
-     // Put result in expression field
-     SetWindowTextA (m_hExpressionEdit, resultStr);
+       // Put result in expression field
+       SetWindowTextA (m_hExpressionEdit, resultStr);
+      }
     }
    catch (...)
     {

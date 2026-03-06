@@ -1,3 +1,7 @@
+05.03.26 (2.12)
+* Doubled quote character (same as opening quote) also represents a single quote:
+   "Hello! ""World"""  -> Hello! "World"
+
 05.03.26 (2.119)
 + Added matrix format (up to 7x7) [(a11,a12,...);(a21,a22,...);...]. For example
   [(-1k, 2m, 3M);(4, 5u, 6n);(7p, 8G, 9)]. 

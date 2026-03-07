@@ -1,3 +1,16 @@
++ Переделан парсер матриц. Теперь элементами матрицы могут быть не только числа, но и 
+  выражения, использующие ранее определенные (в том числе предопределенные) константы и 
+  переменные, если результат этого выражения или значение переменной реальное или целое число.
+  Комплексные числа, строки или матрицы не могут быть элементами матриц.
+* Переделана внутренняя структура символов. Теперь имя хранится статически и ограничено 15 
+  символами.   
++ The matrix parser has been redesigned. Matrix elements can now be not only numbers, but also
+  expressions using previously defined (including predefined) constants and variables, as long 
+  as the result of this expression or variable value is a real number or an integer. Complex 
+  numbers, strings, or matrices cannot be matrix elements.
+* The internal symbol structure has been redesigned. The name is now stored statically and is 
+  limited to 15 characters.
+  
 06.03.26 (2.121)
 + Added a Description section to the help file, with a more or less detailed description 
   of the program's features.

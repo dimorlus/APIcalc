@@ -183,7 +183,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
          *ns = *src;  // Copy all fields (tag, fidx, func, val)
 
          // name always duplicated — destroyvars() frees it using free()
-         ns->name = src->name ? strdup (src->name) : nullptr;
+         //ns->name = src->name ? strdup (src->name) : nullptr;
 
          // val.sval for string variables — duplicate if _STR_VAR_FREE_ is defined
          if ((src->tag == tsVARIABLE) && (src->val.tag == tvSTR) && src->val.sval)
@@ -552,8 +552,9 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
 #endif //_MX_VAR_FREE_
 
        if (sp->tag == tsUFUNCT) free (sp->func);
-       if (sp->name) free (sp->name);
-       sp->name = nullptr;
+       //if (sp->name) free (sp->name);
+       //sp->name = nullptr;
+       sp->name[0] = '\0';
        delete sp;
        sp            = nsp;
        hash_table[i] = nullptr;
@@ -1238,7 +1239,8 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
  sp->tag       = tag;
  sp->fidx      = fidx;
  sp->func      = func;
- sp->name      = strdup (name);
+ //sp->name      = strdup (name);
+ strcpy (sp->name, name);
  sp->val.tag   = tvERR; // tvINT;
  sp->val.ival  = 0;
  sp->val.fval  = qnan;
@@ -1269,7 +1271,8 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
  sp            = new symbol;
  sp->tag       = tag;
  sp->func      = func;
- sp->name      = strdup (name);
+ //sp->name      = strdup (name);
+ strcpy (sp->name, name);
  sp->val.tag   = tvERR; // tvINT;
  sp->val.ival  = 0;
  sp->val.fval  = qnan;
@@ -1343,7 +1346,8 @@ symbol *calculator::addUF (const char *name, const char *expr)
  sp            = new symbol;
  sp->tag       = tsUFUNCT;
  sp->func      = strdup(expr);
- sp->name      = strdup(name);
+ //sp->name      = strdup(name);
+ strcpy (sp->name, name);
  sp->val.tag   = tvUFUNCT;
  sp->val.ival  = 0;
  sp->val.fval  = 0;
@@ -3767,6 +3771,11 @@ t_operator calculator::scan (bool operand, bool percent)
     }
    *np = '\0';
    symbol *sym = nullptr;
+   if (strlen (name) > MAXNAME)
+    {
+     error ("Name too long");
+     return toERROR;
+    }
    if (name[0])
     {
      if (buf[pos] == '\0') sym = find (name);

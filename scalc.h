@@ -57,6 +57,7 @@
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  64  // maximum length of operator or function name
 #define MAXSTK 10  // maximum stack depth
+#define MAXNAME 16  // maximum length of variable or function name
 
 #ifdef __BORLANDC__
 
@@ -358,7 +359,8 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
  v_func fidx;  // Function index
  void *func;   // Function pointer
  value val;    // Value associated with the symbol
- char *name;   // Name of the symbol
+ //char *name;   // Name of the symbol
+ char name[MAXNAME]; // Name of the symbol (fixed-size array to avoid dynamic memory allocation)
  symbol *next; // Next symbol in the hash table chain
 
  inline symbol ()
@@ -366,7 +368,8 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
   tag  = tsVARIABLE;
   fidx = vf_num;
   func = nullptr;
-  name = nullptr;
+  //name = nullptr;
+  name[0] = '\0'; // Initialize name to an empty string
   next = nullptr;
  }
  

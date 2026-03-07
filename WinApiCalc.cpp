@@ -6,6 +6,11 @@
 #include <fstream>
 #include <ctime>
 
+#ifdef _DEBUG_MEMORY_
+#include <crtdbg.h>
+
+_CrtMemState s1, s2, diff;
+#endif //_DEBUG_MEMORY_
 // To debug memory leaks in VS2022 :
 //
 // Enable CRT Debugging : Add this to your main or WinMain (I see it's already in
@@ -195,7 +200,10 @@ WinApiCalc::~WinApiCalc ()
    delete m_pCalculator;
    m_pCalculator = nullptr;
   }
-
+#ifdef _DEBUG_MEMORY_
+ _CrtMemCheckpoint (&s2);
+ if (_CrtMemDifference (&diff, &s1, &s2)) _CrtMemDumpStatistics (&diff); // выведет в Output window
+#endif // _DEBUG_MEMORY_
  if (m_hWhiteBrush)
   {
    DeleteObject (m_hWhiteBrush);
@@ -705,6 +713,9 @@ if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
 void WinApiCalc::OnCreate ()
 {
  // Initialize calculator engine
+#ifdef _DEBUG_MEMORY_
+    _CrtMemCheckpoint (&s1);
+#endif
  m_pCalculator = new calculator (m_options);
 
  // Register pseudo-functions for calculator engine

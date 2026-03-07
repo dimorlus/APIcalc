@@ -150,7 +150,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  scfg          = cfg;
  sres[0]       = '\0';
  memset (v_stack, 0, sizeof v_stack);
- string_list_head = nullptr;
+ mem_list_head = nullptr;
  c_imaginary = 'i';
  // randomize();
  srand (static_cast<unsigned int> (time (nullptr)));
@@ -518,7 +518,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 
 calculator::~calculator (void)
 {
- clearAllStrings ();
+ clear_mem_list ();
  destroyvars ();
  if (res_mval) free (res_mval);
 }
@@ -589,30 +589,64 @@ void calculator::dupstrvars (void) // Duplicate string variables in the hash tab
 }
 
  
-char *calculator::registerString (char *str) // Register a string in the string list for later cleanup
- {
- if (str)
+void *calculator::register_mem (void *mem) // Register a string in the string list for later cleanup
+{
+ if (mem)
   {
    StringNode *node = new StringNode;
-   node->str        = str;
-   node->next       = string_list_head;
-   string_list_head = node;
+   node->mem        = mem;
+   node->next       = mem_list_head;
+   mem_list_head = node;
   }
-  return str;
+  return mem;
+}
+
+void calculator::unregister_mem (void *mem) // 
+{
+ StringNode *node = mem_list_head;
+ while (node)
+  {
+   if (node->mem == mem) node->mem = nullptr; // Mark as unregistered 
+                                         // (will not be freed in clearAllStrings)
+   StringNode *next = node->next;
+   node = next;
+  }
  }
 
- void calculator::clearAllStrings () // Free all registered strings in the string list
+ void calculator::clear_mem_list () // Free all registered strings in the string list
  {
-  StringNode *node = string_list_head;
+  StringNode *node = mem_list_head;
   while (node)
    {
-    free (node->str);
+    free (node->mem);
     StringNode *next = node->next;
     delete node;
     node = next;
    }
-  string_list_head = nullptr;
+  mem_list_head = nullptr;
  }
+
+void calculator::save_vars_mem (void) // Clear all registered strings without freeing memory (for use in copy constructor)
+{
+ symbol *sp;
+ for (int i = 0; i < hash_table_size; i++)
+  {
+   if ((sp = hash_table[i]))
+    {
+     do
+      {
+       if ((sp->tag == tsVARIABLE) && 
+           (sp->val.tag == tvSTR) && (sp->val.sval))
+        unregister_mem (sp->val.sval);
+       if ((sp->tag == tsVARIABLE) && 
+           (sp->val.tag == tvMATRIX) && (sp->val.mval))
+        unregister_mem (sp->val.mval);
+       sp = sp->next;
+      }
+     while (sp);
+    }
+  }
+}
 
  char *calculator::dupString (const char *src) // Duplicate a string and register it for cleanup
   {
@@ -622,7 +656,7 @@ char *calculator::registerString (char *str) // Register a string in the string 
    if (dup)
     {
      strcpy (dup, src);
-     return registerString (dup);
+     return (char *)register_mem (dup);
     }
    return nullptr;
   }
@@ -2728,7 +2762,7 @@ t_operator calculator::sqbraces (void)
    return toERROR;
   }
  
- registerString ((char *)mval);
+ register_mem (mval);
 
  for (int r = 0; r < rows; r++)
   for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
@@ -2962,7 +2996,7 @@ t_operator calculator::sqbraces1(void)
     }
   }
 
- registerString ((char *)mval); // register the allocated matrix pointer as a string to be freed later
+ register_mem (mval); // register the allocated matrix pointer as a string to be freed later
  pos                  = ipos - buf+1;
  v_stack[v_sp].sval   = nullptr;
  v_stack[v_sp].var    = nullptr;
@@ -3175,7 +3209,7 @@ t_operator calculator::dqscan (char qc)
    if (v_stack[v_sp].sval)
     {
      strcpy (v_stack[v_sp].sval, sbuf);
-     registerString (v_stack[v_sp].sval);
+     register_mem (v_stack[v_sp].sval);
     }
    pos                 = ipos - buf + 1;
    v_stack[v_sp].pos   = pos;
@@ -3628,7 +3662,7 @@ t_operator calculator::scan (bool operand, bool percent)
            {
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[1] = '\0';
-            registerString (v_stack[v_sp].sval);
+            register_mem (v_stack[v_sp].sval);
            }
           ipos++;
          }
@@ -3909,7 +3943,7 @@ float__t *calculator::mxAlloc (int rows, int cols)
    mxerror ("memory allocation failed");
    return NULL;
   }
- registerString ((char *)mval);
+ register_mem (mval);
  return mval;
 }
 
@@ -4893,12 +4927,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            v_stack[0].fval  = 0.0;
            v_stack[0].ival  = 0;
            v_stack[0].tag   = tvERR;
-#ifdef _STR_VAR_FREE_
-           dupstrvars ();      // Duplicate string variables to ensure that the result string is not
-                               // freed when clearing the strings created during evaluation
-           clearAllStrings (); // Free string variables that were created during evaluation to prevent
-                               // memory leaks
-#endif //_STR_VAR_FREE_
+
+           save_vars_mem ();  // Save variables to prevent them from being freed during clear_v_stack
+           clear_mem_list (); // Clear the memory list to free any temporary variables created
+                              // during evaluation
            return result_fval;
           }
         }
@@ -4984,7 +5016,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            strcpy (new_s, v_stack[v_sp - 2].sval);
            strcat (new_s, v_stack[v_sp - 1].sval);
            v_stack[v_sp - 2].sval = new_s;
-           registerString (v_stack[v_sp - 2].sval);
+           register_mem (v_stack[v_sp - 2].sval);
           }
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
@@ -7318,7 +7350,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                      {
                       memcpy (new_mval, mxr.mval, msize);
                       v_stack[v_sp - n_args - 1].mval = new_mval;
-                      registerString ((char *)new_mval);
+                      register_mem (new_mval);
                      }
                     else
                      {

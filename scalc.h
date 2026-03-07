@@ -382,7 +382,7 @@ const int hash_table_size = 1013; // Size of hash table for variables and functi
 struct StringNode // StringNode represents a node in a linked list of strings used for memory
                   // management of allocated strings
 {
- char *str;        // String pointer to the allocated string
+ void *mem;        // String pointer to the allocated string
  StringNode *next; // Next node in the list
 };
 
@@ -410,7 +410,7 @@ class calculator // calculator represents the main class for the expression calc
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
- StringNode *string_list_head; // Head of the string list
+ StringNode *mem_list_head; // Head of the string list
  int v_sp; // Value stack pointer
  int o_sp; // Operator stack pointer
  char *buf; // Buffer for expression parsing
@@ -435,8 +435,11 @@ class calculator // calculator represents the main class for the expression calc
 
 
  
- char *registerString (char *str); // Register a string in the string list and return the registered string pointer
- void clearAllStrings (); // Clear all strings in the string list
+ void *register_mem (void *mem); // Register a string in the string list and return the registered string pointer
+ void unregister_mem (void *mem);   // Unregister a string from the string list 
+ void clear_mem_list (); // Clear all strings in the string list
+ void save_vars_mem (void);
+ 
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
  void dupstrvars (void); // Duplicate string variables in the hash table (used when copying the calculator state)

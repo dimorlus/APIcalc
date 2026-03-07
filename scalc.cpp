@@ -64,7 +64,9 @@ int isinf_l(long double x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 #define _WIN_
 #define _WCHAR_ // L'c' and 'c'W input format allow
 #define _ENABLE_PREIMAGINARY_
-#define _STR_VAR_FREE_ 
+//#define _STR_VAR_FREE_ 
+//#define _MX_VAR_FREE_
+//#define _COPY_MATRIX_ON_ASSIGN_
 
 // Macros to determine if an operator is binary or unary based on its position in the enumeration
 #define BINARY(opd) (opd >= toPOW)
@@ -187,7 +189,13 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
          if ((src->tag == tsVARIABLE) && (src->val.tag == tvSTR) && src->val.sval)
           ns->val.sval = strdup (src->val.sval);
 
-                  // func for tsUFUNCT is not copied (see condition above),
+            // val.sval for matrix variables — duplicate if _MX_VAR_FREE_ is defined
+         if ((src->tag == tsVARIABLE) && (src->val.tag == tvMATRIX) && src->val.mval)
+         {
+           ns->val.mval = dupMatrix (src->val);
+         }
+          
+         // func for tsUFUNCT is not copied (see condition above),
          // for other func — pointer to static function, copy as is
          if (src->tag == tsUFUNCT) 
              ns->func = strdup((char *)src->func);
@@ -535,11 +543,13 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
         }
 #endif //_STR_VAR_FREE_
 
+#ifdef _MX_VAR_FREE_
        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
         {
          if (sp->val.mval) free (sp->val.mval);
          sp->val.mval = nullptr;
         }
+#endif //_MX_VAR_FREE_
 
        if (sp->tag == tsUFUNCT) free (sp->func);
        if (sp->name) free (sp->name);
@@ -568,16 +578,7 @@ void calculator::dupstrvars (void) // Duplicate string variables in the hash tab
         }
        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
         {
-         // Assuming matrix is stored as a flat array of float__t with dimensions res_rows x res_cols
-         int rows           = sp->val.mrows;
-         int cols           = sp->val.mcols;
-         int msize = rows * cols * sizeof (float__t);
-         float__t *new_mval = (float__t *)malloc (msize);
-         if (new_mval)
-          {
-           memcpy (new_mval, sp->val.mval, msize);
-           sp->val.mval = new_mval;
-          }
+         sp->val.mval = dupMatrix (sp->val);
         }   
        sp = sp->next;
       }
@@ -616,7 +617,7 @@ char *calculator::registerString (char *str) // Register a string in the string 
   {
    if (!src) return nullptr;
    size_t len = strlen (src);
-   char *dup   = (char *)malloc (len + 1);
+   char *dup  = (char *)malloc (len + 1);
    if (dup)
     {
      strcpy (dup, src);
@@ -625,6 +626,26 @@ char *calculator::registerString (char *str) // Register a string in the string 
    return nullptr;
   }
 
+ // Duplicate a matrix but no register it for cleanup
+
+ float__t *calculator::dupMatrix (value &val)
+  {
+   // Assuming matrix is stored as a flat array of float__t with dimensions res_rows x res_cols
+   if (val.tag != tvMATRIX || !val.mval) return nullptr; // Check if it's a valid matrix
+   int rows  = val.mrows;
+   int cols  = val.mcols;
+   int msize = rows * cols * sizeof (float__t);
+   if (msize)
+    {
+     float__t *new_mval = (float__t *)malloc (msize);
+     if (new_mval)
+      {
+       memcpy (new_mval, val.mval, msize);
+       return new_mval;
+      }
+    }
+   return nullptr;
+  }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
 // Print matrix result in a formatted way, with an option for a new line
@@ -1355,6 +1376,7 @@ void calculator::addfvar (const char *name, float__t val)
 }
 
 // Add  variable to the hash table
+// todo:add matrix variable
 void calculator::addvar (const char *name, value &val)
 {
  symbol *sp   = add (tsVARIABLE, name);
@@ -1362,7 +1384,16 @@ void calculator::addvar (const char *name, value &val)
  sp->val.fval = val.fval;
  sp->val.ival = val.ival;
  sp->val.imval = val.imval;
- sp->val.sval = val.sval;
+ // For string and matrix types, we need to copy the values
+ sp->val.sval = strdup(val.sval);
+ //registerString (sp->val.sval);
+ if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+  {
+   sp->val.mval = dupMatrix (val);
+   // registerString ((char *)sp->val.mval);
+  }   
+ sp->val.mcols = val.mcols;
+ sp->val.mrows = val.mrows;
 }
 
 // Add an imaginary constant to the hash table (if enabled)
@@ -2522,13 +2553,14 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
     {
-     char *sval = strdup (sbuf);
+     //char *sval = strdup (sbuf);
+     char *sval = dupString (sbuf); // dup and register the string in the string table 
      if (!sval)
       {
        error ("memory allocation failed");
        return toERROR;
       }
-     registerString (sval);
+     //registerString (sval);
 
      pos = ipos - buf - 1;
      v_stack[v_sp].sval   = sval;
@@ -2543,6 +2575,175 @@ t_operator calculator::sscan (symbol *sym)
  return toERROR;
 }
 
+t_operator calculator::sqbraces (void)
+{
+ char *ipos = buf + pos;
+ while (isspace (*ipos & 0x7f)) ipos++;
+
+ float__t tmp[MAX_R * MAX_C];
+ int rows    = 0;
+ int cols    = 0;
+ int curCols = 0;
+
+ // one child calculator for all elements — new names stay local to matrix
+ calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep + 1);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return toERROR;
+  }
+
+ while (*ipos && *ipos != ']')
+  {
+   if (*ipos != '(')
+    {
+     error ("Expected '('");
+     delete child;
+     return toERROR;
+    }
+   ipos++;
+   rows++;
+   if (rows > MAX_R)
+    {
+     error ("Too many rows");
+     delete child;
+     return toERROR;
+    }
+   curCols = 0;
+   while (isspace (*ipos & 0x7f)) ipos++;
+
+   while (*ipos && *ipos != ')' && *ipos != ']')
+    {
+     // collect element expression respecting parenthesis depth
+     char ebuf[STRBUF];
+     int eidx  = 0;
+     int depth = 0;
+     while (*ipos)
+      {
+       if (*ipos == '(')
+        depth++;
+       else if (*ipos == ')' && depth > 0)
+        depth--;
+       else if ((*ipos == ',' || *ipos == ')') && depth == 0)
+        break;
+       if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
+      }
+     ebuf[eidx] = '\0';
+     if (eidx == 0)
+      {
+       error ("Empty matrix element");
+       delete child;
+       return toERROR;
+      }
+
+     float__t res = child->evaluate (ebuf);
+     if (IsNaN (res) || child->error ()[0])
+      {
+       error (child->error ());
+       delete child;
+       return toERROR;
+      }
+
+     if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
+      {
+       error ("Matrix element must be scalar");
+       delete child;
+       return toERROR;
+      }
+     
+     if (child->result_imval != 0.0L)
+      {
+       error ("Complex matrix elements not supported");
+       delete child;
+       return toERROR;
+      }
+
+     curCols++;
+     if (curCols > MAX_C)
+      {
+       error ("Too many columns");
+       delete child;
+       return toERROR;
+      }
+     tmp[(rows - 1) * MAX_C + (curCols - 1)] = child->result_fval;
+
+     while (isspace (*ipos & 0x7f)) ipos++;
+     if (*ipos == ',') ipos++;
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+
+   if (*ipos != ')')
+    {
+     error ("Expected ')'");
+     delete child;
+     return toERROR;
+    }
+   ipos++;
+
+   if (rows == 1)
+    cols = curCols;
+   else if (curCols != cols)
+    {
+     error ("Inconsistent column count");
+     delete child;
+     return toERROR;
+    }
+
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (*ipos == ';')
+    {
+     ipos++;
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+   else if (*ipos != ']' && *ipos != '\0')
+    {
+     error ("Expected ';' or ']'");
+     delete child;
+     return toERROR;
+    }
+  }
+
+ delete child; // done with child calculator
+
+ if (*ipos != ']')
+  {
+   error ("Expected ']'");
+   return toERROR;
+  }
+ if (rows == 0 || cols == 0)
+  {
+   error ("Empty matrix");
+   return toERROR;
+  }
+
+ float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+ if (!mval)
+  {
+   error ("Memory allocation failed");
+   return toERROR;
+  }
+ 
+ registerString ((char *)mval);
+
+ for (int r = 0; r < rows; r++)
+  for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
+
+ pos                 = ipos - buf + 1;
+ v_stack[v_sp].sval  = nullptr;
+ v_stack[v_sp].var   = nullptr;
+ v_stack[v_sp].pos   = pos;
+ v_stack[v_sp].fval  = qnan;
+ v_stack[v_sp].imval = 0;
+ v_stack[v_sp].ival  = 0;
+ v_stack[v_sp].mrows = rows;
+ v_stack[v_sp].mcols = cols;
+ v_stack[v_sp].mval  = mval;
+ v_stack[v_sp].tag   = tvMATRIX;
+ v_sp++;
+ return toOPERAND;
+}
+
 //[(a11,a12,...);(a21,a22,...);...]
 // Matrix parser for calculator
 // Called with pos pointing to char after '['
@@ -2550,7 +2751,7 @@ t_operator calculator::sscan (symbol *sym)
 // buf and pos are class fields, dscan() advances pos automatically
 // Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful, 
 // or toERROR if there is a syntax error.
-t_operator calculator::sqbraces(void)
+t_operator calculator::sqbraces1(void)
 {
  int rows    = 0;
  int cols    = 0;
@@ -3418,7 +3619,7 @@ t_operator calculator::scan (bool operand, bool percent)
          {
           scfg |= CHR;
           ival               = *(unsigned char *)(ipos - 1);
-          v_stack[v_sp].sval = (char *)malloc (STRBUF);
+          v_stack[v_sp].sval = (char *)malloc (2);
           if (v_stack[v_sp].sval)
            {
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);
@@ -6187,10 +6388,35 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
           {
            v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
-           v_stack[v_sp - 2].tag = tvSTR;
+           v_stack[v_sp - 2].tag                          = tvSTR;
           }
          else
           v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
+
+#ifdef _COPY_MATRIX_ON_ASSIGN_
+         if (v_stack[v_sp - 1].tag == tvMATRIX)
+          {
+           int rows  = v_stack[v_sp - 1].mrows;
+           int cols  = v_stack[v_sp - 1].mcols;
+           int msize = rows * cols * sizeof (float__t);
+           if (msize)
+            {
+             float__t *new_mval = (float__t *)malloc (msize);
+             if (new_mval)
+              {
+               memcpy (new_mval, v_stack[v_sp - 1].mval, msize);
+               v_stack[v_sp - 2].mval = new_mval;
+               registerString ((char *)new_mval);
+              }
+             else
+              {
+               error (v_stack[v_sp - 1].pos, "Memory allocation failed");
+               result_fval = qnan;
+               return qnan;
+              }
+            }
+          }
+#endif //_COPY_MATRIX_ON_ASSIGN_
         }
        v_sp -= 1;
        break;
@@ -6498,7 +6724,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_sp -= 1;
              break;
 
-            case tsMFUNCM2:
+            case tsMFUNCM2: // matrix f(matrix x, matrix y)
              {
               if (n_args != 2)
                {
@@ -7050,7 +7276,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                 while (*p && isspace (*p)) p++;
                 float__t res = pCalculator->evaluate ((char *)p);
 
-               if (IsNaN (res))
+               if (IsNaN (res) || pCalculator->error ()[0])
                  {
                   errorf (v_stack[v_sp - n_args - 1].pos, "%s", pCalculator->error());
                   delete pCalculator;
@@ -7058,16 +7284,43 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   return qnan;
                  }
 
-                v_stack[v_sp - n_args - 1].fval  = pCalculator->get_re_res () ;
+                v_stack[v_sp - n_args - 1].tag = tvFLOAT;
+                v_stack[v_sp - n_args - 1].fval  = pCalculator->get_re_res ();
                 v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
                 v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
-                v_stack[v_sp - n_args - 1].tag   = tvFLOAT;
+
                 if (v_stack[v_sp - n_args - 1].imval != 0.0)
                  v_stack[v_sp - n_args - 1].tag = tvCOMPLEX;
-                else if ((float__t)v_stack[v_sp - n_args - 1].ival
-                         == v_stack[v_sp - n_args - 1].fval)
-                 v_stack[v_sp - n_args - 1].tag = tvINT;
-
+                else 
+                if ((float__t)v_stack[v_sp - n_args - 1].ival
+                           == v_stack[v_sp - n_args - 1].fval)
+                       v_stack[v_sp - n_args - 1].tag = tvINT;
+               if (pCalculator->get_res_tag () == tvMATRIX)
+                 {
+                  mxresult_t mxr = pCalculator->get_mx_res ();
+                  v_stack[v_sp - n_args - 1].tag = tvMATRIX;
+                  v_stack[v_sp - n_args - 1].mcols = mxr.cols;
+                  v_stack[v_sp - n_args - 1].mrows = mxr.rows;
+                  int msize = mxr.rows * mxr.cols * sizeof (float__t);
+                  if (msize)
+                   {
+                    float__t *new_mval = (float__t *)malloc (msize);
+                    if (new_mval)
+                     {
+                      memcpy (new_mval, mxr.mval, msize);
+                      v_stack[v_sp - n_args - 1].mval = new_mval;
+                      registerString ((char *)new_mval);
+                     }
+                    else
+                     {
+                      errorf (v_stack[v_sp - n_args - 1].pos, "Out of memory");
+                      delete pCalculator;
+                      result_fval = qnan;
+                      return qnan;
+                     }
+                   }
+                 }
+               else
                 if (pCalculator->get_res_tag() == tvSTR)
                  {
                   v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());

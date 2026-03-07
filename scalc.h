@@ -242,8 +242,8 @@ enum t_mresult
  mrERROR,   // represents an error result
 };
 
-#define MASK_ALL 0xffff
-#define MASK_NONE 0x0000
+#define MASK_ALL 0xffffffff
+#define MASK_NONE 0x00000000
 #define MASK_VARIABLE (1<< tsVARIABLE) // tsVARIABLE represents a variable symbol
 #define MASK_CONSTANT (1<< tsCONSTANT) // tsCONSTANT represents a constant symbol
 #define MASK_IFUNCF1 (1<< tsIFUNCF1) // tsIFUNCF1 represents an int function with one float argument
@@ -256,6 +256,10 @@ enum t_mresult
 #define MASK_PFUNCn (1<< tsPFUNCn) // tsPFUNCn represents a printf function with a variable number of arguments
 #define MASK_SFUNCF2 (1<< tsSFUNCF2) // tsSFUNCF2 represents a float function with two float arguments
 #define MASK_SIFUNC1 (1<< tsSIFUNC1) // tsSIFUNC1 represents an int function with one char* argument
+#define MASK_FFUNCM (1<< tsFFUNCM) // float f(matrix M)
+#define MASK_FFUNCM2 (1<< tsFFUNCM2)  // float f(matrix A, matrix B)
+#define MASK_MFUNCM (1<< tsMFUNCM)     // matrix f(matrix M)
+#define MASK_MFUNCM2 (1<< tsMFUNCM2) // matrix f(matrix A, matrix B)
 #define MASK_VFUNC1 (1<< tsVFUNC1) // tsVFUNC1 represents a void function with one value argument and one int argument
 #define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
 #define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
@@ -265,6 +269,7 @@ enum t_mresult
 #define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 \
                     | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
                     | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
+                    | MASK_FFUNCM |MASK_FFUNCM2 | MASK_MFUNCM | MASK_MFUNCM2 \
                     | MASK_VFUNC2 | MASK_UFUNCT)
 
 enum v_func // v_func represents the index of a built-in function in the calculator
@@ -385,6 +390,12 @@ struct GKResult
  bool ok;
 };
 
+struct mxresult_t
+{
+ uint8_t rows;  // Number of rows in the matrix
+ uint8_t cols;  // Number of columns in the matrix
+ float__t *mval; // Matrix values (pointer to array of floats)
+};
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
@@ -437,6 +448,9 @@ class calculator // calculator represents the main class for the expression calc
  t_operator sscan (symbol *sym); // Scan body of the solve, integr and diff 
 
  t_operator sqbraces (void); // Scan [..] matrix/vector constructor 
+
+ t_operator sqbraces1 (void); // Scan [..] matrix/vector constructor 
+
 
  t_operator braces (void);    // Scan the expression for parentheses and return the operator type of
                               // the next token after the parentheses
@@ -495,6 +509,7 @@ class calculator // calculator represents the main class for the expression calc
 
 
  float__t *mxAlloc (int rows, int cols);
+ float__t *dupMatrix (value &val);
  bool mxElemOp (value &res, value &left, value &right, int op);
  bool mxScalarOp (value &res, value &mx, float__t scalar, int op, bool scalar_left);
  bool mxMatMul (value &res, value &left, value &right);
@@ -550,6 +565,14 @@ class calculator // calculator represents the main class for the expression calc
  float__t get_im_res () { return result_imval; };
  t_value get_res_tag () { return result_tag; };
  char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
+ inline mxresult_t get_mx_res ()
+ {
+  mxresult_t res;
+  res.rows = res_rows;
+  res.cols = res_cols;
+  res.mval = res_mval;
+  return res;
+ };
 
  int print (char *str, int Options, int binwide,
             int *size = nullptr); // Print a string representation of the result with specified

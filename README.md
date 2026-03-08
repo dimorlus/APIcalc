@@ -86,9 +86,9 @@ ccalc "help(7)"                 # Options
 
 ### Basic Operations
 
-* Addition (+), Subtraction (-), Multiplication (\*), Division (/)
-* Modulo (%), Power (^)
-* Percentage (% and %%)
+* Addition `+`, Subtraction `-`, Multiplication `*`, Division `/`
+* Modulo `%`, Power `^`
+* Percentage `%` and `%%`
 * Parentheses for grouping
 * ; to separate expressions
 
@@ -489,7 +489,7 @@ L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", 
 
 ### Implicit Multiplication
 
-When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\*` operator in these common cases:
+When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*` operator in these common cases:
 
 1. **Number before function**: `2sin(x)` → `2 * sin(x)`
 2. **Number before parenthesis**: `3(4+5)` → `3 * (4+5)`
@@ -509,16 +509,16 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 
 * **Lowercase `i` and `j` are reserved for imaginary unit**: They are recognized **after** scientific suffixes.
   
-  * `5i` → `0+5i` (imaginary number, not `5 \* i` variable)
+  * `5i` → `0+5i` (imaginary number, not `5 * i` variable)
   * `5j` → `0+5j` (alternative imaginary unit notation)
   * `3pi` → `0+3e-12i` (interpreted as 3 pico + imaginary unit `i`)
 
 * **Use uppercase for variables to avoid conflicts**:
   
-  * `3PI` → `3 \* PI` ≈ 9.42 (implicit multiplication with PI constant)
-  * `3pI` → `3 \* pI` (also works: `p` followed by uppercase `I` avoids pico suffix)
-  * `5I` → `5 \* I` (uppercase `I` as variable, not imaginary unit)
-  * `2e` → `2 \* e` ≈ 5.44 (uppercase `E` as constant, not exponent notation)
+  * `3PI` → `3 * PI` ≈ 9.42 (implicit multiplication with PI constant)
+  * `3pI` → `3 * pI` (also works: `p` followed by uppercase `I` avoids pico suffix)
+  * `5I` → `5 * I` (uppercase `I` as variable, not imaginary unit)
+  * `2e` → `2 * e` ≈ 5.44 (uppercase `E` as constant, not exponent notation)
   * `2E` → `22e+18` (exa)
 
 **Recommended naming convention**: Use **UPPERCASE** for constants/variables to avoid conflicts with scientific suffixes and imaginary unit (e.g., `PI`, `E`, `PHI`, `X`, `Y`, `Z`).
@@ -542,7 +542,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 * **Pas style / C style**: Toggle between Pascal-like syntax (use `^` for power, `:=` for assignment) and C-like syntax
 * **Case sensitive**: Toggle case sensitivity for variables/functions
 * **Forced float**: Force all results to floating-point format
-* **Implicit multiplication**: Allow omitting `\*` operator (e.g., `2sin(x)`, `3PI`)
+* **Implicit multiplication**: Allow omitting `*` operator (e.g., `2sin(x)`, `3PI`)
 * **ESC minimized**: Minimize window on ESC key
 * **Always on top**: Keep calculator window on top of other windows
 * **Opacity**: Adjust window transparency

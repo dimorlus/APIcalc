@@ -491,11 +491,11 @@ L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", 
 
 When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\*` operator in these common cases:
 
-1. **Number before function**: `2sin(x)` → `2 \* sin(x)`
-2. **Number before parenthesis**: `3(4+5)` → `3 \* (4+5)`
-3. **Parenthesis after parenthesis**: `(1+2)(3+4)` → `(1+2) \* (3+4)`
-4. **Number before variable/constant**: `2PI` → `2 \* PI` (uppercase recommended)
-5. **Space instead of \***: `2 3 → 2\*3`
+1. **Number before function**: `2sin(x)` → `2 * sin(x)`
+2. **Number before parenthesis**: `3(4+5)` → `3 * (4+5)`
+3. **Parenthesis after parenthesis**: `(1+2)(3+4)` → `(1+2) * (3+4)`
+4. **Number before variable/constant**: `2PI` → `2 * PI` (uppercase recommended)
+5. **Space instead of \***: `2 3 → 2*3`
 
 **Important notes about scientific suffixes and imaginary unit:**
 

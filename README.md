@@ -80,7 +80,7 @@ ccalc "help(7)"                 # Options
 /SCI+ /IMUL+ /BW=64
 ```
 
-**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `\&`, `<`, `>` have special meaning in PowerShell/CMD.
+**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
 
 ## Supported Functions
 

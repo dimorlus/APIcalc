@@ -4160,7 +4160,7 @@ bool calculator::mxCross (value & res, value & A, value & B)
  int nb = B.mrows * B.mcols;
  if (na != 3 || nb != 3)
   {
-   error ("cross: cross product requires 3-element vectors");
+   mxerror ("cross: cross product requires 3-element vectors");
    return false;
   }
  float__t *mval = mxAlloc (A.mrows, A.mcols); // same shape as A
@@ -4265,13 +4265,13 @@ t_mresult calculator::matrixbin (value &res, value &left, value &right, t_operat
     {
      if (left.mrows != left.mcols)
       {
-       error ("Matrix power requires a square matrix");
+       mxerror ("Matrix power requires a square matrix");
        return mrERROR;
       }
      long long n = (long long)right.fval;
      if ((float__t)n != right.fval || n < 0)
       {
-       error ("Matrix power requires a non-negative integer exponent");
+       mxerror ("Matrix power requires a non-negative integer exponent");
        return mrERROR;
       }
      // start with identity matrix

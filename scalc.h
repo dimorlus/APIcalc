@@ -340,7 +340,7 @@ class value // value represents a value in the calculator, which can be an integ
 
  inline value ()
  {
-  tag   = tvINT;
+  tag   = tvERR; //tvINT;
   var   = nullptr; // Uses for variables and functions
   ival  = 0;
   fval  = 0.0;
@@ -435,8 +435,8 @@ class calculator // calculator represents the main class for the expression calc
  char sres[STRBUF]; // String result buffer
  char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
 
- uint8_t res_cols;
- uint8_t res_rows;
+ uint8_t res_cols; // Number of columns in the matrix result
+ uint8_t res_rows;   // Number of rows in the matrix result
  float__t *res_mval; // Matrix result (pointer to array of floats)
 
  int64_t result_ival; // Integer result

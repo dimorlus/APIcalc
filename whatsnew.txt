@@ -1,15 +1,20 @@
-+ Переделан парсер матриц. Теперь элементами матрицы могут быть не только числа, но и 
-  выражения, использующие ранее определенные (в том числе предопределенные) константы и 
-  переменные, если результат этого выражения или значение переменной реальное или целое число.
-  Комплексные числа, строки или матрицы не могут быть элементами матриц.
-* Переделана внутренняя структура символов. Теперь имя хранится статически и ограничено 15 
-  символами.   
+08.03.26 (2.123)
++ Added functions rows(), cols() and size(), which return the number of rows, columns and 
+  rows * columns of the matrix.
+- Fixed memory management that sometimes caused a crash.
+
+08.03.26 (2.122)
 + The matrix parser has been redesigned. Matrix elements can now be not only numbers, but also
   expressions using previously defined (including predefined) constants and variables, as long 
   as the result of this expression or variable value is a real number or an integer. Complex 
-  numbers, strings, or matrices cannot be matrix elements.
+  numbers, strings, or matrices cannot be matrix elements. Expressions can use variables declared 
+  in previous fields, but variables declared inside the matrix remain in the matrix and are no 
+  longer accessible. 
+  For example, [(a:=2 pi, a/3); (b:=e, b/2)] -> [(6.283, 2.094); (2.718, 1.359)]
 * The internal symbol structure has been redesigned. The name is now stored statically and is 
-  limited to 15 characters.
+  limited to 15 characters. 
+* The internal method for storing pointers to intermediate strings and matrices has been 
+  redesigned from a linked list to an array.
   
 06.03.26 (2.121)
 + Added a Description section to the help file, with a more or less detailed description 

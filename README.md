@@ -230,10 +230,11 @@ Matrices up to 7×7 are supported. Matrix syntax:
 [(a11, a12, ...); (a21, a22, ...); ...]
 ```
 
-Each row is enclosed in `()`, rows are separated by `;`, the whole matrix is enclosed in `[]`. Elements are plain numbers (SI suffixes supported, no expressions):
+Each row is enclosed in `()`, rows are separated by `;`, the whole matrix is enclosed in `[]`. Elements can be plain numbers (SI suffixes supported) or expressions using previously defined constants and variables, as long as the result is a real number or integer. Complex numbers, strings, or matrices cannot be matrix elements. Variables declared inside the matrix are local to it and not accessible afterwards:
 
 ```
 [(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)]
+[(a:=2*pi, a/3); (b:=e, b/2)]  →  [(6.283, 2.094); (2.718, 1.359)]
 ```
 
 When the result is a matrix, it is displayed in engineering format, one row per line:
@@ -282,6 +283,9 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 | `abs(M)` | matrix | element-wise absolute value |
 | `dot(A, B)` | scalar | dot product of two vectors (1×N or N×1), any length |
 | `cross(A, B)` | vector | cross product of two 3-element vectors (1×3 or 3×1) |
+| `rows(M)` | scalar | Return rows of matrix |
+| `cols(M)` | scalar | Return columns of matrix |
+| `size(M)` | scalar | Return rows\*columns of matrix |
 
 #### Matrix Examples
 

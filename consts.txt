@@ -196,6 +196,8 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 
 ;; --- Square equation roots --- 
 {d_sqe(a, b, c) b^2 - 4 * a * c};; Discriminant
+;;{r1_sqe(a, b, c) (-b + sqrt(cpx(d_sqe(a, b, c), 1f))) / (2 * a)};; First root
+;;{r2_sqe(a, b, c) (-b - sqrt(cpx(d_sqe(a, b, c), 1f))) / (2 * a)};; Second root
 {r1_sqe(a, b, c) (-b + sqrt(d_sqe(a, b, c))) / (2 * a)};; First root
 {r2_sqe(a, b, c) (-b - sqrt(d_sqe(a, b, c))) / (2 * a)};; Second root
 
@@ -289,7 +291,7 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 {area_c(r) pi*r^2};; Circle area
 {vol_sphere(r) (4/3)*pi*r^3};; Sphere volume
 
-;; --- Conversions --
+;; --- Conversions ---
 {mil_to_mm(m) m * 0.0254};; Mil (thou) to mm
 {cmil_to_mm2(cm) cm * 0.0005067};; Circular mil to mm²
 {mm2_to_cmil(mm2) mm2 / 0.0005067};; mm² to Circular mil
@@ -301,3 +303,30 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 {hp_to_kw(p) p * 0.7457};; Mechanical HP to kW
 {r_to_usi(rv) 1/(rv * 0.1761)};; R-value (US) to U-factor (Metric W/m²K)
 
+;; --- Vector and Matrix Utility Functions ---
+
+;; Returns the angle between two vectors in radians
+{angle(A, B) acos(dot(A, B) / (norm(A) * norm(B)))}
+
+;; Returns the Euclidean distance between two points (vectors)
+{dist(A, B) norm(A - B)}
+
+;; Returns the unit vector (direction) of A
+{unit(A) A / norm(A)}
+
+;; Solves a system of linear equations A*X = B (returns vector X)
+{solve_lin(A, B) !A * B}
+
+;; Returns the projection of vector A onto vector B
+{proj(A, B) (dot(A, B) / dot(B, B)) * B}
+
+;; Linear interpolation between A and B (t from 0 to 1)
+{lerp(A, B, t) A + t * (B - A)}
+
+;; Returns the scalar triple product of three 3D vectors
+{triple(A, B, C) dot(A, cross(B, C))}
+
+;; --- Coordinate Transformations ---
+
+;; Returns a 2D rotation matrix for a given angle alpha
+{rot2(a) [(cos(a), -sin(a)); (sin(a), cos(a))]}

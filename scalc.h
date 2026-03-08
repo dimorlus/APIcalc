@@ -243,6 +243,14 @@ enum t_mresult
  mrERROR,   // represents an error result
 };
 
+enum t_mxDim
+{
+ mxRows,   
+ mxCols,   
+ mxSize,  
+};
+
+
 #define MASK_ALL 0xffffffff
 #define MASK_NONE 0x00000000
 #define MASK_VARIABLE (1<< tsVARIABLE) // tsVARIABLE represents a variable symbol
@@ -349,6 +357,14 @@ class value // value represents a value in the calculator, which can be an integ
  inline int_t get_int () { return tag == tvINT ? ival : (int_t)fval; }
  inline char *get_str () { return tag == tvSTR ? sval : nullptr; }
  inline bool is_scalar () { return tag == tvINT || tag == tvFLOAT; }
+
+//inline ~value ()
+// {
+//  if (sval) free (sval);
+//  if (mval) free (mval);
+//  sval = nullptr;
+//  mval = nullptr;
+// }
 };
 
 class symbol // symbol represents a symbol in the calculator, which can be a variable, constant, or
@@ -359,7 +375,6 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
  v_func fidx;  // Function index
  void *func;   // Function pointer
  value val;    // Value associated with the symbol
- //char *name;   // Name of the symbol
  char name[MAXNAME]; // Name of the symbol (fixed-size array to avoid dynamic memory allocation)
  symbol *next; // Next symbol in the hash table chain
 
@@ -368,7 +383,6 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
   tag  = tsVARIABLE;
   fidx = vf_num;
   func = nullptr;
-  //name = nullptr;
   name[0] = '\0'; // Initialize name to an empty string
   next = nullptr;
  }
@@ -378,13 +392,6 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
 const int max_stack_size        = 256;  // Maximum size of value and operator stacks
 const int max_expression_length = 1024; // Maximum length of expression
 const int hash_table_size = 1013; // Size of hash table for variables and functions
-
-struct StringNode // StringNode represents a node in a linked list of strings used for memory
-                  // management of allocated strings
-{
- void *mem;        // String pointer to the allocated string
- StringNode *next; // Next node in the list
-};
 
 struct GKResult
 {
@@ -410,7 +417,11 @@ class calculator // calculator represents the main class for the expression calc
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
- StringNode *mem_list_head; // Head of the string list
+
+ void *mem_list[max_stack_size]; // Memory for temporary strings used during expression parsing and
+                            // evaluation
+ int mem_idx;               // Index for the mem array  to manage temporary string memory
+
  int v_sp; // Value stack pointer
  int o_sp; // Operator stack pointer
  char *buf; // Buffer for expression parsing
@@ -433,16 +444,21 @@ class calculator // calculator represents the main class for the expression calc
  float__t result_imval; // Imaginary part of complex result
  t_value result_tag; // Type of result
 
+ void AddPredefined (void);
 
- 
- void *register_mem (void *mem); // Register a string in the string list and return the registered string pointer
- void unregister_mem (void *mem);   // Unregister a string from the string list 
+ void copy_symbols (symbol **symtab = nullptr, int mask = MASK_DEFAULT);
+
+ void init_mem_list (); // Initialize the mem array and mem_idx for memory management of temporary
+                        // strings and matrix values
+ int search_mem (void *mem); // Search for a pointer in the mem array and return its index, or -1 if not found
+ void *register_mem (void *mem); // Register a pointer in the mem array and return the registered pointer
+ void unregister_mem (void *mem); // Unregister a pointer from the mem array by setting its entry to nullptr
+
  void clear_mem_list (); // Clear all strings in the string list
  void save_vars_mem (void);
  
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
- void dupstrvars (void); // Duplicate string variables in the hash table (used when copying the calculator state)
 
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
@@ -455,9 +471,7 @@ class calculator // calculator represents the main class for the expression calc
 
  t_operator sqbraces (void); // Scan [..] matrix/vector constructor 
 
- t_operator sqbraces1 (void); // Scan [..] matrix/vector constructor 
-
-
+ 
  t_operator braces (void);    // Scan the expression for parentheses and return the operator type of
                               // the next token after the parentheses
  t_operator dqscan (char qc); // Scan the double quote string in the expression and return its operator
@@ -548,6 +562,8 @@ class calculator // calculator represents the main class for the expression calc
  float__t mxTrace (value &M);
  float__t mxDet (value &M);
  float__t mxNorm (value &M);
+ float__t mxDim (value &M, t_mxDim dim);
+
  bool mxDot (value &res, value &A, value &B);
  bool mxCross (value &res, value &A, value &B);
 

@@ -93,6 +93,51 @@ void DebugLog (const char *format, ...)
 #endif // _ENABLE_DEBUG_LOG_
 
 
+calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
+{
+ this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
+ v_sp         = 0;    // Clear the value stack pointer
+ o_sp         = 0;    // Clear the operator stack pointer
+
+ res_cols      = 0;    // Clear the result columns count
+ res_rows      = 0;    // Clear the result rows count
+ res_mval      = nullptr; // Clear the matrix result pointer
+
+ result_fval  = qnan; // Clear the floating-point result
+ result_imval = 0.0;  // Clear the imaginary result
+ result_ival  = 0;    // Clear the integer result
+ buf           = nullptr;
+ errpos        = 0;
+ pos           = 0;
+ expr          = false;
+ tmp_var_count = 0;
+ err[0]        = '\0';
+ scfg          = cfg;
+ sres[0]       = '\0';
+ memset (v_stack, 0, sizeof v_stack);
+
+ //mem_list_head = nullptr;
+
+ c_imaginary = 'i';
+ // randomize();
+ srand (static_cast<unsigned int> (time (nullptr)));
+ memset (hash_table, 0, sizeof hash_table);
+
+ init_mem_list ();
+
+ if (symtab) copy_symbols (symtab, copyMask);
+ else AddPredefined ();
+}
+
+calculator::~calculator (void)
+{
+ destroyvars ();
+ clear_mem_list ();
+ if (res_mval) free (res_mval);
+}
+//---------------------------------------------------------------------------
+
+
 float__t Const (void *clc, char *name, float__t x)
 {
  return ((calculator *)clc)->AddConst (name, x);
@@ -128,88 +173,27 @@ bool Cross (void *clc, value &res, value &A, value &B)
  return ((calculator *)clc)->mxCross (res, A, B);
 }
 
-calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
+float__t Rows (void *clc, value &M)
 {
- this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
- v_sp         = 0;    // Clear the value stack pointer
- o_sp         = 0;    // Clear the operator stack pointer
+ return ((calculator *)clc)->mxDim (M, mxRows);
+}
 
- res_cols      = 0;    // Clear the result columns count
- res_rows      = 0;    // Clear the result rows count
- res_mval      = nullptr; // Clear the matrix result pointer
+float__t Cols (void *clc, value &M)
+{
+ return ((calculator *)clc)->mxDim (M, mxCols);
+}
 
- result_fval  = qnan; // Clear the floating-point result
- result_imval = 0.0;  // Clear the imaginary result
- result_ival  = 0;    // Clear the integer result
- buf           = nullptr;
- errpos        = 0;
- pos           = 0;
- expr          = false;
- tmp_var_count = 0;
- err[0]        = '\0';
- scfg          = cfg;
- sres[0]       = '\0';
- memset (v_stack, 0, sizeof v_stack);
- mem_list_head = nullptr;
- c_imaginary = 'i';
- // randomize();
- srand (static_cast<unsigned int> (time (nullptr)));
- memset (hash_table, 0, sizeof hash_table);
+float__t Size (void *clc, value &M)
+{
+ return ((calculator *)clc)->mxDim (M, mxSize);
+}
 
- // Copy symbols from the provided symbol table
- // The function should create a new hashed linked list 
- // from the existing one, duplicate the names, and create 
- // copies of string variables that will be deleted in 
- // the destructor. At the same time, it should allow 
- // flexible selection of which nodes to copy and which 
- // not (depending on the value of the tag field). 
- // All pointers freed in the destructor must be 
- // recreated; the rest can be copied.
- if (symtab)
-  {
-   for (int i = 0; i < hash_table_size; i++)
-    {
-     symbol *src = symtab[i];
-     symbol **dst = &hash_table[i];
 
-     while (src)
-      {
-       // Check the mask: tsUFUNCT is always skipped to avoid recursion
-       // Other tags are checked against the copyMask
-       // if (src->tag != tsUFUNCT && (copyMask & (1 << src->tag)))
-       if ((copyMask & (1 << src->tag)))
-        {
-         symbol *ns = new symbol;
-         *ns = *src;  // Copy all fields (tag, fidx, func, val)
-
-         // name always duplicated — destroyvars() frees it using free()
-         //ns->name = src->name ? strdup (src->name) : nullptr;
-
-         // val.sval for string variables — duplicate if _STR_VAR_FREE_ is defined
-         if ((src->tag == tsVARIABLE) && (src->val.tag == tvSTR) && src->val.sval)
-          ns->val.sval = strdup (src->val.sval);
-
-            // val.sval for matrix variables — duplicate if _MX_VAR_FREE_ is defined
-         if ((src->tag == tsVARIABLE) && (src->val.tag == tvMATRIX) && src->val.mval)
-         {
-           ns->val.mval = dupMatrix (src->val);
-         }
-          
-         // func for tsUFUNCT is not copied (see condition above),
-         // for other func — pointer to static function, copy as is
-         if (src->tag == tsUFUNCT) 
-             ns->func = strdup((char *)src->func);
-
-         ns->next = nullptr;
-         *dst = ns;
-         dst = &ns->next;
-        }
-       src = src->next;
-      }
-    }
-   return;
-  }
-
+void calculator::AddPredefined (void)
+{
+ // This function can be used to add predefined constants and functions
+ // to the symbol table. It is called from the constructor after initializing
+ // the hash table and copying symbols from the provided symbol table (if any).
  add (tsSOLVE, "solve", nullptr);
  add (tsCALC, "calc", nullptr);
  add (tsINTEGR, "integr", nullptr);
@@ -225,8 +209,9 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  add (tsFFUNCM, "norm", (void *)Norm);
  add (tsMFUNCM2, "dot", (void *)Dot);
  add (tsMFUNCM2, "cross", (void *)Cross);
-
-
+ add (tsFFUNCM, "rows", (void *)Rows);
+ add (tsFFUNCM, "cols", (void *)Cols);
+ add (tsFFUNCM, "size", (void *)Size);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -350,106 +335,105 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 
  // Other imperial constants
  // Distance and length
- addfconst ("inch", 0.0254); // Inch (m)
- addfconst ("mil", 0.0000254); // 1/1000Inch (m)
- addfconst ("ft", 0.3048);   // Foot (m)
- addfconst ("yd", 0.9144);   // Yard (m)
- addfconst ("foot", 0.3048);   // Foot (m)
- addfconst ("yard", 0.9144);   // Yard (m)
- addfconst ("mi", 1609.344); // Mile (m)
+ addfconst ("inch", 0.0254);     // Inch (m)
+ addfconst ("mil", 0.0000254);   // 1/1000Inch (m)
+ addfconst ("ft", 0.3048);       // Foot (m)
+ addfconst ("yd", 0.9144);       // Yard (m)
+ addfconst ("foot", 0.3048);     // Foot (m)
+ addfconst ("yard", 0.9144);     // Yard (m)
+ addfconst ("mi", 1609.344);     // Mile (m)
  addfconst ("mile", 1609.344);   // Mile (m)
- addfconst ("nmi", 1852.0);    // Nautical mile
+ addfconst ("nmi", 1852.0);      // Nautical mile
  addfconst ("ptt", 0.0254 / 72); // Point (m)
 
- // Mass 
- addfconst ("lb", 0.45359237L); // Pound (kg)
+ // Mass
+ addfconst ("lb", 0.45359237L);     // Pound (kg)
  addfconst ("oz", 0.028349523125L); // Ounce (kg)
- addfconst ("st", 6.35029318L);      // Stone (kg)
- addfconst ("gr", 0.001);          // Gram (kg)
- addfconst ("kg", 1.0);          // Kilogram (kg)
+ addfconst ("st", 6.35029318L);     // Stone (kg)
+ addfconst ("gr", 0.001);           // Gram (kg)
+ addfconst ("kg", 1.0);             // Kilogram (kg)
 
-// Volume
- addfconst ("gal", 0.003785411784L); // US Gallon (m³)
- addfconst ("qt", 0.000946352946L);  // US Quart (m³)
- addfconst ("pt", 0.000473176473L);  // US Pint (m³)
- addfconst ("cup", 0.0002365882365L); // US Cup (m³)
- addfconst ("floz", 2.95735295625e-5L); // US Fluid Ounce (m³)
- addfconst ("tbsp", 1.478676478125e-5L); // US Tablespoon (m³) 
+ // Volume
+ addfconst ("gal", 0.003785411784L);     // US Gallon (m³)
+ addfconst ("qt", 0.000946352946L);      // US Quart (m³)
+ addfconst ("pt", 0.000473176473L);      // US Pint (m³)
+ addfconst ("cup", 0.0002365882365L);    // US Cup (m³)
+ addfconst ("floz", 2.95735295625e-5L);  // US Fluid Ounce (m³)
+ addfconst ("tbsp", 1.478676478125e-5L); // US Tablespoon (m³)
  addfconst ("tsp", 4.92892159375e-6L);   // US Teaspoon (m³)
- addfconst ("lt", 0.001);               // liters (m³)
- addfconst ("ml", 0.000001);            // milliliters (m³)
- addfconst ("cc", 0.000001);            // milliliters (m³)
+ addfconst ("lt", 0.001);                // liters (m³)
+ addfconst ("ml", 0.000001);             // milliliters (m³)
+ addfconst ("cc", 0.000001);             // milliliters (m³)
 
  // Energy
- addfconst ("cal", 4.184);          // Calorie (J)
- addfconst ("kcal", 4184.0);        // Kilocalorie (J)
- addfconst ("btu", 1055.05585262);  // British thermal unit (J)
- addfconst ("wh", 3600.0);          // Watt hour (J)
- addfconst ("kwh", 3600000.0);      // Kilowatt hour (J)
- addfconst ("mwh", 3600000000.0);   // Megawatt hour (J)
- addfconst ("gtnt", 4184);          // Gram of TNT (Joules)
- addfconst ("ttnt", 4.184e9);       // Tonne of TNT (Joules)
- addfconst ("ktnt", 4.184e12);      // Kiloton of TNT (Joules)
- addfconst ("mtnt", 4.184e15);      // Megaton of TNT (Joules)
- addfconst ("ev", 1.602176634e-19); // Electronvolt (J)
+ addfconst ("cal", 4.184);           // Calorie (J)
+ addfconst ("kcal", 4184.0);         // Kilocalorie (J)
+ addfconst ("btu", 1055.05585262);   // British thermal unit (J)
+ addfconst ("wh", 3600.0);           // Watt hour (J)
+ addfconst ("kwh", 3600000.0);       // Kilowatt hour (J)
+ addfconst ("mwh", 3600000000.0);    // Megawatt hour (J)
+ addfconst ("gtnt", 4184);           // Gram of TNT (Joules)
+ addfconst ("ttnt", 4.184e9);        // Tonne of TNT (Joules)
+ addfconst ("ktnt", 4.184e12);       // Kiloton of TNT (Joules)
+ addfconst ("mtnt", 4.184e15);       // Megaton of TNT (Joules)
+ addfconst ("ev", 1.602176634e-19);  // Electronvolt (J)
  addfconst ("kev", 1.602176634e-16); // Kiloelectronvolt (J)
  addfconst ("mev", 1.602176634e-13); // Megaelectronvolt (J)
  addfconst ("gev", 1.602176634e-10); // Gigaelectronvolt (J)
 
  // Power
  addfconst ("hps", 745.69987158227022L); // Horsepower (W)
- addfconst ("bhp", 745.69987158227022L); // Brake horsepower (W) 
- 
+ addfconst ("bhp", 745.69987158227022L); // Brake horsepower (W)
+
  // Pressure
- addfconst ("atm", 101325.0);          // Standard atmosphere (Pa)
- addfconst ("bar", 100000.0);          // Bar (Pa)
+ addfconst ("atm", 101325.0);           // Standard atmosphere (Pa)
+ addfconst ("bar", 100000.0);           // Bar (Pa)
  addfconst ("psi", 6894.757293168361L); // Pound-force per square inch (Pa)
 
  // Speed
- addfconst ("kmh", 0.277777778); // Kilometers per hour to meters per second
- addfconst ("mph", 0.44704);     // Miles per hour to meters per second   
+ addfconst ("kmh", 0.277777778);  // Kilometers per hour to meters per second
+ addfconst ("mph", 0.44704);      // Miles per hour to meters per second
  addfconst ("knot", 0.514444444); // Nautical miles per hour to meters per second
 
  // Time
- addfconst ("hour", 3600);        //Hour in seconds
- addfconst ("hr", 3600);          // Hour in seconds
- addfconst ("mnt", 60);           // Minute in seconds
+ addfconst ("hour", 3600); // Hour in seconds
+ addfconst ("hr", 3600);   // Hour in seconds
+ addfconst ("mnt", 60);    // Minute in seconds
 
  // Radiation units
- addfconst ("gy", 1.0);           // Gray (J/kg) - Base SI
- addfconst ("rad", 0.01);         // Rad (absorbed dose)
- addfconst ("sv", 1.0);           // Sievert (Equivalent dose) - Base SI
- addfconst ("rem", 0.01);         // Roentgen Equivalent Man (0.01 Sv)
- addfconst ("rn", 0.00877);       // Roentgen (approx in air)
- addfconst ("mrn", 0.00000877);   // Milli-roentgen
- addfconst ("urn", 0.00000000877); // Micro-roentgen
+ addfconst ("gy", 1.0);             // Gray (J/kg) - Base SI
+ addfconst ("rad", 0.01);           // Rad (absorbed dose)
+ addfconst ("sv", 1.0);             // Sievert (Equivalent dose) - Base SI
+ addfconst ("rem", 0.01);           // Roentgen Equivalent Man (0.01 Sv)
+ addfconst ("rn", 0.00877);         // Roentgen (approx in air)
+ addfconst ("mrn", 0.00000877);     // Milli-roentgen
+ addfconst ("urn", 0.00000000877);  // Micro-roentgen
  addfconst ("ngnt", 3.6 * 0.00877); // Not great, not terrible (3.6 R)
 
  // Magnetic units
- addfconst ("tl", 1.0);  // Magnetic flux density (or magnetic induction) Tesla - Base SI 
+ addfconst ("tl", 1.0);  // Magnetic flux density (or magnetic induction) Tesla - Base SI
  addfconst ("wb", 1.0);  // Magnetic flux Weber - Base SI
  addfconst ("gs", 1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
  addfconst ("mw", 1e-8); // Magnetic flux Maxwell to Weber
  addfconst ("oe", (1000.0 / (4.0 * M_PI))); // Magnetic field strength (H) Oersted to A/m
  addfconst ("gb", (10.0 / (4.0 * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
 
-
  // Physical constants (CODATA 2018)
  // Fundamental constants
- addfconst ("c0", 299792458.0);     // Speed of light in vacuum (m/s)
- addfconst ("hp", 6.62607015e-34);  // Planck constant (J·s)
- addfconst ("hb", 1.054571817e-34); // Reduced Planck constant ℏ (J·s)
- addfconst ("gn", 6.67430e-11);     // Gravitational constant (m³/(kg·s²))
- addfconst ("na", 6.02214076e23);   // Avogadro constant (mol⁻¹)
- addfconst ("kb", 1.380649e-23);    // Boltzmann constant (J/K)
- addfconst ("rg", 8.314462618);     // Universal gas constant (J/(mol·K))
- addfconst ("sf", 5.670374419e-8);  // Stefan-Boltzmann constant (W/(m²·K⁴))
- addfconst ("rs", 8.314462618);     // Ideal gas constant kb*Na (J/(mol·K))
+ addfconst ("c0", 299792458.0);          // Speed of light in vacuum (m/s)
+ addfconst ("hp", 6.62607015e-34);       // Planck constant (J·s)
+ addfconst ("hb", 1.054571817e-34);      // Reduced Planck constant ℏ (J·s)
+ addfconst ("gn", 6.67430e-11);          // Gravitational constant (m³/(kg·s²))
+ addfconst ("na", 6.02214076e23);        // Avogadro constant (mol⁻¹)
+ addfconst ("kb", 1.380649e-23);         // Boltzmann constant (J/K)
+ addfconst ("rg", 8.314462618);          // Universal gas constant (J/(mol·K))
+ addfconst ("sf", 5.670374419e-8);       // Stefan-Boltzmann constant (W/(m²·K⁴))
+ addfconst ("rs", 8.314462618);          // Ideal gas constant kb*Na (J/(mol·K))
  addfconst ("nae", 2.1798723611035e-18); // Rydberg energy (J)
  addfconst ("mu", 1.66053906660e-27);    // Atomic mass constant (kg)
 
- addfconst ("stdt", 273.15);        // Standard temperature (K)
- 
+ addfconst ("stdt", 273.15); // Standard temperature (K)
+
  // Electromagnetic constants
  addfconst ("e0", 8.8541878128e-12); // Electric constant, vacuum permittivity (F/m)
  addfconst ("u0", 1.25663706212e-6); // Magnetic constant, vacuum permeability (H/m)
@@ -467,7 +451,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("au", 1.495978707e11L);     // Astronomical unit (m)
  addfconst ("ly", 9.4607304725808e15L); // Light year (m)
  addfconst ("pc", 3.0856775814914e16L); // Parsec (m)
- addfconst ("g0", 9.80665);            // Standard gravity (m/s²)
+ addfconst ("g0", 9.80665);             // Standard gravity (m/s²)
 
  // Additional constants
  addfconst ("ry", 10973731.568160); // Rydberg constant (m⁻¹)
@@ -515,14 +499,69 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  addfconst ("version", _ver_);
  addim ();
 }
+ 
+// Copy symbols from the provided symbol table with the specified copy mask
+// Copy symbols from the provided symbol table
+// The function should create a new hashed linked list
+// from the existing one, duplicate the names, and create
+// copies of string variables that will be deleted in
+// the destructor. At the same time, it should allow
+// flexible selection of which nodes to copy and which
+// not (depending on the value of the tag field).
+// All pointers freed in the destructor must be
+// recreated; the rest can be copied.
 
-calculator::~calculator (void)
+
+void calculator::copy_symbols (symbol **symtab, int mask)
 {
- clear_mem_list ();
- destroyvars ();
- if (res_mval) free (res_mval);
+ symbol *sp;
+ symbol *nsp;
+
+ for (int i = 0; i < hash_table_size; i++)
+ {
+  if ((sp = symtab[i]) != nullptr)
+   {
+    do
+     {
+      nsp = sp->next;
+      if (sp->name[0])
+       {
+        if ((mask & (1 << sp->tag)))
+         {
+          symbol *new_symbol = add (sp->tag, sp->name); //, sp->func);
+          if (new_symbol)
+           {
+            new_symbol->tag = sp->tag;
+            strcpy (new_symbol->name, sp->name); // Duplicate name for safety (freed in destructor)
+
+            new_symbol->fidx = sp->fidx;
+            if (sp->tag == tsUFUNCT && sp->func)
+                new_symbol->func = strdup((char *)sp->func); // Duplicate function name for user-defined functions
+            else
+                new_symbol->func = sp->func; // Copy function pointer as is (static functions)
+            
+            new_symbol->val.tag = sp->val.tag;
+            new_symbol->val.ival = sp->val.ival;
+            new_symbol->val.fval = sp->val.fval;
+            new_symbol->val.imval = sp->val.imval;
+            new_symbol->val.mcols = sp->val.mcols;
+            new_symbol->val.mrows = sp->val.mrows;
+            new_symbol->val.sval  = nullptr;
+            new_symbol->val.mval  = nullptr;
+            if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && sp->val.sval)
+             new_symbol->val.sval = strdup (sp->val.sval); // Duplicate string value
+            else if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && sp->val.mval)
+             new_symbol->val.mval = dupMatrix (sp->val); // Duplicate matrix value
+           }
+         }
+       }
+      sp = nsp;
+     }
+    while (nsp);
+   }
+ }
 }
-//---------------------------------------------------------------------------
+
 void calculator::destroyvars (void) // Free all symbols in the hash table
 {
  symbol *sp;
@@ -535,26 +574,41 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
      do
       {
        nsp = sp->next;
-#ifdef _STR_VAR_FREE_
+       if (sp->name[0])
+        {
+       // #ifdef _STR_VAR_FREE_
        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
         {
-         if (sp->val.sval) free (sp->val.sval);
+         if (sp->val.sval)
+          {
+           unregister_mem (sp->val.sval); // Unregister string from memory list
+           free (sp->val.sval);
+          }
          sp->val.sval = nullptr;
         }
-#endif //_STR_VAR_FREE_
+       // #endif //_STR_VAR_FREE_
 
-#ifdef _MX_VAR_FREE_
+       // #ifdef _MX_VAR_FREE_
        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
         {
-         if (sp->val.mval) free (sp->val.mval);
+         if (sp->val.mval) 
+         {
+          unregister_mem (sp->val.mval); // Unregister matrix from memory list
+          free (sp->val.mval);
+         }
          sp->val.mval = nullptr;
         }
-#endif //_MX_VAR_FREE_
+       // #endif //_MX_VAR_FREE_
 
-       if (sp->tag == tsUFUNCT) free (sp->func);
-       //if (sp->name) free (sp->name);
-       //sp->name = nullptr;
+       if (sp->tag == tsUFUNCT && sp->func) 
+        {
+         unregister_mem (sp->func); // Unregister function name from memory list 
+         free (sp->func);
+         sp->func = nullptr;
+        }    
+
        sp->name[0] = '\0';
+       }
        delete sp;
        sp            = nsp;
        hash_table[i] = nullptr;
@@ -564,67 +618,46 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
   }
 }
 
-void calculator::dupstrvars (void) // Duplicate string variables in the hash table
+void calculator::init_mem_list ()
 {
- symbol *sp;
- for (int i = 0; i < hash_table_size; i++)
+ for (int i = 0; i < max_stack_size; i++) mem_list[i] = nullptr;
+ mem_idx = 0;
+}
+int calculator::search_mem (void *mem)
+{
+ for (int i = 0; i < mem_idx; i++)
+  if (mem_list[i] == mem) return i;
+ return -1;
+}
+void *calculator::register_mem (void *mem)
+{
+ if (search_mem (mem) != -1) return mem;
+ if (mem_idx < max_stack_size)
   {
-   if ((sp = hash_table[i]))
-    {
-     do
-      {
-       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
-        {
-         sp->val.sval = strdup (sp->val.sval);
-        }
-       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
-        {
-         sp->val.mval = dupMatrix (sp->val);
-        }   
-       sp = sp->next;
-      }
-     while (sp);
-    }
+   mem_list[mem_idx++] = mem;
+   return mem;
+  }
+ return nullptr; // Memory list full
+}
+void calculator::unregister_mem(void* mem) //
+{
+ int idx = search_mem(mem);
+ if (idx != -1) 
+  {
+   mem_list[idx] = nullptr; // Mark as unregistered (will not be freed in clearAllStrings)
   }
 }
-
- 
-void *calculator::register_mem (void *mem) // Register a string in the string list for later cleanup
+void calculator::clear_mem_list () // Free all registered strings in the string list
 {
- if (mem)
+ for (int i = 0; i < mem_idx; i++)
   {
-   StringNode *node = new StringNode;
-   node->mem        = mem;
-   node->next       = mem_list_head;
-   mem_list_head = node;
+   if (mem_list[i]) 
+       free (mem_list[i]);
+   mem_list[i] = nullptr;
   }
-  return mem;
+ mem_idx = 0;
 }
 
-void calculator::unregister_mem (void *mem) // 
-{
- StringNode *node = mem_list_head;
- while (node)
-  {
-   if (node->mem == mem) node->mem = nullptr; // Mark as unregistered 
-                                         // (will not be freed in clearAllStrings)
-   StringNode *next = node->next;
-   node = next;
-  }
- }
-
- void calculator::clear_mem_list () // Free all registered strings in the string list
- {
-  StringNode *node = mem_list_head;
-  while (node)
-   {
-    free (node->mem);
-    StringNode *next = node->next;
-    delete node;
-    node = next;
-   }
-  mem_list_head = nullptr;
- }
 
 void calculator::save_vars_mem (void) // Clear all registered strings without freeing memory (for use in copy constructor)
 {
@@ -635,12 +668,13 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
     {
      do
       {
-       if ((sp->tag == tsVARIABLE) && 
-           (sp->val.tag == tvSTR) && (sp->val.sval))
-        unregister_mem (sp->val.sval);
-       if ((sp->tag == tsVARIABLE) && 
-           (sp->val.tag == tvMATRIX) && (sp->val.mval))
-        unregister_mem (sp->val.mval);
+       if (sp->name[0])
+        {
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && (sp->val.sval))
+          unregister_mem (sp->val.sval);
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && (sp->val.mval))
+          unregister_mem (sp->val.mval);
+        }
        sp = sp->next;
       }
      while (sp);
@@ -1233,6 +1267,7 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
  return lineCount;
 }
 
+//---------------------------------------------------------------------------
 // A simple hash function for strings (djb2 by Dan Bernstein)
 unsigned calculator::string_hash_function (const char *p) 
 {
@@ -1273,13 +1308,15 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
  sp->tag       = tag;
  sp->fidx      = fidx;
  sp->func      = func;
- //sp->name      = strdup (name);
  strcpy (sp->name, name);
  sp->val.tag   = tvERR; // tvINT;
  sp->val.ival  = 0;
  sp->val.fval  = qnan;
  sp->val.imval = 0;
  sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
  sp->next      = hash_table[h];
  hash_table[h] = sp;
  return sp;
@@ -2613,6 +2650,13 @@ t_operator calculator::sscan (symbol *sym)
  return toERROR;
 }
 
+//[(a11,a12,...);(a21,a22,...);...]
+// Matrix parser for calculator
+// Called with pos pointing to char after '['
+// Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
+// Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful,
+// or toERROR if there is a syntax error.
+
 t_operator calculator::sqbraces (void)
 {
  char *ipos = buf + pos;
@@ -2624,7 +2668,7 @@ t_operator calculator::sqbraces (void)
  int curCols = 0;
 
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep + 1);
+ calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -2781,239 +2825,6 @@ t_operator calculator::sqbraces (void)
  v_sp++;
  return toOPERAND;
 }
-
-//[(a11,a12,...);(a21,a22,...);...]
-// Matrix parser for calculator
-// Called with pos pointing to char after '['
-// Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
-// buf and pos are class fields, dscan() advances pos automatically
-// Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful, 
-// or toERROR if there is a syntax error.
-t_operator calculator::sqbraces1(void)
-{
- int rows    = 0;
- int cols    = 0;
- int curCols = 0;
- char *ipos  = buf + pos;
- // ----------------------------------------------------------------
- // PASS 1: count rows and columns, check consistency
- // ----------------------------------------------------------------
-
- while (isspace (*ipos & 0x7f)) ipos++;
-
- while (*ipos)
- {
-   if (*ipos == ']') break;
-   if (*ipos != '(')
-   {
-    error ("Expected '(' at the beginning of a row");
-    return toERROR;
-   }
-   ipos++; // skip '('
-   rows++;
-   if (rows > MAX_R)
-    {
-     error ("Too many rows in matrix");
-     return toERROR;
-    }
-   curCols = 0;
-   while (isspace (*ipos & 0x7f)) ipos++;
-   while (*ipos && *ipos != ')' && *ipos != ']')
-   {
-    while (isspace (*ipos & 0x7f)) ipos++;
-    if (*ipos == '(')
-     {
-      error ("Nested parentheses are not allowed in matrix rows");
-      return toERROR;
-     }
-    // skip one token: optional sign + number chars until delimiter
-    bool hasChars = false;
-    if (*ipos == '+' || *ipos == '-') ipos++;
-    while (isspace (*ipos & 0x7f)) ipos++; // skip whitespace after optional sign
-    while (*ipos && *ipos != ',' && *ipos != ')' && *ipos != ' ' && *ipos != '\t')
-     {
-      if (*ipos == '(')
-       {
-        error ("Nested parentheses are not allowed in matrix rows");
-        return toERROR;
-       }
-      hasChars = true;
-      ipos++;
-     }
-    if (!hasChars)
-     {
-      error ("Empty matrix element");
-      return toERROR;
-     }
-    curCols++;
-    if (curCols > MAX_C)
-     {
-      error ("Too many columns in matrix");
-      return toERROR;
-     }
-    while (isspace (*ipos & 0x7f)) ipos++;
-    if (*ipos == ',') ipos++; // skip comma
-    while (isspace (*ipos & 0x7f)) ipos++;
-   }
-   if (*ipos != ')')
-    {
-     error ("Expected ')' at the end of a row");
-     return toERROR;
-    }
-   ipos++; // skip ')'
-   if (rows == 1)
-    {
-     cols = curCols;
-     if (cols == 0)
-      {
-       error ("No columns found in the first row");
-       return toERROR;
-      }
-    }
-   else if (curCols != cols)
-    {
-     error ("Inconsistent number of columns in matrix rows");
-     return toERROR;
-    }
-   while (isspace (*ipos & 0x7f)) ipos++;
-   if (*ipos == ';')
-    {
-     ipos++; // skip semicolon
-     while (isspace (*ipos & 0x7f)) ipos++;
-    }
-   else if (*ipos != ']' && *ipos != '\0')
-    {
-     error ("Expected ';' between rows or ']' at the end of the matrix");
-     return toERROR;
-    }
- }
- if (*ipos != ']')
-  {
-   error ("Expected ']' at the end of the matrix");
-   return toERROR;
-  }
- if (rows == 0 || cols == 0)
-  {
-   error ("Empty matrix");
-   return toERROR;
-  }
- // ----------------------------------------------------------------
- // PASS 2: allocate and fill using dscan()
- // ----------------------------------------------------------------
- float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
- if (!mval)
-  {
-   error ("Memory allocation failed for matrix");
-   return toERROR;
-  }
- //memset (mval, 0, rows * cols * sizeof (float__t)); // initialize to zero
- // initialize mval to qnan to detect unfilled elements in case of errors
- for (int i = 0; i < rows * cols; i++) mval[i] = qnan;
-
- ipos = buf + pos; // reset ipos to the beginning of the matrix for the second pass 
-
- while (isspace (*ipos & 0x7f)) ipos++;
- for (int r = 0; r < rows; r++)
-  {
-   if (*ipos != '(')
-    {
-     error ("Expected '(' at the beginning of a row");
-     free(mval);
-     return toERROR;
-    }
-   ipos++; // skip '('
-   while (isspace (*ipos & 0x7f)) ipos++;
-   for (int c = 0; c < cols; c++)
-    {
-     // use dscan to parse the number, which advances ipos
-     t_value tag;
-     float__t fval;
-     bool percent = false;
-     bool negative = false;
-     if (*ipos == '-')
-      {
-       negative = true;
-       ipos++;
-      }
-     else if (*ipos == '+')
-      {
-       ipos++;
-      }
-     while (isspace (*ipos & 0x7f)) ipos++; // skip whitespace after optional sign
-
-     pos = ipos - buf+1;
-     if (dscan (true, percent) != toOPERAND)
-      {
-       error ("Invalid number in matrix");
-       free(mval);
-       return toERROR;
-      }
-     ipos = buf + pos;
-     tag = v_stack[v_sp - 1].tag;
-     if (tag == tvINT || tag == tvFLOAT)
-      {
-       fval = v_stack[--v_sp].fval; // get the parsed value from the stack
-       if (negative) fval = -fval;
-       mval[r * cols + c] = fval;   // store in row-major order
-      }
-     else
-      {
-       error ("Expected a number in matrix");
-       free(mval);
-       return toERROR;
-      }
-     while (isspace (*ipos & 0x7f)) ipos++;
-     if (c < cols - 1)
-      {
-       if (*ipos != ',')
-        {
-         error ("Expected ',' between matrix elements");
-         free(mval);
-         return toERROR;
-        }
-       ipos++; // skip comma
-       while (isspace (*ipos & 0x7f)) ipos++;
-      }
-    }
-   if (*ipos != ')')
-    {
-     error ("Expected ')' at the end of a row");
-     free(mval);
-     return toERROR;
-    }
-   ipos++; // skip ')'
-   while (isspace (*ipos & 0x7f)) ipos++;
-   if (r < rows - 1)
-    {
-     if (*ipos != ';')
-      {
-       error ("Expected ';' between rows");
-       free(mval);
-       return toERROR;
-      }
-     ipos++; // skip semicolon
-     while (isspace (*ipos & 0x7f)) ipos++;
-    }
-  }
-
- register_mem (mval); // register the allocated matrix pointer as a string to be freed later
- pos                  = ipos - buf+1;
- v_stack[v_sp].sval   = nullptr;
- v_stack[v_sp].var    = nullptr;
- v_stack[v_sp].pos    = pos;
- v_stack[v_sp].fval   = qnan;
- v_stack[v_sp].imval  = 0;
- v_stack[v_sp].ival   = 0;
- v_stack[v_sp].tag    = tvMATRIX;
- v_stack[v_sp].mrows  = rows;
- v_stack[v_sp].mcols  = cols;
- v_stack[v_sp].mval   = mval;
- v_sp++;
- return toOPERAND;
-
- //return toERROR; // not implemented yet
-}
-
 
 // User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
 // 1. Find the expression in {}
@@ -3923,6 +3734,9 @@ void calculator::clear_v_stack ()
    v_stack[i].ival  = 0;
    v_stack[i].fval  = 0.0;
    v_stack[i].imval = 0.0;
+   v_stack[i].mval  = nullptr;
+   v_stack[i].mrows = 0;
+   v_stack[i].mcols = 0;
   }
  v_sp = 0;
 }
@@ -4172,7 +3986,25 @@ float__t calculator::mxNorm (value &M)
  return sqrtl (sum);
 }
 
-// ---------------------------------------------------------------------------
+float__t calculator::mxDim (value & M, t_mxDim dim)
+{ 
+  switch (dim)
+  {
+   case mxRows:
+   return M.mrows;
+    break;
+   case mxCols:
+    return M.mcols;
+    break;
+   case mxSize:
+    return M.mrows * M.mcols;
+    break;
+   default:
+    return 0; // should not happen, caller checks
+    break;
+  }
+}
+    // ---------------------------------------------------------------------------
 // MATRIX -> MATRIX FUNCTIONS
 // ---------------------------------------------------------------------------
 
@@ -4729,6 +4561,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
    return qnan;
   }
 
+ init_mem_list ();
  clear_v_stack (); // Clear the value stack before evaluation
  res_cols = 0;       // Clear the result columns count
  res_rows = 0;       // Clear the result rows count

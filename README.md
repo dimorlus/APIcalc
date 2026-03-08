@@ -191,7 +191,7 @@ x %% y  →  (x / y - 1) * 100
   ```
   ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j
   ```
-  Polar form notation: `|modulus|(degrees`minutes'seconds")`
+  Polar form notation: ``|modulus|(degrees`minutes'seconds")``
 
 ### User-Defined Functions
 
@@ -309,6 +309,17 @@ dot([(3,4)], [(3,4)])              →  25     ;; = norm^2
 cross([(1,0,0)], [(0,1,0)])        →  [(0,0,1)]
 cross([(1,2,3)], [(4,-1,2)])       →  [(7,10,-9)]
 dot(cross([(1,2,3)],[(4,-1,2)]), [(1,2,3)]) →  0  ;; cross product ⊥ both inputs
+
+2x-3y = -4
+3x-2y = -1
+x = 1, y=2
+
+solve_lin([(2, -3);(3, -2)],[(-4);(-1)])→[(1); (2)]
+
+F1:=[(10, 5, 0)]; F2:=[(0, 10, 5)];degr:=angle(F1, F2)/deg→66.42182152179818
+V_sns:=[(10); (0)]; ang:=pi/4;V_global:= rot2(ang) V_sns → [(7.071); (7.071)]
+
+
 ```
 
 ### Strings

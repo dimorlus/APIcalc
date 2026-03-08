@@ -64,9 +64,6 @@ int isinf_l(long double x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 #define _WIN_
 #define _WCHAR_ // L'c' and 'c'W input format allow
 #define _ENABLE_PREIMAGINARY_
-//#define _STR_VAR_FREE_ 
-//#define _MX_VAR_FREE_
-//#define _COPY_MATRIX_ON_ASSIGN_
 
 // Macros to determine if an operator is binary or unary based on its position in the enumeration
 #define BINARY(opd) (opd >= toPOW)
@@ -6268,31 +6265,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
           }
          else
           v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
-
-#ifdef _COPY_MATRIX_ON_ASSIGN_
-         if (v_stack[v_sp - 1].tag == tvMATRIX)
-          {
-           int rows  = v_stack[v_sp - 1].mrows;
-           int cols  = v_stack[v_sp - 1].mcols;
-           int msize = rows * cols * sizeof (float__t);
-           if (msize)
-            {
-             float__t *new_mval = (float__t *)malloc (msize);
-             if (new_mval)
-              {
-               memcpy (new_mval, v_stack[v_sp - 1].mval, msize);
-               v_stack[v_sp - 2].mval = new_mval;
-               registerString ((char *)new_mval);
-              }
-             else
-              {
-               error (v_stack[v_sp - 1].pos, "Memory allocation failed");
-               result_fval = qnan;
-               return qnan;
-              }
-            }
-          }
-#endif //_COPY_MATRIX_ON_ASSIGN_
         }
        v_sp -= 1;
        break;

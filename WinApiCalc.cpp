@@ -6,6 +6,7 @@
 #include <fstream>
 #include <ctime>
 
+//#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
 #include <crtdbg.h>
 

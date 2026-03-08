@@ -448,15 +448,22 @@ class calculator // calculator represents the main class for the expression calc
 
  void copy_symbols (symbol **symtab = nullptr, int mask = MASK_DEFAULT);
 
+ //memory management
  void init_mem_list (); // Initialize the mem array and mem_idx for memory management of temporary
                         // strings and matrix values
  int search_mem (void *mem); // Search for a pointer in the mem array and return its index, or -1 if not found
  void *register_mem (void *mem); // Register a pointer in the mem array and return the registered pointer
- void unregister_mem (void *mem); // Unregister a pointer from the mem array by setting its entry to nullptr
+ void *unregister_mem (void *mem); // Unregister a pointer from the mem array by setting its entry to nullptr
 
- void clear_mem_list (); // Clear all strings in the string list
- void save_vars_mem (void);
+ void clear_mem_list (void); // Clear all strings in the string list
+ void save_vars_mem (void);  // Save the current variables in the hash table to the mem array for 
+                             //memory management
  
+ void *sf_alloc (int size); // Allocate memory for a temporary string and register it in the mem
+                            // array for memory management
+ void sf_free (void *dat);  // Free memory for a temporary string and unregister it from the mem
+                            // array for memory management
+
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
 

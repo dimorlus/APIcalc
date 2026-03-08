@@ -497,7 +497,7 @@ void calculator::AddPredefined (void)
  addlvar ("daylight", (float__t)daylight, daylight);
  addlvar ("tz", currentTz, (int)currentTz);
  addfconst ("version", _ver_);
- addim ();
+ addim (); // Add imaginary unit 'i', 'j' as a predefined constant
 }
  
 // Copy symbols from the provided symbol table with the specified copy mask
@@ -576,39 +576,23 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
        nsp = sp->next;
        if (sp->name[0])
         {
-       // #ifdef _STR_VAR_FREE_
-       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
-        {
-         if (sp->val.sval)
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
           {
-           unregister_mem (sp->val.sval); // Unregister string from memory list
-           free (sp->val.sval);
+           sf_free (sp->val.sval); // Free string value using sf_free to ensure it's unregistered
+           sp->val.sval = nullptr;
           }
-         sp->val.sval = nullptr;
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+          {
+           sf_free (sp->val.mval); // Free matrix value using sf_free to ensure it's unregistered
+           sp->val.mval = nullptr;
+          }
+         if (sp->tag == tsUFUNCT && sp->func) 
+          {
+           sf_free (sp->func); // Free function name using sf_free to ensure it's unregistered
+           sp->func = nullptr;
+          }    
+         sp->name[0] = '\0';
         }
-       // #endif //_STR_VAR_FREE_
-
-       // #ifdef _MX_VAR_FREE_
-       if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
-        {
-         if (sp->val.mval) 
-         {
-          unregister_mem (sp->val.mval); // Unregister matrix from memory list
-          free (sp->val.mval);
-         }
-         sp->val.mval = nullptr;
-        }
-       // #endif //_MX_VAR_FREE_
-
-       if (sp->tag == tsUFUNCT && sp->func) 
-        {
-         unregister_mem (sp->func); // Unregister function name from memory list 
-         free (sp->func);
-         sp->func = nullptr;
-        }    
-
-       sp->name[0] = '\0';
-       }
        delete sp;
        sp            = nsp;
        hash_table[i] = nullptr;
@@ -620,7 +604,8 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
 
 void calculator::init_mem_list ()
 {
- for (int i = 0; i < max_stack_size; i++) mem_list[i] = nullptr;
+ //for (int i = 0; i < max_stack_size; i++) mem_list[i] = nullptr;
+ memset (mem_list, 0, sizeof (mem_list)); // Clear memory list
  mem_idx = 0;
 }
 int calculator::search_mem (void *mem)
@@ -639,14 +624,36 @@ void *calculator::register_mem (void *mem)
   }
  return nullptr; // Memory list full
 }
-void calculator::unregister_mem(void* mem) //
+void *calculator::unregister_mem(void* mem) //
 {
  int idx = search_mem(mem);
  if (idx != -1) 
   {
    mem_list[idx] = nullptr; // Mark as unregistered (will not be freed in clearAllStrings)
   }
+ return mem;
 }
+
+void *calculator::sf_alloc(int size)
+{
+ if (size)
+  {
+   void *mem = malloc (size);
+   if (mem) register_mem (mem); // Register allocated memory for cleanup
+   return mem;
+  }
+ return nullptr;
+}
+
+void calculator::sf_free (void *dat)
+{
+ if (dat)
+  {
+   unregister_mem (dat); // Unregister from memory list
+   free (dat);
+  }
+}
+
 void calculator::clear_mem_list () // Free all registered strings in the string list
 {
  for (int i = 0; i < mem_idx; i++)
@@ -2799,14 +2806,13 @@ t_operator calculator::sqbraces (void)
    return toERROR;
   }
 
- float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+ float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
+
  if (!mval)
   {
    error ("Memory allocation failed");
    return toERROR;
   }
- 
- register_mem (mval);
 
  for (int r = 0; r < rows; r++)
   for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
@@ -3016,11 +3022,10 @@ t_operator calculator::dqscan (char qc)
    if (sbuf[0]) scfg |= STR;
    v_stack[v_sp].tag  = tvSTR;
    v_stack[v_sp].ival = 0;
-   v_stack[v_sp].sval = (char *)malloc (sidx + 1);
+   v_stack[v_sp].sval = (char *)sf_alloc (sidx + 1);
    if (v_stack[v_sp].sval)
     {
      strcpy (v_stack[v_sp].sval, sbuf);
-     register_mem (v_stack[v_sp].sval);
     }
    pos                 = ipos - buf + 1;
    v_stack[v_sp].pos   = pos;
@@ -3468,12 +3473,11 @@ t_operator calculator::scan (bool operand, bool percent)
          {
           scfg |= CHR;
           ival               = *(unsigned char *)(ipos - 1);
-          v_stack[v_sp].sval = (char *)malloc (2);
+          v_stack[v_sp].sval = (char *)sf_alloc (2);
           if (v_stack[v_sp].sval)
            {
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[1] = '\0';
-            register_mem (v_stack[v_sp].sval);
            }
           ipos++;
          }
@@ -3751,13 +3755,12 @@ void calculator::clear_v_stack ()
 // Returns NULL on failure (error already set)
 float__t *calculator::mxAlloc (int rows, int cols)
 {
- float__t *mval = (float__t *)malloc (rows * cols * sizeof (float__t));
+ float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
  if (!mval)
   {
    mxerror ("memory allocation failed");
    return NULL;
   }
- register_mem (mval);
  return mval;
 }
 
@@ -4839,7 +4842,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            return qnan;
           }
           {
-           char *new_s = (char *)malloc (new_len);
+           char *new_s = (char *)sf_alloc (new_len);
            if (!new_s)
             {
              error (v_stack[v_sp - 2].pos, "Memory allocation failed");
@@ -4849,7 +4852,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            strcpy (new_s, v_stack[v_sp - 2].sval);
            strcat (new_s, v_stack[v_sp - 1].sval);
            v_stack[v_sp - 2].sval = new_s;
-           register_mem (v_stack[v_sp - 2].sval);
           }
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
@@ -7178,12 +7180,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   int msize = mxr.rows * mxr.cols * sizeof (float__t);
                   if (msize)
                    {
-                    float__t *new_mval = (float__t *)malloc (msize);
+                    float__t *new_mval = (float__t *)sf_alloc (msize); 
                     if (new_mval)
                      {
                       memcpy (new_mval, mxr.mval, msize);
                       v_stack[v_sp - n_args - 1].mval = new_mval;
-                      register_mem (new_mval);
                      }
                     else
                      {

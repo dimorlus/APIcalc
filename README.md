@@ -136,44 +136,62 @@ x %% y  →  (x / y - 1) * 100
 ### Utility Functions
 
 * **pol**: Convert to polar coordinates
+
 * **const("name", value)**: Define a named constant programmatically
+
 * **var("name", value)**: Define a named variable programmatically
+
 * **wrgb, trgb**: Color-related utility functions
+
 * **winf**: Returns a string describing the portion of the spectrum of a given wavelength
+
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
+
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
+
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
+
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
+  
   ```
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
   polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
   ```
+  
   This function is built-in (previously defined in `consts.txt`).
 
 * **solve(expr, var:=estimate)**: Find root of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
+  
   ```
   solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
   solve(x*(2x+2)-2, x:=-1)  →  -1.61803398875005
   ```
+  
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
 
 * **calc(expr, var:=val)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
+  
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
   ```
+
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
+  
   ```
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
   integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
   ```
+  
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
 
 * **diff(expr, point, var)**: Numerical differentiation using central difference method:
+  
   ```
   diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
   ```
 
 * **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
+  
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
@@ -182,15 +200,23 @@ x %% y  →  (x / y - 1) * 100
 ### **Complex Number Support**
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
+
 * Functions like `sqrt`, `log`, `ln`, `asin`, `acos`, `pow` and operator `^` automatically switch to the complex version when the real result is undefined — for example `sqrt(-1)` returns `|1|(90`0'0") 0+1i` instead of NaN.
+
 * Complex numbers can be entered in the form `a+bi` or `a+ib` (e.g., `1+2i`, `1+i2`, `3-4i`).
+
 * Functions like `sin`, `cos`, `exp`, `abs`, etc., work with both real and complex arguments.
+
 * The result is displayed in the form `a+bi` if the imaginary part is nonzero.
+
 * The `~` operator on a complex number returns its **complex conjugate** (negates the imaginary part). On integers, `~` performs bitwise NOT.
+
 * When the result is complex, it is displayed in **both rectangular and polar forms** for convenience:
+  
   ```
   ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j
   ```
+  
   Polar form notation: ``|modulus|(degrees`minutes'seconds")``
 
 ### User-Defined Functions
@@ -251,41 +277,41 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 
 **Binary operators** (where `M` = matrix, `s` = scalar):
 
-| Expression | Result | Notes |
-|-----------|--------|-------|
-| `M + M` | matrix | element-wise, dimensions must match |
-| `M - M` | matrix | element-wise |
-| `M * M` | matrix | true matrix multiplication |
-| `M + s`, `s + M` | matrix | scalar added to each element |
-| `M - s`, `s - M` | matrix | |
-| `M * s`, `s * M` | matrix | scalar multiplication |
-| `M / s` | matrix | divide each element by scalar |
-| `s / M` | matrix | divide scalar by each element |
-| `M ^ n` | matrix | integer power n≥0, square matrix only |
-| `M == M`, `M != M` | 0 or 1 | all elements equal? |
-| `M // s`, `M // M` | matrix | parallel resistors, element-wise |
+| Expression         | Result | Notes                                 |
+| ------------------ | ------ | ------------------------------------- |
+| `M + M`            | matrix | element-wise, dimensions must match   |
+| `M - M`            | matrix | element-wise                          |
+| `M * M`            | matrix | true matrix multiplication            |
+| `M + s`, `s + M`   | matrix | scalar added to each element          |
+| `M - s`, `s - M`   | matrix |                                       |
+| `M * s`, `s * M`   | matrix | scalar multiplication                 |
+| `M / s`            | matrix | divide each element by scalar         |
+| `s / M`            | matrix | divide scalar by each element         |
+| `M ^ n`            | matrix | integer power n≥0, square matrix only |
+| `M == M`, `M != M` | 0 or 1 | all elements equal?                   |
+| `M // s`, `M // M` | matrix | parallel resistors, element-wise      |
 
 **Unary operators:**
 
-| Expression | Result | Notes |
-|-----------|--------|-------|
-| `-M` | matrix | negate all elements |
-| `~M` | matrix | transpose (rows ↔ columns) |
-| `!M` | matrix | matrix inverse (square matrix only) |
+| Expression | Result | Notes                               |
+| ---------- | ------ | ----------------------------------- |
+| `-M`       | matrix | negate all elements                 |
+| `~M`       | matrix | transpose (rows ↔ columns)          |
+| `!M`       | matrix | matrix inverse (square matrix only) |
 
 #### Matrix Functions
 
-| Function | Returns | Notes |
-|---------|---------|-------|
-| `tr(M)` | scalar | trace — sum of diagonal elements |
-| `det(M)` | scalar | determinant, square matrix only |
-| `norm(M)` | scalar | Frobenius norm √(Σ aᵢⱼ²) |
-| `abs(M)` | matrix | element-wise absolute value |
-| `dot(A, B)` | scalar | dot product of two vectors (1×N or N×1), any length |
-| `cross(A, B)` | vector | cross product of two 3-element vectors (1×3 or 3×1) |
-| `rows(M)` | scalar | Return rows of matrix |
-| `cols(M)` | scalar | Return columns of matrix |
-| `size(M)` | scalar | Return rows\*columns of matrix |
+| Function      | Returns | Notes                                               |
+| ------------- | ------- | --------------------------------------------------- |
+| `tr(M)`       | scalar  | trace — sum of diagonal elements                    |
+| `det(M)`      | scalar  | determinant, square matrix only                     |
+| `norm(M)`     | scalar  | Frobenius norm √(Σ aᵢⱼ²)                            |
+| `abs(M)`      | matrix  | element-wise absolute value                         |
+| `dot(A, B)`   | scalar  | dot product of two vectors (1×N or N×1), any length |
+| `cross(A, B)` | vector  | cross product of two 3-element vectors (1×3 or 3×1) |
+| `rows(M)`     | scalar  | Return rows of matrix                               |
+| `cols(M)`     | scalar  | Return columns of matrix                            |
+| `size(M)`     | scalar  | Return rows\*columns of matrix                      |
 
 #### Matrix Examples
 
@@ -318,12 +344,12 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)])→[(1); (2)]
 
 F1:=[(10, 5, 0)]; F2:=[(0, 10, 5)];degr:=angle(F1, F2)/deg→66.42182152179818
 V_sns:=[(10); (0)]; ang:=pi/4;V_global:= rot2(ang) V_sns → [(7.071); (7.071)]
-
-
 ```
 
 ### Strings
+
 You can enter a string, assign a string value to a variable, and perform string concatenation.
+
 ```
 S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 
 ```
@@ -420,9 +446,11 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (10³⁰), **R** (10²⁷) and their lowercase counterparts **q** (10⁻³⁰), **r** (10⁻²⁷) are also supported.
 
 For complex numbers, suffixes apply independently to both the real and imaginary parts in output:
+
 ```
 polar(10k, 30`20'40")  →  8.63k+5.052ki
 ```
+
 Here `k` is applied separately to the real part (`8.63k`) and the imaginary part (`5.052k`), followed by `i`.
 
 In engineering and normalized formats, the suffix order is based on the **modulus**. If the real or imaginary part differs from the modulus by three or more orders of magnitude, it is considered negligible and displayed as zero.
@@ -467,7 +495,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `\
 2. **Number before parenthesis**: `3(4+5)` → `3 \* (4+5)`
 3. **Parenthesis after parenthesis**: `(1+2)(3+4)` → `(1+2) \* (3+4)`
 4. **Number before variable/constant**: `2PI` → `2 \* PI` (uppercase recommended)
-5. **Space instead of \* **: `2 3 → 2\*3`
+5. **Space instead of \***: `2 3 → 2\*3`
 
 **Important notes about scientific suffixes and imaginary unit:**
 

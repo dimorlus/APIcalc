@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctime>
 
-//#define _DEBUG_MEMORY_
+#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
 #include <crtdbg.h>
 
@@ -203,7 +203,13 @@ WinApiCalc::~WinApiCalc ()
   }
 #ifdef _DEBUG_MEMORY_
  _CrtMemCheckpoint (&s2);
- if (_CrtMemDifference (&diff, &s1, &s2)) _CrtMemDumpStatistics (&diff); // выведет в Output window
+ if (_CrtMemDifference (&diff, &s1, &s2))
+  {
+   _CrtMemDumpStatistics (&diff);    // выведет в Output window
+   _CrtMemDumpAllObjectsSince (&s1); // <-- добавь это
+  }
+ else
+  OutputDebugStringA ("=== No memory leaks ===\n");
 #endif // _DEBUG_MEMORY_
  if (m_hWhiteBrush)
   {

@@ -2053,13 +2053,13 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
  re = 0.5L * logl (x * x + y * y);
- im = atan2l (y, x);
+ //im = atan2l (y, x);
+ im = (y == 0.0L && x < 0.0L) ? 3.14159265358979323846L : atan2l (y, x);
 #else
  re = 0.5 * log (x * x + y * y);
- im = atan2 (y, x);
+ im = (y == 0.0 && x < 0.0) ? 3.14159265358979324 : atan2 (y, x);
 #endif
 }
-
 
 // Square root of a complex number: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
 void SqrtC (float__t x, float__t y, float__t &re, float__t &im)

@@ -128,9 +128,10 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 
 calculator::~calculator (void)
 {
+ clear_v_stack ();
  destroyvars ();
  clear_mem_list ();
- if (res_mval) free (res_mval);
+ //if (res_mval) free (res_mval);
 }
 //---------------------------------------------------------------------------
 
@@ -533,7 +534,10 @@ void calculator::copy_symbols (symbol **symtab, int mask)
 
             new_symbol->fidx = sp->fidx;
             if (sp->tag == tsUFUNCT && sp->func)
+              {
                 new_symbol->func = strdup((char *)sp->func); // Duplicate function name for user-defined functions
+                register_mem (new_symbol->func); // Register duplicated function name for cleanup
+              }
             else
                 new_symbol->func = sp->func; // Copy function pointer as is (static functions)
             
@@ -546,7 +550,10 @@ void calculator::copy_symbols (symbol **symtab, int mask)
             new_symbol->val.sval  = nullptr;
             new_symbol->val.mval  = nullptr;
             if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && sp->val.sval)
-             new_symbol->val.sval = strdup (sp->val.sval); // Duplicate string value
+             {
+              new_symbol->val.sval = strdup (sp->val.sval); // Duplicate string value
+              register_mem (new_symbol->val.sval); // Register duplicated string for cleanup
+             }
             else if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && sp->val.mval)
              new_symbol->val.mval = dupMatrix (sp->val); // Duplicate matrix value
            }
@@ -605,6 +612,7 @@ void calculator::init_mem_list ()
  memset (mem_list, 0, sizeof (mem_list)); // Clear memory list
  mem_idx = 0;
 }
+
 int calculator::search_mem (void *mem)
 {
  for (int i = 0; i < mem_idx; i++)
@@ -613,15 +621,18 @@ int calculator::search_mem (void *mem)
 }
 void *calculator::register_mem (void *mem)
 {
- if (search_mem (mem) != -1) return mem;
- if (mem_idx < max_stack_size)
+ if (mem)
   {
-   mem_list[mem_idx++] = mem;
-   return mem;
+   if (search_mem (mem) != -1) return mem;
+   if (mem_idx < max_stack_size)
+    {
+     mem_list[mem_idx++] = mem;
+     return mem;
+    }
   }
  return nullptr; // Memory list full
 }
-void *calculator::unregister_mem(void* mem) //
+void *calculator::unregister_mem (void *mem) //
 {
  int idx = search_mem(mem);
  if (idx != -1) 
@@ -642,6 +653,7 @@ void *calculator::sf_alloc(int size)
  return nullptr;
 }
 
+ 
 void calculator::sf_free (void *dat)
 {
  if (dat)
@@ -656,7 +668,7 @@ void calculator::clear_mem_list () // Free all registered strings in the string 
  for (int i = 0; i < mem_idx; i++)
   {
    if (mem_list[i]) 
-       free (mem_list[i]);
+       sf_free (mem_list[i]);
    mem_list[i] = nullptr;
   }
  mem_idx = 0;
@@ -713,6 +725,7 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
      float__t *new_mval = (float__t *)malloc (msize);
      if (new_mval)
       {
+       register_mem (new_mval); // Register the new matrix for cleanup
        memcpy (new_mval, val.mval, msize);
        return new_mval;
       }
@@ -869,44 +882,6 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    if (result_tag == tvMATRIX) 
     {
      n += mxprint (str, true, &bsize);
-#ifdef _COMMENT_
-    {
-     // compute Frobenius norm for threshold
-     float__t norm = 0.0L;
-     int nm        = res_rows * res_cols;
-     for (int i = 0; i < nm; i++) norm += res_mval[i] * res_mval[i];
-     norm               = sqrtl (norm);
-     float__t threshold = norm * 1e-9L;
-
-     char mstr[80];
-     for (int i = 0; i < res_rows; i++)
-      {
-       char *cp = mstr;
-       if (i > 0)
-        cp += sprintf (cp, " (");
-       else
-        cp += sprintf (cp, "[(");
-       for (int j = 0; j < res_cols; j++)
-        {
-         char elemstr[20];
-         float__t elem = res_mval[i * res_cols + j];
-         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
-         d2scistr (elemstr, elem);
-         if (j < res_cols - 1)
-          cp += sprintf (cp, "%6.6s, ", elemstr);
-         else
-          {
-           if (i == res_rows - 1)
-            cp += sprintf (cp, "%6.6s)]", elemstr);
-           else
-            cp += sprintf (cp, "%6.6s); ", elemstr);
-          }
-        }
-       if (i == res_rows - 1) cp += sprintf (cp, " ");
-       bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
-       n++;
-      }
-#endif //_COMMENT_
      if (size) *size = bsize;
      return n;
     }
@@ -1408,8 +1383,10 @@ symbol *calculator::addUF (const char *name, const char *expr)
     {
      if (strcmp ((char*)sp->func, expr) == 0)
       return sp; // If the existing function is the same as the new one, return it
+     unregister_mem (sp->func);
      free (sp->func);
      sp->func = strdup (expr);
+     register_mem (sp->func);
     }
    return sp;
   }
@@ -1421,6 +1398,7 @@ symbol *calculator::addUF (const char *name, const char *expr)
  sp            = new symbol;
  sp->tag       = tsUFUNCT;
  sp->func      = strdup(expr);
+ register_mem (sp->func);
  //sp->name      = strdup(name);
  strcpy (sp->name, name);
  sp->val.tag   = tvUFUNCT;
@@ -1428,6 +1406,9 @@ symbol *calculator::addUF (const char *name, const char *expr)
  sp->val.fval  = 0;
  sp->val.imval = 0;
  sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
  sp->next      = hash_table[h];
  hash_table[h] = sp;
 
@@ -1442,6 +1423,10 @@ void calculator::addfconst (const char *name, float__t val)
  sp->val.fval = val;
  sp->val.ival = 0;
  sp->val.imval = 0;
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
 }
 
 // Add a float variable to the hash table
@@ -1452,6 +1437,10 @@ void calculator::addfvar (const char *name, float__t val)
  sp->val.fval = val;
  sp->val.ival  = 0;
  sp->val.imval = 0;
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
 }
 
 // Add  variable to the hash table
@@ -1465,11 +1454,10 @@ void calculator::addvar (const char *name, value &val)
  sp->val.imval = val.imval;
  // For string and matrix types, we need to copy the values
  sp->val.sval = strdup(val.sval);
- //registerString (sp->val.sval);
+ register_mem (sp->val.sval);
  if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
   {
    sp->val.mval = dupMatrix (val);
-   // registerString ((char *)sp->val.mval);
   }   
  sp->val.mcols = val.mcols;
  sp->val.mrows = val.mrows;
@@ -2902,44 +2890,6 @@ t_operator calculator::braces (void) //{...}
 #endif //_UF_AS_OPERAND_
 }
 
-#ifdef _COMMENT_
-//"...." or '...'
-t_operator calculator::dqscan (char qc) // scan a string literal in double quotes, e.g. "Hello, World!"
-// todo: consider escape sequences in string literals (e.g. "Line 1\nLine 2"), currently not
-// supported. And double quotes inside string literals (e.g. "She said, ""Hello!""") are not
-// supported either, currently treated as end of string at the first double quote. To support them,
-// we can use "" to represent a single " in the string, and modify the scanning logic accordingly.
-//"Hello! ""World""" -> Hello! "World"
-{
- char *ipos;
- char sbuf[STRBUF];
- int sidx = 0;
- ipos = buf + pos;
- while (*ipos && (*ipos != qc) && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
- sbuf[sidx] = '\0';
- if (*ipos == qc)
-  {
-   if (sbuf[0]) scfg |= STR;
-   v_stack[v_sp].tag  = tvSTR;
-   v_stack[v_sp].ival = 0;
-   v_stack[v_sp].sval = (char *)malloc (sidx + 1);
-   if (v_stack[v_sp].sval)
-    {
-     strcpy (v_stack[v_sp].sval, sbuf);
-     registerString (v_stack[v_sp].sval);
-    }
-   pos = ipos - buf + 1;
-   v_stack[v_sp].pos   = pos;
-   v_stack[v_sp++].var = nullptr;
-   return toOPERAND;
-  }
- else
-  {
-   error ("bad char constant");
-   return toERROR;
-  }
-}
-#endif //_COMMENT_
 
 // "...." or '....'
 // Supported escape sequences:
@@ -3729,12 +3679,16 @@ void calculator::clear_v_stack ()
  for (int i = 0; i < max_stack_size; ++i)
   {
    v_stack[i].tag   = tvINT;
+   //sf_free (v_stack[i].sval); // free string if allocated
+   register_mem (v_stack[i].sval);
    v_stack[i].sval = nullptr;  
    v_stack[i].var   = nullptr;
    v_stack[i].pos   = 0;
    v_stack[i].ival  = 0;
    v_stack[i].fval  = 0.0;
    v_stack[i].imval = 0.0;
+   //sf_free (v_stack[i].mval); // free matrix if allocated
+   register_mem (v_stack[i].mval);
    v_stack[i].mval  = nullptr;
    v_stack[i].mrows = 0;
    v_stack[i].mcols = 0;
@@ -4725,6 +4679,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              result_fval = qnan;
              return qnan;
             }
+           register_mem (res_mval); // Register the allocated matrix result for cleanup
            memcpy (res_mval, v_stack[0].mval, res_cols * res_rows * sizeof (float__t)); 
            v_stack[0].mval = nullptr; // Prevent freeing the matrix result in clear_v_stack
            result_fval     = 0;
@@ -4793,6 +4748,8 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          result_fval = qnan;
          return qnan;
         }
+       register_mem (v_stack[v_sp - 1].sval);
+       register_mem (v_stack[v_sp - 1].mval);
        v_stack[v_sp - 2]       = v_stack[v_sp - 1];
        v_stack[v_sp - 1].var   = nullptr;
        v_stack[v_sp - 1].sval  = nullptr;
@@ -6257,6 +6214,13 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            result_fval = qnan;
            return qnan;
           }
+         // if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
+         register_mem (v_stack[v_sp - 2].mval);
+         register_mem (v_stack[v_sp - 1].mval);
+         // if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
+         register_mem (v_stack[v_sp - 2].sval);
+         register_mem (v_stack[v_sp - 1].sval);
+
          // v_stack[v_sp - 2] := v_stack[v_sp - 1]
          if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
           {

@@ -680,11 +680,11 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
     {
      do
       {
-       if (sp->name[0])
+ //      if (sp->name[0])
         {
-         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && (sp->val.sval))
+ //        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && (sp->val.sval))
           unregister_mem (sp->val.sval);
-         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && (sp->val.mval))
+ //        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && (sp->val.mval))
           unregister_mem (sp->val.mval);
         }
        sp = sp->next;
@@ -3683,7 +3683,7 @@ void calculator::clear_v_stack ()
   {
    v_stack[i].tag   = tvINT;
    //sf_free (v_stack[i].sval); // free string if allocated
-   register_mem (v_stack[i].sval);
+   //register_mem (v_stack[i].sval);
    v_stack[i].sval = nullptr;  
    v_stack[i].var   = nullptr;
    v_stack[i].pos   = 0;
@@ -3691,7 +3691,7 @@ void calculator::clear_v_stack ()
    v_stack[i].fval  = 0.0;
    v_stack[i].imval = 0.0;
    //sf_free (v_stack[i].mval); // free matrix if allocated
-   register_mem (v_stack[i].mval);
+   //register_mem (v_stack[i].mval);
    v_stack[i].mval  = nullptr;
    v_stack[i].mrows = 0;
    v_stack[i].mcols = 0;

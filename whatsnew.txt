@@ -1,3 +1,6 @@
+09.03.26 (2.126)
+- View variables now shows matrices as well.
+
 09.03.26 (2.125)
 - A memory leak that occurred when reassigning a matrix or string variable was found and fixed.
 * The memory manager has been redesigned and is now a separate class.

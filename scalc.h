@@ -86,6 +86,7 @@ const float__t qnan = 0.0 / 0.0;
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
 #endif
 
+//#define _STATIC_MM_
 
 class value;
 class symbol;
@@ -389,6 +390,95 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
  
 };
 
+
+class MemList
+{
+ void **list;
+ int capacity;
+ int count; // mem_idx аналог
+
+ public:
+ MemList (int initial = 256) : capacity (initial), count (0)
+ {
+  list = (void **)malloc (capacity * sizeof (void *));
+  if (list) memset (list, 0, capacity * sizeof (void *));
+ }
+
+ ~MemList () { free (list); }
+
+ void init_mem_list ()
+ {
+  if (list) memset (list, 0, capacity * sizeof (void *));
+  count = 0;
+ }
+
+ int search_mem (void *mem)
+ {
+  for (int i = 0; i < count; i++)
+   if (list[i] == mem) return i;
+  return -1;
+ }
+
+ void *register_mem (void *mem)
+ {
+  if (!mem) return nullptr;
+  if (search_mem (mem) != -1) return mem; // already registered
+  if (count < capacity)
+   {
+    list[count++] = mem;
+    return mem;
+   }
+  // grow
+  int newcap     = capacity * 2;
+  void **newlist = (void **)realloc (list, newcap * sizeof (void *));
+  if (!newlist) return nullptr; // allocation failed
+  list = newlist;
+  // zero new entries
+  memset (list + capacity, 0, (newcap - capacity) * sizeof (void *));
+  capacity      = newcap;
+  list[count++] = mem;
+  return mem;
+ }
+
+ void *unregister_mem (void *mem)
+ {
+  int idx = search_mem (mem);
+  if (idx != -1) list[idx] = nullptr; // mark as unregistered, not freed
+  return mem;
+ }
+
+ void *sf_alloc (int size)
+ {
+  if (!size) return nullptr;
+  void *mem = malloc (size);
+  if (mem) register_mem (mem);
+  return mem;
+ }
+
+ void sf_free (void *dat)
+ {
+  if (dat)
+   {
+    unregister_mem (dat);
+    free (dat);
+   }
+ }
+
+ void free_all ()
+ {
+  for (int i = 0; i < count; i++)
+   if (list[i])
+    {
+     free (list[i]);
+     list[i] = nullptr;
+    }
+  count = 0;
+ }
+
+ int size () const { return count; }
+};
+
+
 const int max_stack_size        = 256;  // Maximum size of value and operator stacks
 const int max_expression_length = 1024; // Maximum length of expression
 const int hash_table_size = 1013; // Size of hash table for variables and functions
@@ -418,10 +508,13 @@ class calculator // calculator represents the main class for the expression calc
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
 
+ #ifdef _STATIC_MM_
  void *mem_list[max_stack_size]; // Memory for temporary strings used during expression parsing and
                             // evaluation
  int mem_idx;               // Index for the mem array  to manage temporary string memory
-
+#else //_STATIC_MM_
+ MemList mem_list; // Memory list for temporary strings used during expression parsing and evaluation
+#endif //_STATIC_MM_
 
  int v_sp; // Value stack pointer
  int o_sp; // Operator stack pointer
@@ -450,22 +543,29 @@ class calculator // calculator represents the main class for the expression calc
  void copy_symbols (symbol **symtab = nullptr, int mask = MASK_DEFAULT);
 
  //memory management
+#ifdef _STATIC_MM_
  void init_mem_list (); // Initialize the mem array and mem_idx for memory management of temporary
                         // strings and matrix values
  int search_mem (void *mem); // Search for a pointer in the mem array and return its index, or -1 if not found
-
- void *register_mem (void *mem); // Register a pointer in the mem array and return the registered pointer
+  void *register_mem (void *mem); // Register a pointer in the mem array and return the registered pointer
  void *unregister_mem (void *mem); // Unregister a pointer from the mem array by setting its entry to nullptr
-
- void clear_mem_list (void); // Clear all strings in the string list
- void save_vars_mem (void);  // Save the current variables in the hash table to the mem array for 
-                             //memory management
- 
+  void clear_mem_list (void); // Clear all strings in the string list
  void *sf_alloc (int size); // Allocate memory for a temporary string and register it in the mem
                             // array for memory management
  void sf_free (void *dat);  // Free memory for a temporary string and unregister it from the mem
                             // array for memory management
+#else //_STATIC_MM_
+ void init_mem_list () { mem_list.init_mem_list (); }
+ int search_mem (void *mem) { return mem_list.search_mem (mem); }
+ void *register_mem (void *mem) { return mem_list.register_mem (mem); }
+ void *unregister_mem (void *mem) { return mem_list.unregister_mem (mem); }
+ void *sf_alloc (int size) { return mem_list.sf_alloc (size); }
+ void sf_free (void *dat) { mem_list.sf_free (dat); }
+ void clear_mem_list (void) { mem_list.free_all (); }
+#endif //_STATIC_MM_
 
+ void save_vars_mem (void); // Save the current variables in the hash table to the mem array for
+                            // memory management
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
 

@@ -1,3 +1,7 @@
+09.03.26 (2.125)
+- A memory leak that occurred when reassigning a matrix or string variable was found and fixed.
+* The memory manager has been redesigned and is now a separate class.
+
 08.03.26 (2.124)
 - Some matrix error handling fixses.
 

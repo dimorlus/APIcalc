@@ -606,13 +606,13 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
   }
 }
 
+#ifdef _STATIC_MM_
 void calculator::init_mem_list ()
 {
  //for (int i = 0; i < max_stack_size; i++) mem_list[i] = nullptr;
  memset (mem_list, 0, sizeof (mem_list)); // Clear memory list
  mem_idx = 0;
 }
-
 int calculator::search_mem (void *mem)
 {
  for (int i = 0; i < mem_idx; i++)
@@ -641,7 +641,6 @@ void *calculator::unregister_mem (void *mem) //
   }
  return mem;
 }
-
 void *calculator::sf_alloc(int size)
 {
  if (size)
@@ -652,8 +651,6 @@ void *calculator::sf_alloc(int size)
   }
  return nullptr;
 }
-
- 
 void calculator::sf_free (void *dat)
 {
  if (dat)
@@ -662,7 +659,6 @@ void calculator::sf_free (void *dat)
    free (dat);
   }
 }
-
 void calculator::clear_mem_list () // Free all registered strings in the string list
 {
  for (int i = 0; i < mem_idx; i++)
@@ -673,7 +669,7 @@ void calculator::clear_mem_list () // Free all registered strings in the string 
   }
  mem_idx = 0;
 }
-
+#endif
 
 void calculator::save_vars_mem (void) // Clear all registered strings without freeing memory (for use in copy constructor)
 {

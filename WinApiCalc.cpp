@@ -205,8 +205,8 @@ WinApiCalc::~WinApiCalc ()
  _CrtMemCheckpoint (&s2);
  if (_CrtMemDifference (&diff, &s1, &s2))
   {
-   _CrtMemDumpStatistics (&diff);    // выведет в Output window
-   _CrtMemDumpAllObjectsSince (&s1); // <-- добавь это
+   _CrtMemDumpStatistics (&diff);    
+   _CrtMemDumpAllObjectsSince (&s1); 
   }
  else
   OutputDebugStringA ("=== No memory leaks ===\n");

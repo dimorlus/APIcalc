@@ -131,7 +131,7 @@ calculator::~calculator (void)
  clear_v_stack ();
  destroyvars ();
  clear_mem_list ();
- //if (res_mval) free (res_mval);
+ if (res_mval) free (res_mval);
 }
 //---------------------------------------------------------------------------
 
@@ -536,7 +536,7 @@ void calculator::copy_symbols (symbol **symtab, int mask)
             if (sp->tag == tsUFUNCT && sp->func)
               {
                 new_symbol->func = strdup((char *)sp->func); // Duplicate function name for user-defined functions
-                register_mem (new_symbol->func); // Register duplicated function name for cleanup
+                //register_mem (new_symbol->func); // Register duplicated function name for cleanup
               }
             else
                 new_symbol->func = sp->func; // Copy function pointer as is (static functions)
@@ -592,7 +592,7 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
           }
          if (sp->tag == tsUFUNCT && sp->func) 
           {
-           sf_free (sp->func); // Free function name using sf_free to ensure it's unregistered
+           free (sp->func); // Free function name using sf_free to ensure it's unregistered
            sp->func = nullptr;
           }    
          sp->name[0] = '\0';
@@ -732,8 +732,9 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
 //---------------------------------------------------------------------------
 // Print matrix result in a formatted way, with an option for a new line
 // and an optional pointer to store the size of the output
-int calculator::mxprint (char *str, bool nl, int *size)
-{
+  int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str, bool nl,
+                           int *size)
+  {
  int n     = 0;
  int bsize = 0;
  if (result_tag == tvMATRIX)
@@ -877,7 +878,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
   {
    if (result_tag == tvMATRIX) 
     {
-     n += mxprint (str, true, &bsize);
+     n += mxprint (res_rows, res_cols, res_mval, str, true, &bsize);
      if (size) *size = bsize;
      return n;
     }
@@ -1213,7 +1214,7 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
       {
        if (sp->tag == tsVARIABLE)
         {
-         int written;
+         int written = 0;
          if ((sp->val.tag == tvCOMPLEX) || (sp->val.imval != 0))
           {
            written = snprintf (cp, bsize - (cp - buf), "%-10s = %-.5Lg%+.5Lgi\r\n", sp->name,
@@ -1223,6 +1224,13 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
           {
            written = snprintf (cp, bsize - (cp - buf), "%-10s = \"%s\"\r\n", sp->name,
                                sp->val.sval ? sp->val.sval : "");
+          }
+         else if (sp->val.tag == tvMATRIX)
+          {
+           char mstr[256];
+           mxprint (sp->val.mrows, sp->val.mcols, sp->val.mval, mstr, false);
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %s\r\n", sp->name, mstr);
+
           }
          else
           {
@@ -1379,10 +1387,9 @@ symbol *calculator::addUF (const char *name, const char *expr)
     {
      if (strcmp ((char*)sp->func, expr) == 0)
       return sp; // If the existing function is the same as the new one, return it
-     unregister_mem (sp->func);
      free (sp->func);
      sp->func = strdup (expr);
-     register_mem (sp->func);
+     //register_mem (sp->func);
     }
    return sp;
   }
@@ -1394,7 +1401,7 @@ symbol *calculator::addUF (const char *name, const char *expr)
  sp            = new symbol;
  sp->tag       = tsUFUNCT;
  sp->func      = strdup(expr);
- register_mem (sp->func);
+ //register_mem (sp->func);
  //sp->name      = strdup(name);
  strcpy (sp->name, name);
  sp->val.tag   = tvUFUNCT;
@@ -4511,7 +4518,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
    return qnan;
   }
 
- init_mem_list ();
+ //init_mem_list ();
  clear_v_stack (); // Clear the value stack before evaluation
  res_cols = 0;       // Clear the result columns count
  res_rows = 0;       // Clear the result rows count
@@ -4650,13 +4657,16 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
          return qnan;
         }
        if (oper != toEND) error ("Unexpected end of input");
-       if (v_sp == 1)
+       if (v_sp == 1) // Final result should be on the stack
         {
          if (scfg & UTMP)
           {
            sprintf (var_name, "@%d", ++tmp_var_count);
            add (tsVARIABLE, var_name)->val = v_stack[0];
           }
+         register_mem (v_stack[0].sval);
+         register_mem (v_stack[0].mval);
+
          result_fval = v_stack[0].get ();
          result_imval = v_stack[0].imval;
          result_ival  = v_stack[0].ival;
@@ -4675,11 +4685,9 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              result_fval = qnan;
              return qnan;
             }
-           register_mem (res_mval); // Register the allocated matrix result for cleanup
            memcpy (res_mval, v_stack[0].mval, res_cols * res_rows * sizeof (float__t)); 
            v_stack[0].mval = nullptr; // Prevent freeing the matrix result in clear_v_stack
            result_fval     = 0;
-           return 0; // Matrix result is not a single numeric value, return 0
           }
 
          if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == 0.0))
@@ -4706,6 +4714,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              v_stack[0].sval  = nullptr;
             }
            else sres[0] = '\0'; // Clear sres if not a string result
+
            v_stack[v_sp - 1].var = nullptr;
            v_stack[0].imval = 0.0;
            v_stack[0].fval  = 0.0;

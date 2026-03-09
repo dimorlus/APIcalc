@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctime>
 
-//#define _DEBUG_MEMORY_
+#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
 #include <crtdbg.h>
 
@@ -107,6 +107,11 @@ WinApiCalc::WinApiCalc ()
       ,
       m_isWine (false), m_pendingColor (0), m_hasPendingColor (false), m_isColorWindowOpen (false)
 {
+#ifdef _DEBUG_MEMORY_
+// _CrtMemCheckpoint (&s1);
+#endif
+
+
  // Detect Wine
  HMODULE hNTDLL = GetModuleHandleA ("ntdll.dll");
  if (hNTDLL)
@@ -201,20 +206,21 @@ WinApiCalc::~WinApiCalc ()
    delete m_pCalculator;
    m_pCalculator = nullptr;
   }
-#ifdef _DEBUG_MEMORY_
- _CrtMemCheckpoint (&s2);
- if (_CrtMemDifference (&diff, &s1, &s2))
-  {
-   _CrtMemDumpStatistics (&diff);    
-   _CrtMemDumpAllObjectsSince (&s1); 
-  }
- else
-  OutputDebugStringA ("=== No memory leaks ===\n");
-#endif // _DEBUG_MEMORY_
  if (m_hWhiteBrush)
   {
    DeleteObject (m_hWhiteBrush);
   }
+
+#ifdef _DEBUG_MEMORY_
+ _CrtMemCheckpoint (&s2);
+ if (_CrtMemDifference (&diff, &s1, &s2))
+  {
+   _CrtMemDumpStatistics (&diff);
+   _CrtMemDumpAllObjectsSince (&s1);
+  }
+ else
+  OutputDebugStringA ("=== No memory leaks ===\n");
+#endif // _DEBUG_MEMORY_
 }
 
 ATOM WinApiCalc::RegisterClass (HINSTANCE hInstance)
@@ -1177,7 +1183,8 @@ void WinApiCalc::OnEnterPressed ()
      if (m_pCalculator->get_res_tag() == tvMATRIX)
       {
        char resultStr[256];
-       m_pCalculator->mxprint (resultStr, false);
+       mxresult_t res = m_pCalculator->get_mx_res ();
+       m_pCalculator->mxprint (res.rows, res.cols, res.mval, resultStr, false);
        // Put result in expression field
        SetWindowTextA (m_hExpressionEdit, resultStr);
       }

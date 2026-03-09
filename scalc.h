@@ -419,10 +419,18 @@ class MemList
   return -1;
  }
 
- void *register_mem (void *mem)
+void *register_mem (void *mem)
  {
   if (!mem) return nullptr;
   if (search_mem (mem) != -1) return mem; // already registered
+  // fill holes first
+  for (int i = 0; i < count; i++)
+   if (!list[i])
+    {
+     list[i] = mem;
+     return mem;
+    }
+  // no holes — append
   if (count < capacity)
    {
     list[count++] = mem;
@@ -431,9 +439,8 @@ class MemList
   // grow
   int newcap     = capacity * 2;
   void **newlist = (void **)realloc (list, newcap * sizeof (void *));
-  if (!newlist) return nullptr; // allocation failed
+  if (!newlist) return nullptr;
   list = newlist;
-  // zero new entries
   memset (list + capacity, 0, (newcap - capacity) * sizeof (void *));
   capacity      = newcap;
   list[count++] = mem;
@@ -442,6 +449,7 @@ class MemList
 
  void *unregister_mem (void *mem)
  {
+  if (!mem) return nullptr;
   int idx = search_mem (mem);
   if (idx != -1) list[idx] = nullptr; // mark as unregistered, not freed
   return mem;
@@ -708,7 +716,11 @@ class calculator // calculator represents the main class for the expression calc
  int print (char *str, int Options, int binwide,
             int *size = nullptr); // Print a string representation of the result with specified
                                   // options and binary width,
- int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
+ int mxprint (int8_t res_rows, 
+              int8_t res_cols, 
+              float__t *res_mval,
+              char *str,
+              bool nl, // Print matrix result in a formatted way, with an option for a new line
               int *size = nullptr); // and an optional pointer to store the size of the output 
 
  ~calculator (void); // Destructor to clean up resources

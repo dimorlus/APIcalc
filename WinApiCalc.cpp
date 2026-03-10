@@ -1183,8 +1183,7 @@ void WinApiCalc::OnEnterPressed ()
      if (m_pCalculator->get_res_tag() == tvMATRIX)
       {
        char resultStr[256];
-       mxresult_t res = m_pCalculator->get_mx_res ();
-       m_pCalculator->mxprint (res.rows, res.cols, res.mval, resultStr, false);
+       m_pCalculator->mxprint (resultStr, false);
        // Put result in expression field
        SetWindowTextA (m_hExpressionEdit, resultStr);
       }

@@ -625,9 +625,9 @@ class calculator // calculator represents the main class for the expression calc
  float__t Solve (const char *expr, t_symbol tag); // Solve an equation given by the expression and
                                                   // return the solution as a floating-point value
 
- float__t gkEval (calculator *pCalc, char *sexpr, const char *svar,
-                  float__t x); // Evaluate a function for a given expression, variable name, and
-                               // variable value, and return the result as a floating-point value
+ float__t gkEval (calculator *pCalc, char *sexpr, // Evaluate a function for a given expression, variable name, and
+                  const char *svar, float__t x); // variable value, and return the result as a floating-point value
+                               
  GKResult gkPanel (calculator *pCalc, char *sexpr, const char *svar, float__t a, float__t b);
  GKResult gkAdaptive (calculator *pCalc, 
                      char *sexpr, 
@@ -639,10 +639,8 @@ class calculator // calculator represents the main class for the expression calc
                      int maxDepth, 
                      int &callCount, 
                      int maxCalls);
-
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
-                                    
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
 
  // Matrix operations
@@ -662,10 +660,12 @@ class calculator // calculator represents the main class for the expression calc
  t_mresult matrixuno (value &res, value &left, t_operator cop);
  void mxerror (const char *msg);
 
+ int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
+              bool nl, // Print matrix in a formatted way, with an option for a new line
+              int *size = nullptr); // and an optional pointer to store the size of the output
+
  public:
- calculator (int cfg = PAS + SCI + UPCASE,
-             symbol **symtab = nullptr,
-             int mask=MASK_DEFAULT,
+ calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int mask=MASK_DEFAULT,
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
@@ -695,9 +695,13 @@ class calculator // calculator represents the main class for the expression calc
 
  int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
             int *size = nullptr); // options and binary width,
- int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
-              bool nl, // Print matrix result in a formatted way, with an option for a new line
-              int *size = nullptr); // and an optional pointer to store the size of the output
+ 
+ int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
+              int *size = nullptr) // and an optional pointer to store the size of the output
+  {
+   return mxprint (res_rows, res_cols, res_mval, str, nl, size);
+  }
+
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
                           

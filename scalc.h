@@ -387,9 +387,7 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
   name[0] = '\0'; // Initialize name to an empty string
   next = nullptr;
  }
- 
 };
-
 
 class MemList
 {
@@ -486,7 +484,6 @@ void *register_mem (void *mem)
  int size () const { return count; }
 };
 
-
 const int max_stack_size        = 256;  // Maximum size of value and operator stacks
 const int max_expression_length = 1024; // Maximum length of expression
 const int hash_table_size = 1013; // Size of hash table for variables and functions
@@ -572,11 +569,11 @@ class calculator // calculator represents the main class for the expression calc
  void clear_mem_list (void) { mem_list.free_all (); }
 #endif //_STATIC_MM_
 
+ // sybol table management
  void save_vars_mem (void); // Save the current variables in the hash table to the mem array for
                             // memory management
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
-
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
  symbol *add (t_symbol tag, v_func fidx, const char *name,
@@ -584,26 +581,27 @@ class calculator // calculator represents the main class for the expression calc
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
+
+ // Expression parsing
  t_operator sscan (symbol *sym); // Scan body of the solve, integr and diff 
 
  t_operator sqbraces (void); // Scan [..] matrix/vector constructor 
-
  
  t_operator braces (void);    // Scan the expression for parentheses and return the operator type of
                               // the next token after the parentheses
  t_operator dqscan (char qc); // Scan the double quote string in the expression and return its operator
-                           // type, used for main scan
- t_operator dscan (bool operand,
-                   bool percent); // Scan the digits in the expression and return its operator type,
-                          // used for main scan
- t_operator scan (bool operand,
-                  bool percent); // Scan the next token in the expression and return its operator type
+                              // type, used for main scan
+ t_operator dscan (bool operand, bool percent); // Scan the digits in the expression and return its 
+                                                //operator type, used for main scan
+ t_operator scan (bool operand, bool percent); // Scan the next token in the expression and return 
+                                               // its operator type
+
+ // Error handling
  void error (int pos, const char *msg); // Report an error at the given position with the specified message
  void errorf (int pos, const char *fmt, ...); // Report an error at the given position with a formatted message
  inline void error (const char *msg) { error (pos - 1, msg); } // Report an error at the current position with 
                                                                //the specified message
- bool set_op (); // Assign a value to a variable
-
+ // Format checking and conversion
  bool isCMP (char *&fpos); // Check if the current position is a computing format
  int hscanf (char *str, int_t &ival,  int &nn); // Scan a hexadecimal number from the string and store it in ival,
                                                // with nn being the number of characters processed
@@ -618,9 +616,12 @@ class calculator // calculator represents the main class for the expression calc
  float__t tstrtod (char *s, char **endptr); // Convert a string to a long double-precision floating-point number
  void engineering (float__t mul, char *&fpos, float__t &fval); // Perform engineering notation conversion
  void scientific (char *&fpos, float__t &fval); // Perform scientific notation conversion
+ 
+ bool set_op (); // Assign a value to a variable
  void clear_v_stack (); // Clear the value stack
  void addim (void); // Add imaginary unit
  
+ // Math for solving, integrating and differentiating
  float__t Solve (const char *expr, t_symbol tag); // Solve an equation given by the expression and
                                                   // return the solution as a floating-point value
 
@@ -644,13 +645,12 @@ class calculator // calculator represents the main class for the expression calc
                                     
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
 
-
+ // Matrix operations
  float__t *mxAlloc (int rows, int cols);
  float__t *dupMatrix (value &val);
  bool mxElemOp (value &res, value &left, value &right, int op);
  bool mxScalarOp (value &res, value &mx, float__t scalar, int op, bool scalar_left);
  bool mxMatMul (value &res, value &left, value &right);
-
  bool mxGaussJordan (float__t *aug, int n, float__t &det);
  float__t *mxMakeAug (value &M);
  bool mxInv (value &res, value &M);
@@ -661,6 +661,7 @@ class calculator // calculator represents the main class for the expression calc
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);
  void mxerror (const char *msg);
+
  public:
  calculator (int cfg = PAS + SCI + UPCASE,
              symbol **symtab = nullptr,
@@ -691,12 +692,18 @@ class calculator // calculator represents the main class for the expression calc
  void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
  void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
+
+ int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
+            int *size = nullptr); // options and binary width,
+ int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
+              bool nl, // Print matrix result in a formatted way, with an option for a new line
+              int *size = nullptr); // and an optional pointer to store the size of the output
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
                           
- float__t  evaluate (char *expr, __int64 *piVal = nullptr,
-           float__t *pimval = nullptr); // Evaluate an expression and return the result as a floating-point value,
-                       // with optional pointers to store integer and imaginary results
+ float__t  evaluate (char *expr, // Evaluate an expression   
+           __int64 *piVal = nullptr, float__t *pimval = nullptr); 
+                       
  inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 
                                                        //expression  
  int64_t get_int_res () { return result_ival; };
@@ -713,15 +720,6 @@ class calculator // calculator represents the main class for the expression calc
   return res;
  };
 
- int print (char *str, int Options, int binwide,
-            int *size = nullptr); // Print a string representation of the result with specified
-                                  // options and binary width,
- int mxprint (int8_t res_rows, 
-              int8_t res_cols, 
-              float__t *res_mval,
-              char *str,
-              bool nl, // Print matrix result in a formatted way, with an option for a new line
-              int *size = nullptr); // and an optional pointer to store the size of the output 
 
  ~calculator (void); // Destructor to clean up resources
 };

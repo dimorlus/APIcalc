@@ -524,19 +524,19 @@ void calculator::copy_symbols (symbol **symtab, int mask)
       nsp = sp->next;
       if (sp->name[0])
        {
-        if ((mask & (1 << sp->tag)))
+        if ((mask & (1 << sp->tag))) // Check if the symbol's tag matches the copy mask
          {
           symbol *new_symbol = add (sp->tag, sp->name); //, sp->func);
           if (new_symbol)
            {
             new_symbol->tag = sp->tag;
-            strcpy (new_symbol->name, sp->name); // Duplicate name for safety (freed in destructor)
+            strcpy (new_symbol->name, sp->name); // Copy symbol name 
 
             new_symbol->fidx = sp->fidx;
             if (sp->tag == tsUFUNCT && sp->func)
               {
-                new_symbol->func = strdup((char *)sp->func); // Duplicate function name for user-defined functions
-                //register_mem (new_symbol->func); // Register duplicated function name for cleanup
+                new_symbol->func = strdup((char *)sp->func); // Copy UDF
+                //register_mem (new_symbol->func); // Register UDF for cleanup
               }
             else
                 new_symbol->func = sp->func; // Copy function pointer as is (static functions)
@@ -549,13 +549,11 @@ void calculator::copy_symbols (symbol **symtab, int mask)
             new_symbol->val.mrows = sp->val.mrows;
             new_symbol->val.sval  = nullptr;
             new_symbol->val.mval  = nullptr;
-            if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && sp->val.sval)
-             {
-              new_symbol->val.sval = strdup (sp->val.sval); // Duplicate string value
-              register_mem (new_symbol->val.sval); // Register duplicated string for cleanup
-             }
-            else if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && sp->val.mval)
-             new_symbol->val.mval = dupMatrix (sp->val); // Duplicate matrix value
+            if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
+              new_symbol->val.sval = dupString (sp->val.sval); // Duplicate and register string value 
+            else 
+            if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+              new_symbol->val.mval = dupMatrix (sp->val); // Duplicate and register matrix value 
            }
          }
        }
@@ -606,6 +604,8 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
   }
 }
 
+//---------------------------------------------------------------------------
+// Memory management functions for static memory management mode
 #ifdef _STATIC_MM_
 void calculator::init_mem_list ()
 {
@@ -671,7 +671,8 @@ void calculator::clear_mem_list () // Free all registered strings in the string 
 }
 #endif
 
-void calculator::save_vars_mem (void) // Clear all registered strings without freeing memory (for use in copy constructor)
+// Do not clean variables with other trash
+void calculator::save_vars_mem (void) 
 {
  symbol *sp;
  for (int i = 0; i < hash_table_size; i++)
@@ -680,13 +681,8 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
     {
      do
       {
- //      if (sp->name[0])
-        {
- //        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR) && (sp->val.sval))
-          unregister_mem (sp->val.sval);
- //        if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX) && (sp->val.mval))
-          unregister_mem (sp->val.mval);
-        }
+       unregister_mem (sp->val.sval);
+       unregister_mem (sp->val.mval);
        sp = sp->next;
       }
      while (sp);
@@ -694,21 +690,19 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
   }
 }
 
+// Duplicate a string and register it for cleanup
  char *calculator::dupString (const char *src) // Duplicate a string and register it for cleanup
-  {
-   if (!src) return nullptr;
-   size_t len = strlen (src);
-   char *dup  = (char *)malloc (len + 1);
-   if (dup)
-    {
-     strcpy (dup, src);
-     return (char *)register_mem (dup);
-    }
-   return nullptr;
-  }
+ {
+  if (src && src[0]) 
+   {
+    char *dup = strdup (src); // Duplicate string using strdup
+    if (dup) register_mem (dup); // Register duplicated string for cleanup
+    return dup;
+   }
+  return nullptr;
+ }
 
- // Duplicate a matrix but no register it for cleanup
-
+ // Duplicate a matrix and register it for cleanup
  float__t *calculator::dupMatrix (value &val)
   {
    // Assuming matrix is stored as a flat array of float__t with dimensions res_rows x res_cols
@@ -729,17 +723,20 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
    return nullptr;
   }
 //---------------------------------------------------------------------------
+
+
+
 //---------------------------------------------------------------------------
 // Print matrix result in a formatted way, with an option for a new line
 // and an optional pointer to store the size of the output
-  int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str, bool nl,
-                           int *size)
-  {
+int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, 
+                         char *str, bool nl, int *size)
+{
  int n     = 0;
  int bsize = 0;
  if (result_tag == tvMATRIX)
   {
-   // compute Frobenius norm for threshold
+   // compute Frobenius norm (RMS) for threshold
    float__t norm = 0.0L;
    int nm = res_rows * res_cols;
    for (int i = 0; i < nm; i++) norm += res_mval[i] * res_mval[i];
@@ -763,10 +760,8 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
          if (j < res_cols - 1) cp += sprintf (cp, "%6.6s, ", elemstr);
          else
           {
-           if (i == res_rows - 1)
-            cp += sprintf (cp, "%6.6s)]", elemstr);
-           else
-            cp += sprintf (cp, "%6.6s); ", elemstr);
+           if (i == res_rows - 1) cp += sprintf (cp, "%6.6s)]", elemstr);
+           else cp += sprintf (cp, "%6.6s); ", elemstr);
           }
         }
        if (i == res_rows - 1) cp += sprintf (cp, " ");
@@ -774,7 +769,7 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
        n++;
       }
      else
-     {
+      {
        if (i > 0) cp += sprintf (cp, "(");
        else cp += sprintf (cp, "[(");
        for (int j = 0; j < res_cols; j++)
@@ -787,17 +782,13 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
           cp += sprintf (cp, "%s, ", elemstr);
          else
           {
-           if (i == res_rows - 1)
-            cp += sprintf (cp, "%s)]", elemstr);
-           else
-            cp += sprintf (cp, "%s); ", elemstr);
+           if (i == res_rows - 1) cp += sprintf (cp, "%s)]", elemstr);
+           else cp += sprintf (cp, "%s); ", elemstr);
           }
         }
-       
        bsize += sprintf (str + bsize, "%s", mstr);
        n++;
-
-     }
+      }
     }
    if (size) *size += bsize;
    return n;
@@ -805,7 +796,7 @@ void calculator::save_vars_mem (void) // Clear all registered strings without fr
  return n;
 }
 
-  // Print the result of the calculation into the provided string buffer with formatting options
+// Print the result of the calculation into the provided string buffer with formatting options
 int calculator::print (char *str, int Options, int binwide, int *size)
 {
  int n     = 0;
@@ -3682,16 +3673,12 @@ void calculator::clear_v_stack ()
  for (int i = 0; i < max_stack_size; ++i)
   {
    v_stack[i].tag   = tvINT;
-   //sf_free (v_stack[i].sval); // free string if allocated
-   //register_mem (v_stack[i].sval);
    v_stack[i].sval = nullptr;  
    v_stack[i].var   = nullptr;
    v_stack[i].pos   = 0;
    v_stack[i].ival  = 0;
    v_stack[i].fval  = 0.0;
    v_stack[i].imval = 0.0;
-   //sf_free (v_stack[i].mval); // free matrix if allocated
-   //register_mem (v_stack[i].mval);
    v_stack[i].mval  = nullptr;
    v_stack[i].mrows = 0;
    v_stack[i].mcols = 0;

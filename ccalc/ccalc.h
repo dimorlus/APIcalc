@@ -36,17 +36,17 @@ static const option_def all_options[] =
     { "NRM",    NRM    },
     { "IGR",    IGR    },
     { "UNS",    UNS    },
-    { "ALL",    SCI+DEG+SCI+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM    },
+    { "ALL",    SCI+DEG+SCI+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM},
     { "FRC",    FRC    },
     { "FRI",    FRI    },
     { "FRH",    FRH    },
- //{ "AUT",    AUTO   },
- //   { "AUTO",   AUTO   },
   //{ "MIN",    MIN    },
   //{ "MNU",    MNU    },
     { "UTM",    UTM    },
   //{ "TOP",    TOP    },
 	{ "OPT",    OPT    },
+    { "SRC",    SRC    },
+    { "AUTO",   AUTO   },
     { NULL,     0      } // Sentinel
 };
 
@@ -56,6 +56,7 @@ struct ccalc_options
 {
     int calc_flags;     // Flags for calculator and output
     int binary_width;   // Width for binary format
+    char filename[256]; // Optional source filename
     
     ccalc_options()
     {

@@ -46,6 +46,10 @@
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
 #pragma warn -8004 // assigned a value that is never used
+#pragma warn -8080
+#pragma warn -8060
+#pragma warn -8066
+#pragma warn -8070
 
 #include <float.h>
 int isinf_f(float x) { return x < -FLT_MAX || x > FLT_MAX; }
@@ -321,6 +325,12 @@ void calculator::AddPredefined (void)
  add (tsIFUNCF1, "wrgb", (void *)wavelength_to_rgb);
  add (tsIFUNCF1, "trgb", (void *)temperature_to_rgb);
  add (tsSFUNCF1, "winf", (void *)wavelength_info);
+
+ add (tsIFUNCF1, "binf", (void *)binf);
+ add (tsIFUNCF1, "bind", (void *)bindbl);
+
+ add (tsFFUNCI1, "floatf", (void *)floatf);
+ add (tsFFUNCI1, "floatd", (void *)floatd);
 
  // Mathematical constants
  addfconst ("pi", M_PI);
@@ -794,6 +804,247 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
    return n;
   }
  return n;
+}
+
+// Print the result string to the input
+int calculator::printres(char* str, int options, int binwide)
+{
+ if (isnan (result_fval) || err[0])
+  {
+   return sprintf (str, "%s", err[0] ? err : "NaN");
+  }
+ if (result_tag == tvMATRIX)
+  {
+    return mxprint (str, false);
+  }
+ else
+  {
+   if (options & AUTO)
+    {
+     if (sres[0])
+      return sprintf (str, "%s", sres);
+     else
+      {
+       if (result_imval == 0)
+        return sprintf (str, "%.16Lg", result_fval);
+       else
+        return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
+      }
+    }
+
+   if (options & FFLOAT)
+    {
+     if (result_imval == 0)
+      return sprintf (str, "%.16Lg", result_fval);
+     else
+      return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
+    }
+
+   if (options & SCI)
+    {
+     char scistr[80];
+     if (result_imval == 0)
+      d2scistr (scistr, result_fval);
+     else
+      {
+       char cphi[20];
+       char cr[20];
+       float__t imval = result_imval;
+       float__t fval  = result_fval;
+       normz (fval, imval);
+       float__t phi = atan2l (imval, fval);
+       float__t r   = hypotl (fval, imval);
+       d2scistr (cr, r);
+       dgr2str (cphi, phi);
+       sprintf (scistr, "|%s|(%s) %.16Lg%+.16Lg%c", cr, cphi, fval, imval, c_imaginary);
+      }
+     return sprintf (str, "%s", scistr);
+    }
+
+   if (options & NRM)
+    {
+     char nrmstr[80];
+     float__t imval = result_imval;
+     float__t fval  = result_fval;
+     normz (fval, imval);
+     if (imval == 0) d2nrmstr (nrmstr, fval);
+     else
+      {
+       char cphi[20];
+       char cr[20];
+       float__t phi = atan2l (imval, fval);
+       float__t r   = hypotl (fval, imval);
+       d2nrmstr (cr, r);
+       dgr2str (cphi, phi);
+       sprintf (nrmstr, "|%s|(%s) %.16Lg%+.16Lg%c", cr, cphi, fval, imval, c_imaginary);
+      }
+     return sprintf (str, "%s", nrmstr);
+    }
+
+   if (options & CMP)
+    {
+     char bscistr[80];
+     b2scistr (bscistr, result_fval);
+     return sprintf (str, "%s", bscistr);
+    }
+   if (options & IGR)
+    {
+     return sprintf (str, "%lld", result_ival);
+    }
+   if (options & UNS)
+    {
+     return sprintf (str, "%llu", result_ival); //%llu|%zu
+    }
+   if (options & FRC)
+    {
+     char frcstr[80];
+     int num, denum;
+     double val;
+     if (result_fval > 0)
+      val = result_fval;
+     else
+      val = -result_fval;
+     double intpart = floor (val);
+     if (intpart < 1e15)
+      {
+       if (intpart > 0)
+        {
+         fraction (val - intpart, 0.001, num, denum);
+         if (result_fval > 0)
+          sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
+         else
+          sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
+        }
+       else
+        {
+         fraction (val, 0.001, num, denum);
+         if (result_fval > 0)
+          sprintf (frcstr, "%d/%d", num, denum);
+         else
+          sprintf (frcstr, "-%d/%d", num, denum);
+        }
+       if (denum)
+        {
+         return sprintf (str, "%s", frcstr);
+        }
+      }
+    }
+
+   if (options & FRI)
+    {
+     char frcstr[80];
+     int num, denum;
+     double val;
+     if (result_fval > 0)
+      val = result_fval;
+     else
+      val = -result_fval;
+     val /= 25.4e-3;
+     double intpart = floor (val);
+     if (intpart < 1e15)
+      {
+       if (intpart > 0)
+        {
+         fraction (val - intpart, 0.001, num, denum);
+         if (num && denum)
+          {
+           if (result_fval > 0)
+            sprintf (frcstr, "%.0f+%d/%d", intpart, num, denum);
+           else
+            sprintf (frcstr, "-%.0f-%d/%d", intpart, num, denum);
+          }
+         else
+          {
+           sprintf (frcstr, "%.0f", intpart);
+          }
+        }
+       else
+        {
+         fraction (val, 0.001, num, denum);
+         if (result_fval > 0)
+          sprintf (frcstr, "%d/%d", num, denum);
+         else
+          sprintf (frcstr, "-%d/%d", num, denum);
+        }
+       return sprintf (str, "%s", frcstr);
+      }
+    }
+
+   if (options & HEX)
+    {
+     char binfstr[16];
+     sprintf (binfstr, "%%0.%illxh  \r\n", binwide / 4);
+     return sprintf (str, binfstr, result_ival);
+    }
+
+   if (options & OCT)
+    {
+     char binfstr[16];
+     sprintf (binfstr, "%%0.%illoo  \r\n", binwide / 3);
+     return sprintf (str, binfstr, result_ival);
+    }
+
+   if (options & fBIN)
+    {
+     char binfstr[16];
+     char binstr[80];
+     sprintf (binfstr, "%%%ib", binwide);
+     b2str (binstr, binfstr, result_ival);
+     return sprintf (str, "%sb", binstr);
+    }
+
+   if (options & CHR)
+    {
+     char chrstr[10];
+     chr2str (chrstr, result_ival);
+     return sprintf (str, "%s", chrstr);
+    }
+
+   if (options & WCH)
+    {
+     char wchrstr[10];
+     int i = result_ival & 0xffff;
+     wchr2str (wchrstr, i);
+     return sprintf (str, "%s", wchrstr);
+    }
+
+   if (options & DAT)
+    {
+     char dtstr[80];
+     t2str (dtstr, result_ival);
+     return sprintf (str, "%s", dtstr);
+    }
+
+   if (options & UTM)
+    {
+     char dtstr[80];
+     nx_time2str (dtstr, result_ival);
+     return sprintf (str, "%s", dtstr);
+    }
+
+   if (options & DEG)
+    {
+     char dgrstr[80];
+     char *cp = dgrstr;
+     cp += sprintf (cp, "%.6Lg rad|", (long double)result_fval);
+     cp += dgr2str (cp, result_fval);
+     cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
+     return sprintf (str, "%s", dgrstr);
+    }
+
+   if ((options & FRH) && (result_fval > -273.15))
+    {
+     char frhstr[80];
+     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
+              (long double)result_fval, (long double)(result_fval * 9.0 / 5.0 + 32.0));
+     return sprintf (str, "%s", frhstr); 
+    }
+
+   if (options & STR) return sprintf (str, "'%s'", sres);
+  }
+ return sprintf (str, "%s", "");
 }
 
 // Print the result of the calculation into the provided string buffer with formatting options
@@ -6636,6 +6887,36 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                  &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
              v_sp -= 2;
              break;
+
+             case tsFFUNCI1: // float f(int x) (float() function)
+             if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (((v_stack[v_sp - 1].tag == tvERR)))
+               {
+                error (v_stack[v_sp - 1].pos, "Undefined operand");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvSTR)
+               {
+                error (v_stack[v_sp - 1].pos, "Illegal string operation");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvMATRIX)
+               {
+                error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
+              v_stack[v_sp - 2].tag  = tvFLOAT;
+              v_sp -= 1;
+              break;
 
             case tsIFUNCF1: // int f(float x) (wrgb() function)
              if (n_args != 1)

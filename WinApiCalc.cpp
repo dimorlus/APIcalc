@@ -1180,22 +1180,9 @@ void WinApiCalc::OnEnterPressed ()
        return; // Don't replace on error
       }
 
-     if (m_pCalculator->get_res_tag() == tvMATRIX)
       {
        char resultStr[256];
-       m_pCalculator->mxprint (resultStr, false);
-       // Put result in expression field
-       SetWindowTextA (m_hExpressionEdit, resultStr);
-      }
-     else
-      {
-       // Format result as %.16Lg as specified in SOW
-       char resultStr[64];
-       if (imVal == 0)
-        sprintf_s (resultStr, "%.16Lg", fVal);
-       else
-        sprintf_s (resultStr, "%.16Lg%+.16Lg%c", fVal, imVal, m_pCalculator->Ichar ());
-
+       m_pCalculator->printres (resultStr);
        // Put result in expression field
        SetWindowTextA (m_hExpressionEdit, resultStr);
       }

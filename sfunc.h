@@ -18,6 +18,12 @@
 int_t To_int(int_t val);
 float__t To_float(float__t val);
 int_t Prime(int_t n);
+
+float__t floatf (uint64_t i);
+float__t floatd (uint64_t i);
+uint64_t binf (float__t x);
+uint64_t bindbl (float__t x);
+
 char* to_bin(int nval, char* pbuf, int nbufsize);
 int_t Gcd(int_t x, int_t y);
 int_t Invmod(int_t x, int_t y);

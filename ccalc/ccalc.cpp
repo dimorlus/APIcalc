@@ -5,15 +5,20 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <stdio.h>
+#include <io.h>
+
 #include "../scalc.h"
 
 char errMsg[512] = { 0 };
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide);
+int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename);
 
 ccalc_config::ccalc_config (uint32_t dconf)
 {
  opts.calc_flags = dconf;
+ opts.binary_width = 64;
+ opts.filename[0]  = '\0';
 }
 
 bool ccalc_config::parse_single_option (const char *opt)
@@ -103,7 +108,7 @@ int ccalc_config::parse_cmdline_options (char *cmdline)
  if (first_option_pos >= 0)
   {
    // Use scan_opt to parse all options
-   opts.calc_flags = scan_opt (cmdline + first_option_pos, opts.calc_flags, &opts.binary_width);
+   opts.calc_flags = scan_opt (cmdline + first_option_pos, opts.calc_flags, &opts.binary_width, opts.filename);
 
    // Trim the string (remove options)
    cmdline[first_option_pos] = '\0';
@@ -116,7 +121,7 @@ int ccalc_config::parse_cmdline_options (char *cmdline)
  return first_option_pos;
 }
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide)
+int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename)
 {
  int i, j, k, l;
  char c, cc;
@@ -147,6 +152,20 @@ int32_t scan_opt (char *str, int32_t initial_opts, int *binwide)
     }
 
    l++; // Skip '/'
+
+   int cmp = _strnicmp (&str[l], "FILE=",5);
+   if (cmp== 0)
+    {
+     l += 5; // Skip "FILE="
+     if (str[l] == '"') l++; // Skip opening quote if present
+     int j = 0;
+     for (; str[l] && str[l] != '/' && str[l] != '"'; l++)
+     {
+       filename[j++] = str[l];
+     }
+     filename[j] = '\0'; 
+     //strcpy_s (filename, i, &str[l]);
+    }
 
    // Check for BW=n
    if ((str[l] == 'B' || str[l] == 'b') && (str[l + 1] == 'W' || str[l + 1] == 'w')
@@ -221,7 +240,7 @@ bool ccalc_config::load_config (const char *filename)
 
  // Используем scan_opt для парсинга
  char *str       = const_cast<char *> (content.c_str ());
- opts.calc_flags = scan_opt (str, opts.calc_flags, &opts.binary_width);
+ opts.calc_flags = scan_opt (str, opts.calc_flags, &opts.binary_width, opts.filename);
 
  return true;
 }
@@ -433,11 +452,11 @@ int main ()
  expr_len = strlen (expression);
  while (expr_len > 0 && isspace (expression[expr_len - 1])) expression[--expr_len] = '\0';
 
- if (expr_len == 0)
-  {
-   std::cerr << "Error: Empty expression" << std::endl;
-   return 1;
-  }
+ //if (expr_len == 0)
+ // {
+ //  std::cerr << "Error: Empty expression" << std::endl;
+ //  return 1;
+ // }
 
  // Create the calculator
  calculator calc (config.get_options ().calc_flags);
@@ -453,14 +472,59 @@ int main ()
    return 1;
   }
 
+  if (!_isatty (_fileno (stdin)))
+  {
+    char line[1024];
+    char result_str[256];
+    while (fgets (line, sizeof (line), stdin))
+    {
+      int_t len = strlen (line);
+      while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'
+                 || isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
+      if (line[0] == '\0') continue; // Skip empty lines
+      float__t res = calc.evaluate (line);
+      calc.printres (result_str, config.get_options ().calc_flags,
+                     config.get_options ().binary_width);
+      if (config.get_options ().calc_flags & SRC)
+       printf ("%s => %s\n", line, result_str);
+      else
+       printf ("%s\n", result_str);
+     }
+    return 0;
+  }
+
+ if (config.get_options().filename[0])
+ {
+  FILE *f = nullptr;
+  char *fname = config.get_options ().filename;
+  if (fopen_s (&f, fname, "r") == 0 && f)
+   {
+    char line[1024];
+    char result_str[256];
+    while (fgets (line, sizeof (line), f))
+     {
+      int_t len      = strlen (line);
+      while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r' || 
+          isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
+      if (line[0] == '\0') continue; // Skip empty lines
+      float__t res = calc.evaluate (line);
+      calc.printres (result_str, config.get_options ().calc_flags,
+                    config.get_options ().binary_width);
+      if (config.get_options ().calc_flags & SRC)
+       printf ("%s => %s\n", line, result_str);
+      else
+       printf ("%s\n", result_str);
+     }
+    fclose (f);
+   }
+  return 0;
+ }
+
  // Evaluate
- __int64 iVal    = 0;
- float__t imVal  = 0;
- float__t result = calc.evaluate (expression, &iVal, &imVal);
+ calc.evaluate (expression);
 
  char result_str[1600];
- //calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width,
- //            result, imVal, iVal);
+
  calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width);
 
  if (config.get_options ().calc_flags & OPT)

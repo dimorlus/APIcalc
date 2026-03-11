@@ -80,6 +80,36 @@ ccalc "help(7)"                 # Options
 /SCI+ /IMUL+ /BW=64
 ```
 
+#### Batch Processing (File or Stdin)
+
+Process a file of expressions line by line, redirecting output to a file:
+
+```
+ccalc /ALL-/AUTO+/SRC+/FILE="apicalc_cli_tests.txt" >result.txt
+```
+
+Or via stdin pipe:
+
+```
+type apicalc_cli_tests.txt | ccalc /ALL-/AUTO+/SRC+ >result.txt
+```
+
+With `/SRC+` each output line includes the source expression:
+
+```
+-1^2 ;; -(1^2), not (-1)^2 => -1
+integr(exp(-(x^2)), -5, 5, x) ;; sqrt(pi) => 1.77245385090552
+```
+
+Without `/SRC+` only results are printed, one per line:
+
+```
+-1
+1.77245385090552
+```
+
+Lines starting with `;;` are comments and produce no output. Blank lines are passed through as blank lines.
+
 **IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
 
 ## Supported Functions
@@ -147,6 +177,21 @@ x %% y  →  (x / y - 1) * 100
 
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
 
+* **bind(x)**, **binf(x)**: Reinterpret a floating-point value as an integer by its raw bit pattern (the inverse of `floatd`/`floatf`). Useful for inspecting IEEE 754 representation:
+  
+  ```
+  bind(pi)   →  400921fb54442d18h   ;; double (64-bit) bit pattern of π
+  binf(pi)   →  40490fdbh           ;; float (32-bit) bit pattern of π
+  ```
+
+* **floatd(x)**, **floatf(x)**: Reinterpret an integer as a floating-point value by its raw bit pattern (the inverse of `bind`/`binf`):
+  
+  ```
+  floatd(0x400921FB54442D18)  →  3.14159265358979   ;; reconstruct π from bits
+  floatf(0x40490FDB)          →  3.141593            ;; 32-bit float precision
+  floatd(bind(pi))            →  3.14159265358979   ;; round-trip
+  ```
+
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
@@ -176,6 +221,12 @@ x %% y  →  (x / y - 1) * 100
   ```
 
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
+  
+  $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
+```
+  integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
+  integral(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
+```
   
   ```
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
@@ -346,7 +397,7 @@ x = 1, y=2
 F1:=[(10, 5, 0)]; F2:=[(0, 10, 5)];degr:=angle(F1, F2)/deg→66.42182152179818
 V_sns:=[(10); (0)]; ang:=pi/4;V_global:= rot2(ang) V_sns → [(7.071); (7.071)]
 ```
-
+$$\begin{cases} 2x - 3y = -4 \\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}$$
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.

@@ -387,26 +387,14 @@ cross([(1,0,0)], [(0,1,0)])        →  [(0,0,1)]
 cross([(1,2,3)], [(4,-1,2)])       →  [(7,10,-9)]
 dot(cross([(1,2,3)],[(4,-1,2)]), [(1,2,3)]) →  0  ;; cross product ⊥ both inputs
 
-2x-3y = -4
-3x-2y = -1
-
-solve_lin([(2, -3);(3, -2)],[(-4);(-1)])→[(1); (2)]
-
-x = 1, y=2
-
 F1:=[(10, 5, 0)]; F2:=[(0, 10, 5)];degr:=angle(F1, F2)/deg→66.42182152179818
 V_sns:=[(10); (0)]; ang:=pi/4;V_global:= rot2(ang) V_sns → [(7.071); (7.071)]
 ```
-$$\begin{cases} 2x - 3y = -4 \\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}$$
-
-$$
-\begin{cases} 2x - 3y = -4 \\ 3x - 2y = -1 \end{cases}
-\Rightarrow
-\begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}
-$$
 
 $$\begin{cases} 2x - 3y = -4 \\\\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pmatrix} x \\\\ y \end{pmatrix} = \begin{pmatrix} 1 \\\\ 2 \end{pmatrix}$$
-
+```
+solve_lin([(2, -3);(3, -2)],[(-4);(-1)])→[(1); (2)]
+```
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.

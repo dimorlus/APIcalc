@@ -404,6 +404,9 @@ $$
 \Rightarrow
 \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} 1 \\ 2 \end{pmatrix}
 $$
+
+$$\begin{cases} 2x - 3y = -4 \\\\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pmatrix} x \\\\ y \end{pmatrix} = \begin{pmatrix} 1 \\\\ 2 \end{pmatrix}$$
+
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.

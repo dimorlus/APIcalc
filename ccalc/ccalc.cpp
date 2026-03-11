@@ -452,11 +452,6 @@ int main ()
  expr_len = strlen (expression);
  while (expr_len > 0 && isspace (expression[expr_len - 1])) expression[--expr_len] = '\0';
 
- //if (expr_len == 0)
- // {
- //  std::cerr << "Error: Empty expression" << std::endl;
- //  return 1;
- // }
 
  // Create the calculator
  calculator calc (config.get_options ().calc_flags);
@@ -481,7 +476,11 @@ int main ()
       int_t len = strlen (line);
       while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'
                  || isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
-      if (line[0] == '\0') continue; // Skip empty lines
+      if (line[0] == '\0')
+       {
+        printf ("\n");
+        continue; // Skip empty lines
+       }
       float__t res = calc.evaluate (line);
       calc.printres (result_str, config.get_options ().calc_flags,
                      config.get_options ().binary_width);
@@ -506,7 +505,11 @@ int main ()
       int_t len      = strlen (line);
       while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r' || 
           isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
-      if (line[0] == '\0') continue; // Skip empty lines
+      if (line[0] == '\0')
+       {
+        printf ("\n");
+        continue; // Skip empty lines
+       }
       float__t res = calc.evaluate (line);
       calc.printres (result_str, config.get_options ().calc_flags,
                     config.get_options ().binary_width);
@@ -521,6 +524,11 @@ int main ()
  }
 
  // Evaluate
+ if (expression[0] == '\0')
+  {
+   printf("Error: Empty expression\n");
+   return 1;
+  }
  calc.evaluate (expression);
 
  char result_str[1600];
@@ -529,6 +537,6 @@ int main ()
 
  if (config.get_options ().calc_flags & OPT)
   print_options (config.get_options ().calc_flags, config.get_options ().binary_width);
- printf ("%s\r\n%s\r\n", expression, result_str);
+ printf ("%s\n%s\n", expression, result_str);
  return 0;
 }

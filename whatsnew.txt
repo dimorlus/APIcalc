@@ -1,3 +1,23 @@
+10.03.26 (2.129)
++ Added functions bind(x), binf(x): Reinterpret a floating-point value as an integer by 
+  its raw bit pattern (the inverse of floatd/floatf). Useful for inspecting IEEE 754 
+  representation:
++ Added functions floatd(i), floatf(i): Reinterpret an integer as a floating-point value 
+  by its raw bit pattern (the inverse of bind/binf):
+    bind(pi)   ->  400921fb54442d18h   ;; double (64-bit) bit pattern of Pi
+    binf(pi)   ->  40490fdbh           ;; float (32-bit) bit pattern of Pi
+    floatd(bind(pi)) -> 3.14159265358979   ;; round-trip
++ The CLI version of the calculator can now read a text file with expressions (one line 
+  per expression). All variables are global within a single file, and variables defined 
+  in one line can be used in subsequent lines. The file is specified either with the 
+  /FILE=name.txt command-line option or read from standard input. The result is output 
+  line by line to standard output.	
+    ccalc /ALL-/AUTO+/SRC+/FILE="apicalc_cli_tests.txt" >result.txt
+	type apicalc_cli_tests.txt | ccalc /ALL-/AUTO+/SRC+ >result.txt
+  You can specify a specific output format, but only one. If there are multiple, the 
+  first one in the internal list will work, so it's better to write, for example, 
+  /ALL-/HEX+	
+
 10.03.26 (2.128)
 * Cosmetic changes.
 

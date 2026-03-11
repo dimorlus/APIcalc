@@ -227,10 +227,9 @@ x %% y  →  (x / y - 1) * 100
   integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
   integral(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
 ```
-  
+ 
   ```
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
-  integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
   ```
   
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.

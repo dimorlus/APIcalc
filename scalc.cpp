@@ -1190,7 +1190,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
      n++;
 
      // (RO) String format found
-     if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
+     if (((Options & STR) || (fflags & STR)) && (result_imval == 0))
       {
         {
          if (sres[0])
@@ -1240,7 +1240,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       }
     }
    // (RO) Scientific (6.8k) format found
-   if (Options & (SCI | ENG))
+   if ((Options & SCI) || (fflags & ENG))
     {
      char scistr[80];
      if (result_imval == 0)
@@ -1302,7 +1302,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Computing format found
-   if (((Options & CMP) || (scfg & CMP)) && (result_imval == 0))
+   if (((Options & CMP) || (fflags & CMP)) && (result_imval == 0))
     {
      char bscistr[80];
      b2scistr (bscistr, result_fval);
@@ -1404,7 +1404,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Hex format found
-   if (((Options & HEX) || (scfg & HEX)) && (result_imval == 0))
+   if (((Options & HEX) || (fflags & HEX)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  \r\n", binwide / 4);
@@ -1415,7 +1415,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Octal format found
-   if (((Options & OCT) || (scfg & OCT)) && (result_imval == 0))
+   if (((Options & OCT) || (fflags & OCT)) && (result_imval == 0))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  \r\n", binwide / 3);
@@ -1426,7 +1426,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Binary format found
-   if (((Options & fBIN) || (scfg & fBIN)) && (result_imval == 0))
+   if (((Options & fBIN) || (fflags & fBIN)) && (result_imval == 0))
     {
      char binfstr[16];
      char binstr[80];
@@ -1439,7 +1439,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Char format found
-   if (((Options & CHR) || (scfg & CHR)) && (result_imval == 0))
+   if (((Options & CHR) || (fflags & CHR)) && (result_imval == 0))
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
@@ -1450,7 +1450,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) WChar format found
-   if (((Options & WCH) || (scfg & WCH)) && (result_imval == 0))
+   if (((Options & WCH) || (fflags & WCH)) && (result_imval == 0))
     {
      char wchrstr[80];
      int i = result_ival & 0xffff;
@@ -1462,7 +1462,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Date time format found
-   if (((Options & DAT) || (scfg & DAT)) && (result_imval == 0))
+   if (((Options & DAT) || (fflags & DAT)) && (result_imval == 0))
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
@@ -1473,7 +1473,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Unix time
-   if (((Options & UTM) || (scfg & UTM)) && (result_imval == 0))
+   if (((Options & UTM) || (fflags & UTM)) && (result_imval == 0))
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
@@ -1484,7 +1484,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Degrees format found  * 180.0 / M_PI
-   if (((Options & DEG) || (scfg & DEG)) && (result_imval == 0) && (result_tag == tvFLOAT))
+   if (((Options & DEG) || (fflags & DEG)) && (result_imval == 0) && (result_tag == tvFLOAT))
     {
      char dgrstr[80];
      char *cp = dgrstr;
@@ -1499,7 +1499,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Temperature format
-   if (((Options & FRH) || (scfg & FRH)) && (result_imval == 0) && 
+   if (((Options & FRH) || (fflags & FRH)) && (result_imval == 0) && 
        (result_fval > -273.15) && (result_tag == tvFLOAT))
     {
      char frhstr[80];
@@ -1512,7 +1512,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
 
 
    // (RO) String format found
-   if (((Options & STR) || (scfg & STR)) && (result_imval == 0))
+   if (((Options & STR) || (fflags & STR)) && (result_imval == 0))
     {
       {
        if (sres[0])
@@ -1867,7 +1867,6 @@ int calculator::hscanf (char *str, int_t &ival, int &nn)
  nn   = n;
  if (n)
   {
-   scfg |= HEX;
    fflags |= HEX;
   }
  return 0;
@@ -1895,7 +1894,6 @@ int calculator::bscanf (char *str, int_t &ival, int &nn)
  nn   = n;
  if (n) 
   {
-   scfg |= fBIN;
    fflags |= fBIN;
   }
  return 0;
@@ -1923,7 +1921,6 @@ int calculator::oscanf (char *str, int_t &ival, int &nn)
  nn   = n;
  if (n) 
   {
-   scfg |= OCT;
    fflags |= OCT;
   }
  return 0;
@@ -1974,7 +1971,6 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
     if (res >= max) n--;
     if (n)
      {
-      scfg |= OCT;
       fflags |= OCT;
      }
    }
@@ -2007,7 +2003,6 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
    if (res >= max) n--;
    if (n) 
     {
-     scfg |= HEX;
      fflags |= HEX;
     }
    break;
@@ -2015,21 +2010,18 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
   case 'a':
    res = '\007';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 'f':
    res = 255u;
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 'v':
    res = '\x0b';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
@@ -2037,42 +2029,36 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
   case 'e':
    res = '\033';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 't':
    res = '\t';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 'n':
    res = '\n';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 'r':
    res = '\r';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case 'b':
    res = '\b';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
 
   case '\\':
    res = '\\';
    n   = 1;
-   scfg |= ESC;
    fflags |= ESC;
    break;
   }
@@ -2099,7 +2085,6 @@ float__t calculator::dstrtod (char *s, char **endptr)
       {
        res += d * mdeg[i];
        end++;
-       scfg |= DEG;
        fflags |= DEG;
        break;
       }
@@ -2138,7 +2123,6 @@ float__t calculator::tstrtod (char *s, char **endptr)
       {
        res += d * dms[i];
        end += 2;
-       scfg |= DAT;
        fflags |= DAT;
        break;
       }
@@ -2164,7 +2148,6 @@ void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
    div *= 10;
    fract *= 10;
    fract += *fpos++ - '0';
-   scfg |= ENG;
    fflags |= ENG;
   }
  fval *= mul;
@@ -2178,7 +2161,6 @@ bool calculator::isCMP (char *&fpos)
  if (*fpos == 'B')
   {
    fpos++;
-   scfg |= CMP;
    fflags |= CMP;
    return true;
   }
@@ -2186,7 +2168,6 @@ bool calculator::isCMP (char *&fpos)
  if ((*fpos == 'i') && (*(fpos + 1) == 'B'))
   {
    fpos += 2;
-   scfg |= CMP;
    fflags |= CMP;
    return true;
   }
@@ -3426,35 +3407,30 @@ t_operator calculator::dscan (bool operand, bool percent)
    {
     ierr = xscanf (buf + pos, 1, ival, n);
     ipos = buf + pos + n;
-    scfg |= ESC;
     fflags |= ESC;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
    {
     ierr = bscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
-    scfg |= fBIN;
     fflags |= fBIN;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
    {
     ierr = oscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
-    scfg |= OCT;
     fflags |= OCT;
    }
   else if (buf[pos - 1] == '$')
    {
     ierr = hscanf (buf + pos, ival, n);
     ipos = buf + pos + n;
-    scfg |= HEX;
     fflags |= HEX;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
    {
     ierr = hscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
-    scfg |= HEX;
     fflags |= HEX;
    }
   else
@@ -3519,7 +3495,6 @@ t_operator calculator::dscan (bool operand, bool percent)
    {
     c_imaginary = *fpos;
     fpos++;
-    scfg |= CPX;
     fflags |= CPX;
     v_stack[v_sp].tag = tvCOMPLEX;
    }
@@ -3863,14 +3838,12 @@ t_operator calculator::scan (bool operand, bool percent)
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
           ival = *(int *)&wbuf[0];
           ipos += 2;
-          scfg |= WCH;
           fflags |= WCH;
          }
         else
 #endif /*_WIN_*/
 #endif /*_WCHAR_*/
          {
-          scfg |= CHR;
           fflags |= CHR;
           ival               = *(unsigned char *)(ipos - 1);
           v_stack[v_sp].sval = (char *)sf_alloc (2);
@@ -3930,7 +3903,6 @@ t_operator calculator::scan (bool operand, bool percent)
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
           ival = *(int *)&wbuf[0];
           ipos += 3;
-          scfg |= WCH;
           fflags |= WCH;
          }
         else
@@ -7190,7 +7162,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
               sres[STRBUF - 1] = '\0';
               if (sres[0])
                {
-                scfg |= STR;
                 fflags |= STR;
                }
               v_stack[v_sp - 2].sval = dupString(sres);
@@ -7379,7 +7350,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   v_stack[v_sp - n_args].get_str (), n_args - 1, &v_stack[v_sp - n_args + 1]);
              if (sres[0]) 
               {
-               scfg |= STR;
                //fflags |= STR;
               }
              v_stack[v_sp - n_args - 1].sval = dupString(sres);
@@ -7627,7 +7597,6 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                  {
                   v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
                   v_stack[v_sp - n_args - 1].tag  = tvSTR;
-                  scfg |= STR;
                   fflags |= STR;
                  }
 

@@ -807,6 +807,82 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
  return n;
 }
 
+#define OPTS sizeof (all_options) / sizeof (option_def)
+int32_t scan_opt (char *str, int &opts)
+{
+ struct option_def
+ {
+  const char name[4]; // Option name
+  int flag;           // Bit mask
+ };
+
+ // All supported options definitions
+ static const option_def all_options[] = {
+  { "DEG", DEG },  { "ENG", ENG }, { "STR", STR }, { "HEX", HEX }, { "OCT", OCT },
+  { "BIN", FBIN }, { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
+  { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI },
+  { "FRH", FRH },  { "UTM", UTM }, { ""   , 0 } // Sentinel
+ };
+ int i, j, k, l;
+ char c, cc;
+
+ l = 0;
+ while (str[l])
+  {
+   // Skip whitespace
+   while (str[l] && (str[l] == ' ' || str[l] == '\t' || str[l] == '\r' || str[l] == '\n')) l++;
+
+   if (!str[l]) break;
+   // Search for an option
+   if (str[l] != '/')
+    {
+     l++;
+     continue;
+    }
+
+   l++; // Skip '/'
+   // Search for a matching option
+   bool found = false;
+   for (i = 0; i < OPTS - 1; i++) // -1 to avoid checking NULL sentinel
+    {
+     j = l;
+     k = 0;
+
+     // Compare option name
+     while (all_options[i].name[k])
+      {
+       c = str[j];
+       if (c >= 'a' && c <= 'z') c -= ('a' - 'A'); // To upper
+       cc = all_options[i].name[k];
+
+       if (c != cc) break;
+
+       j++;
+       k++;
+      }
+
+     // Check if the name matched completely
+     if (all_options[i].name[k] == '\0')
+      {
+       c = str[j];
+       if (c == '+' || c == '-')
+        {
+         // Found the option!
+         if (c == '+')
+          opts |= all_options[i].flag;
+         else
+          opts &= ~all_options[i].flag;
+
+         l     = j + 1;
+         found = true;
+         break;
+        }
+      }
+    }
+  }
+ return opts;
+} 
+ 
 // Print the result string to the input
 int calculator::printres(char* str, int options, int binwide)
 {
@@ -3550,6 +3626,7 @@ t_operator calculator::scan (bool operand, bool percent)
    if (buf[pos] == ';') // (RO) ;; operator (comment to end of line)
     {
      pos += 1;
+     scan_opt (&buf[pos], fflags);
      return toEND;
     } 
    return toSEMI;

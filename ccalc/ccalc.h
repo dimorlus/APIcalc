@@ -5,8 +5,9 @@
 
 struct option_def
 {
-    const char* name;    // Название опции
-    int flag;            // Битовая маска
+  //const char* name;    // Option name 
+ const char name[8]; // Option name (макс 7 символов + null-терминатор)
+ int flag;            // Битовая маска
 };
 
 
@@ -16,12 +17,10 @@ static const option_def all_options[] =
     { "PAS",    PAS    },
     { "SCI",    SCI    },
     { "UPCASE", UPCASE },
-  //{ "UTMP",   UTMP   },
     { "FFLOAT", FFLOAT },
     { "IMUL",   IMUL   },
     
     { "DEG",    DEG    },
-  //{ "SCF",    SCF    },
   //{ "ENG",    ENG    },
     { "STR",    STR    },
     { "HEX",    HEX    },
@@ -30,7 +29,6 @@ static const option_def all_options[] =
     { "DAT",    DAT    },
     { "CHR",    CHR    },
     { "WCH",    WCH    },
-  //{ "ESC",    ESC    },
     { "CMP",    CMP    },
     
     { "NRM",    NRM    },
@@ -40,10 +38,7 @@ static const option_def all_options[] =
     { "FRC",    FRC    },
     { "FRI",    FRI    },
     { "FRH",    FRH    },
-  //{ "MIN",    MIN    },
-  //{ "MNU",    MNU    },
     { "UTM",    UTM    },
-  //{ "TOP",    TOP    },
 	{ "OPT",    OPT    },
     { "SRC",    SRC    },
     { "AUTO",   AUTO   },

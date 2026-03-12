@@ -1,4 +1,4 @@
-L:=130u
+L:=130u;;Inductance /ENG-/NRM+
 PI
 pi
 sin(0)

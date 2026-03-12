@@ -250,7 +250,7 @@ void print_options (int32_t flags, int binary_width)
  int count = 0;
 
  // Print all options from the table
- for (int i = 0; all_options[i].name != NULL; i++)
+ for (int i = 0; all_options[i].name[0] != '\0'; i++)
   {
    if ((flags & all_options[i].flag) == all_options[i].flag) printf ("/%s+", all_options[i].name);
    else printf ("/%s-", all_options[i].name);

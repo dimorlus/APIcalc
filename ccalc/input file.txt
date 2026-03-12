@@ -1,4 +1,31 @@
+L:=130u
+PI
+pi
+sin(0)
+SIN(0)
+1.33e3
+1234
+12345
+5`42'38"
+2sin(15`42'38")
+L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C));Rw:=sqrt(L/C);prn("f:%SHz, Rw:%SOhm",f,Rw);;resonant frequency
+L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C))
+L:=130u;C:=2.2n
+L
+sqrt(L C)
+f:=1/(2*pi sqrt(L C))
+123.4
+123.4E3
+123E3
+3.14
+3.1415926
+pi
+10k+1kj
+10k
 ;; test
 -1^2   		;; -1
-
 (-1)^2 		;;  1
+10k
+10k+1kj
+30e3
+0x2222

@@ -252,22 +252,18 @@ void print_options (int32_t flags, int binary_width)
  // Print all options from the table
  for (int i = 0; all_options[i].name != NULL; i++)
   {
-   if (flags & all_options[i].flag)
-    std::cout << "/" << all_options[i].name << "+";
-   else
-    std::cout << "/" << all_options[i].name << "-";
+   if ((flags & all_options[i].flag) == all_options[i].flag) printf ("/%s+", all_options[i].name);
+   else printf ("/%s-", all_options[i].name);
 
    count++;
-   if (count % 8 == 0)
-    std::cout << std::endl;
-   else
-    std::cout << " ";
+   if (count % 8 == 0) printf ("\n");
+   else printf (" ");
   }
 
  // Print binary width
- std::cout << "/BW=" << binary_width;
+ printf ("/BW=%d", binary_width);
 
- std::cout << std::endl;
+ printf ("\n");
 }
 
 float__t fhelp (float__t x)
@@ -471,6 +467,7 @@ int main ()
   {
     char line[1024];
     char result_str[256];
+    calc.clrfflags (); // Clear flags before processing the file
     while (fgets (line, sizeof (line), stdin))
     {
       int_t len = strlen (line);
@@ -492,7 +489,11 @@ int main ()
     return 0;
   }
 
- if (config.get_options().filename[0])
+ if (config.get_options ().calc_flags & OPT)
+   print_options (config.get_options ().calc_flags, config.get_options ().binary_width);
+
+  
+if (config.get_options().filename[0])
  {
   FILE *f = nullptr;
   char *fname = config.get_options ().filename;
@@ -500,6 +501,7 @@ int main ()
    {
     char line[1024];
     char result_str[256];
+    calc.clrfflags (); // Clear flags before processing the file
     while (fgets (line, sizeof (line), f))
      {
       int_t len      = strlen (line);
@@ -510,7 +512,8 @@ int main ()
         printf ("\n");
         continue; // Skip empty lines
        }
-      float__t res = calc.evaluate (line);
+      calc.clrfflags (); // Clear flags before processing the file
+      calc.evaluate (line);
       calc.printres (result_str, config.get_options ().calc_flags,
                     config.get_options ().binary_width);
       if (config.get_options ().calc_flags & SRC)
@@ -529,14 +532,12 @@ int main ()
    printf("Error: Empty expression\n");
    return 1;
   }
- calc.evaluate (expression);
 
- char result_str[1600];
-
- calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width);
-
- if (config.get_options ().calc_flags & OPT)
-  print_options (config.get_options ().calc_flags, config.get_options ().binary_width);
- printf ("%s\n%s\n", expression, result_str);
- return 0;
+{
+  char result_str[1600];
+  calc.evaluate (expression);
+  calc.print (result_str, config.get_options ().calc_flags, config.get_options ().binary_width);
+  printf ("%s\n%s\n", expression, result_str);
+  return 0;
+ }
 }

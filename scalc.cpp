@@ -114,6 +114,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  tmp_var_count = 0;
  err[0]        = '\0';
  scfg          = cfg;
+ fflags        = 0;
  sres[0]       = '\0';
  memset (v_stack, 0, sizeof v_stack);
 
@@ -825,6 +826,16 @@ int calculator::printres(char* str, int options, int binwide)
       return sprintf (str, "%s", sres);
      else
       {
+       if (fflags & ENG) return printres (str, SCI, binwide);
+       if (fflags & NRM) return printres (str, NRM, binwide);
+       //if (fflags & DEG) return printres (str, DEG, binwide);
+       if (fflags & FRH) return printres (str, FRH, binwide);
+       if (fflags & CMP) return printres (str, CMP, binwide);
+       if ((fflags & HEX) && ((float__t)result_ival == result_fval)) return printres (str, HEX, binwide);
+       if ((fflags & OCT) && ((float__t)result_ival == result_fval)) return printres (str, OCT, binwide);
+       if ((fflags & fBIN) && ((float__t)result_ival == result_fval)) return printres (str, fBIN, binwide);
+       if ((float__t)result_ival == result_fval) return printres (str, IGR, binwide);
+
        if (result_imval == 0)
         return sprintf (str, "%.16Lg", result_fval);
        else
@@ -849,14 +860,20 @@ int calculator::printres(char* str, int options, int binwide)
       {
        char cphi[20];
        char cr[20];
+       char *cp       = scistr;
        float__t imval = result_imval;
        float__t fval  = result_fval;
-       normz (fval, imval);
-       float__t phi = atan2l (imval, fval);
-       float__t r   = hypotl (fval, imval);
+       float__t phi   = atan2l (imval, fval);
+       float__t r     = hypotl (fval, imval);
        d2scistr (cr, r);
        dgr2str (cphi, phi);
-       sprintf (scistr, "|%s|(%s) %.16Lg%+.16Lg%c", cr, cphi, fval, imval, c_imaginary);
+       cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
+       normz (fval, imval);
+       cp += d2scistr (cp, fval);
+       if (imval >= 0) *cp++ = '+';
+       cp += d2scistr (cp, imval);
+       *cp++ = c_imaginary;
+       *cp   = '\0';
       }
      return sprintf (str, "%s", scistr);
     }
@@ -973,14 +990,14 @@ int calculator::printres(char* str, int options, int binwide)
    if (options & HEX)
     {
      char binfstr[16];
-     sprintf (binfstr, "%%0.%illxh  \r\n", binwide / 4);
+     sprintf (binfstr, "0x%%0.%illx", binwide / 4);
      return sprintf (str, binfstr, result_ival);
     }
 
    if (options & OCT)
     {
      char binfstr[16];
-     sprintf (binfstr, "%%0.%illoo  \r\n", binwide / 3);
+     sprintf (binfstr, "0o%%0.%illo", binwide / 3);
      return sprintf (str, binfstr, result_ival);
     }
 
@@ -990,7 +1007,7 @@ int calculator::printres(char* str, int options, int binwide)
      char binstr[80];
      sprintf (binfstr, "%%%ib", binwide);
      b2str (binstr, binfstr, result_ival);
-     return sprintf (str, "%sb", binstr);
+     return sprintf (str, "%s", binstr);
     }
 
    if (options & CHR)
@@ -1772,7 +1789,11 @@ int calculator::hscanf (char *str, int_t &ival, int &nn)
   }
  ival = res;
  nn   = n;
- if (n) scfg |= HEX;
+ if (n)
+  {
+   scfg |= HEX;
+   fflags |= HEX;
+  }
  return 0;
 }
 
@@ -1796,7 +1817,11 @@ int calculator::bscanf (char *str, int_t &ival, int &nn)
   }
  ival = res;
  nn   = n;
- if (n) scfg |= fBIN;
+ if (n) 
+  {
+   scfg |= fBIN;
+   fflags |= fBIN;
+  }
  return 0;
 }
 
@@ -1820,7 +1845,11 @@ int calculator::oscanf (char *str, int_t &ival, int &nn)
   }
  ival = res;
  nn   = n;
- if (n) scfg |= OCT;
+ if (n) 
+  {
+   scfg |= OCT;
+   fflags |= OCT;
+  }
  return 0;
 }
 
@@ -1867,7 +1896,11 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
        break;
      }
     if (res >= max) n--;
-    if (n) scfg |= OCT;
+    if (n)
+     {
+      scfg |= OCT;
+      fflags |= OCT;
+     }
    }
    break;
 
@@ -1896,25 +1929,32 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
       break;
     }
    if (res >= max) n--;
-   if (n) scfg |= HEX;
+   if (n) 
+    {
+     scfg |= HEX;
+     fflags |= HEX;
+    }
    break;
 
   case 'a':
    res = '\007';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'f':
    res = 255u;
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'v':
    res = '\x0b';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'E':
@@ -1922,36 +1962,42 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
    res = '\033';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 't':
    res = '\t';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'n':
    res = '\n';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'r':
    res = '\r';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case 'b':
    res = '\b';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
 
   case '\\':
    res = '\\';
    n   = 1;
    scfg |= ESC;
+   fflags |= ESC;
    break;
   }
  ival = res;
@@ -1978,6 +2024,7 @@ float__t calculator::dstrtod (char *s, char **endptr)
        res += d * mdeg[i];
        end++;
        scfg |= DEG;
+       fflags |= DEG;
        break;
       }
      else
@@ -2016,6 +2063,7 @@ float__t calculator::tstrtod (char *s, char **endptr)
        res += d * dms[i];
        end += 2;
        scfg |= DAT;
+       fflags |= DAT;
        break;
       }
      else
@@ -2041,9 +2089,11 @@ void calculator::engineering (float__t mul, char *&fpos, float__t &fval)
    fract *= 10;
    fract += *fpos++ - '0';
    scfg |= ENG;
+   fflags |= ENG;
   }
  fval *= mul;
  fval += (fract * mul) / div;
+ fflags |= ENG;
 }
 
 // Check if the next characters are "B" or "iB" for computing format, and set the CMP flag if found
@@ -2053,6 +2103,7 @@ bool calculator::isCMP (char *&fpos)
   {
    fpos++;
    scfg |= CMP;
+   fflags |= CMP;
    return true;
   }
  else
@@ -2060,6 +2111,7 @@ bool calculator::isCMP (char *&fpos)
   {
    fpos += 2;
    scfg |= CMP;
+   fflags |= CMP;
    return true;
   }
  return false;
@@ -2077,6 +2129,7 @@ void calculator::scientific (char *&fpos, float__t &fval)
      fpos++;
      // fval *= 25.4e-3;
      engineering (25.4e-3, fpos, fval);
+     fflags |= FRI;
     }
    break;
   case 'Q':
@@ -2129,9 +2182,17 @@ void calculator::scientific (char *&fpos, float__t &fval)
    else engineering (1e6, fpos, fval);
    break;
   case 'K':
+#ifdef _KELVIN_
+   fpos++;
+   if (isCMP (fpos))  fval *= 1024; // 2**10
+   else 
+   if ((scfg & FRH) == 0) engineering (1e3, fpos, fval);
+   else fpos--;
+#else
    fpos++;
    if (isCMP (fpos)) fval *= 1024; // 2**10
    else engineering (1e3, fpos, fval);
+#endif //_KELVIN_
    break;
   //case 'R':
   // fpos++;
@@ -2387,6 +2448,7 @@ float__t calculator::Solve (const char *expr, t_symbol tag)
     vvar = fx;
    }
 
+   fflags |= pCalculator->isfflags ();
    delete pCalculator;
    return vvar;
   }
@@ -2687,6 +2749,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      errorf (pos, "Unknown tag");
      result = qnan;
     }
+   fflags |= pCalculator->isfflags ();
    delete pCalculator;
    return result;
   }
@@ -2771,6 +2834,7 @@ float__t calculator::Diff (const char *expr)
 
      float__t fp = (fxp - fxm) / (2.0L * delta);
 
+     fflags |= pCalculator->isfflags ();
      delete pCalculator;
      return fp;
     }
@@ -3023,6 +3087,7 @@ t_operator calculator::sqbraces (void)
     }
   }
 
+ fflags |= child->isfflags ();
  delete child; // done with child calculator
 
  if (*ipos != ']')
@@ -3211,7 +3276,11 @@ t_operator calculator::dqscan (char qc)
 
  if (*ipos == qc)
   {
-   if (sbuf[0]) scfg |= STR;
+   //if (sbuf[0])
+   // {
+   //  scfg |= STR;
+   //  fflags |= STR;
+   // }
    v_stack[v_sp].tag  = tvSTR;
    v_stack[v_sp].ival = 0;
    v_stack[v_sp].sval = (char *)sf_alloc (sidx + 1);
@@ -3231,6 +3300,40 @@ t_operator calculator::dqscan (char qc)
   }
 }
 
+void calculator::isNRM(char* start, char* end)
+{
+ int ppos = 0; 
+ int epos = 0;
+ int len  = end - start;
+ // Check if the number is in normal (non-scientific) format
+ // by looking for 'e' or 'E' in the part of the string that was parsed as a number
+ for (char *p = start; p < end; p++)
+  {
+   if (*p == '.') ppos = p - start + 1;              // position of decimal point, if any
+   if (*p == 'e' || *p == 'E') epos = p - start + 1; // position of exponent, if any
+  }
+
+ if (ppos == 0 && epos == 0 && len <= 4) //1234
+   {
+    fflags |= NRM;
+    return;
+   }
+ if (ppos && epos == 0 && len <= 5) //123.4
+   {
+    fflags |= NRM;
+    return;
+   }
+  if (ppos && epos > 0 && epos <= 6) //123.4E3
+   {
+    fflags |= NRM;
+    return;
+   }
+  if (ppos == 0 && epos > 0 && epos <= 4) //123E3 
+   {
+    fflags |= NRM;
+    return;
+   }
+}
 
 // Scan a number in various formats: decimal, hex (0x or $), octal (0o), binary (0b), or with
 // backslash for base prefix
@@ -3248,30 +3351,35 @@ t_operator calculator::dscan (bool operand, bool percent)
     ierr = xscanf (buf + pos, 1, ival, n);
     ipos = buf + pos + n;
     scfg |= ESC;
+    fflags |= ESC;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
    {
     ierr = bscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
     scfg |= fBIN;
+    fflags |= fBIN;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
    {
     ierr = oscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
     scfg |= OCT;
+    fflags |= OCT;
    }
   else if (buf[pos - 1] == '$')
    {
     ierr = hscanf (buf + pos, ival, n);
     ipos = buf + pos + n;
     scfg |= HEX;
+    fflags |= HEX;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
    {
     ierr = hscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
     scfg |= HEX;
+    fflags |= HEX;
    }
   else
    {
@@ -3289,6 +3397,10 @@ t_operator calculator::dscan (bool operand, bool percent)
 #else
   sfval = fval = strtold (buf + pos - 1, &fpos);
 #endif
+
+  if (errno == 0 && (fpos > ipos)) 
+      isNRM (buf + pos - 1, fpos); //
+
   sfpos = fpos;
 
   v_stack[v_sp].tag = tvFLOAT;
@@ -3307,7 +3419,21 @@ t_operator calculator::dscan (bool operand, bool percent)
      fval = -(-fval - 32.0) * 5.0 / 9.0;
     else
      fval = (fval - 32.0) * 5.0 / 9.0;
+    fflags |= FRH;
    }
+#ifdef _KELVIN_
+  if ((scfg & FRH) && (*fpos == 'K')) // Kelvin to Celsius
+   {
+    fpos++;
+    if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS)) //fval = qnan;
+    {
+     error ("Temperature below absolute zero");
+     return toERROR;
+    }
+    else  fval = fval - 273.15;
+    fflags |= FRH;
+   }
+#endif //_KELVIN_
   if (operand && percent && (*fpos == '%'))
    {
     fpos++;
@@ -3318,6 +3444,7 @@ t_operator calculator::dscan (bool operand, bool percent)
     c_imaginary = *fpos;
     fpos++;
     scfg |= CPX;
+    fflags |= CPX;
     v_stack[v_sp].tag = tvCOMPLEX;
    }
   if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
@@ -3526,6 +3653,7 @@ t_operator calculator::scan (bool operand, bool percent)
    if (buf[pos] == '=') // (RO) == operator
     {
      scfg &= ~PAS;
+     fflags &= ~PAS;
      pos += 1;
      return toEQ;
     }
@@ -3537,6 +3665,7 @@ t_operator calculator::scan (bool operand, bool percent)
    if (buf[pos] == '=') // (RO) := operator
     {
      scfg |= PAS;
+     fflags |= PAS;
      pos += 1;
      return toSET;
     }
@@ -3658,12 +3787,14 @@ t_operator calculator::scan (bool operand, bool percent)
           ival = *(int *)&wbuf[0];
           ipos += 2;
           scfg |= WCH;
+          fflags |= WCH;
          }
         else
 #endif /*_WIN_*/
 #endif /*_WCHAR_*/
          {
           scfg |= CHR;
+          fflags |= CHR;
           ival               = *(unsigned char *)(ipos - 1);
           v_stack[v_sp].sval = (char *)sf_alloc (2);
           if (v_stack[v_sp].sval)
@@ -3723,6 +3854,7 @@ t_operator calculator::scan (bool operand, bool percent)
           ival = *(int *)&wbuf[0];
           ipos += 3;
           scfg |= WCH;
+          fflags |= WCH;
          }
         else
          {
@@ -3772,6 +3904,7 @@ t_operator calculator::scan (bool operand, bool percent)
       c_imaginary         = buf[pos - 1];
       v_stack[v_sp].tag   = tvCOMPLEX;
       scfg |= CPX;
+      fflags |= CPX;
       v_stack[v_sp].imval = fval;
       v_stack[v_sp].fval  = 0;
       v_stack[v_sp].pos   = pos;
@@ -6978,7 +7111,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
               strncpy (sres, resStr ? resStr : "", STRBUF - 1);
               sres[STRBUF - 1] = '\0';
-              if (sres[0]) scfg |= STR;
+              if (sres[0])
+               {
+                scfg |= STR;
+                fflags |= STR;
+               }
               v_stack[v_sp - 2].sval = dupString(sres);
               v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
               v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
@@ -7163,7 +7300,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
              (*(int_t (*) (char *, char *, int, value *))sym->func) // call prn(...)
                  (sres, // put result string in sres first
                   v_stack[v_sp - n_args].get_str (), n_args - 1, &v_stack[v_sp - n_args + 1]);
-             if (sres[0]) scfg |= STR;
+             if (sres[0]) 
+              {
+               scfg |= STR;
+               //fflags |= STR;
+              }
              v_stack[v_sp - n_args - 1].sval = dupString(sres);
              v_stack[v_sp - n_args - 1].ival = 0;
              v_stack[v_sp - n_args - 1].tag  = tvSTR;
@@ -7410,8 +7551,10 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                   v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
                   v_stack[v_sp - n_args - 1].tag  = tvSTR;
                   scfg |= STR;
+                  fflags |= STR;
                  }
 
+                fflags |= pCalculator->isfflags ();
                 delete pCalculator;
                 v_sp -= n_args; // pop arguments
              }

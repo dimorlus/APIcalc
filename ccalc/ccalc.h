@@ -36,7 +36,7 @@ static const option_def all_options[] =
     { "NRM",    NRM    },
     { "IGR",    IGR    },
     { "UNS",    UNS    },
-    { "ALL",    SCI+DEG+SCI+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM},
+    { "ALL",    DEG+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM+FRH},
     { "FRC",    FRC    },
     { "FRI",    FRI    },
     { "FRH",    FRH    },

@@ -45,16 +45,16 @@
 #define UNS  (1 << 19) // (UI) Unsigned output
 #define ALL  (1 << 20) // (UI) All outputs
 #define MIN  (1 << 21) // (UI) Esc minimized feature (GUI only)
+#define OPT  (1 << 21) // (UI) Print options (CLI only)
 #define MNU  (1 << 22) // (UI) Show/hide menu feature (GUI only)
+#define SRC  (1 << 22) // (UI) Print source expression (CLI only)
 #define UTM  (1 << 23) // (UI) Unix time
 #define FRC  (1 << 24) // (UI) Fraction output
 #define FRI  (1 << 25) // (UI) Fraction inch output
 #define FRH  (1 << 26) // (UI) Farenheit input/output
 #define TOP  (1 << 27) // (UI) Always on top (GUI only)
 #define IMUL (1 << 28) // (WO) Implicit multiplication
-#define OPT  (1 << 21) // (UI) Print options (CLI only)
-#define SRC  (1 << 22) // (UI) Print source expression (CLI only)
-#define AUTO (1 << 23) // (UI) Auto output format
+#define AUTO (1 << 29) // (UI) Auto output format
 
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  64  // maximum length of operator or function name
@@ -514,6 +514,7 @@ class calculator // calculator represents the main class for the expression calc
 {
  private:
  int scfg; // Syntax configuration flags
+ int fflags; // Founded format flags
  int deep; // Current stack depth
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
@@ -589,6 +590,7 @@ class calculator // calculator represents the main class for the expression calc
                                                     // with the given name and expression
 
  // Expression parsing
+ void isNRM (char *start, char *end); // Check if the current position in the expression is a normalized number format
  t_operator sscan (symbol *sym); // Scan body of the solve, integr and diff 
 
  t_operator sqbraces (void); // Scan [..] matrix/vector constructor 
@@ -675,6 +677,10 @@ class calculator // calculator represents the main class for the expression calc
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
+
+ inline int isfflags (void) { return fflags; } // Get current flags configuration
+ inline void clrfflags (void) { fflags = 0; } // Clear flags configuration
+
  inline char *error (void) { return err; }   // Get error message
  inline int errps (void) { return errpos; }; // Get error position
  inline char *Sres (void) { return sres; };  // Get string result

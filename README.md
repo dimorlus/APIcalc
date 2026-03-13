@@ -110,6 +110,35 @@ Without `/SRC+` only results are printed, one per line:
 
 Lines starting with `;;` are comments and produce no output. Blank lines are passed through as blank lines.
 
+The CLI version allows to specify options in the expression comment that determine the output format when the /AUTO+ option is enabled, which determines 
+the output format based on the input format. For example
+```
+   L:=130u;;Inductance /ALL-/FLT+ => 0.00013
+   5`42'38";;/ALL-/DEG+ => 0.099668 rad|5`42'38" (5.71056`)|6.345 gon|0.01586 turn
+   2sin(15`42'38");;/ALL-/ENG+ => 541.6m
+   
+   ;Output Format Options:
+  /DEG+			;Degrees format
+  /ENG+         ;Engineering (Scientific) numbers format (6k8 => 6800)
+  /STR+			;String format 
+  /HEX+			;Hex format
+  /OCT+			;Octal format
+  /BIN+	  	    ;Binary format
+  /DAT+			;Date time format
+  /CHR+			;Char format
+  /WCH+			;WChar format
+  /CMP+			;Computing format
+  /UTM+			;Unix time format
+  /NRM+			;Normalized output
+  /IGR+   		;Integer output
+  /UNS+   		;Unsigned output
+  /FRC+   		;Fraction output
+  /FRI+   		;Fraction inch output
+  /FRH+         ;Temperature
+  /FLT+         ;Floating point output
+  /UTM+         ;Unix time
+  /ALL+         ;All of the above 
+```
 **IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
 
 ## Supported Functions

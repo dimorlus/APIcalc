@@ -820,8 +820,11 @@ int32_t scan_opt (char *str, int &opts)
  static const option_def all_options[] = {
   { "DEG", DEG },  { "ENG", ENG }, { "STR", STR }, { "HEX", HEX }, { "OCT", OCT },
   { "BIN", FBIN }, { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
-  { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI },
-  { "FRH", FRH },  { "UTM", UTM }, { ""   , 0 } // Sentinel
+  { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI }, 
+  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM },
+  { "ALL", DEG + ENG + STR + HEX + OCT + FBIN + DAT + CHR + WCH + CMP + NRM + IGR 
+         + UNS + FRC + FRI + FRH + UTM + FLT },
+  { ""   , 0 } // Sentinel
  };
  int i, j, k, l;
  char c, cc;
@@ -902,15 +905,33 @@ int calculator::printres(char* str, int options, int binwide)
       return sprintf (str, "%s", sres);
      else
       {
+/*
+  { "DEG", DEG },  { "ENG", ENG }, { "STR", STR }, { "HEX", HEX }, { "OCT", OCT },
+  { "BIN", FBIN }, { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
+  { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI },
+  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM }, { ""   , 0 } // Sentinel
+*/
+       if (fflags & DEG) return printres (str, DEG, binwide);
+       if (fflags & FLT) return printres (str, FFLOAT, binwide);
        if (fflags & ENG) return printres (str, SCI, binwide);
        if (fflags & NRM) return printres (str, NRM, binwide);
-       //if (fflags & DEG) return printres (str, DEG, binwide);
        if (fflags & FRH) return printres (str, FRH, binwide);
        if (fflags & CMP) return printres (str, CMP, binwide);
-       if ((fflags & HEX) && ((float__t)result_ival == result_fval)) return printres (str, HEX, binwide);
+       if (fflags & DAT) return printres (str, DAT, binwide);
+       if (fflags & IGR) return printres (str, IGR, binwide);
+       if (fflags & UNS) return printres (str, UNS, binwide);
+       if (fflags & FRC) return printres (str, FRC, binwide);
+       if (fflags & FRI) return printres (str, FRI, binwide);
+       if (fflags & UTM) return printres (str, UTM, binwide);
+       if (fflags & CHR) return printres (str, CHR, binwide);
+       if (fflags & WCH) return printres (str, WCH, binwide);
+
+       if ((fflags & HEX) && ((float__t)result_ival == result_fval))
+        return printres (str, HEX, binwide);
        if ((fflags & OCT) && ((float__t)result_ival == result_fval)) return printres (str, OCT, binwide);
        if ((fflags & fBIN) && ((float__t)result_ival == result_fval)) return printres (str, fBIN, binwide);
        if ((float__t)result_ival == result_fval) return printres (str, IGR, binwide);
+       if (fflags & STR) return printres (str, STR, binwide);
 
        if (result_imval == 0)
         return sprintf (str, "%.16Lg", result_fval);
@@ -919,7 +940,7 @@ int calculator::printres(char* str, int options, int binwide)
       }
     }
 
-   if (options & FFLOAT)
+   if (options & (FFLOAT|FLT))
     {
      if (result_imval == 0)
       return sprintf (str, "%.16Lg", result_fval);
@@ -3546,6 +3567,7 @@ t_operator calculator::dscan (bool operand, bool percent)
      }
    }
   v_stack[v_sp].pos   = pos;
+  if (v_stack[v_sp].tag == tvFLOAT) fflags |= FLT;
   v_stack[v_sp++].var = nullptr;
   return toOPERAND;
  }

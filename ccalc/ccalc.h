@@ -21,11 +21,10 @@ static const option_def all_options[] =
     { "IMUL",   IMUL   },
     
     { "DEG",    DEG    },
-  //{ "ENG",    ENG    },
     { "STR",    STR    },
     { "HEX",    HEX    },
     { "OCT",    OCT    },
-    { "FBIN",   FBIN   },
+    { "BIN",    FBIN   },
     { "DAT",    DAT    },
     { "CHR",    CHR    },
     { "WCH",    WCH    },
@@ -34,15 +33,16 @@ static const option_def all_options[] =
     { "NRM",    NRM    },
     { "IGR",    IGR    },
     { "UNS",    UNS    },
-    { "ALL",    DEG+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM+FRH},
+    { "ALL",    DEG+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM+FRH+FLT},
     { "FRC",    FRC    },
     { "FRI",    FRI    },
     { "FRH",    FRH    },
+    { "FLT",    FLT    },
     { "UTM",    UTM    },
 	{ "OPT",    OPT    },
     { "SRC",    SRC    },
     { "AUTO",   AUTO   },
-    { NULL,     0      } // Sentinel
+    { "", 0 } // Sentinel
 };
 
 #define OPTS sizeof(all_options)/sizeof(option_def)

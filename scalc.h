@@ -53,6 +53,7 @@
 #define FRI  (1 << 25) // (UI) Fraction inch output
 #define FRH  (1 << 26) // (UI) Farenheit input/output
 #define TOP  (1 << 27) // (UI) Always on top (GUI only)
+#define FLT  (1 << 27) // (UI) Floating point output (CLI only)
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define AUTO (1 << 29) // (UI) Auto output format
 

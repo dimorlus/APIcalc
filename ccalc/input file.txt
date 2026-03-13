@@ -1,4 +1,5 @@
-L:=130u;;Inductance /ENG-/NRM+
+5`42'38";;/ALL-/DEG+
+L:=130u;;Inductance /ALL-/FLT+
 PI
 pi
 sin(0)
@@ -6,10 +7,10 @@ SIN(0)
 1.33e3
 1234
 12345
-5`42'38"
-2sin(15`42'38")
+5`42'38";;/ALL-/DEG+
+2sin(15`42'38");;/ALL-/ENG+
 L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C));Rw:=sqrt(L/C);prn("f:%SHz, Rw:%SOhm",f,Rw);;resonant frequency
-L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C))
+L:=130u;C:=2.2n;f:=1/(2PI sqrt(L C));;/FLT+
 L:=130u;C:=2.2n
 L
 sqrt(L C)

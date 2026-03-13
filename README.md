@@ -110,7 +110,7 @@ Without `/SRC+` only results are printed, one per line:
 
 Lines starting with `;;` are comments and produce no output. Blank lines are passed through as blank lines.
 
-The CLI version allows to specify options in the expression comment that determine the output format when the /AUTO+ option is enabled, which determines 
+The CLI version allows to specify options in the expression comment that determine the output format when the `/AUTO+` option is enabled, which determines 
 the output format based on the input format. For example
 ```
    L:=130u;;Inductance /ALL-/FLT+ => 0.00013

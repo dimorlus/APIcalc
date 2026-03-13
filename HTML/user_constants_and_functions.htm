@@ -1,0 +1,382 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>User constants and functions</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="" />
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "user_constants_and_functions.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">User constants and functions</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     <a href="description.htm">Previous</a>&nbsp;
+     <a href="e_series_of_preferred_numbers.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p class="p_CodeExample"><span class="f_CodeExample">;; This text file must be located in the directory containing the calculator executable. </span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; It contains declarations of user-defined constants and functions and is loaded during </span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; calculator startup. This file can be freely edited to add new constants and functions </span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; or remove existing ones.</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><a id="constants"></a><span class="f_CodeExample">;; --- Density (kg/m3) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_cu&quot;, 8930);; Copper</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_al&quot;, 2700);; Aluminium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_mg&quot;, 1738);; Magnesium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_fe&quot;, 7874);; Iron</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_ag&quot;, 10490);; Silver</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_au&quot;, 19300);; Gold</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_pb&quot;, 11340);; Lead</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_ti&quot;, 4505);; Titanium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_w&quot;, 19250);; Tungsten</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_zn&quot;, 7140);; Zinc</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_ni&quot;, 8900);; Nickel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_sn&quot;, 7310);; Tin</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_hg&quot;, 13546);; Mercury</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Nuclear Materials ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_u&quot;, 19050);; Uranium (pure metal)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_pu&quot;, 19840);; Plutonium (alpha phase)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_uf6&quot;, 5090);; Uranium Hexafluoride (solid at 20C)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_uo2&quot;, 10970);; Uranium Dioxide (fuel pellets)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_steel&quot;, 7850);; Steel (typical)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_ss&quot;, 8000);; Stainless Steel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_brass&quot;, 8500);; Brass</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_bronze&quot;, 8700);; Bronze</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_solder&quot;, 8400);; Solder (Sn60Pb40)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Electrical Resistivity at 20C (Ohm*m) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Formula: R = re * length / area</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_ag&quot;, 1.59e-8);; Silver</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_cu&quot;, 1.68e-8);; Copper</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_au&quot;, 2.44e-8);; Gold</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_al&quot;, 2.65e-8);; Aluminium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_mg&quot;, 4.4e-8);; Magnesium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_w&quot;, 5.6e-8);; Tungsten</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_zn&quot;, 5.9e-8);; Zinc</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_ni&quot;, 6.99e-8);; Nickel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_fe&quot;, 1.0e-7);; Iron</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_pb&quot;, 2.2e-7);; Lead</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_ti&quot;, 4.2e-7);; Titanium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_steel&quot;, 1.5e-7);; Low-carbon Steel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_ss&quot;, 7.2e-7);; Stainless Steel (304)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_brass&quot;, 0.7e-7);; Brass</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_nichr&quot;, 1.1e-6);; Nichrome</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_const&quot;, 4.9e-7);; Constantan</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Various Solids Density (kg/m3) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_glass&quot;, 2500);; Glass</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_conc&quot;, 2400);; Concrete</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_brick&quot;, 1800);; Brick</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_ice&quot;, 917);; Ice</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_silic&quot;, 2330);; Silicon</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_abs&quot;, 1040);; ABS Plastic</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_pla&quot;, 1240);; PLA (3D Printing)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_tefl&quot;, 2200);; Teflon (PTFE)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Liquids Density (kg/m3) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_water&quot;, 1000);; Pure Water (4C)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_sea&quot;, 1025);; Sea Water</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_oil&quot;, 900);; Engine Oil (approx)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_eth&quot;, 789);; Ethanol</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Gases Density at STP (kg/m3) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_air&quot;, 1.225);; Air (sea level, 15C)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_he&quot;, 0.178);; Helium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_h2&quot;, 0.089);; Hydrogen</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Linear Thermal Expansion Coefficients (1/K) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;te_al&quot;, 23.1e-6);; Aluminium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;te_cu&quot;, 17.0e-6);; Copper</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;te_fe&quot;, 11.8e-6);; Iron</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;te_ss&quot;, 17.3e-6);; Stainless Steel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;te_glass&quot;, 9.0e-6);; Glass (typical)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Temperature Coefficient of Resistance (1/K) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Formula: R = R20 * (1 + tcr * (T - 20))</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_ag&quot;, 0.0038);; Silver</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_cu&quot;, 0.00393);; Copper</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_au&quot;, 0.0034);; Gold</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_al&quot;, 0.0039);; Aluminium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_w&quot;, 0.0045);; Tungsten</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_fe&quot;, 0.005);; Iron</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_ni&quot;, 0.006);; Nickel</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_pb&quot;, 0.0039);; Lead</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_ti&quot;, 0.0038);; Titanium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Alloys with low TCR (used for precision resistors)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_const&quot;, 0.00001);; Constantan (near zero)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_mang&quot;, 0.000002);; Manganin</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_nichr&quot;, 0.0004);; Nichrome</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_steel&quot;, 0.003);; Steel (typical)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Platinum (Pt) Properties ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_pt&quot;, 21450);; Density (kg/m3)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;re_pt&quot;, 1.06e-7);; Electrical Resistivity (Ohm*m)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;tcr_pt&quot;, 0.003927);; TCR (1/K) - Standard for Pt100/Pt1000</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Common Resistance Sensor Benchmarks ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;pt100_r0&quot;, 100);; Resistance at 0C (Ohms)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;pt1000_r0&quot;, 1000);; Resistance at 0C (Ohms)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Propagation &amp; Air ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;v_sound&quot;, 343);; Speed of sound in dry air at 20C (m/s)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;v_light&quot;, 299792458);; Speed of light in vacuum (m/s) - if not in core</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;ro_air_stp&quot;, 1.293);; Air density at 0C, 101.325kPa (kg/m3)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;visc_water&quot;, 1.004e-6);; Kinematic viscosity of water at 20C (m²/s)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;visc_air&quot;, 1.516e-5);; Kinematic viscosity of air at 20C (m²/s)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Heat &amp; Thermodynamics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;c_water&quot;, 4186);; Specific heat of water (J/kg*K)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;c_air&quot;, 1005);; Specific heat of air (J/kg*K)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;rho_air&quot;, 1.225);; Air density at sea level (kg/m3)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Nukes ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;m_crit_u235&quot;, 52);; Critical mass U-235 (kg)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;m_crit_pu239&quot;, 10);; Critical mass Pu-239 (kg)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Functions ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{WWeight(D, R)(ro_cu/re_cu)(pi^2 (D 1m)^4/16)R 1k};;Wire weight in gram</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Electricity ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{ohm_u(i, r) i*r};; Ohm's law (Voltage)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_dc(u, i) u*i};; DC Power</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_ac(u, i, pf) u*i*pf};; AC Power (pf = power factor/cos phi)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{xc(f, c) 1/(tau*f*c)};; Capacitive reactance</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{xl(f, l) tau*f*l};; Inductive reactance</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_cap(c, xc) 1/(tau*c*xc)};; Frequency to get specific capacitive reactance</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_ind(l, xl) xl/(tau*l)};; Frequency to get specific inductive reactance</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{res_f(l, c) 1/(tau*sqrt(l*c))};; LC Resonance frequency</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{led_r(vs, vf, if) (vs-vf)/if};; LED resistor calculator</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{q_factor(f, l, r) (tau*f*l)/r};; Q-factor of an inductor</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{ind_air(n, r, l) (u0 * n^2 * pi * r^2) / l};; Long solenoid inductance (SI)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{energy_l(l, i) (l * i^2) / 2};; Energy stored in inductor</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{energy_c(c, u) (c * u^2) / 2};; Energy stored in capacitor</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{ant_dipole(f) 143 / (f / 1e6)};; Half-wave dipole length (m) from F (Hz)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_prop(er) c0 / sqrt(er)};; Velocity of light in dielectric</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{z_line(l, c) sqrt(l / c)};; Characteristic impedance of a line</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Transformers and chokes --</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Core &amp; Inductance ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{Lcoil(N, Ae, Lm, mu) u0*mu*N^2*Ae/Lm};; Inductance (H)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{n_from_l(L, mu, Ae, Lm) sqrt((L*Lm)/(u0*mu*Ae))};; Required turns N for target L</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{Wcore(Bmax, Ae, Le, mu) (0.5*Bmax^2*Ae*Le)/(u0*mu)};; Energy stored in core (J)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{gap_l(N, Ae, L) (u0*Ae*N^2)/L};; Approx air gap (m) for target L (ignoring mu)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Voltage &amp; Induction ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{Ucoil(f, N, Bmax, Ae) 4.44*f*N*Bmax*Ae};; Max RMS voltage (V)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{Bcoil(V, f, N, Ae) V/(4.44*f*N*Ae)};; Magnetic induction (Tl)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{nv_iron(Ae, f) 1/(4.44*f*Ae*1.2)};; Turns per volt (Iron, Bmax=1.2Tl)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{nv_ferr(Ae, f) 1/(4.44*f*Ae*0.3)};; Turns per volt (Ferrite, Bmax=0.3Tl)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Current &amp; Power ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{i_rms(D_wire, JJ) cs(D_wire)*JJ};; Max current (A) for diam D and density JJ</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{i_max(N, Bmax, Lm, mu) (Bmax*Lm)/(u0*mu*N)};; Saturation current (A)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_core(f, Bmax, JJ, Ae, An, Ku) 4.44*f*Bmax*JJ*Ae*An*Ku};; Core power capacity (W)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Physical &amp; Copper losses ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{res_coil(N, L_turn, D_wire) ro_cu*(N*L_turn)/cs(D_wire)};; DC Resistance (Ohm)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{m_coil(N, L_turn, D_wire) ro_cu*(N*L_turn)*cs(D_wire)};; Copper mass (kg)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- High Frequency Extras ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{skin_d(f) 0.0661k / sqrt(f)};; Skin depth for Copper at 20C (mm)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{d_max_hf(f) 2k * 0.0661 / sqrt(f)};; Max recommended wire diameter in mm for freq f</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Waveguide &amp; Cable Basics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_prop(er) c0 / sqrt(er)};; Phase velocity in dielectric</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{beta_w(f, er) (tau * f) / v_prop(er)};; Phase constant (beta)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{wave_len(f, er) v_prop(er) / f};; Wavelength in medium</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Impedance &amp; Reflection ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Complex Impedance ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{z_l(l, f) i * tau * f * l};; Inductive impedance (Zl = jωL)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{z_c(c, f) 1 / (i * tau * f * c)};; Capacitive impedance (Zc = 1/jωC)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{gamma_z(zl, z0) (zl - z0) / (zl + z0)};; Reflection coefficient (complex)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{swr_g(g) (1 + abs(g)) / (1 - abs(g))};; SWR from complex Gamma</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{z_in(z0, zl, bl) z0 * (zl + j*z0*tan(bl)) / (z0 + j*zl*tan(bl))};; Input impedance of line</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_max_match(vg, rg) abs(vg)^2 / (4 * real(rg))};; Max power transfer to matched load</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_res(l, c) 1 / (tau * sqrt(l * c))};; Resonant frequency (Hz)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{q_ser(l, c, r) sqrt(l / c) / r};; Q-factor of series RLC</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{q_par(l, c, r) r / sqrt(l / c)};; Q-factor of parallel RLC</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- 3 phase ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">const(&quot;a_phase&quot;, exp(120*deg * j));; Phase shift operator (120 degrees)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{u_line(u_ph) u_ph * sqrt(3)};; Line voltage from phase voltage</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{i_delta(i_line) i_line / sqrt(3)};; Phase current in delta connection</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Polar to Complex ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;;{polar(m, a) m * exp(j * a)};; Input as magnitude and angle (radians or with `)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Square equation roots --- </span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{d_sqe(a, b, c) b^2 - 4 * a * c};; Discriminant</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;;{r1_sqe(a, b, c) (-b + sqrt(cpx(d_sqe(a, b, c), 1f))) / (2 * a)};; First root</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;;{r2_sqe(a, b, c) (-b - sqrt(cpx(d_sqe(a, b, c), 1f))) / (2 * a)};; Second root</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{r1_sqe(a, b, c) (-b + sqrt(d_sqe(a, b, c))) / (2 * a)};; First root</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{r2_sqe(a, b, c) (-b - sqrt(d_sqe(a, b, c))) / (2 * a)};; Second root</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- THD &amp; Distorted Power ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{i_total(i_fund, thd) i_fund * sqrt(1 + thd^2)};; Total RMS current with THD</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{pf_dist(cos_phi, thd) cos_phi / sqrt(1 + thd^2)};; PF considering harmonics</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- dBm ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{dbm(w) db(w / 1m)};; Convert Watts to dBm</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{adbm(dbm) adb(dbm) * 1m};; Convert dBm to Watts</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{db_p(p1, p0) 10*log10(p1/p0)};; Power ratio in decibels</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{db_u(u1, u0) 20*log10(u1/u0)};; Voltage ratio in decibels</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Mechanics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{speed(s, t) s/t};; Average speed</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{accel(v, t) v/t};; Acceleration</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{kin_e(m, v) (m*v^2)/2};; Kinetic energy</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{pot_e(m, h) m*g0*h};; Potential energy near Earth</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{force(m, a) m*a};; Newton's second law</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_grav(m1, m2, r) gn*m1*m2/r^2};; Universal gravitation</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{torque(f, r) f*r};; Torque</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{reynolds(v, d, visc) v*d/visc};; Reynolds number (simplified)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{fall_t(h) sqrt(2*h/g0)};; Time of fall from height h (no air resistance)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{fall_v(h) sqrt(2*g0*h)};; Impact velocity from height h</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_orbit(r) sqrt(gn*5.972e24/r)};; Orbital velocity (5.972e24 is Earth mass)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{escape_v(r) sqrt(2*gn*5.972e24/r)};; Escape velocity</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_pend(l) tau * sqrt(l / g0)};; Ideal pendulum period (seconds)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_spring(m, k) tau * sqrt(m / k)};; Mass-spring system period (seconds)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_spring(m, k) 1 / (tau * sqrt(m / k))};; Mass-spring frequency (Hz)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Rotational Dynamics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_circ(r, rpm) r * (rpm * tau / 60)};; Linear velocity from RPM (m/s)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{a_centr(v, r) v^2 / r};; Centripetal acceleration (m/s²)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_rot(torq, rpm) torq * (rpm * tau / 60)};; Rotational power (Watts) from Torque (Nm) and RPM</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Fluids &amp; Pipes ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_flow(q, d) q / (pi * (d / 2)^2)};; Flow velocity (m/s) from Flow rate (m³/s) and Diameter</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{re_pipe(v, d, visc) v * d / visc};; Reynolds number for pipe flow (visc is kinematic viscosity)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Material Strength (Simple) ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{stress(f, a) f / a};; Mechanical stress (Pa)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{strain(dl, l) dl / l};; Engineering strain (dimensionless)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Ballistic ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{mach(v, t) v/sqrt(1.4*rg*(t+stdt)/0.02896)};; Mach number (t in Celsius)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_hydro(h, ro) ro*g0*h};; Hydrostatic pressure at depth h</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_rms(t, m_mol) sqrt(3*rg*(t+stdt)/m_mol)};; Root-mean-square speed of gas molecules</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Optics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{wavelen(f) c0/f};; Wavelength in vacuum</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{freq(wl) c0/wl};; Frequency from wavelength</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{photon_e(wl) (hp*c0)/wl};; Photon energy from wavelength</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{lens(f1, f2) 1/(1/f1 + 1/f2)};; Thin lens equation (combined focal length)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Thermodynamics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_gas(n, t, v) (n*rg*t)/v};; Ideal gas law (Pressure)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_gas(n, t, p) (n*rg*t)/p};; Ideal gas law (Volume)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{c_to_k(c) c + stdt};; Celsius to Kelvin</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{k_to_c(k) k - stdt};; Kelvin to Celsius</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{f_to_c(f) (f-32)*5/9};; Fahrenheit to Celsius</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{t_junc(p, rth, tamb) tamb + p * rth};; Junction temperature (Celsius)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{p_max(tj, ta, rth) (tj - ta) / rth};; Max power dissipation</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_leak(p, ro) sqrt(2 * p / ro)};; Ideal gas leak velocity (Bernoulli)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{db_dist(db1, d1, d2) db1 - 20 * log10(d2 / d1)};; Sound level change with distance</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{heat_p(m, dt, t) (m * c_water * dt) / t};; Power (W) to heat mass M by DT in time T</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{air_flow_p(p, dt) p / (c_air * rho_air * dt)};; Required air flow (m3/s) for power P</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Nuclear and particles ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{e_mc2(m) m*c0^2};; Mass-energy equivalence</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{de_broglie(m, v) hp/(m*v)};; De Broglie wavelength</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{br_radius(n) a0*n^2};; Bohr orbit radius for hydrogen</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{c_force(q1, q2, r) (1/(4*pi*e0))*(q1*q2/r^2)};; Coulomb force</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{ledwl(vf) (hp*c0)/(vf*qe)};; Wavelength (m) from LED forward voltage</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{vled(wl) (hp*c0)/(wl*qe)};; Expected voltage (V) from wavelength</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{eband(wl) (hp*c0/wl)/ev};; Band gap energy in electron-volts</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{wien_wl(t) 0.002897/t};; Wien's displacement law (peak wavelength from temp)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Particles &amp; Radiation ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{e_photon(wl) (hp * c0) / wl};; Photon energy (Joules)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{ev_to_wl(v) (hp * c0) / (v * qe)};; eV to wavelength (m)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{wl_to_ev(wl) (hp * c0) / (wl * qe)};; wavelength (m) to eV</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Nuclear Logistics ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{uran_feed(Mp, xp) xf:=0.0071; xt:=0.002; Mp * (xp - xt) / (xf - xt)};;Uranium enrichment Mp-enriched mass, xp-enriched level, xt - tails, xf - nature U235 level. Return uranium needs</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Geometry ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{v_mass(m, ro) m / ro};; Volume from mass and density</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{sphere_r(v) (3 * v / (4 * pi))^(1/3)};; Radius of a sphere from volume</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{area_c(r) pi*r^2};; Circle area</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{vol_sphere(r) (4/3)*pi*r^3};; Sphere volume</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Conversions ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{mil_to_mm(m) m * 0.0254};; Mil (thou) to mm</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{cmil_to_mm2(cm) cm * 0.0005067};; Circular mil to mm²</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{mm2_to_cmil(mm2) mm2 / 0.0005067};; mm² to Circular mil</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{psi_to_bar(p) p * 0.0689476};; PSI to Bar</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{bar_to_psi(p) p / 0.0689476};; Bar to PSI</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{gpm_to_lpm(g) g * 3.78541};; Gallons per minute to Liters per minute</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{lbft_to_nm(v) v * 1.355818};; Pound-foot to Newton-meter</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{nm_to_lbft(v) v / 1.355818};; Newton-meter to Pound-foot</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{hp_to_kw(p) p * 0.7457};; Mechanical HP to kW</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{r_to_usi(rv) 1/(rv * 0.1761)};; R-value (US) to U-factor (Metric W/m²K)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><a id="matrix"></a><span class="f_CodeExample">;; --- Vector and Matrix Utility Functions ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns the angle between two vectors in radians</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{angle(A, B) acos(dot(A, B) / (norm(A) * norm(B)))}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns the Euclidean distance between two points (vectors)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{dist(A, B) norm(A - B)}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns the unit vector (direction) of A</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{unit(A) A / norm(A)}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Solves a system of linear equations A*X = B (returns vector X)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{solve_lin(A, B) !A * B}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns the projection of vector A onto vector B</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{proj(A, B) (dot(A, B) / dot(B, B)) * B}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Linear interpolation between A and B (t from 0 to 1)</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{lerp(A, B, t) A + t * (B - A)}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns the scalar triple product of three 3D vectors</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{triple(A, B, C) dot(A, cross(B, C))}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; --- Coordinate Transformations ---</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">;; Returns a 2D rotation matrix for a given angle alpha</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">{rot2(a) [(cos(a), -sin(a)); (sin(a), cos(a))]}</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+<p class="p_CodeExample"><span class="f_CodeExample">&nbsp;</span></p>
+
+</td></tr></table>
+
+</body>
+</html>

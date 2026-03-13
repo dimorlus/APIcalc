@@ -1,0 +1,239 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+   <title>Format Precision Specifiers</title>
+   <meta name="generator" content="Help &amp; Manual" />
+   <meta name="keywords" content="Format Precision Specifiers" />
+   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+   <meta http-equiv="Content-Style-Type" content="text/css" />
+   <link type="text/css" href="default.css" rel="stylesheet" />
+   <script type="text/javascript" src="jquery.js"></script>
+   <script type="text/javascript" src="helpman_settings.js"></script>
+   <script type="text/javascript" src="helpman_topicinit.js"></script>
+
+   <script type="text/javascript">
+     HMSyncTOC("index.html", "format_precision_specifiers.htm");
+   </script>
+   <script type="text/javascript" src="highlight.js"></script>
+   <script type="text/javascript">
+     $(document).ready(function(){highlight();});
+   </script>
+</head>
+<body style="margin: 0px 0px 0px 0px; background: #FFFFFF;">
+
+
+<table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#649CCC">
+  <tr valign="middle">
+    <td align="left">
+      <h1 class="p_Heading1"><span class="f_Heading1">Format Precision Specifiers</span></h1>
+
+    </td>
+    <td align="right">
+     <span style="font-size: 9pt">
+     <a href="introduction.htm">Top</a>&nbsp;
+     <a href="format_width_specifiers.htm">Previous</a>&nbsp;
+     <a href="format_input-size_modifiers.htm">Next</a>
+     </span>
+    </td>
+  </tr>
+</table>
+
+
+<!-- Placeholder for topic body. -->
+<table width="100%" border="0" cellspacing="0" cellpadding="5"><tr valign="top"><td align="left">
+<p>The printf &nbsp;precision specifiers set the maximum number of characters (or minimum number of integer digits) to print.</p>
+<p>&nbsp;</p>
+<p>A printf precision specification always begins with a period (.) to separate it from any preceding width specifier.</p>
+<p>&nbsp;</p>
+<p>Then, like [width], precision is specified in one of two ways:</p>
+<p>&nbsp;</p>
+<p style="text-align: left; padding: 0px 0px 0px 17px; margin: 0px 0px 0px 0px;"><span style="font-size:12pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;display:inline-block;width:17px;margin-left:-17px">&#9642;</span>directly, through a decimal digit string</p><p style="text-align: left; padding: 0px 0px 0px 17px; margin: 0px 0px 0px 0px;"><span style="font-size:12pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;display:inline-block;width:17px;margin-left:-17px">&#9642;</span>indirectly, through an asterisk (*)</p><p>&nbsp;</p>
+<p>If you use an * for the precision specifier, the next argument in the call (treated as an int) specifies the precision.</p>
+<p>&nbsp;</p>
+<p>If you use asterisks for the width or the precision, or for both, the width argument must immediately follow the specifiers, followed by the precision argument, then the argument for the data to be converted.</p>
+<p>&nbsp;</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-weight: bold;">[.prec]</span></p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p><span style="font-weight: bold;">How Output Precision Is Affected</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">(none)</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>Precision set to default:</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>= 1 for <span style="font-style: italic;">d,i,o,u,x,X</span> types</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>= 6 for <span style="font-style: italic;">e,E,f</span> types</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>= All significant digits for <span style="font-style: italic;">g,G</span> types</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>= Print to first null character for <span style="font-style: italic;">s</span> types</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>= No effect on <span style="font-style: italic;">c</span> types</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-style: italic;">.0</span></p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>For <span style="font-style: italic;">d,i,o,u,x</span> types, precision set to default</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>for <span style="font-style: italic;">e,E,f</span> types, no decimal point is printed.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-style: italic;">.n</span></p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p><span style="font-style: italic;">n</span> characters or <span style="font-style: italic;">n</span> decimal places are printed.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>If the output value has more than n characters, the output might be truncated or rounded. (Whether this happens depends on the type character.)</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:middle; width:79px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-style: italic;">.</span></p>
+</td>
+<td style="vertical-align:top; width:688px; padding:0px; border:solid 1px #808080;"><p>The argument list supplies the precision specifier, which must precede the actual argument being formatted.</p>
+</td>
+</tr>
+</table>
+</div>
+<p><span style="width:60px">&nbsp;</span></p>
+<p>No numeric characters will be output for a field (i.e., the field will be blank) if the following conditions are all met:</p>
+<p>&nbsp;</p>
+<p style="text-align: left; padding: 0px 0px 0px 17px; margin: 0px 0px 0px 0px;"><span style="font-size:12pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;display:inline-block;width:17px;margin-left:-17px">&#9642;</span>you specify an explicit precision of 0</p><p style="text-align: left; padding: 0px 0px 0px 17px; margin: 0px 0px 0px 0px;"><span style="font-size:12pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;display:inline-block;width:17px;margin-left:-17px">&#9642;</span>the format specifier for the field is one of the integer formats (d, i, o, u, or x)</p><p style="text-align: left; padding: 0px 0px 0px 17px; margin: 0px 0px 0px 0px;"><span style="font-size:12pt; font-family: 'Arial Unicode MS','Lucida Sans Unicode','Arial';color:#000000;display:inline-block;width:17px;margin-left:-17px">&#9642;</span>the value to be printed is 0</p><p>&nbsp;</p>
+<p><span style="font-weight: bold;">How [.prec] Affects Conversion</span></p>
+<p>&nbsp;</p>
+<div style="text-align: left; text-indent: 0px; padding: 0px 0px 0px 0px; margin: 0px 0px 0px 0px;"><table style="border:solid 3px #808080; border-spacing:0px; border-collapse:collapse;">
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;"><span style="font-weight: bold;">Char Type</span></p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p><span style="font-weight: bold;">Effect of [.prec] (.n) on Conversion</span></p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">d</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>Specifies that at least n digits are printed.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">i</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>If input argument has less than n digits,</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">o</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>output value is left-padded x with zeros.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">u</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>If input argument has more than n digits,</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">x</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>the output value is not truncated.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">X</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><br />
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">e</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>Specifies that n characters are</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">E</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>printed after the decimal point, and</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">f</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>the last digit printed is rounded.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><br />
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">g</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>Specifies that at most n significant</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">G</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>digits are printed.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">&nbsp;</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><br />
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">c</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>Has no effect on the output.</p>
+</td>
+</tr>
+<tr style="text-align:left;vertical-align:top;">
+<td style="vertical-align:top; width:118px; padding:0px; border:solid 1px #808080;"><p style="text-align: center;">s</p>
+</td>
+<td style="vertical-align:top; width:434px; padding:0px; border:solid 1px #808080;"><p>Specifies that no more than n characters are printed.</p>
+</td>
+</tr>
+</table>
+</div>
+
+</td></tr></table>
+
+</body>
+</html>

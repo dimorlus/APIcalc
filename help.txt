@@ -1,408 +1,412 @@
-							Operators:
-							Common
-+ (1,3) 	Plus (also for string)            	- (1,3) 	Minus
-++ 			Increment pre and post (++V, V++) 	-- 			Decrement pre and post (--V, V--)
-! (4) 		Not									~ (2,3) 	Complement
-* (1,3)		Multiplication						/ (1)		Division
-% 			Remainder							** (1,3)	Power
-&& 			Logical AND							&			AND
-||			Logical OR							|			OR
-<<			Shift left							>>			Shift right
->>>			Unsign shift right					#			XOR
-<			Less								>			Greater
-!= (1,3)	Not equal							<> (1,3)	Not equal
-+=			Increase							-=			Decrease
-*=			Mul and assign						/=			Div and assign
-%=			Rem and assign						**=			Pow and assign
-<<=			Shift and assign					>>=			Shift and assign
-#=			XOR and assign						&=			AND and assign
-^=			XOR and assign						>>>=		Shift and assign
-							'Pascal' - style
-:= (1,3)	Assign								= (1,3)		Compare
-^ (1,3)		Power								// (1,3)	Parallel resistors
-							'C' - style
-= (1)		Assign								== (1,3)	Compare
-^			XOR									// (1,3)	Parallel resistors
-(1) Also for complex operands. 					(2) Complex conjugate: ~(1+2i)=1-2i
-(3) Also for matrix operands.					(4) Matrix inversion.
+                            Operators:
+                            Common
++ (1,3)     Plus (also for string)              - (1,3)     Minus
+++          Increment pre and post (++V, V++)   --          Decrement pre and post (--V, V--)
+! (4)       Not                                 ~ (2,3)     Complement
+* (1,3)     Multiplication                      / (1)       Division
+%           Remainder                           ** (1,3)    Power
+&&          Logical AND                         &           AND
+||          Logical OR                          |           OR
+<<          Shift left                          >>          Shift right
+>>>         Unsign shift right                  #           XOR
+<           Less                                >           Greater
+!= (1,3)    Not equal                           <> (1,3)    Not equal
++=          Increase                            -=          Decrease
+*=          Mul and assign                      /=          Div and assign
+%=          Rem and assign                      **=         Pow and assign
+<<=         Shift and assign                    >>=         Shift and assign
+#=          XOR and assign                      &=          AND and assign
+^=          XOR and assign                      >>>=        Shift and assign
+                            'Pascal' - style
+:= (1,3)    Assign                              = (1,3)     Compare
+^ (1,3)     Power                               // (1,3)    Parallel resistors
+                            'C' - style
+= (1)       Assign                              == (1,3)    Compare
+^           XOR                                 // (1,3)    Parallel resistors
+(1) Also for complex operands.                  (2) Complex conjugate: ~(1+2i)=1-2i
+(3) Also for matrix operands.                   (4) Matrix inversion.
 First using of '==' switches engine to 'C'-style syntax.
 First using of ':=' switches engine to 'Pas'-style syntax.
 Default is 'Pas'-style syntax.
 
-			Functions:
-abs(x|z) (1,3)				Absolute value|Complex
-sin(x|z) (1)				Sin of radian|Complex
-sing(x)						Sin of degrees
-cos(x|z (1)             	Cos of radian|Complex
-cosg(x)						Cos of degrees
-tg(x|z), tan(x|z) (1)   	Tangent of radian|Complex
-tgg(x)						Tangent of degrees
-ctg(x|z), cot(x|z) (1)  	Cotangent of radian|Complex
-ctgg(x)						Cotangent of degrees
-arcsin(x|z), asin(x|z) (1)	ArcSin in radian|Complex
-arccos(x|z), acos(x|z) (1)  ArcCos in radian|Complex
-arctg(x|z), atan(x|z) (1)	ArcTg in radian|Complex
-arcctg(x|z), acot(x|z) (1)  ArcCtg in radian|Complex
-sinh(x|z), sh(x|z) (1)		Hyperbolic sine
-cosh(x|z), ch(x|z) (1) 		Hyperbolic cosine
-tanh(x|z), th(x|z) (1)		Hyperbolic tangent
-ctanh(x|z), cth(x|z) (1)	Hyperbolic cotangent
-asinh(x|z), arsh(x|z) (1)	Hyperbolic arcsine
-acosh(x|z), arch(x|z) (1)	Hyperbolic arccosine
-atanh(x|z), arth(x|z) (1)	Hyperbolic arctangent
-acoth(x|z), arcth(x|z) (1)	Hyperbolic arccotangent
-atan2(y,x)					Arc tangent of y/x.
-sqrt(x|z) root2(x|z) (1)	Square root
-exp(x|z) (1)				Exponent, e^x
-ln(x|z), log(x|z) (1)		Natural logarithm
-exp10(x)					10^x 
-lg(x), log10(x)				Logarithm base 10, Log10(x)
-root3(x), cbrt(x)			Cube root, x^(1/3)
-rootn(x|z,n|z) (1)          nth root, x^(1/n) 
-log2(x)						Logarithm base 2, Log2(x)
-int(x)						Convert to int
-float(n)					Convert to float
-round(x)					Round value
-frac(x)						Returns the fractional part
-not(n) 						Inversion all bits, ~n
-erf(x)						Error function
-erfc(x)						Complementary error function
-now(n)						Current Unix time (+/- n hours)
-rnd(x)						Random value 0..x
-hypot(x,y)					Hypotenuse
-db(x)						Decibel, 10*lg(x)
-np(x)						Neper, 20*lg(x)
-adb(x)						10^(x/10) 
-anp(x)						10^(x/20) 
-pow(x|z,y|z) (1)			x^y
-logn(x|z,y|z) (1)			Log x(y)
-Vout(Vref,Rh,Rl) 			Vout=Vref*(Rh+Rl)/Rl
-frh(x)						Fahrenheit to Celsius.
-winf(x)						Returns a string describing the portion of the spectrum of a given wavelength.
-wrgb(x)						Returns the RGB color of the given wavelength in 0xRRGGBB format.
-trgb(x)						Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
-color(n)					Shows a color (colored square on top of the application in 0xRRGGBB format)
-ee(n,x)						E series of preferred numbers ee(24, 5k)=5.1k
-cs(x)						Cross section of diameter
-acs(x)						Diameter of cross section
-awg(n)						American wire gauge to mm
-sawg(n)						American wire gauge to mm2
-aawg(x)						mm to american wire gauge
-swg(n)						British standard wire gauge to mm
-sswg(n)						British standard wire gauge to mm2
-aswg(x)						mm to british standard wire gauge
-polar(r,θ)					Return complex value r*cos(θ)+ir*sin(θ)
-cmplx(x,y), cpx(x,y)		Return complex value x+iy
-re(z)						Return real part of complex
-im(z)						Return imaginary part of complex
-pol(z)						atan(im(z)/re(z))
-gcd(n,m)					Greatest common divisor of n and m
-invmod(n,m)					Inverse of n modulo m
-min(x,y)					Minimum of x, y
-max(x,y)					Maximum of x, y
-fact(n), n!					Factorial (n!)
-prime(n)					Smallest prime number
-			Special:
-help(0)							Call help
-opacity(100)					Set opacity level in percent
-binwide(32)						Set binary width
-menu(0)							Hide (0) or show (1) menu.
-vars(0)							Show variables list
-font(x)							Set calculator font size.
-const("name",x)					Add constant 
-var("name",x)					Add variable
-integr(expr, from, to, x)		Numeric Gauss-Kronrod integration
-diff(expr, point, x)			Numeric differentiation
-sum(expr, from, to, x)			∑expr(x)
-tr(A) (3)						trace = sum of diagonal
-det(A) (3)						Determinant of matrix
-norm(A) (3)						Frobenius norm
-dot(A, B) (3)					Dot product of two vectors (1×N or N×1), any length
-cross(A, B) (3)					Cross product of two 3-element vectors (1×3 or 3×1)
-rows(A) (3)						Return matrix rows
-cols(A) (3)						Return matrix columns
-size(A) (3)						Return matrix rows*columns
-bind(x)							Reinterpret a floating-point value as an integer 64
-floatd(i)						Reinterpret an integer as a floating-point 64
-binf(x)							Reinterpret a floating-point value as an integer 32
-floatf(i)						Reinterpret an integer as a floating-point 32
-printf(fmt, ...),fprn, prn  	C-style printf. Result in the string value.
-datatime("2017.11.23 22:00:20")	Return Unix time
+            Functions:
+abs(x|z) (1,3)              	Absolute value|Complex
+
+sin(x|z) (1)                	Sin of radian|Complex
+sing(x)                     	Sin of degrees
+cos(x|z (1)                 	Cos of radian|Complex
+cosg(x)                     	Cos of degrees
+tg(x|z), tan(x|z) (1)       	Tangent of radian|Complex
+tgg(x)                      	Tangent of degrees
+ctg(x|z), cot(x|z) (1)      	Cotangent of radian|Complex
+ctgg(x)                     	Cotangent of degrees
+
+arcsin(x|z), asin(x|z) (1)  	ArcSin in radian|Complex
+arccos(x|z), acos(x|z) (1)  	ArcCos in radian|Complex
+arctg(x|z), atan(x|z) (1)   	ArcTg in radian|Complex
+arcctg(x|z), acot(x|z) (1)  	ArcCtg in radian|Complex
+atan2(y,x)                  	Arc tangent of y/x.
+
+sinh(x|z), sh(x|z) (1)      	Hyperbolic sine
+cosh(x|z), ch(x|z) (1)      	Hyperbolic cosine
+tanh(x|z), th(x|z) (1)      	Hyperbolic tangent
+ctanh(x|z), cth(x|z) (1)    	Hyperbolic cotangent
+asinh(x|z), arsh(x|z) (1)   	Hyperbolic arcsine
+acosh(x|z), arch(x|z) (1)   	Hyperbolic arccosine
+atanh(x|z), arth(x|z) (1)   	Hyperbolic arctangent
+acoth(x|z), arcth(x|z) (1)  	Hyperbolic arccotangent
+
+exp(x|z) (1)                	Exponent, e^x
+exp10(x)                    	10^x 
+pow(x|z,y|z) (1)            	x^y
+
+ln(x|z), log(x|z) (1)       	Natural logarithm
+lg(x), log10(x)             	Logarithm base 10, Log10(x)
+log2(x)                     	Logarithm base 2, Log2(x)
+logn(x|z,y|z) (1)           	Log x(y)
+
+sqrt(x|z) root2(x|z) (1)    	Square root
+root3(x), cbrt(x)           	Cube root, x^(1/3)
+rootn(x|z,n|z) (1)          	nth root, x^(1/n) 
+hypot(x,y)                  	Hypotenuse
+
+int(x)                      	Convert to int
+float(n)                    	Convert to float
+round(x)                    	Round value
+ceil(x)                         Rounds the number x up
+floor(x)						Rounds the number x down
+frac(x)                     	Returns the fractional part
+not(n)                      	Inversion all bits, ~n
+gcd(n,m)                    	Greatest common divisor of n and m
+invmod(n,m)                 	Inverse of n modulo m
+rnd(x)                      	Random value 0..x
+
+erf(x)                      	Error function
+erfc(x)                     	Complementary error function
+
+db(x)                       	Decibel, 10*lg(x)
+np(x)                       	Neper, 20*lg(x)
+adb(x)                      	10^(x/10) 
+anp(x)                      	10^(x/20) 
+Vout(Vref,Rh,Rl)            	Vout=Vref*(Rh+Rl)/Rl
+
+frh(x)                      	Fahrenheit to Celsius.
+ee(n,x)                     	E series of preferred numbers ee(24, 5k)=5.1k
+cs(x)                       	Cross section of diameter
+acs(x)                      	Diameter of cross section
+awg(n)                      	American wire gauge to mm
+sawg(n)                     	American wire gauge to mm2
+aawg(x)                     	mm to american wire gauge
+swg(n)                      	British standard wire gauge to mm
+sswg(n)                     	British standard wire gauge to mm2
+aswg(x)                     	mm to British standard wire gauge
+
+polar(r,θ)                  	Return complex value r*cos(θ)+ir*sin(θ)
+cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
+re(z)                       	Return real part of complex
+im(z)                       	Return imaginary part of complex
+pol(z)                      	atan(im(z)/re(z))
+min(x,y)                    	Minimum of x, y
+max(x,y)                    	Maximum of x, y
+fact(n), n!                 	Factorial (n!)
+prime(n)                    	Smallest prime number
+winf(x)                     	Returns a string describing the portion of the spectrum of a given wavelength.
+wrgb(x)                     	Returns the RGB color of the given wavelength in 0xRRGGBB format.
+trgb(x)                     	Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
+color(n)                    	Shows a color (colored square on top of the application in 0xRRGGBB format)
+
+const("name",x)                 Add constant 
+var("name",x)                   Add variable
+
+integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
+diff(expr, point, x)            Numeric differentiation
+sum(expr, from, to, x)          ∑expr(x)
+
+tr(A) (3)                       trace = sum of diagonal
+det(A) (3)                      Determinant of matrix
+norm(A) (3)                     Frobenius norm
+dot(A, B) (3)                   Dot product of two vectors (1×N or N×1), any length
+cross(A, B) (3)                 Cross product of two 3-element vectors (1×3 or 3×1)
+rows(A) (3)                     Return matrix rows
+cols(A) (3)                     Return matrix columns
+size(A) (3)                     Return matrix rows*columns
+
+bind(x)                         Reinterpret a floating-point value as an integer 64
+floatd(i)                       Reinterpret an integer as a floating-point 64
+binf(x)                         Reinterpret a floating-point value as an integer 32
+floatf(i)                       Reinterpret an integer as a floating-point 32
+
+printf(fmt, ...),fprn, prn      C-style printf. Result in the string value.
+datatime("2017.11.23 22:00:20") Return Unix time
+now(n)                      	Current Unix time (+/- n hours)
+            Special:
+help(0)                         Call help
+opacity(100)                    Set opacity level in percent
+binwide(32)                     Set binary width
+menu(0)                         Hide (0) or show (1) menu.
+vars(0)                         Show variables list
+font(x)                         Set calculator font size.
 (1) Also for complex operands.
 (3) Also for matrix operands.
 
-		User defined functions:
-{frq(L, C)1/(2 pi sqrt(L C))}			frq(130u, 2n2)
-		Newton-Raphson solution of the equation:
-solve(x(2x+2)-2, x:=0)					0.6180339887500326
-solve(x(2x+2)-2, x:=-1)					-1.61803398875005
-calc(x(2x+2)-2, x:=-1)					-2
+        User defined functions:
+{frq(L, C)1/(2 pi sqrt(L C))}           frq(130u, 2n2)
+        Newton-Raphson solution of the equation:
+solve(x(2x+2)-2, x:=0)                  0.6180339887500326
+solve(x(2x+2)-2, x:=-1)                 -1.61803398875005
+calc(x(2x+2)-2, x:=-1)                  -2
 solve(expr, var:=est) expr is the left side of the equation, 
 expr(var)=0, est is the first approximation of the root.
 
 
-		Data formats:
-Hex					0x1000, $1000				4096
-Octal 				01000, 0o1000				512
-Binary				0b1000						8
-Degrees				10`20'40"					0.180544 rad.
-Date time			1:c1:y1:d1:h1:m1:s			189377247661s
-Char				'c'							99
-WChar 				L'c', 'c'W 					'c'W
+        Data formats:
+Hex                 0x1000, $1000               4096
+Octal               01000, 0o1000               512
+Binary              0b1000                      8
+Degrees             10`20'40"                   0.180544 rad.
+Date time           1:c1:y1:d1:h1:m1:s          189377247661s
+Char                'c'                         99
+WChar               L'c', 'c'W                  'c'W
 String              'string'+ " value"          "String value"
 Other               \377 = 255, \e = 27, \n = 10, \xff = 255
-Normalized          1.8e6						1800000
-Scientific			1.8M						1800000
-Engineering			1k33						1330
-Computing			1KB, 1KiB					1024
-Fractional			3+9/64						Pi
-Gauge				#28, awg(28)				0.3211265489669004
-Inch				2"5							0.0635=2+1/2 "
-Complex				3+4i, 3+j4, j4+3			3+4i
-Temperature			frh(75), 75F				297.039 K|23.8889 `C|75 `F
-Matrix				A := [(1,2,3);(4,5,6);(7,8,9)];C := [(1,2);(3,4);(5,6)]
+Normalized          1.8e6                       1800000
+Scientific          1.8M                        1800000
+Engineering         1k33                        1330
+Computing           1KB, 1KiB                   1024
+Fractional          3+9/64                      Pi
+Gauge               #28, awg(28)                0.3211265489669004
+Inch                2"5                         0.0635=2+1/2 "
+Complex             3+4i, 3+j4, j4+3            3+4i
+Temperature         frh(75), 75F                297.039 K|23.8889 `C|75 `F
+Matrix              A := [(1,2,3);(4,5,6);(7,8,9)];C := [(1,2);(3,4);(5,6)]
 
-					Examples:
-L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant				297.6k
-72-20%														57.6
-72-20%+5%													60.48
-500*5%														12500
-1/2%														50
-57.6%%72													-20
-abs(3+4j);;Comment											5
-z:=3+4i														3+4i
-integr(1/sqrt(x), 0.001, 1, x)								1.93675444679663
-time:=2*pi;sqrt((1/time)integral((10sin(x))^2, 0, time, x))	7.071067811865472
-diff(tg(x), 0, x)											1
-sum(1/x!,20,0,x)											2.718281828459045
-A := [(1,2,3);(4,5,6);(7,8,9)];tr(A)						15
-A := [(1,2,3);(4,5,6);(7,8,9)];norm(A)						16.881943016134134
-A := [(1,2,3);(4,5,6);(7,8,9)];cols(A)						3
+                    Examples:
+L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant             297.6k
+72-20%                                                      57.6
+72-20%+5%                                                   60.48
+500*5%                                                      12500
+1/2%                                                        50
+57.6%%72                                                    -20
+abs(3+4j);;Comment                                          5
+z:=3+4i                                                     3+4i
+integr(1/sqrt(x), 0.001, 1, x)                              1.93675444679663
+time:=2*pi;sqrt((1/time)integral((10sin(x))^2, 0, time, x)) 7.071067811865472
+diff(tg(x), 0, x)                                           1
+sum(1/x!,20,0,x)                                            2.718281828459045
+A := [(1,2,3);(4,5,6);(7,8,9)];tr(A)                        15
+A := [(1,2,3);(4,5,6);(7,8,9)];norm(A)                      16.881943016134134
+A := [(1,2,3);(4,5,6);(7,8,9)];cols(A)                      3
 
-	Implicit Multiplication:
-3PI				3*PI				9.424777960
-3pi				0+3pi				0+3e-12i
-2 pi			2*pi				6.283185307
-2sin(2PI/3)		2*sin(2*PI/3)		1.732050807
-3(1+2)			3*(1+2)				9
-(1+2)(1+2)(1+2) (1+2)*(1+2)*(1+2)	27
+    Implicit Multiplication:
+3PI             3*PI                9.424777960
+3pi             0+3pi               0+3e-12i
+2 pi            2*pi                6.283185307
+2sin(2PI/3)     2*sin(2*PI/3)       1.732050807
+3(1+2)          3*(1+2)             9
+(1+2)(1+2)(1+2) (1+2)*(1+2)*(1+2)   27
 
-			Constants:
-version						2.02 or above
-pi							3.141592653589
-e							2.718281828459
-phi							1.618033988749 (Golden ratio)
-timezone					System timezone offset (hours)
-daylight					Daylight saving time flag
-tz							Offset from UTC in hours
+            Constants:
+version                     2.02 or above
+pi                          3.141592653589
+e                           2.718281828459
+phi                         1.618033988749 (Golden ratio)
+timezone                    System timezone offset (hours)
+daylight                    Daylight saving time flag
+tz                          Offset from UTC in hours
 
-				Range postfix:
-				Binary (power of 2)
-1QB	quetta	1267650600228229401496703205376 2^100
+                Range postfix:
+                Binary (power of 2)
+1QB quetta  1267650600228229401496703205376 2^100
 1RB ronna   1237940039285380274899124224    2^90
-1YB yotta	1208925819614629174706176		2^80
-1ZB zetta	1180591620717411303424			2^70
-1EB	exa		1152921504606846976				2^60
-1PB peta    1125899906842624				2^50
-1TB	tera	1099511627776					2^40
-1GB	giga	1073741824						2^30
-1MB	mega	1048576							2^20
-1KB	kilo	1024							2^10
-				Decimal (power of 10)
-						EU				US
-1Q	quetta 	10^30		Quintillion     Nonillion
-1q  quecto 	10^-30
-1R  ronna  	10^27    	Quadrilliard    Octillion
-1r  ronto  	10^-27
-1Y  yotta  	10^24    	Quadrillion     Septillion
-1y  yocto  	10^-24
-1Z  zetta  	10^21    	Trilliard       Sextillion
-1z  zepto  	10^-21 
-1E  exa    	10^18    	Trillion        Quintillion 
-1a  atto   	10^-18
-1P  peta   	10^15    	Billiard		Quadrillion
-1f	femto  	10^-15
-1T 	tera   	10^12    	Billion         Trillion
-1p	pico	10^-12
-1G	giga	10^9		Milliard		Billion
-1n	nano	10^-9
-1M	mega	10^6		Million			Million
-1u	micro	10^-6
-1K	kilo	10^3		Thousand		Thousand
-1m	milli	10^-3
-1k	kilo	10^3		Thousand		Thousand
-1h	hecto	10^2		Hundred			Hundred
-1c  centi	10^-2
-1D	deka    10^1		Ten				Ten 
-1da deka    10^1		Ten				Ten
-1d	deci	10^-1
-1			10^0		One				One
+1YB yotta   1208925819614629174706176       2^80
+1ZB zetta   1180591620717411303424          2^70
+1EB exa     1152921504606846976             2^60
+1PB peta    1125899906842624                2^50
+1TB tera    1099511627776                   2^40
+1GB giga    1073741824                      2^30
+1MB mega    1048576                         2^20
+1KB kilo    1024                            2^10
+                Decimal (power of 10)
+                        EU              US
+1Q  quetta  10^30       Quintillion     Nonillion		1q  quecto  10^-30
+1R  ronna   10^27       Quadrilliard    Octillion		1r  ronto   10^-27
+1Y  yotta   10^24       Quadrillion     Septillion		1y  yocto   10^-24
+1Z  zetta   10^21       Trilliard       Sextillion		1z  zepto   10^-21
+1E  exa     10^18       Trillion        Quintillion 	1a  atto    10^-18
+1P  peta    10^15       Billiard        Quadrillion		1f  femto   10^-15
+1T  tera    10^12       Billion         Trillion		1p  pico    10^-12
+1G  giga    10^9        Milliard        Billion			1n  nano    10^-9
+1M  mega    10^6        Million         Million			1u  micro   10^-6
+1K  kilo    10^3        Thousand        Thousand		1m  milli   10^-3
+1k  kilo    10^3        Thousand        Thousand
+1h  hecto   10^2        Hundred         Hundred			1c  centi   10^-2
+1D  deka    10^1        Ten             Ten				1d  deci    10^-1 
+1da deka    10^1        Ten             Ten
+1           10^0        One             One				1           10^0
 
-			Predefined constants:
-Name			Value					Description
+            Predefined constants:
+Name            Value                   Description
 Mathematical:
-pi				3.141592653589793		π
-tau				6.283185307179586		2π
-turn			6.283185307179586		2π
-gon				0.01570796326794897		π/200
-deg				0.0174532925199433		π/180
-e				2.718281828459045		Euler's number
-i, j			0+1i					√-1
-phi				1.618033988749895		Golden ratio
+pi              3.141592653589793       π
+tau             6.283185307179586       2π
+turn            6.283185307179586       2π
+gon             0.01570796326794897     π/200
+deg             0.0174532925199433      π/180
+e               2.718281828459045       Euler's number
+i, j            0+1i                    √-1
+phi             1.618033988749895       Golden ratio
 
 Imperial and other:
 
 Distance:
-inch			0.0254					Inch (m)
-mil				2.54e-05				1/1000Inch (m)
-ft				0.3048					Foot (m)
-foot			0.3048					Foot (m)
-yd				0.9144					Yard (m)
-yard			0.9144					Yard (m)
-mi				1609.344				Mile (m)
-mile			1609.344				Mile (m)
-nmi				1852					Nautical mile (m)
-ptt				0.0003527777777777778	Printing point DTP 0.3528mm
+inch            0.0254                  Inch (m)
+mil             2.54e-05                1/1000Inch (m)
+ft              0.3048                  Foot (m)
+foot            0.3048                  Foot (m)
+yd              0.9144                  Yard (m)
+yard            0.9144                  Yard (m)
+mi              1609.344                Mile (m)
+mile            1609.344                Mile (m)
+nmi             1852                    Nautical mile (m)
+ptt             0.0003527777777777778   Printing point DTP 0.3528mm
 
 Mass:
-kg				1						Kilogram (kg)
-lb				0.45359237				Pound (kg)
-oz				0.028349523125			Ounce (kg)
-st				6.35029318				Stone (kg)
-gr				0.001					Gram (kg)
+kg              1                       Kilogram (kg)
+lb              0.45359237              Pound (kg)
+oz              0.028349523125          Ounce (kg)
+st              6.35029318              Stone (kg)
+gr              0.001                   Gram (kg)
 
 Volume:
-gal				0.003785411784			US Gallon (m³)
-qt				0.000946352946			US Quart (m³)
-pt				0.000473176473			US Pint (m³)
-cup				0.0002365882365			US Cup (m³)
-floz			2.95735295625e-05		US Fluid Ounce (m³)
-tbsp			1.478676478125e-05		US Tablespoon (m³) 
-tsp				4.92892159375e-06		US Teaspoon (m³)
-lt				0.001					liters (m³)
-ml				1e-06					milliliters (m³)
-cc				1e-06					milliliters (m³)
+gal             0.003785411784          US Gallon (m³)
+qt              0.000946352946          US Quart (m³)
+pt              0.000473176473          US Pint (m³)
+cup             0.0002365882365         US Cup (m³)
+floz            2.95735295625e-05       US Fluid Ounce (m³)
+tbsp            1.478676478125e-05      US Tablespoon (m³) 
+tsp             4.92892159375e-06       US Teaspoon (m³)
+lt              0.001                   liters (m³)
+ml              1e-06                   milliliters (m³)
+cc              1e-06                   milliliters (m³)
 
 Energy:
-cal				4.184					Calorie (J)
-kcal			4184					Kilocalorie (J)
-btu				1055.05585262			British thermal unit (J)
-wh				3600					Watt hour (J)
-kwh				3600000					Kilowatt hour (J)
-mwh				3600000000				Megawatt hour (J)
-gtnt			4184					Gram of TNT (Joules)
-ttnt			4184000000				Tonne of TNT (Joules)
-ktnt			4184000000000			Kiloton of TNT (Joules)
-mtnt			4184000000000000		Megaton of TNT (Joules)
-ev				1.602176634e-19			Electronvolt (J)
-kev				1.602176634e-16			Kiloelectronvolt (J)
-mev				1.602176634e-13			Megaelectronvolt (J)
-gev				1.602176634e-10			Gigaelectronvolt (J)
+cal             4.184                   Calorie (J)
+kcal            4184                    Kilocalorie (J)
+btu             1055.05585262           British thermal unit (J)
+wh              3600                    Watt hour (J)
+kwh             3600000                 Kilowatt hour (J)
+mwh             3600000000              Megawatt hour (J)
+gtnt            4184                    Gram of TNT (Joules)
+ttnt            4184000000              Tonne of TNT (Joules)
+ktnt            4184000000000           Kiloton of TNT (Joules)
+mtnt            4184000000000000        Megaton of TNT (Joules)
+ev              1.602176634e-19         Electronvolt (J)
+kev             1.602176634e-16         Kiloelectronvolt (J)
+mev             1.602176634e-13         Megaelectronvolt (J)
+gev             1.602176634e-10         Gigaelectronvolt (J)
 
 Power:
-hps				745.6998715822702		Horsepower (W)
-bhp				745.6998715822702		Brake horsepower (W) 
+hps             745.6998715822702       Horsepower (W)
+bhp             745.6998715822702       Brake horsepower (W) 
 
 Pressure:
-atm				101325					Standard atmosphere (Pa)
-bar				100000					Bar (Pa)
-psi				6894.757293168361		Pound-force per square inch (Pa)
+atm             101325                  Standard atmosphere (Pa)
+bar             100000                  Bar (Pa)
+psi             6894.757293168361       Pound-force per square inch (Pa)
 
 Velocity:
-kmh				0.277777778				Kilometers per hour to meters per second
-mph				0.44704					Miles per hour to meters per second
-knot			0.514444444				Nautical miles per hour to meters per second
+kmh             0.277777778             Kilometers per hour to meters per second
+mph             0.44704                 Miles per hour to meters per second
+knot            0.514444444             Nautical miles per hour to meters per second
 
 Time:
-hour			3600					Hour in seconds
-hr				3600					Hour in seconds
-mnt				60						Minute in seconds
+hour            3600                    Hour in seconds
+hr              3600                    Hour in seconds
+mnt             60                      Minute in seconds
 
 Magnetic:
-tl				1						Magnetic flux density (or magnetic induction) Tesla - Base SI 
-wb				1						Magnetic flux Weber - Base SI
-gs				0.0001					Magnetic flux density (or magnetic induction) Gauss to Tesla
-mw				1e-08					Magnetic flux Maxwell to Weber
-oe				79.57747154594767		Magnetic field strength (H) Oersted to A/m
-gb				0.7957747154594768		Magnetomotive force (MMF) Gilbert to Ampere-turn
+tl              1                       Magnetic flux density (or magnetic induction) Tesla - Base SI 
+wb              1                       Magnetic flux Weber - Base SI
+gs              0.0001                  Magnetic flux density (or magnetic induction) Gauss to Tesla
+mw              1e-08                   Magnetic flux Maxwell to Weber
+oe              79.57747154594767       Magnetic field strength (H) Oersted to A/m
+gb              0.7957747154594768      Magnetomotive force (MMF) Gilbert to Ampere-turn
 
 Radiation:
-gy				1						Gray (J/kg) - Base SI
-rad				0.01					Rad (absorbed dose)
-sv				1						Sievert (Equivalent dose) - Base SI
-rem				0.01					Roentgen Equivalent Man (0.01 Sv)
-rn				0.00877					Roentgen (approx in air)
-mrn				0.00000877				Milli-roentgen
-urn				8.77e-09				Micro-roentgen
-ngnt			0.031572				Not great, not terrible (3.6 R)
+gy              1                       Gray (J/kg) - Base SI
+rad             0.01                    Rad (absorbed dose)
+sv              1                       Sievert (Equivalent dose) - Base SI
+rem             0.01                    Roentgen Equivalent Man (0.01 Sv)
+rn              0.00877                 Roentgen (approx in air)
+mrn             0.00000877              Milli-roentgen
+urn             8.77e-09                Micro-roentgen
+ngnt            0.031572                Not great, not terrible (3.6 R)
 
 Physical Constants (CODATA 2018):
 Fundamental:
-c0				299792458				Speed of light (m/s) The speed of electromagnetic radiation in vacuum
-hp				6.62607015e-34			Planck constant (J·s) Relating energy to frequency
-hb				1.054571817e-34			Reduced Planck constant ℏ (J·s) Planck constant divided by 2π
-gn				6.6743e-11				Gravitational (Newton's) constant (m³/(kg·s²))
-na				6.02214076e+23			Avogadro constant (mol⁻¹) Number of constituent particles per mole
-kb				1.380649e-23			Boltzmann constant (J/K) Relates average kinetic energy of particles to temperature
-rg				8.314462618				Universal gas constant (J/(mol·K)) Product of Boltzmann constant and Avogadro constant
-sf				5.670374419e-08			Stefan-Boltzmann constant (W/(m²·K^4))
-rs				8.314462618				Ideal gas constant kb*Na (J/(mol·K))
-nae				2.1798723611035e-18		Rydberg energy (J)
-mu				1.6605390666e-27		Atomic mass constant (kg)
-stdt			273.15					Standard temperature 0°C (K)
+c0              299792458               Speed of light (m/s) The speed of electromagnetic radiation in vacuum
+hp              6.62607015e-34          Planck constant (J·s) Relating energy to frequency
+hb              1.054571817e-34         Reduced Planck constant ℏ (J·s) Planck constant divided by 2π
+gn              6.6743e-11              Gravitational (Newton's) constant (m³/(kg·s²))
+na              6.02214076e+23          Avogadro constant (mol⁻¹) Number of constituent particles per mole
+kb              1.380649e-23            Boltzmann constant (J/K) Relates average kinetic energy of particles to temperature
+rg              8.314462618             Universal gas constant (J/(mol·K)) Product of Boltzmann constant and Avogadro constant
+sf              5.670374419e-08         Stefan-Boltzmann constant (W/(m²·K^4))
+rs              8.314462618             Ideal gas constant kb*Na (J/(mol·K))
+nae             2.1798723611035e-18     Rydberg energy (J)
+mu              1.6605390666e-27        Atomic mass constant (kg)
+stdt            273.15                  Standard temperature 0°C (K)
 
 Electromagnetic:
-e0				8.8541878128e-12		Electric constant (vacuum permittivity) (F/m) Permittivity of free space
-u0				1.25663706212e-06		Magnetic constant (vacuum permeability) (H/m) Permittivity of free space
-z0				376.730313668			Impedance of vacuum (Ω) Wave impedance of electromagnetic waves in vacuum
+e0              8.8541878128e-12        Electric constant (vacuum permittivity) (F/m) Permittivity of free space
+u0              1.25663706212e-06       Magnetic constant (vacuum permeability) (H/m) Permittivity of free space
+z0              376.730313668           Impedance of vacuum (Ω) Wave impedance of electromagnetic waves in vacuum
 
 Particle:
-qe				1.602176634e-19			Elementary charge (C) Electric charge of a proton (magnitude)
-me				9.1093837015e-31		Electron mass (kg) Rest mass of an electron
-mp				1.67262192369e-27		Proton mass (kg) Rest mass of a proton
-mn				1.67492749804e-27		Neutron mass (kg) Rest mass of a neutron
-rel				2.8179403262e-15		Classical electron radius (m) Characteristic length scale for electron scattering
-a0				5.29177210903e-11		Bohr radius (m) Most probable distance between nucleus and electron in hydrogen ground state
+qe              1.602176634e-19         Elementary charge (C) Electric charge of a proton (magnitude)
+me              9.1093837015e-31        Electron mass (kg) Rest mass of an electron
+mp              1.67262192369e-27       Proton mass (kg) Rest mass of a proton
+mn              1.67492749804e-27       Neutron mass (kg) Rest mass of a neutron
+rel             2.8179403262e-15        Classical electron radius (m) Characteristic length scale for electron scattering
+a0              5.29177210903e-11       Bohr radius (m) Most probable distance between nucleus and electron in hydrogen ground state
 
 Astronomical:
-au				149597870700			Astronomical unit (m) Mean distance from Earth to Sun
-ly				9460730472580800		Light year (m) Distance light travels in one Julian year
-pc				3.0856775814914e+16		Parsec (m) Parallax of one arcsecond, astronomical distance unit
-g0				9.80665					Standard gravity (m/s²)
+au              149597870700            Astronomical unit (m) Mean distance from Earth to Sun
+ly              9460730472580800        Light year (m) Distance light travels in one Julian year
+pc              3.0856775814914e+16     Parsec (m) Parallax of one arcsecond, astronomical distance unit
+g0              9.80665                 Standard gravity (m/s²)
 
 Additional:
-ry				10973731.56816			Rydberg constant (m⁻¹) Spectroscopic constant for atomic spectra
-sb				5.670374419e-08			Stefan-Boltzmann constant (W/(m²·K^4)) Constant relating black body radiation to temperature
+ry              10973731.56816          Rydberg constant (m⁻¹) Spectroscopic constant for atomic spectra
+sb              5.670374419e-08         Stefan-Boltzmann constant (W/(m²·K^4)) Constant relating black body radiation to temperature
 
 Rainbow Colors:
 Wavelengths (in nanometers, nm)
-fir				316e-6 					Far infrared (FIR, 100-1000 um)
-lwir			11.5e-6 				Long-wave IR (LWIR, 8-15 um, thermal)
-mwir			5.5e-6 					Mid-wave IR (MWIR, 3-8 um, night vision)
-swir			2.2e-6 					Short-wave IR (SWIR, 1.4-3 um, fiber)
-nir				1.09e-6 				Near IR (NIR, 0.78-1.4 um, remote)
-red				685e-9 					(~620–750 nm)
-orange			605e-9 					(~590–620 nm)
-yellow			580e-9 					(~570–590 nm)
-green			532e-9 					(~495–570 nm)
-blue			472e-9 					(~450–495 nm)
-indigo			435e-9 					(Often grouped with blue/violet, ~420-450 nm)
-violet			400e-9 					(~380–450 nm)		
-uva				348e-9 					UVA ultraviolet (315-380 nm, tanning)
-uvb				298e-9 					UVB ultraviolet (280-315 nm)
-uvc				190e-9 					UVC ultraviolet (100-280 nm, germicidal)
+fir             316e-6                  Far infrared (FIR, 100-1000 um)
+lwir            11.5e-6                 Long-wave IR (LWIR, 8-15 um, thermal)
+mwir            5.5e-6                  Mid-wave IR (MWIR, 3-8 um, night vision)
+swir            2.2e-6                  Short-wave IR (SWIR, 1.4-3 um, fiber)
+nir             1.09e-6                 Near IR (NIR, 0.78-1.4 um, remote)
+red             685e-9                  (~620–750 nm)
+orange          605e-9                  (~590–620 nm)
+yellow          580e-9                  (~570–590 nm)
+green           532e-9                  (~495–570 nm)
+blue            472e-9                  (~450–495 nm)
+indigo          435e-9                  (Often grouped with blue/violet, ~420-450 nm)
+violet          400e-9                  (~380–450 nm)       
+uva             348e-9                  UVA ultraviolet (315-380 nm, tanning)
+uvb             298e-9                  UVB ultraviolet (280-315 nm)
+uvc             190e-9                  UVC ultraviolet (100-280 nm, germicidal)
 
 Integer Limits:
-max32, maxint		Maximum signed 32-bit (2147483647, 0x7FFFFFFF)
-maxu32, maxuint		Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
-max64, maxlong		Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
-maxu64, maxulong	Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
+max32, maxint       Maximum signed 32-bit (2147483647, 0x7FFFFFFF)
+maxu32, maxuint     Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
+max64, maxlong      Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
+maxu64, maxulong    Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
 
 System:
-
-version				Calculator version
-timezone			System timezone offset in hours
-daylight			Daylight saving time flag (0 or 1)
-tz					Current timezone with DST applied
-Note: All constants are case-insensitive without Case sensetive option.
-
+version             Calculator version
+timezone            System timezone offset in hours
+daylight            Daylight saving time flag (0 or 1)
+tz                  Current timezone with DST applied
+Note: All constants are case-insensitive without Case sensitive option.

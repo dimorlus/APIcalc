@@ -493,6 +493,9 @@ void calculator::AddPredefined (void)
  addlvar ("maxu64", 18446744073709551615.0L, 0xffffffffffffffffull);
  addlvar ("maxulong", 18446744073709551615.0L, 0xffffffffffffffffull);
 
+ addlvar ("float_sz", sizeof (float__t), sizeof (float__t));
+ addlvar ("int_sz", sizeof (int_t), sizeof (int_t));
+
  // System
  //  Get system timezone information
  TIME_ZONE_INFORMATION tzi;
@@ -812,7 +815,7 @@ int32_t scan_opt (char *str, int &opts)
 {
  struct option_def
  {
-  const char name[4]; // Option name
+  char name[4]; // Option name
   int flag;           // Bit mask
  };
 

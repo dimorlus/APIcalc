@@ -18,6 +18,7 @@
 
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define nullptr NULL
+#pragma warn -8066
 
 #else
 #include <cstdint>

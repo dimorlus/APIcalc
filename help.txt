@@ -1,16 +1,16 @@
                             Operators:
                             Common
-+ (1,3)     Plus (also for string)              - (1,3)     Minus
++    (1,3)  Plus (also for string)              -    (1,3)  Minus
 ++          Increment pre and post (++V, V++)   --          Decrement pre and post (--V, V--)
-! (4)       Not                                 ~ (2,3)     Complement
-* (1,3)     Multiplication                      / (1)       Division
-%           Remainder                           ** (1,3)    Power
+!    (4)    Not                                 ~    (2,3)  Complement
+*    (1,3)  Multiplication                      /    (1)    Division
+%           Remainder                           **   (1,3)  Power
 &&          Logical AND                         &           AND
 ||          Logical OR                          |           OR
 <<          Shift left                          >>          Shift right
 >>>         Unsign shift right                  #           XOR
 <           Less                                >           Greater
-!= (1,3)    Not equal                           <> (1,3)    Not equal
+!=   (1,3)  Not equal                           <>   (1,3)  Not equal
 +=          Increase                            -=          Decrease
 *=          Mul and assign                      /=          Div and assign
 %=          Rem and assign                      **=         Pow and assign
@@ -18,11 +18,11 @@
 #=          XOR and assign                      &=          AND and assign
 ^=          XOR and assign                      >>>=        Shift and assign
                             'Pascal' - style
-:= (1,3)    Assign                              = (1,3)     Compare
-^ (1,3)     Power                               // (1,3)    Parallel resistors
+:=   (1,3)  Assign                              =    (1,3)  Compare
+^    (1,3)  Power                               //   (1,3)  Parallel resistors
                             'C' - style
-= (1)       Assign                              == (1,3)    Compare
-^           XOR                                 // (1,3)    Parallel resistors
+=    (1)    Assign                              ==   (1,3)  Compare
+^           XOR                                 //   (1,3)  Parallel resistors
 (1) Also for complex operands.                  (2) Complex conjugate: ~(1+2i)=1-2i
 (3) Also for matrix operands.                   (4) Matrix inversion.
 First using of '==' switches engine to 'C'-style syntax.
@@ -30,90 +30,90 @@ First using of ':=' switches engine to 'Pas'-style syntax.
 Default is 'Pas'-style syntax.
 
             Functions:
-abs(x|z) (1,3)              	Absolute value|Complex
+abs(x|z)                 (1,3)  Absolute value|Complex
 
-sin(x|z) (1)                	Sin of radian|Complex
-sing(x)                     	Sin of degrees
-cos(x|z (1)                 	Cos of radian|Complex
-cosg(x)                     	Cos of degrees
-tg(x|z), tan(x|z) (1)       	Tangent of radian|Complex
-tgg(x)                      	Tangent of degrees
-ctg(x|z), cot(x|z) (1)      	Cotangent of radian|Complex
-ctgg(x)                     	Cotangent of degrees
+sin(x|z)                  (1)   Sin of radian|Complex
+sing(x)                         Sin of degrees
+cos(x|z                   (1)   Cos of radian|Complex
+cosg(x)                         Cos of degrees
+tg(x|z), tan(x|z)         (1)   Tangent of radian|Complex
+tgg(x)                          Tangent of degrees
+ctg(x|z), cot(x|z)        (1)   Cotangent of radian|Complex
+ctgg(x)                         Cotangent of degrees
 
-arcsin(x|z), asin(x|z) (1)  	ArcSin in radian|Complex
-arccos(x|z), acos(x|z) (1)  	ArcCos in radian|Complex
-arctg(x|z), atan(x|z) (1)   	ArcTg in radian|Complex
-arcctg(x|z), acot(x|z) (1)  	ArcCtg in radian|Complex
-atan2(y,x)                  	Arc tangent of y/x.
+arcsin(x|z), asin(x|z)    (1)   ArcSin in radian|Complex
+arccos(x|z), acos(x|z)    (1)   ArcCos in radian|Complex
+arctg(x|z), atan(x|z)     (1)   ArcTg in radian|Complex
+arcctg(x|z), acot(x|z)    (1)   ArcCtg in radian|Complex
+atan2(y,x)                      Arc tangent of y/x.
 
-sinh(x|z), sh(x|z) (1)      	Hyperbolic sine
-cosh(x|z), ch(x|z) (1)      	Hyperbolic cosine
-tanh(x|z), th(x|z) (1)      	Hyperbolic tangent
-ctanh(x|z), cth(x|z) (1)    	Hyperbolic cotangent
-asinh(x|z), arsh(x|z) (1)   	Hyperbolic arcsine
-acosh(x|z), arch(x|z) (1)   	Hyperbolic arccosine
-atanh(x|z), arth(x|z) (1)   	Hyperbolic arctangent
-acoth(x|z), arcth(x|z) (1)  	Hyperbolic arccotangent
+sinh(x|z), sh(x|z)        (1)   Hyperbolic sine
+cosh(x|z), ch(x|z)        (1)   Hyperbolic cosine
+tanh(x|z), th(x|z)        (1)   Hyperbolic tangent
+ctanh(x|z), cth(x|z)      (1)   Hyperbolic cotangent
+asinh(x|z), arsh(x|z)     (1)   Hyperbolic arcsine
+acosh(x|z), arch(x|z)     (1)   Hyperbolic arccosine
+atanh(x|z), arth(x|z)     (1)   Hyperbolic arctangent
+acoth(x|z), arcth(x|z)    (1)   Hyperbolic arccotangent
 
-exp(x|z) (1)                	Exponent, e^x
-exp10(x)                    	10^x 
-pow(x|z,y|z) (1)            	x^y
+exp(x|z)                  (1)   Exponent, e^x
+exp10(x)                        10^x 
+pow(x|z,y|z)              (1)   x^y
 
-ln(x|z), log(x|z) (1)       	Natural logarithm
-lg(x), log10(x)             	Logarithm base 10, Log10(x)
-log2(x)                     	Logarithm base 2, Log2(x)
-logn(x|z,y|z) (1)           	Log x(y)
+ln(x|z), log(x|z)         (1)   Natural logarithm
+lg(x), log10(x)                 Logarithm base 10, Log10(x)
+log2(x)                         Logarithm base 2, Log2(x)
+logn(x|z,y|z)             (1)   Log x(y)
 
-sqrt(x|z) root2(x|z) (1)    	Square root
-root3(x), cbrt(x)           	Cube root, x^(1/3)
-rootn(x|z,n|z) (1)          	nth root, x^(1/n) 
-hypot(x,y)                  	Hypotenuse
+sqrt(x|z) root2(x|z)      (1)   Square root
+root3(x), cbrt(x)               Cube root, x^(1/3)
+rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
+hypot(x,y)                      Hypotenuse
 
-int(x)                      	Convert to int
-float(n)                    	Convert to float
-round(x)                    	Round value
+int(x)                          Convert to int
+float(n)                        Convert to float
+round(x)                        Round value
 ceil(x)                         Rounds the number x up
-floor(x)						Rounds the number x down
-frac(x)                     	Returns the fractional part
-not(n)                      	Inversion all bits, ~n
-gcd(n,m)                    	Greatest common divisor of n and m
-invmod(n,m)                 	Inverse of n modulo m
-rnd(x)                      	Random value 0..x
+floor(x)                        Rounds the number x down
+frac(x)                         Returns the fractional part
+not(n)                          Inversion all bits, ~n
+gcd(n,m)                        Greatest common divisor of n and m
+invmod(n,m)                     Inverse of n modulo m
+rnd(x)                          Random value 0..x
 
-erf(x)                      	Error function
-erfc(x)                     	Complementary error function
+erf(x)                          Error function
+erfc(x)                         Complementary error function
 
-db(x)                       	Decibel, 10*lg(x)
-np(x)                       	Neper, 20*lg(x)
-adb(x)                      	10^(x/10) 
-anp(x)                      	10^(x/20) 
-Vout(Vref,Rh,Rl)            	Vout=Vref*(Rh+Rl)/Rl
+db(x)                           Decibel, 10*lg(x)
+np(x)                           Neper, 20*lg(x)
+adb(x)                          10^(x/10) 
+anp(x)                          10^(x/20) 
+Vout(Vref,Rh,Rl)                Vout=Vref*(Rh+Rl)/Rl
 
-frh(x)                      	Fahrenheit to Celsius.
-ee(n,x)                     	E series of preferred numbers ee(24, 5k)=5.1k
-cs(x)                       	Cross section of diameter
-acs(x)                      	Diameter of cross section
-awg(n)                      	American wire gauge to mm
-sawg(n)                     	American wire gauge to mm2
-aawg(x)                     	mm to american wire gauge
-swg(n)                      	British standard wire gauge to mm
-sswg(n)                     	British standard wire gauge to mm2
-aswg(x)                     	mm to British standard wire gauge
+frh(x)                          Fahrenheit to Celsius.
+ee(n,x)                         E series of preferred numbers ee(24, 5k)=5.1k
+cs(x)                           Cross section of diameter
+acs(x)                          Diameter of cross section
+awg(n)                          American wire gauge to mm
+sawg(n)                         American wire gauge to mm2
+aawg(x)                         mm to american wire gauge
+swg(n)                          British standard wire gauge to mm
+sswg(n)                         British standard wire gauge to mm2
+aswg(x)                         mm to British standard wire gauge
 
-polar(r,θ)                  	Return complex value r*cos(θ)+ir*sin(θ)
+polar(r,θ)                      Return complex value r*cos(θ)+ir*sin(θ)
 cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
-re(z)                       	Return real part of complex
-im(z)                       	Return imaginary part of complex
-pol(z)                      	atan(im(z)/re(z))
-min(x,y)                    	Minimum of x, y
-max(x,y)                    	Maximum of x, y
-fact(n), n!                 	Factorial (n!)
-prime(n)                    	Smallest prime number
-winf(x)                     	Returns a string describing the portion of the spectrum of a given wavelength.
-wrgb(x)                     	Returns the RGB color of the given wavelength in 0xRRGGBB format.
-trgb(x)                     	Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
-color(n)                    	Shows a color (colored square on top of the application in 0xRRGGBB format)
+re(z)                     (1)   Return real part of complex
+im(z)                     (1)   Return imaginary part of complex
+pol(z)                    (1)   atan(im(z)/re(z))
+min(x,y)                        Minimum of x, y
+max(x,y)                        Maximum of x, y
+fact(n), n!                     Factorial (n!)
+prime(n)                        Smallest prime number
+winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
+wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
+trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
+color(n)                        Shows a color (colored square on top of the application in 0xRRGGBB format)
 
 const("name",x)                 Add constant 
 var("name",x)                   Add variable
@@ -122,14 +122,14 @@ integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation
 sum(expr, from, to, x)          ∑expr(x)
 
-tr(A) (3)                       trace = sum of diagonal
-det(A) (3)                      Determinant of matrix
-norm(A) (3)                     Frobenius norm
-dot(A, B) (3)                   Dot product of two vectors (1×N or N×1), any length
-cross(A, B) (3)                 Cross product of two 3-element vectors (1×3 or 3×1)
-rows(A) (3)                     Return matrix rows
-cols(A) (3)                     Return matrix columns
-size(A) (3)                     Return matrix rows*columns
+tr(A)                     (3)   trace = sum of diagonal
+det(A)                    (3)   Determinant of matrix
+norm(A)                   (3)   Frobenius norm
+dot(A, B)                 (3)   Dot product of two vectors (1×N or N×1), any length
+cross(A, B)               (3)   Cross product of two 3-element vectors (1×3 or 3×1)
+rows(A)                   (3)   Return matrix rows
+cols(A)                   (3)   Return matrix columns
+size(A)                   (3)   Return matrix rows*columns
 
 bind(x)                         Reinterpret a floating-point value as an integer 64
 floatd(i)                       Reinterpret an integer as a floating-point 64
@@ -138,7 +138,7 @@ floatf(i)                       Reinterpret an integer as a floating-point 32
 
 printf(fmt, ...),fprn, prn      C-style printf. Result in the string value.
 datatime("2017.11.23 22:00:20") Return Unix time
-now(n)                      	Current Unix time (+/- n hours)
+now(n)                          Current Unix time (+/- n hours)
             Special:
 help(0)                         Call help
 opacity(100)                    Set opacity level in percent
@@ -228,21 +228,21 @@ tz                          Offset from UTC in hours
 1KB kilo    1024                            2^10
                 Decimal (power of 10)
                         EU              US
-1Q  quetta  10^30       Quintillion     Nonillion		1q  quecto  10^-30
-1R  ronna   10^27       Quadrilliard    Octillion		1r  ronto   10^-27
-1Y  yotta   10^24       Quadrillion     Septillion		1y  yocto   10^-24
-1Z  zetta   10^21       Trilliard       Sextillion		1z  zepto   10^-21
-1E  exa     10^18       Trillion        Quintillion 	1a  atto    10^-18
-1P  peta    10^15       Billiard        Quadrillion		1f  femto   10^-15
-1T  tera    10^12       Billion         Trillion		1p  pico    10^-12
-1G  giga    10^9        Milliard        Billion			1n  nano    10^-9
-1M  mega    10^6        Million         Million			1u  micro   10^-6
-1K  kilo    10^3        Thousand        Thousand		1m  milli   10^-3
+1Q  quetta  10^30       Quintillion     Nonillion       1q  quecto  10^-30
+1R  ronna   10^27       Quadrilliard    Octillion       1r  ronto   10^-27
+1Y  yotta   10^24       Quadrillion     Septillion      1y  yocto   10^-24
+1Z  zetta   10^21       Trilliard       Sextillion      1z  zepto   10^-21
+1E  exa     10^18       Trillion        Quintillion     1a  atto    10^-18
+1P  peta    10^15       Billiard        Quadrillion     1f  femto   10^-15
+1T  tera    10^12       Billion         Trillion        1p  pico    10^-12
+1G  giga    10^9        Milliard        Billion         1n  nano    10^-9
+1M  mega    10^6        Million         Million         1u  micro   10^-6
+1K  kilo    10^3        Thousand        Thousand        1m  milli   10^-3
 1k  kilo    10^3        Thousand        Thousand
-1h  hecto   10^2        Hundred         Hundred			1c  centi   10^-2
-1D  deka    10^1        Ten             Ten				1d  deci    10^-1 
+1h  hecto   10^2        Hundred         Hundred         1c  centi   10^-2
+1D  deka    10^1        Ten             Ten             1d  deci    10^-1 
 1da deka    10^1        Ten             Ten
-1           10^0        One             One				1           10^0
+1           10^0        One             One             1           10^0
 
             Predefined constants:
 Name            Value                   Description

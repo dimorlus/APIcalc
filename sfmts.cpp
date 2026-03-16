@@ -204,7 +204,7 @@ int d2scistr (char *str, float__t d)
  };
 
  if (isNan (d))
-  return sprintf (str, "%e", d);
+  return sprintf (str, "%Le", d);
  else
   {
 #ifdef _long_double_
@@ -277,7 +277,7 @@ int normz (float__t &re, float__t &im)
  int d2nrmstr (char *str, float__t d)
 {
  if (isNan (d))
-  return sprintf (str, "%e", d);
+  return sprintf (str, "%Le", d);
  else
   {
 #ifdef _long_double_
@@ -336,7 +336,7 @@ int b2scistr (char *str, float__t d)
  };
 
  if (isNan (d))
-  return sprintf (str, "%e", d);
+  return sprintf (str, "%Le", d);
  else
   {
 #ifdef _long_double_
@@ -453,7 +453,8 @@ int wchr2str (char *str, int i)
  wchar_t wbuf[2];
  char cbuf[8];
 
- wbuf[0] = *(wchar_t *)&i;
+ //wbuf[0] = *(wchar_t *)&i;
+ memcpy (&wbuf[0], &i, sizeof (wchar_t));
  wbuf[1] = L'\0';
 
  if (i == '\t')
@@ -596,7 +597,7 @@ int d2frcstr (char *str, float__t d, int eps_order)
       return sprintf (str, "-%.0f-%d/%d", intpart, num, denum);
     }
    else
-    return sprintf (str, "%f", d);
+    return sprintf (str, "%Lf", d);
   }
  else
   {
@@ -609,7 +610,7 @@ int d2frcstr (char *str, float__t d, int eps_order)
       return sprintf (str, "-%d/%d", num, denum);
     }
    else
-    return sprintf (str, "%f", d);
+    return sprintf (str, "%Lf", d);
   }
 }
 //---------------------------------------------------------------------------

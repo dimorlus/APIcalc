@@ -934,17 +934,17 @@ float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 // }
 
 // Check if a double value is NaN (Not a Number)
-bool IsNaN (const double fVal)
-{
- return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
-         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
-}
-
-// Check if a long double value is NaN (Not a Number)
-bool IsNaNL (const long double ldVal)
-{
- return IsNaN ((double)ldVal);
-}
+//bool IsNaN (const double fVal)
+//{
+// return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
+//         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
+//}
+//
+//// Check if a long double value is NaN (Not a Number)
+//bool IsNaNL (const long double ldVal)
+//{
+// return IsNaN ((double)ldVal);
+//}
 
 // Template function to get the minimum of two values
 template <class T> T tmax (T x, T y)
@@ -1552,7 +1552,7 @@ int timezone(void) //return seconds
 }
 #else
 // Get the timezone offset in seconds
-int timezone (void) // return seconds
+int get_timezone (void) // return seconds
 {
  TIME_ZONE_INFORMATION tzi;
  DWORD tzResult    = GetTimeZoneInformation (&tzi);
@@ -1576,7 +1576,7 @@ int_t datatime (char *tstr)
    breakdown.tm_hour   = hour;
    breakdown.tm_min    = min;
    breakdown.tm_sec    = sec;
-   result              = mktime (&breakdown) - timezone ();
+   result              = mktime (&breakdown) - get_timezone ();
   }
  return (int_t)result;
 }

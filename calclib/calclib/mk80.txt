@@ -1,0 +1,134 @@
+c:/Qt/Tools/mingw810_32/bin/g++ -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -D_CALCLIB_ -I../.. -mlong-double-80 -mfpmath=387 -O2 -DNDEBUG -c ../../scalc.cpp -o gcc_release80/scalc.o
+In file included from ../../framework.h:3,
+                 from ../../pch.h:3,
+                 from ../../scalc.cpp:3:
+../../targetver.h:9:1: warning: null character(s) ignored
+  
+ ^
+../../targetver.h:10:1: warning: null character(s) ignored
+  
+ ^
+../../scalc.cpp:64: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4996) // 'function': was declared deprecated
+ 
+../../scalc.cpp:65: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4244) // 'argument': conversion from 'type1' to 'type2', possible loss of data
+ 
+../../scalc.cpp: In function 'int32_t scan_opt(char*, int&)':
+../../scalc.cpp:852:18: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+    for (i = 0; i < OPTS - 1; i++) // -1 to avoid checking NULL sentinel
+                ~~^~~~~~~~~~
+../../scalc.cpp:851:9: warning: variable 'found' set but not used [-Wunused-but-set-variable]
+    bool found = false;
+         ^~~~~
+../../scalc.cpp: In member function 'float__t calculator::Integr(const char*, t_symbol)':
+../../scalc.cpp:2697:13: warning: unused variable 'fvx' [-Wunused-variable]
+    float__t fvx   = qnan;
+             ^~~
+../../scalc.cpp: In member function 'float__t calculator::Diff(const char*)':
+../../scalc.cpp:2851:15: warning: unused variable 'fvx' [-Wunused-variable]
+      float__t fvx    = qnan;
+               ^~~
+../../scalc.cpp:2852:15: warning: unused variable 'result' [-Wunused-variable]
+      float__t result = 0;
+               ^~~~~~
+../../scalc.cpp: In member function 'float__t calculator::evaluate(char*, long long int*, float__t*)':
+../../scalc.cpp:6881:19: warning: enumeration value 'tsVARIABLE' not handled in switch [-Wswitch]
+            switch (sym->tag)
+                   ^
+../../scalc.cpp:6881:19: warning: enumeration value 'tsCONSTANT' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNCI1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsIFUNCF1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsSFUNCF1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsIFUNC1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsIFUNC2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNC1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNC2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNC3' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsPFUNCn' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsSFUNCF2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsSIFUNC1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNCM' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsFFUNCM2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsMFUNCM' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsMFUNCM2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsVFUNC1' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsVFUNC2' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsUFUNCT' not handled in switch [-Wswitch]
+../../scalc.cpp:6881:19: warning: enumeration value 'tsNUM' not handled in switch [-Wswitch]
+../../scalc.cpp:7640:16: warning: this 'else' clause does not guard... [-Wmisleading-indentation]
+                else
+                ^~~~
+../../scalc.cpp:7648:17: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'else'
+                 fflags |= pCalculator->isfflags ();
+                 ^~~~~~
+../../scalc.cpp:7514:21: warning: unused variable 'param_count' [-Wunused-variable]
+                 int param_count = 0;
+                     ^~~~~~~~~~~
+../../scalc.cpp:4948:15: warning: unused variable 'mindbl' [-Wunused-variable]
+  const double mindbl = DBL_MIN; // 2.2250738585072014e-308
+               ^~~~~~
+../../scalc.cpp: In member function 'int calculator::xscanf(char*, int, int_t&, int&)':
+../../scalc.cpp:2007:40: warning: 'hmax' may be used uninitialized in this function [-Wmaybe-uninitialized]
+    while (c = *str++, c && (res < max) && (n < hmax))
+                       ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+c:/Qt/Tools/mingw810_32/bin/g++ -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -D_CALCLIB_ -I../.. -mlong-double-80 -mfpmath=387 -O2 -DNDEBUG -c ../../sfmts.cpp -o gcc_release80/sfmts.o
+In file included from ../../framework.h:3,
+                 from ../../pch.h:3,
+                 from ../../sfmts.cpp:2:
+../../targetver.h:9:1: warning: null character(s) ignored
+  
+ ^
+../../targetver.h:10:1: warning: null character(s) ignored
+  
+ ^
+../../sfmts.cpp:42: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4996)
+ 
+../../sfmts.cpp:43: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4244)
+ 
+c:/Qt/Tools/mingw810_32/bin/g++ -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -D_CALCLIB_ -I../.. -mlong-double-80 -mfpmath=387 -O2 -DNDEBUG -c ../../sfunc.cpp -o gcc_release80/sfunc.o
+In file included from ../../framework.h:3,
+                 from ../../pch.h:3,
+                 from ../../sfunc.cpp:1:
+../../targetver.h:9:1: warning: null character(s) ignored
+  
+ ^
+../../targetver.h:10:1: warning: null character(s) ignored
+  
+ ^
+../../sfunc.cpp:41: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4996)
+ 
+../../sfunc.cpp:42: warning: ignoring #pragma warning  [-Wunknown-pragmas]
+ #pragma warning(disable : 4244)
+ 
+../../sfunc.cpp: In function 'float__t Ee(float__t, float__t)':
+../../sfunc.cpp:814:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E3)))
+                          ~~~^~~~~~~~~~~~~
+../../sfunc.cpp:820:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E6)))
+                          ~~~^~~~~~~~~~~~~
+../../sfunc.cpp:826:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E12)))
+                          ~~~^~~~~~~~~~~~~~
+../../sfunc.cpp:832:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E24)))
+                          ~~~^~~~~~~~~~~~~~
+../../sfunc.cpp:838:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E48)))
+                          ~~~^~~~~~~~~~~~~~
+../../sfunc.cpp:844:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E96)))
+                          ~~~^~~~~~~~~~~~~~
+../../sfunc.cpp:850:29: warning: comparison of integer expressions of different signedness: 'int' and 'unsigned int' [-Wsign-compare]
+        if ((nn >= 0) && (nn < sizeof (E192)))
+                          ~~~^~~~~~~~~~~~~~~
+../../sfunc.cpp: In function 'int get_timezone()':
+../../sfunc.cpp:1558:8: warning: unused variable 'tzResult' [-Wunused-variable]
+  DWORD tzResult    = GetTimeZoneInformation (&tzi);
+        ^~~~~~~~
+c:/Qt/Tools/mingw810_32/bin/g++ -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -D_CALCLIB_ -I../.. -mlong-double-80 -mfpmath=387 -O2 -DNDEBUG -c calclib.cpp -o gcc_release80/calclib.o
+c:/Qt/Tools/mingw810_32/bin/g++ -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -D_CALCLIB_ -I../.. -mlong-double-80 -mfpmath=387 -O2 -DNDEBUG -shared -static-libgcc -static-libstdc++ -o gcc_release80/calclib.dll gcc_release80/scalc.o gcc_release80/sfmts.o gcc_release80/sfunc.o gcc_release80/calclib.o calclib.def

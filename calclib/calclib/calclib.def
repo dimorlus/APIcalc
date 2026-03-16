@@ -1,0 +1,11 @@
+LIBRARY calclib
+EXPORTS
+    calc_create
+    calc_destroy
+    calc_evaluate
+    calc_print
+    calc_print_res
+    calc_addfn
+    calc_get_flags
+    calc_clr_flags
+    calc_set_syntax

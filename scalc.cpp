@@ -816,7 +816,7 @@ int32_t scan_opt (char *str, int &opts)
  struct option_def
  {
   char name[4]; // Option name
-  int flag;           // Bit mask
+  int flag;     // Bit mask
  };
 
  // All supported options definitions
@@ -1177,7 +1177,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    return n;
   }
 
- if (IsNaN (result_fval)||result_tag == tvERR)
+ if (isnan (result_fval)||result_tag == tvERR)
   {
    if (err[0])
     {
@@ -3102,7 +3102,7 @@ t_operator calculator::sqbraces (void)
       }
 
      float__t res = child->evaluate (ebuf);
-     if (IsNaN (res) || child->error ()[0])
+     if (isnan (res) || child->error ()[0])
       {
        error (child->error ());
        delete child;
@@ -3861,7 +3861,8 @@ t_operator calculator::scan (bool operand, bool percent)
           cbuf[1] = '\0';
 
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
-          ival = *(int *)&wbuf[0];
+          //ival = *(int *)&wbuf[0];
+          memcpy (&ival, &wbuf[0], 2);
           ipos += 2;
           fflags |= WCH;
          }
@@ -3926,7 +3927,8 @@ t_operator calculator::scan (bool operand, bool percent)
           cbuf[1] = '\0';
 
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
-          ival = *(int *)&wbuf[0];
+          //ival = *(int *)&wbuf[0];
+          memcpy (&ival, &wbuf[0], 2);
           ipos += 3;
           fflags |= WCH;
          }
@@ -4931,10 +4933,19 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
  bool operand            = true;
  bool percent            = false;
  int n_args              = 0;
- const __int64 i64maxdbl = 0x7feffffffffffffeull;
- const __int64 i64mindbl = 0x0010000000000001ull;
- const double maxdbl     = *(double *)&i64maxdbl;
- const double mindbl     = *(double *)&i64mindbl;
+ //const __int64 i64maxdbl = 0x7feffffffffffffeull;
+ //const __int64 i64mindbl = 0x0010000000000001ull;
+ //const double maxdbl     = *(double *)&i64maxdbl;
+ //const double mindbl     = *(double *)&i64mindbl;
+
+ //const uint64_t i64maxdbl = 0x7feffffffffffffeull;
+ //const uint64_t i64mindbl = 0x0010000000000001ull;
+ //double maxdbl, mindbl;
+ //memcpy (&maxdbl, &i64maxdbl, sizeof (double));
+ //memcpy (&mindbl, &i64mindbl, sizeof (double));
+
+ const double maxdbl = DBL_MAX; // 1.7976931348623157e+308
+ const double mindbl = DBL_MIN; // 2.2250738585072014e-308
  #ifdef __BORLANDC__
  const float__t qnan = 0.0/0.0;
  #else
@@ -5812,9 +5823,18 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            long double u = x2 * ln_r - y2 * phi;
            long double v = x2 * phi + y2 * ln_r;
 
+           #ifdef __GNUC__
+           long double exp_u       = expl (u);
+           v_stack[v_sp - 2].fval  = exp_u * cosl (v);
+           v_stack[v_sp - 2].imval = exp_u * sinl (v);
+#else
            long double exp_u       = std::expl (u);
            v_stack[v_sp - 2].fval  = exp_u * std::cosl (v);
            v_stack[v_sp - 2].imval = exp_u * std::sinl (v);
+#endif
+           //long double exp_u       = std::expl (u);
+           //v_stack[v_sp - 2].fval  = exp_u * std::cosl (v);
+           //v_stack[v_sp - 2].imval = exp_u * std::sinl (v);
            v_stack[v_sp - 2].tag   = tvCOMPLEX;
           }
          else
@@ -7574,7 +7594,7 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
                 while (*p && isspace (*p)) p++;
                 float__t res = pCalculator->evaluate ((char *)p);
 
-               if (IsNaN (res) || pCalculator->error ()[0])
+               if (isnan (res) || pCalculator->error ()[0])
                  {
                   errorf (v_stack[v_sp - n_args - 1].pos, "%s", pCalculator->error());
                   delete pCalculator;

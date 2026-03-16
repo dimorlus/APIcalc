@@ -14,7 +14,7 @@
 #endif
 
 #include <cstdlib> // for free() function
-
+#include <limits>
 
 // RW - set both by calc engine and application
 // WO - set only from application
@@ -73,8 +73,10 @@ typedef __int64 int64_t;
 typedef unsigned __int64 unsigned_t;
 #else //__BORLANDC__
 
-#define _long_double_
 #include <cstdint>
+#include <cstring> 
+
+#define _long_double_
 typedef int64_t int_t;
 typedef uint64_t unsigned_t;
 #endif //__BORLANDC__
@@ -743,9 +745,9 @@ class calculator // calculator represents the main class for the expression calc
  ~calculator (void); // Destructor to clean up resources
 };
 
-extern bool IsNaN (const double fVal); // Function to check if a double-precision floating-point
-                                       // value is NaN (Not a Number)
-extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision floating-point
+//extern bool IsNaN (const double fVal); // Function to check if a double-precision floating-point
+//                                       // value is NaN (Not a Number)
+//extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision floating-point
                                               // value is NaN (Not a Number)
 #define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
 

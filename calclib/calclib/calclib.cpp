@@ -1,5 +1,4 @@
-// calc_dll.cpp — реализация, только этот файл знает про calculator
-//#include "pch.h"
+// calc_dll.cpp — Realization, only this file knows about calculator
 #include "calclib.h"
 #include "../../scalc.h"
 

@@ -64,6 +64,7 @@
 
 #ifdef __BORLANDC__
 
+#pragma warn -8027
 #define nullptr NULL
 #define _long_double_
 typedef unsigned char uint8_t;

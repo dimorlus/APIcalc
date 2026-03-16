@@ -1546,7 +1546,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
 }
 
 #ifdef __BORLANDC__
-int timezone(void) //return seconds
+int get_timezone(void) //return seconds
 {
     return -_timezone;
 }

@@ -1,0 +1,37 @@
+Странные результаты, можешь объяснить?
+
+MSVC 64 DLL 
+
+float_sz -> 8
+
+sqrt(-1) -> 6.123233995736766e-17+1i
+
+MSVC 32 DLL
+
+float_sz -> 8
+
+sqrt(-1) -> 6.123233995736766e-17+1i
+
+GCC 64 DLL 
+
+float_sz -> 16
+
+sqrt(-1) -> -2.508278806334166e-20+1i
+
+GCC 32
+
+float_sz -> 12
+
+sqrt(-1) -> 6.123031769111886e-17+1i
+
+BCB6
+
+float_sz -> 10
+
+sqrt(-1) -> 1.897353801849633e-19+1i
+
+
+
+typedef long double float__t;
+
+addlvar ("float_sz", sizeof (float__t), sizeof (float__t));

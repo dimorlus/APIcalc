@@ -65,6 +65,14 @@ int main(void)
     printf ("Result: %s\n", result);
     printf ("Flags: 0x%X\n\n", calc_get_flags (calc));
 
+    // Тест 7: long double size
+    printf ("Test 7: sqrt(-1)\n");
+    calc_clr_flags (calc);
+    calc_evaluate (calc, "sqrt(-1)");
+    calc_print_res (calc, result, FFLOAT, 64);
+    printf ("Result: %s\n", result);
+    printf ("Flags: 0x%X\n\n", calc_get_flags (calc));
+
     // Освобождаём ресурсы
     calc_destroy(calc);
 

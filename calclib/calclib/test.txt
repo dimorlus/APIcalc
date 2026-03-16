@@ -1,0 +1,138 @@
+=== Calculator MSVC 64 DLL Test ===
+
+Test 1: 2+2*2
+Result: 6
+Flags: 0x0
+
+Test 2: 1.5k + 500
+Result: 2000
+Flags: 0x8020080
+
+Test 3: 0xFF + 0x10
+Result: 0x000000000000010f
+Flags: 0x200
+
+Test 4: sin(pi/2)
+Result: 1
+Flags: 0x0
+
+Test 5: x:=10; y:=20; x+y
+Result: 30
+Flags: 0x1
+
+Test 6: float_sz
+Result: 8
+Flags: 0x0
+
+Test 7: sqrt(-1)
+Result: 6.123233995736766e-17+1i
+Flags: 0x0
+
+
+=== All tests completed ===
+Press Enter to exit...
+
+=== Calculator GCC 64 DLL Test ===
+
+Test 1: 2+2*2
+Result: 6
+Flags: 0x0
+
+Test 2: 1.5k + 500
+Result: 2000
+Flags: 0x8020080
+
+Test 3: 0xFF + 0x10
+Result: 0x000000000000010f
+Flags: 0x200
+
+Test 4: sin(pi/2)
+Result: 1
+Flags: 0x0
+
+Test 5: x:=10; y:=20; x+y
+Result: 30
+Flags: 0x1
+
+Test 6: float_sz
+Result: 16
+Flags: 0x0
+
+Test 7: sqrt(-1)
+Result: -2.508278806334166e-20+1i
+Flags: 0x0
+
+
+=== All tests completed ===
+Press Enter to exit...
+=== Calculator MSVC 32 DLL Test ===
+
+Test 1: 2+2*2
+Result: 6
+Flags: 0x0
+
+Test 2: 1.5k + 500
+Result: 2000
+Flags: 0x8020080
+
+Test 3: 0xFF + 0x10
+Result: 0x000000000000010f
+Flags: 0x200
+
+Test 4: sin(pi/2)
+Result: 1
+Flags: 0x0
+
+Test 5: x:=10; y:=20; x+y
+Result: 30
+Flags: 0x1
+
+Test 6: float_sz
+Result: 8
+Flags: 0x0
+
+Test 7: sqrt(-1)
+Result: 6.123233995736766e-17+1i
+Flags: 0x0
+
+
+=== All tests completed ===
+Press Enter to exit...
+=== Calculator GCC 32 DLL Test ===
+
+Test 1: 2+2*2
+Result: 6
+Flags: 0x0
+
+Test 2: 1.5k + 500
+Result: 2000
+Flags: 0x8020080
+
+Test 3: 0xFF + 0x10
+Result: 0x000000000000010f
+Flags: 0x200
+
+Test 4: sin(pi/2)
+Result: 1
+Flags: 0x0
+
+Test 5: x:=10; y:=20; x+y
+Result: 30
+Flags: 0x1
+
+Test 6: float_sz
+Result: 12
+Flags: 0x0
+
+Test 7: sqrt(-1)
+Result: 6.123031769111886e-17+1i
+Flags: 0x0
+
+
+=== All tests completed ===
+Press Enter to exit...
+
+BCB6
+sqrt(-1) -> 1.897353801849633e-19+1i
+float_sz -> 10
+

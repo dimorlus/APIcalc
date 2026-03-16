@@ -50,6 +50,7 @@
 #pragma warn -8060
 #pragma warn -8066
 #pragma warn -8070
+#pragma warn -8027
 
 #include <float.h>
 int isinf_f(float x) { return x < -FLT_MAX || x > FLT_MAX; }
@@ -3862,6 +3863,7 @@ t_operator calculator::scan (bool operand, bool percent)
 
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
           //ival = *(int *)&wbuf[0];
+          ival = 0;
           memcpy (&ival, &wbuf[0], 2);
           ipos += 2;
           fflags |= WCH;
@@ -3928,6 +3930,7 @@ t_operator calculator::scan (bool operand, bool percent)
 
           MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
           //ival = *(int *)&wbuf[0];
+          ival = 0;
           memcpy (&ival, &wbuf[0], 2);
           ipos += 3;
           fflags |= WCH;

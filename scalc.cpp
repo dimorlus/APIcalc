@@ -62,8 +62,10 @@ int isinf_l(long double x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
 #define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
+#ifndef __GNUC__
 #pragma warning(disable : 4996) // 'function': was declared deprecated
 #pragma warning(disable : 4244) // 'argument': conversion from 'type1' to 'type2', possible loss of data
+#endif              //__GNUC__
 #endif //__BORLANDC__
 
 #define _WIN_
@@ -830,7 +832,7 @@ int32_t scan_opt (char *str, int &opts)
          + UNS + FRC + FRI + FRH + UTM + FLT },
   { ""   , 0 } // Sentinel
  };
- int i, j, k, l;
+ unsigned int i, j, k, l;
  char c, cc;
 
  l = 0;
@@ -936,20 +938,33 @@ int calculator::printres(char* str, int options, int binwide)
        if ((fflags & fBIN) && ((float__t)result_ival == result_fval)) return printres (str, fBIN, binwide);
        if ((float__t)result_ival == result_fval) return printres (str, IGR, binwide);
        if (fflags & STR) return printres (str, STR, binwide);
-
+#ifdef __GNUC__
+       if (result_imval == 0)
+        return sprintf (str, "%.22Lg", result_fval);
+       else
+        return sprintf (str, "%.22Lg%+.22Lg%c", result_fval, result_imval, c_imaginary);
+#else
        if (result_imval == 0)
         return sprintf (str, "%.16Lg", result_fval);
        else
         return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
+#endif
       }
     }
 
    if (options & (FFLOAT|FLT))
     {
+#ifdef __GNUC__
+     if (result_imval == 0)
+      return sprintf (str, "%.22Lg", result_fval);
+     else
+      return sprintf (str, "%.22Lg%+.22Lg%c", result_fval, result_imval, c_imaginary);
+#else
      if (result_imval == 0)
       return sprintf (str, "%.16Lg", result_fval);
      else
       return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
+#endif
     }
 
    if (options & SCI)
@@ -994,7 +1009,11 @@ int calculator::printres(char* str, int options, int binwide)
        float__t r   = hypotl (fval, imval);
        d2nrmstr (cr, r);
        dgr2str (cphi, phi);
+#ifdef __GNUC__
+       sprintf (nrmstr, "|%s|(%s) %.22Lg%+.22Lg%c", cr, cphi, fval, imval, c_imaginary);
+#else
        sprintf (nrmstr, "|%s|(%s) %.16Lg%+.16Lg%c", cr, cphi, fval, imval, c_imaginary);
+#endif
       }
      return sprintf (str, "%s", nrmstr);
     }
@@ -1248,7 +1267,11 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      if (result_imval == 0)
       {
+#ifdef __GNUC__
+       bsize += sprintf (str + bsize, "%65.22Lg f\r\n", (long double)result_fval);
+#else
        bsize += sprintf (str + bsize, "%65.16Lg f\r\n", (long double)result_fval);
+#endif
        n++;
       }
      else
@@ -1258,8 +1281,14 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        float__t phi = atan2l (result_imval, result_fval);
        float__t r   = hypotl (result_fval, result_imval);
        dgr2str (cphi, phi);
+#ifdef __GNUC__
+       sprintf (imstr, "|%.8Lg|(%s) %.22Lg%+.22Lg%c", (long double)r, cphi,
+                (long double)result_fval, (long double)result_imval, c_imaginary);
+
+#else
        sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi,
                 (long double)result_fval, (long double)result_imval, c_imaginary);
+#endif
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -1513,11 +1542,11 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += sprintf (cp, "%.6Lg rad|", (long double)result_fval);
+     cp += sprintf (cp, "%.6Lg rad|", (float__t)result_fval);
      cp += dgr2str (cp, result_fval);
-     cp += sprintf (cp, " (%.6Lg`)", (long double)result_fval * 180.0 / M_PI);
-     cp += sprintf (cp, "|%.4Lg gon", (long double)result_fval * 200.0 / M_PI);
-     cp += sprintf (cp, "|%.4Lg turn", (long double)result_fval * 0.5 / M_PI);
+     cp += sprintf (cp, " (%.6Lg`)", (float__t)result_fval * 180.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg gon", (float__t)result_fval * 200.0 / M_PI);
+     cp += sprintf (cp, "|%.4Lg turn", (float__t)result_fval * 0.5 / M_PI);
 
      bsize += sprintf (str + bsize, "%65.64s  \r\n", dgrstr);
      n++;
@@ -1528,8 +1557,8 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        (result_fval > -273.15) && (result_tag == tvFLOAT))
     {
      char frhstr[80];
-     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (long double)(result_fval + 273.15),
-              (long double)result_fval, (long double)(result_fval * 9.0 / 5.0 + 32.0));
+     sprintf (frhstr, "%.6Lg K|%.6Lg `C|%.6Lg `F", (float__t)(result_fval + 273.15),
+              (float__t)result_fval, (float__t)(result_fval * 9.0 / 5.0 + 32.0));
 
      bsize += sprintf (str + bsize, "%65.64s  \r\n", frhstr);
      n++;
@@ -1975,6 +2004,8 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
    break;
   default:
    max = 0;
+   hmax = 0;
+   omax = 0;
   }
  switch (*str)
   {
@@ -4930,7 +4961,7 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
 // Evaluate the given expression and return the result as a floating-point value. The expression is
 // parsed and evaluated according to the rules defined in the calculator class,
 // using operator precedence
-float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
+double calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
 {
  char var_name[MAXOP]; // maximum length of operator or function name
  bool operand            = true;
@@ -5830,14 +5861,11 @@ float__t calculator::evaluate (char *expression, __int64 *piVal, float__t *pimva
            long double exp_u       = expl (u);
            v_stack[v_sp - 2].fval  = exp_u * cosl (v);
            v_stack[v_sp - 2].imval = exp_u * sinl (v);
-#else
+           #else
            long double exp_u       = std::expl (u);
            v_stack[v_sp - 2].fval  = exp_u * std::cosl (v);
            v_stack[v_sp - 2].imval = exp_u * std::sinl (v);
-#endif
-           //long double exp_u       = std::expl (u);
-           //v_stack[v_sp - 2].fval  = exp_u * std::cosl (v);
-           //v_stack[v_sp - 2].imval = exp_u * std::sinl (v);
+           #endif
            v_stack[v_sp - 2].tag   = tvCOMPLEX;
           }
          else

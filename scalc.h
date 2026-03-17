@@ -706,7 +706,7 @@ class calculator // calculator represents the main class for the expression calc
  void addfvar (const char *name, float__t val); // Add a floating-point variable to the calculator
  void addivar (const char *name, int_t val); // Add an integer variable to the calculator
  void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
- void addfn (const char *name, void *func) { add (tsFFUNC1, name, func); } // Add a function to the calculator
+ void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
 
  int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
@@ -723,7 +723,7 @@ class calculator // calculator represents the main class for the expression calc
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
                           
- float__t  evaluate (char *expr, // Evaluate an expression   
+ double evaluate (char *expr, // Evaluate an expression   
            __int64 *piVal = nullptr, float__t *pimval = nullptr); 
                        
  inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 

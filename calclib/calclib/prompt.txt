@@ -30,7 +30,13 @@ float_sz -> 10
 
 sqrt(-1) -> 1.897353801849633e-19+1i
 
+Скажи, а почем сама dll у msvc 32/64 139/137КБ, а у GCC 64/32 423/643КБ
 
+CXX80    = c:/Qt/Tools/mingw810_32/bin/g++
+
+CXX      = c:/Qt/Tools/mingw1310_64/bin/g++
+
+ 
 
 typedef long double float__t;
 

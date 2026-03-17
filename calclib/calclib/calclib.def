@@ -9,3 +9,5 @@ EXPORTS
     calc_get_flags
     calc_clr_flags
     calc_set_syntax
+    calc_varlist
+    calc_error

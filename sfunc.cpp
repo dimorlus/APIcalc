@@ -38,9 +38,10 @@
 #include "sfmts.h"
 #include "sfunc.h"
 
+#ifndef __GNUC__
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
-
+#endif
 #define M_PI    3.1415926535897932384626433832795L
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
@@ -76,7 +77,7 @@ int_t Prime (int_t n)
 }
 
 // int -> float (reinterpret bits)
-float__t floatf (uint64_t i) // float: берём младшие 32 бита
+float__t floatf (uint64_t i) // float: take the lower 32 bits
 {
  uint32_t ii = (uint32_t)(0xffffffff & i); // truncate to 32
  float f;
@@ -783,10 +784,10 @@ double E192[]
 // Find the nearest standard value from E-series
 float__t Ee (float__t x, float__t y) // find standard value
 {
- if (y)
+ if (x >= 0.0 && y >= 0.0)
   {
-   int n;
-   int N          = x;
+   unsigned int n;
+   unsigned int N = x;
    double delta_n = 10;
    double delta_n1;
    double V = fabs (y);
@@ -806,7 +807,7 @@ float__t Ee (float__t x, float__t y) // find standard value
 
    if (N <= 192)
     {
-     int nn = log10 (V) * N + 0.5;
+     unsigned int nn = log10 (V) * N + 0.5;
      if (nn > N) nn = N;
      switch (N)
       {
@@ -999,269 +1000,6 @@ int fmtc (char *dst, char *fmt)
  return i;
 }
 
-#ifdef _COMMENT_
-// prn("%1.30LG",(x:=1.84467440737095536e19;(x-1)/x))
-// Format a string with the given format and arguments, and copy it to the destination buffer
-int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
-{
- char pfmt[STRBUF];
- enum ftypes
- {
-  tNone,
-  tBin,
-  tComp,
-  tChar,
-  tSpc,
-  tSci,
-  tNrm,
-  tTime,
-  tInt,
-  tFloat,
-  tFract,
-  tDeg,
-  tString,
-  tPtr
- } fmt;
- char c, cc;
- char param[16] = { 0 };
- int p          = 0;
- int i;
- int n = 0;
- bool flag;
- char *dst = dest;
- if (!sfmt) return 0;
- do
-  {
-   c    = '\0';
-   i    = 0;
-   flag = false;
-   fmt  = tNone;
-   do
-    {
-     cc = c;
-     c = pfmt[i++] = *sfmt++;
-     pfmt[i]       = '\0';
-     if (flag)
-      {
-       if (c == '%')
-        {
-         flag = false;
-         continue;
-        }
-       else if ((c == 'f') || (c == 'e') || (c == 'E') || (c == 'g') || (c == 'G'))
-        {
-         fmt = tFloat;
-         break;
-        }
-       else if ((c == 'd') || (c == 'i') || (c == 'u') || (c == 'x') || (c == 'X') || (c == 'o'))
-        {
-         fmt = tInt;
-         break;
-        }
-       else if (c == 'c')
-        {
-         fmt = tChar;
-         break;
-        }
-       else if (c == 'C')
-        {
-         fmt = tSpc;
-         break;
-        }
-       else if (c == 'D')
-        {
-         fmt = tDeg;
-         break;
-        }
-       else if (c == 'S')
-        {
-         fmt = tSci;
-         break;
-        }
-       else if (c == 'F')
-        {
-         fmt = tFract;
-         break;
-        }
-       else if (c == 'N')
-        {
-         fmt = tNrm;
-         break;
-        }
-       else if (c == 't')
-        {
-         fmt = tTime;
-         break;
-        }
-       else if (c == 'b')
-        {
-         fmt = tBin;
-         break;
-        }
-       else if (c == 'B')
-        {
-         fmt = tComp;
-         break;
-        }
-       else if (c == 's')
-        {
-         fmt = tString;
-         break;
-        }
-       else if ((c == 'n') || (c == 'p'))
-        {
-         fmt = tPtr;
-         break;
-        }
-       else
-        {
-         if (p < sizeof (param)) param[p++] = c;
-         param[p] = '\0';
-         continue;
-        }
-      }
-     else if (c == '%')
-      {
-       flag = true;
-       continue;
-      }
-    }
-   while (c && (i < STRBUF-2));
-   if (!c) sfmt--; // poit to '\0' ???
-   if (n < args)
-    {
-     switch (fmt)
-      {
-      case tNone:
-       dst += sprintf (dst, pfmt);
-       break;
-      case tPtr:
-       strcpy (dst, pfmt);
-       dst += strlen (pfmt);
-       break;
-      case tComp:
-       {
-        float__t cd = v_stack[n].get ();
-        dst += fmtc (dst, pfmt);
-        dst += b2scistr (dst, cd);
-       }
-       break;
-      case tBin:
-       {
-        __int64 bi = v_stack[n].get_int ();
-        dst += fmtc (dst, pfmt);
-        dst += b2str (dst, pfmt, bi);
-       }
-       break;
-      case tChar:
-       {
-        if (cc == 'l')
-         {
-          int ii = v_stack[n].get_int ();
-          dst += fmtc (dst, pfmt);
-          dst += wchr2str (dst, ii);
-         }
-        else
-         {
-          char ci = v_stack[n].get_int ();
-          dst += sprintf (dst, pfmt, ci);
-         }
-       }
-       break;
-      case tSpc:
-       {
-        char ci = v_stack[n].get_int ();
-        dst += fmtc (dst, pfmt);
-        dst += chr2str (dst, ci);
-       }
-       break;
-      case tSci:
-       {
-        double dd = v_stack[n].get ();
-        dst += fmtc (dst, pfmt);
-        dst += d2scistr (dst, dd);
-       }
-       break;
-      case tFract:
-       {
-        int en    = 0;
-        double dd = v_stack[n].get ();
-        dst += fmtc (dst, pfmt);
-        if (param[0]) en = atoi (param);
-        dst += d2frcstr (dst, dd, en);
-       }
-       break;
-      case tNrm:
-       {
-        double dd = v_stack[n].get ();
-        dst += fmtc (dst, pfmt);
-        dst += d2nrmstr (dst, dd);
-       }
-       break;
-      case tTime:
-       {
-        __int64 bi = v_stack[n].get_int ();
-        dst += fmtc (dst, pfmt);
-        dst += t2str (dst, bi);
-       }
-       break;
-      case tInt:
-       {
-        if (cc == 'l')
-         {
-          long li = v_stack[n].get_int ();
-          dst += sprintf (dst, pfmt, li);
-         }
-        else if (cc == 'L')
-         {
-          __int64 Li = v_stack[n].get_int ();
-          dst += sprintf (dst, pfmt, Li);
-         }
-        else if (cc == 'h')
-         {
-          short hi = v_stack[n].get_int ();
-          dst += sprintf (dst, pfmt, hi);
-         }
-        else
-         {
-          int ii = v_stack[n].get_int ();
-          dst += sprintf (dst, pfmt, ii);
-         }
-       }
-       break;
-      case tFloat:
-       {
-        if (cc == 'L')
-         {
-          long double Ld = v_stack[n].get ();
-          dst += sprintf (dst, pfmt, Ld);
-         }
-        else
-         {
-          double dd = v_stack[n].get ();
-          dst += sprintf (dst, pfmt, dd);
-         }
-       }
-       break;
-      case tDeg:
-       {
-        double dd = v_stack[n].get ();
-        dst += fmtc (dst, pfmt);
-        dst += dgr2str (dst, dd);
-       }
-       break;
-      case tString:
-       dst += sprintf (dst, pfmt, v_stack[n].sval);
-       break;
-      }
-     n++;
-    }
-   else dst += sprintf(dst, pfmt);
-  }
- while (*sfmt && (i < STRBUF) && (n <= args));
- return dst - dest;
-}
-#endif /*_COMMENT_*/
 // prn("%1.30LG",(x:=1.84467440737095536e19;(x-1)/x))
 // Format a string with the given format and arguments, and copy it to the destination buffer
 // Fixes:

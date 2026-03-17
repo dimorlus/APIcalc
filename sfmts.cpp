@@ -42,9 +42,9 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
 
-#define M_PI    3.1415926535897932384626433832795
-#define M_PI_2l 1.5707963267948966192313216916398
-#define M_E     2.7182818284590452353602874713527
+#define M_PI    3.1415926535897932384626433832795L
+#define M_PI_2l 1.5707963267948966192313216916398L
+#define M_E     2.7182818284590452353602874713527L
 #endif
 //----------------------------------
 
@@ -59,30 +59,30 @@ int ones (unsigned char *cp, int from, int to)
 //---------------------------------------------------------------------------
 
 // Check if a floating-point number is NaN (Not a Number) by examining its bit pattern
-bool isNan (float__t d)
-{
- int fr, ex;
- if (d < 0) d = -d;
- if (sizeof (d) == 80 / 8) // IEEE 754 80 bits
-  {
-   fr = ones ((unsigned char *)&d, 0, 64);
-   ex = ones ((unsigned char *)&d, 64, 80);
-   return ((ex >= 15) && fr);
-  }
- else if (sizeof (d) == 64 / 8) // IEEE 754 64 bits
-  {
-   fr = ones ((unsigned char *)&d, 0, 52);
-   ex = ones ((unsigned char *)&d, 52, 64);
-   return ((ex >= 11) && fr);
-  }
- else if (sizeof (d) == 32 / 8) // IEEE 754 32 bits
-  {
-   fr = ones ((unsigned char *)&d, 0, 23);
-   ex = ones ((unsigned char *)&d, 23, 32);
-   return ((ex >= 8) && fr);
-  }
- return false;
-}
+//bool isNan (float__t d)
+//{
+// int fr, ex;
+// if (d < 0) d = -d;
+// if (sizeof (d) == 80 / 8) // IEEE 754 80 bits
+//  {
+//   fr = ones ((unsigned char *)&d, 0, 64);
+//   ex = ones ((unsigned char *)&d, 64, 80);
+//   return ((ex >= 15) && fr);
+//  }
+// else if (sizeof (d) == 64 / 8) // IEEE 754 64 bits
+//  {
+//   fr = ones ((unsigned char *)&d, 0, 52);
+//   ex = ones ((unsigned char *)&d, 52, 64);
+//   return ((ex >= 11) && fr);
+//  }
+// else if (sizeof (d) == 32 / 8) // IEEE 754 32 bits
+//  {
+//   fr = ones ((unsigned char *)&d, 0, 23);
+//   ex = ones ((unsigned char *)&d, 23, 32);
+//   return ((ex >= 8) && fr);
+//  }
+// return false;
+//}
 //---------------------------------------------------------------------------
 
 const uint64_t dms[] = { (60ull * 60 * 60 * 24 * 36525ull),
@@ -203,7 +203,7 @@ int d2scistr (char *str, float__t d)
   quetta
  };
 
- if (isNan (d))
+ if (isnan (d))
   return sprintf (str, "%Le", d);
  else
   {
@@ -263,7 +263,7 @@ int d2scistr (char *str, float__t d)
 int normz (float__t &re, float__t &im)
  {
   float__t d = sqrt (re * re + im * im);
-  if (isNan (d)) return 0;
+  if (isnan (d)) return 0;
   if (d == 0) return 0;
   if (re != 0 && (d / fabs(re) > 1000.0)) re = 0.0;
   if (im != 0 && (d / fabs(im) > 1000.0)) im = 0.0;
@@ -276,7 +276,7 @@ int normz (float__t &re, float__t &im)
  // for 1230)
  int d2nrmstr (char *str, float__t d)
 {
- if (isNan (d))
+ if (isnan (d))
   return sprintf (str, "%Le", d);
  else
   {
@@ -335,7 +335,7 @@ int b2scistr (char *str, float__t d)
   Quetta
  };
 
- if (isNan (d))
+ if (isnan (d))
   return sprintf (str, "%Le", d);
  else
   {

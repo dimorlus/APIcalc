@@ -7,7 +7,7 @@
 "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" ccalc\ccalc_dll.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" calclib.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 copy /Y x64\Release\calclib.lib .\
-del /Q gcc_release\*.*
+::del /Q gcc_release\*.*
 c:/Qt/Tools/mingw1310_64/bin/mingw32-make.exe --makefile=make_dll.mak 2>nul
 copy /Y gcc_release\calclib.dll bin64\Release\dll\calclib.dll
 pause

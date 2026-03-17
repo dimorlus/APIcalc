@@ -31,7 +31,12 @@ else
   TARGET = $(OUTDIR)/calclib.dll
 endif
 
-LDFLAGS  = -shared -static-libgcc -static-libstdc++
+#	LDFLAGS  = -shared -static-libgcc -static-libstdc++ -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic
+#LDFLAGS = -shared -static-libgcc -static-libstdc++ \
+#          c:/Qt/Tools/mingw1310_64/x86_64-w64-mingw32/lib/libwinpthread.a
+LDFLAGS = -shared -static-libgcc -static-libstdc++ \
+          -Wl,--allow-multiple-definition \
+          -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive,-Bdynamic
 DEFFILE  = calclib.def
 
 SRCS = scalc.cpp \
@@ -52,7 +57,7 @@ $(OUTDIR):
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(DEFFILE)
 
-$(OUTDIR)/%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp $(MAKEFILE_LIST) ver.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
@@ -75,6 +80,6 @@ $(OUTDIR80):
 $(TARGET80): $(OBJS80)
 	$(CXX80) $(CXXFLAGS80) $(LDFLAGS) -o $@ $^ $(DEFFILE)
 
-$(OUTDIR80)/%.o: %.cpp
+$(OUTDIR80)/%.o: %.cpp $(MAKEFILE_LIST)
 	$(CXX80) $(CXXFLAGS80) -c $< -o $@
 .PHONY: all clean 80bit

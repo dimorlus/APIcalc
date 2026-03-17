@@ -83,3 +83,10 @@ ccalc/obj
 # !Release/fcalc.exe
 *.aps
 Setup/*.exe
+bin64/
+calc_std/
+Debug/
+obj/
+Release/
+WinApiCalc/
+x64/

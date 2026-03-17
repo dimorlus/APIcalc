@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinApiCalc", "WinApiCalc.vcxproj", "{A7C8C3F0-8B5A-4D8C-9F3E-2A1B3C4D5E6F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calc_std", "calc_std.vcxproj", "{A7C8C3F0-8B5A-4D8C-9F3E-2A1B3C4D5E6F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

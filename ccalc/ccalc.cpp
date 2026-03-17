@@ -8,7 +8,11 @@
 #include <stdio.h>
 #include <io.h>
 
+#ifdef USE_DLL
+#include "../scalc_dll.h"
+#else
 #include "../scalc.h"
+#endif
 
 char errMsg[512] = { 0 };
 
@@ -266,7 +270,7 @@ void print_options (int32_t flags, int binary_width)
  printf ("\n");
 }
 
-float__t fhelp (float__t x)
+int fhelp (int x)
 {
  switch ((int)x)
   {
@@ -349,7 +353,7 @@ void load_user_constants (calculator &calc, const char *Fname)
          if (!hasContent) continue;
 
          // Evaluate line
-         float__t result = calc.evaluate (line);
+         double result = calc.evaluate (line);
          if (isnan (result))
           {
            // Error
@@ -416,7 +420,7 @@ int main ()
 
 
  // Copy to a mutable buffer
- char expression[max_expression_length];
+ char expression[1024];
  strncpy_s (expression, sizeof (expression), cmdline, _TRUNCATE);
 
  // Remove quotes around the expression (if any)
@@ -452,7 +456,7 @@ int main ()
  // Create the calculator
  calculator calc (config.get_options ().calc_flags);
 
- calc.addfn ("help", (void *)(float__t (*) (float__t))fhelp);
+ calc.addfn ("help", (void *)(int (*) (int))fhelp);
 
  load_user_constants (calc, "consts.txt");
  load_user_constants (calc, "user.txt");
@@ -470,7 +474,7 @@ int main ()
     calc.clrfflags (); // Clear flags before processing the file
     while (fgets (line, sizeof (line), stdin))
     {
-      int_t len = strlen (line);
+      int len = (int)strlen (line);
       while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r'
                  || isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
       if (line[0] == '\0')
@@ -478,7 +482,7 @@ int main ()
         printf ("\n");
         continue; // Skip empty lines
        }
-      float__t res = calc.evaluate (line);
+      double res = calc.evaluate (line);
       calc.printres (result_str, config.get_options ().calc_flags,
                      config.get_options ().binary_width);
       if (config.get_options ().calc_flags & SRC)
@@ -504,7 +508,7 @@ if (config.get_options().filename[0])
     calc.clrfflags (); // Clear flags before processing the file
     while (fgets (line, sizeof (line), f))
      {
-      int_t len      = strlen (line);
+      int len      = (int)strlen (line);
       while (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r' || 
           isspace ((unsigned char)line[len - 1]))) line[--len] = '\0';
       if (line[0] == '\0')

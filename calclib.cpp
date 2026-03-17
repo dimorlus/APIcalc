@@ -1,6 +1,6 @@
 // calc_dll.cpp — Realization, only this file knows about calculator
 #include "calclib.h"
-#include "../../scalc.h"
+#include "scalc.h"
 
 extern "C" {
 

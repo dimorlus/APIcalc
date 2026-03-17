@@ -2,7 +2,11 @@
 
 #include "Resource.h"
 #include "framework.h"
+#ifdef USE_DLL
+#include "scalc_dll.h"
+#else
 #include "scalc.h"
+#endif
 
 // Forward declarations
 class calculator;

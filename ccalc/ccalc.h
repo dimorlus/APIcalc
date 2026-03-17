@@ -1,7 +1,11 @@
 #ifndef CCALC_H
 #define CCALC_H
 
+#ifdef USE_DLL
+#include "../scalc_dll.h"
+#else
 #include "../scalc.h"
+#endif
 
 struct option_def
 {

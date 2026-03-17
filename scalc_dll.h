@@ -1,19 +1,7 @@
-// calculator_dll.h — замена scalc.h для тех кто использует dll
+// calculator_dll.h — replacement for scalc.h for those who use dll
 #pragma once
 #include "calclib.h"
 
-/*
-calculator (m_options);
-addfn ("menu", (void *)(int (*) (int))MenuFunction);
-syntax (m_options);
-evaluate (exprBuf);
-evaluate (line);
-error ();
-printres (resultStr);
-issyntax ();
-print (printBuf, m_options, m_binWidth, &prnSize);
-varlist (textBuffer, sizeof (textBuffer) - 1, &maxlen);
-*/
 class calculator
 {
  HCALC h;
@@ -21,7 +9,7 @@ public:
  calculator (int options = PAS + SCI + UPCASE) { h = calc_create(options); }
  ~calculator () { calc_destroy(h); }
 
- // некопируемый — как и оригинал
+ // non-copyable — like the original
  calculator (const calculator&)            = delete;
  calculator& operator= (const calculator&) = delete;
 

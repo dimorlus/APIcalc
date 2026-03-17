@@ -1,4 +1,4 @@
-// calc.h — чистый C интерфейс
+// calc.h — pure C interface
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,7 +44,7 @@ extern "C" {
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define AUTO (1 << 29) // (UI) Auto output format
 
-typedef void* HCALC;  // непрозрачный handle, снаружи никто не знает что внутри
+typedef void* HCALC;  // opaque handle, no one outside knows what's inside
 
 #ifdef CALCLIB_EXPORTS
  #define CALCAPI __declspec(dllexport)
@@ -52,19 +52,6 @@ typedef void* HCALC;  // непрозрачный handle, снаружи ник�
  #define CALCAPI __declspec(dllimport)
 #endif
 
-/*
-calculator (m_options);
-~calculator();
-addfn ("menu", (void *)(int (*) (int))MenuFunction);
-syntax (m_options);
-evaluate (exprBuf);
-evaluate (line);
-error ();
-printres (resultStr);
-issyntax ();
-print (printBuf, m_options, m_binWidth, &prnSize);
-varlist (textBuffer, sizeof (textBuffer) - 1, &maxlen);
-*/
 
 CALCAPI HCALC   __cdecl calc_create (int cfg);
 CALCAPI void	__cdecl calc_destroy (HCALC h);

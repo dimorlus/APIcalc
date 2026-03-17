@@ -1,3 +1,41 @@
+17.03.26 (2.132)
++ A GUI and CLI version has been added with a calculator engine in the form of a 
+  DLL compiled with gcc using 80-bit floating point (the standard version is 64-bit). 
+  This allows for output of approximately 20 digits of a number and reduces rounding 
+  losses in complex calculations. The built-in float_sz constant indicates the size 
+  in bytes allocated for a floating-point number. In the standard version, this is 
+  8 bytes; in the DLL, it is 16 (10 bytes for the number plus padding for alignment). 
+  This applies only to the 64-bit version of the program.
+13.03.26 (2.130)
++ The CLI version now allows you to specify options in the expression comment that 
+  determine the output format when the /AUTO+ option is enabled, which determines 
+  the output format based on the input format. For example
+   L:=130u;;Inductance /ALL-/FLT+ => 0.00013
+   5`42'38";;/ALL-/DEG+ => 0.099668 rad|5`42'38" (5.71056`)|6.345 gon|0.01586 turn
+   2sin(15`42'38");;/ALL-/ENG+ => 541.6m
+   
+   ;Output Format Options:
+  /DEG+			;Degrees format
+  /ENG+         ;Engineering (Scientific) numbers format (6k8 => 6800)
+  /STR+			;String format 
+  /HEX+			;Hex format
+  /OCT+			;Octal format
+  /BIN+	  	    ;Binary format
+  /DAT+			;Date time format
+  /CHR+			;Char format
+  /WCH+			;WChar format
+  /CMP+			;Computing format
+  /UTM+			;Unix time format
+  /NRM+			;Normalized output
+  /IGR+   		;Integer output
+  /UNS+   		;Unsigned output
+  /FRC+   		;Fraction output
+  /FRI+   		;Fraction inch output
+  /FRH+         ;Temperature
+  /FLT+         ;Floating point output
+  /UTM+         ;Unix time
+  /ALL+         ;All of the above 
+   
 10.03.26 (2.129)
 + Added functions bind(x), binf(x): Reinterpret a floating-point value as an integer by 
   its raw bit pattern (the inverse of floatd/floatf). Useful for inspecting IEEE 754 

@@ -1826,10 +1826,10 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
 #ifdef _long_double_
  re = 0.5L * logl (x * x + y * y);
  //im = atan2l (y, x);
- im = (y == 0.0L && x < 0.0L) ? 3.14159265358979323846L : atan2l (y, x);
+ im = (y == 0.0L && x < 0.0L) ? M_PI : atan2l (y, x);
 #else
  re = 0.5 * log (x * x + y * y);
- im = (y == 0.0 && x < 0.0) ? 3.14159265358979324 : atan2 (y, x);
+ im = (y == 0.0 && x < 0.0) ? M_PI : atan2 (y, x);
 #endif
 }
 
@@ -1839,7 +1839,7 @@ void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
 #ifdef _long_double_
  long double r   = hypotl (x, y);
  //long double phi = atan2l (y, x);
- long double phi = (y == 0.0 && x < 0.0) ? 3.14159265358979323846L : atan2l (y, x);
+ long double phi = (y == 0.0 && x < 0.0) ? M_PI : atan2l (y, x);
  r               = sqrtl (r);
  re              = r * cosl (phi / 2);
  im              = r * sinl (phi / 2);

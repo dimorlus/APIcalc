@@ -1,3 +1,8 @@
+17.03.26 (2.133)
++ Now the precision is set automatically depending on the floating point size (16 for 
+  64 bits and 18 if larger), and can be changed during operation using the 
+  pseudo-function prec(18)
+   prec(21);pi -> 3.14159265358979323851
 17.03.26 (2.132)
 + A GUI and CLI version has been added with a calculator engine in the form of a 
   DLL compiled with gcc using 80-bit floating point (the standard version is 64-bit). 

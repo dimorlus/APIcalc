@@ -223,6 +223,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFFUNCI1,  // float f(int x)
  tsIFUNCF1,  // int f(float x)
  tsSFUNCF1,  // char* f(float x)
+ tsCIFUNC1,  // int f(this, int x)
  tsIFUNC1,   // int f(int x)
  tsIFUNC2,   // int f(int x, int y)
  tsFFUNC1,   // float f(float x)
@@ -269,6 +270,7 @@ enum t_mxDim
 #define MASK_IFUNCF1 (1<< tsIFUNCF1) // tsIFUNCF1 represents an int function with one float argument
 #define MASK_SFUNCF1 (1<< tsSFUNCF1) // tsSFUNCF1 represents a char* function with one float argument
 #define MASK_IFUNC1 (1<< tsIFUNC1) // tsIFUNC1 represents an int function with one int argument
+#define MASK_CIFUNC1 (1<< tsCIFUNC1) // tsCIFUNC1 represents an int function with one int argument and a this pointer
 #define MASK_IFUNC2 (1<< tsIFUNC2) // tsIFUNC2 represents an int function with two int arguments
 #define MASK_FFUNC1 (1<< tsFFUNC1) // tsFFUNC1 represents a float function with one float argument
 #define MASK_FFUNC2 (1<< tsFFUNC2) // tsFFUNC2 represents a float function with two float arguments
@@ -290,7 +292,7 @@ enum t_mxDim
                     | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
                     | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
                     | MASK_FFUNCM |MASK_FFUNCM2 | MASK_MFUNCM | MASK_MFUNCM2 \
-                    | MASK_VFUNC2 | MASK_UFUNCT| MASK_FFUNCI1)
+                    | MASK_VFUNC2 | MASK_UFUNCT| MASK_FFUNCI1 | MASK_CIFUNC1 )
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -540,6 +542,7 @@ class calculator // calculator represents the main class for the expression calc
  char err[80]; // Error message buffer
  char mxerr[80]; // Error message buffer for matrix operations
  int errpos;   // Error position
+ int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
  bool expr;    // Expression flag
  char sres[STRBUF]; // String result buffer
@@ -709,6 +712,8 @@ class calculator // calculator represents the main class for the expression calc
  void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
 
+ void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
+ int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
  int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
             int *size = nullptr); // options and binary width,
  

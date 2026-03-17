@@ -122,6 +122,8 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  memset (v_stack, 0, sizeof v_stack);
 
  //mem_list_head = nullptr;
+ if (sizeof (float__t) == 8) fprec = 16;
+ else fprec = 18;
 
  c_imaginary = 'i';
  // randomize();
@@ -194,6 +196,14 @@ float__t Size (void *clc, value &M)
  return ((calculator *)clc)->mxDim (M, mxSize);
 }
 
+int SetPrecision (void *clc, int prec)
+{
+ calculator *calc = (calculator *)clc;
+ if (prec < 0) prec = 0;
+ if (prec > 24) prec = 24;
+ calc->set_fprec (prec);
+ return prec;
+}
 
 void calculator::AddPredefined (void)
 {
@@ -221,6 +231,8 @@ void calculator::AddPredefined (void)
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
+
+ add (tsCIFUNC1, "prec", (void *)SetPrecision);
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
@@ -938,33 +950,20 @@ int calculator::printres(char* str, int options, int binwide)
        if ((fflags & fBIN) && ((float__t)result_ival == result_fval)) return printres (str, fBIN, binwide);
        if ((float__t)result_ival == result_fval) return printres (str, IGR, binwide);
        if (fflags & STR) return printres (str, STR, binwide);
-#ifdef __GNUC__
        if (result_imval == 0)
-        return sprintf (str, "%.22Lg", result_fval);
+        return sprintf (str, "%.*Lg", fprec, result_fval);
        else
-        return sprintf (str, "%.22Lg%+.22Lg%c", result_fval, result_imval, c_imaginary);
-#else
-       if (result_imval == 0)
-        return sprintf (str, "%.16Lg", result_fval);
-       else
-        return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
-#endif
+        return sprintf (str, "%.*Lg%+.*Lg%c", fprec, result_fval, fprec, result_imval, c_imaginary);
+
       }
     }
 
    if (options & (FFLOAT|FLT))
     {
-#ifdef __GNUC__
      if (result_imval == 0)
-      return sprintf (str, "%.22Lg", result_fval);
+      return sprintf (str, "%.*Lg", fprec, result_fval);
      else
-      return sprintf (str, "%.22Lg%+.22Lg%c", result_fval, result_imval, c_imaginary);
-#else
-     if (result_imval == 0)
-      return sprintf (str, "%.16Lg", result_fval);
-     else
-      return sprintf (str, "%.16Lg%+.16Lg%c", result_fval, result_imval, c_imaginary);
-#endif
+      return sprintf (str, "%.*Lg%+.*Lg%c", fprec, result_fval, fprec, result_imval, c_imaginary);
     }
 
    if (options & SCI)
@@ -1009,11 +1008,7 @@ int calculator::printres(char* str, int options, int binwide)
        float__t r   = hypotl (fval, imval);
        d2nrmstr (cr, r);
        dgr2str (cphi, phi);
-#ifdef __GNUC__
-       sprintf (nrmstr, "|%s|(%s) %.22Lg%+.22Lg%c", cr, cphi, fval, imval, c_imaginary);
-#else
-       sprintf (nrmstr, "|%s|(%s) %.16Lg%+.16Lg%c", cr, cphi, fval, imval, c_imaginary);
-#endif
+       sprintf (nrmstr, "|%s|(%s) %.*Lg%+.*Lg%c", cr, cphi, fprec, fval, fprec, imval, c_imaginary);
       }
      return sprintf (str, "%s", nrmstr);
     }
@@ -1267,11 +1262,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      if (result_imval == 0)
       {
-#ifdef __GNUC__
-       bsize += sprintf (str + bsize, "%65.22Lg f\r\n", (long double)result_fval);
-#else
-       bsize += sprintf (str + bsize, "%65.16Lg f\r\n", (long double)result_fval);
-#endif
+       bsize += sprintf (str + bsize, "%65.*Lg f\r\n", fprec, (long double)result_fval);
        n++;
       }
      else
@@ -1281,14 +1272,8 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        float__t phi = atan2l (result_imval, result_fval);
        float__t r   = hypotl (result_fval, result_imval);
        dgr2str (cphi, phi);
-#ifdef __GNUC__
-       sprintf (imstr, "|%.8Lg|(%s) %.22Lg%+.22Lg%c", (long double)r, cphi,
-                (long double)result_fval, (long double)result_imval, c_imaginary);
-
-#else
-       sprintf (imstr, "|%.8Lg|(%s) %.16Lg%+.16Lg%c", (long double)r, cphi,
-                (long double)result_fval, (long double)result_imval, c_imaginary);
-#endif
+       sprintf (imstr, "|%.8Lg|(%s) %.*Lg%+.*Lg%c", (long double)r, cphi,
+                fprec, (long double)result_fval, fprec, (long double)result_imval, c_imaginary);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -7442,6 +7427,37 @@ double calculator::evaluate (char *expression, __int64 *piVal, float__t *pimval)
                 v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
               }
              v_sp -= n_args;
+             break;
+
+            case tsCIFUNC1: // int f(this, int x)
+             if (n_args != 1)
+              {
+               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (((v_stack[v_sp - 1].tag == tvERR)))
+              {
+               error (v_stack[v_sp - 1].pos, "Undefined operand");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (v_stack[v_sp - 1].tag == tvSTR)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal string operation");
+               result_fval = qnan;
+               return qnan;
+              }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               result_fval = qnan;
+               return qnan;
+              }
+             v_stack[v_sp - 2].ival
+                 = (*(int_t (*) (void *, int_t))sym->func) ((void *)this, v_stack[v_sp - 1].get_int ());
+             v_stack[v_sp - 2].tag = tvINT;
+             v_sp -= 1;
              break;
 
             case tsSFUNCF2: // float f(str, x) (const())

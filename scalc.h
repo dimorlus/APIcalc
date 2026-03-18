@@ -77,16 +77,160 @@ typedef unsigned __int64 unsigned_t;
 #include <cstdint>
 #include <cstring> 
 
+#ifdef __GNUC__
+#define _float128_
+#else
 #define _long_double_
+#endif
 typedef int64_t int_t;
 typedef uint64_t unsigned_t;
 #endif //__BORLANDC__
 
+#ifdef _float128_
+#include <quadmath.h>
+#endif
+
+
+#ifdef _float128_
+inline bool isnan(__float128 x) { return isnanq(x); }
+inline bool isinf(__float128 x) { return isinfq(x); }
+inline bool isfinite(__float128 x) { return finiteq(x); }
+#endif
+
+#ifdef _float128_
+#define MAX_PREC 34
+namespace std
+{
+inline __float128 pow (__float128 x, __float128 y)
+{
+ return powq (x, y);
+}
+inline __float128 fmod (__float128 x, __float128 y)
+{
+ return fmodq (x, y);
+}
+inline __float128 hypot (__float128 x, __float128 y)
+{
+ return hypotq (x, y);
+}
+inline __float128 atan2 (__float128 y, __float128 x)
+{
+ return atan2q (y, x);
+}
+inline __float128 sin (__float128 x)
+{
+ return sinq (x);
+}
+inline __float128 cos (__float128 x)
+{
+ return cosq (x);
+}
+inline __float128 tan (__float128 x)
+{
+ return tanq (x);
+}
+inline __float128 asin (__float128 x)
+{
+ return asinq (x);
+}
+inline __float128 acos (__float128 x)
+{
+ return acosq (x);
+}
+inline __float128 atan (__float128 x)
+{
+ return atanq (x);
+}
+inline __float128 sinh (__float128 x)
+{
+ return sinhq (x);
+}
+inline __float128 cosh (__float128 x)
+{
+ return coshq (x);
+}
+inline __float128 tanh (__float128 x)
+{
+ return tanhq (x);
+}
+inline __float128 sqrt (__float128 x)
+{
+ return sqrtq (x);
+}
+inline __float128 exp (__float128 x)
+{
+ return expq (x);
+}
+inline __float128 log (__float128 x)
+{
+ return logq (x);
+}
+inline __float128 log10 (__float128 x)
+{
+ return log10q (x);
+}
+inline __float128 fabs (__float128 x)
+{
+ return fabsq (x);
+}
+inline __float128 floor (__float128 x)
+{
+ return floorq (x);
+}
+inline __float128 ceil (__float128 x)
+{
+ return ceilq (x);
+}
+inline __float128 round (__float128 x)
+{
+ return roundq (x);
+}
+inline bool isnan (__float128 x)
+{
+ return isnanq (x);
+}
+inline bool isinf (__float128 x)
+{
+ return isinfq (x);
+}
+inline bool isfinite (__float128 x)
+{
+ return finiteq (x);
+}
+}
+// and in the global namespace too — for calls without std::
+using std::acos;
+using std::asin;
+using std::atan;
+using std::atan2;
+using std::ceil;
+using std::cos;
+using std::cosh;
+using std::exp;
+using std::fabs;
+using std::floor;
+using std::fmod;
+using std::hypot;
+using std::log;
+using std::log10;
+using std::pow;
+using std::round;
+using std::sin;
+using std::sinh;
+using std::sqrt;
+using std::tan;
+using std::tanh;
+#endif
 #ifdef _long_double_
 typedef long double float__t;
-#else
-typedef double float__t;
+#define MAX_PREC 20
 #endif
+
+#ifdef _float128_
+typedef __float128 float__t;
+#define fabsl  fabsq
+#endif
+
 
 #ifdef __BORLANDC__
 const float__t qnan = 0.0 / 0.0;
@@ -755,6 +899,6 @@ class calculator // calculator represents the main class for the expression calc
 //                                       // value is NaN (Not a Number)
 //extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision floating-point
                                               // value is NaN (Not a Number)
-#define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
+//#define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
 
 #endif // scalcH

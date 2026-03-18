@@ -6,12 +6,13 @@
 #   make 80bit    — build x86 32-bit with true 80-bit long double
 
 CXX80    = c:/Qt/Tools/mingw810_32/bin/g++
-#	CXX      = c:/Qt/Tools/mingw810_64/bin/g++
 CXX      = c:/Qt/Tools/mingw1310_64/bin/g++
+
+#	CXX      = c:/Qt/Tools/mingw810_64/bin/g++
 #	CXX      = c:/Qt/Tools/mingw1120_64/bin/g++
 #	CXX      = g++
-CXXFLAGS = -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -I../..
-
+# CXXFLAGS = -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -I../..
+CXXFLAGS = -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -I../.. -O2 -mfpmath=387 -mlong-double-80 -D__USE_MINGW_ANSI_STDIO=1 -D__USE_MINGW_ANSI_STDIO=1
 ifdef DEBUG
   CXXFLAGS += -g -O0 -D_DEBUG
   OUTDIR    = gcc_debug
@@ -37,6 +38,7 @@ endif
 LDFLAGS = -shared -static-libgcc -static-libstdc++ \
           -Wl,--allow-multiple-definition \
           -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive,-Bdynamic
+ 
 DEFFILE  = calclib.def
 
 SRCS = scalc.cpp \

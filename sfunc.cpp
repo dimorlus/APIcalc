@@ -37,15 +37,52 @@
 #include "scalc.h"
 #include "sfmts.h"
 #include "sfunc.h"
+#endif
+
+#ifdef _float128_
+#define _long_double_
+typedef __float128 float__t;
+#define sinl   sinq
+#define cosl   cosq
+#define tanl   tanq
+#define asinl  asinq
+#define acosl  acosq
+#define atanl  atanq
+#define atan2l atan2q
+#define sinhl  sinhq
+#define coshl  coshq
+#define tanhl  tanhq
+#define sqrtl  sqrtq
+#define expl   expq
+#define logl   logq
+#define log10l log10q
+#define powl   powq
+#define fabsl fabsq
+#define floorl floorq
+#define ceill  ceilq
+#define roundl roundq
+#define hypotl hypotq
+#define fmodl  fmodq
+#define isnanl isnanq
+#define isinfl isinfq
+#endif // _float128_
 
 #ifndef __GNUC__
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
-#endif
+#endif // __GNUC__
+
+#ifdef _float128_
+#define M_PI    3.14159265358979323846264338327950288Q
+#define M_PI_2l 1.5707963267948966192313216916398Q
+#define M_E     2.71828182845904523536028747135266250Q
+#define PHI     1.61803398874989484820458683436563812Q //(1+sqrt(5))/2 golden ratio
+#else
 #define M_PI    3.1415926535897932384626433832795L
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
-#endif
+#define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
+#endif  //_float128_
 
 int_t To_int (int_t val)
 {
@@ -85,7 +122,7 @@ float__t floatf (uint64_t i) // float: take the lower 32 bits
  return (float__t)f;
 }
 
-float__t floatd (uint64_t i) // double / long double (64 бит)
+float__t floatd (uint64_t i) // double / float__t (64 бит)
 {
  double d;
  memcpy (&d, &i, 8);
@@ -610,7 +647,11 @@ float__t Frac (float__t x)
 {
  float__t d;
 #ifdef _long_double_
+#ifdef _float128_
+ return modfq (x, &d);
+#else
  return modfl (x, &d);
+#endif /*_float128_*/
 #else
  return modf (x, &d);
 #endif
@@ -934,17 +975,28 @@ float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 //   return 0;             /* error has been handled */
 // }
 
-// Check if a double value is NaN (Not a Number)
+ //Check if a double value is NaN (Not a Number)
 //bool IsNaN (const double fVal)
 //{
 // return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
 //         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
 //}
 //
-//// Check if a long double value is NaN (Not a Number)
-//bool IsNaNL (const long double ldVal)
+//// Check if a float__t value is NaN (Not a Number)
+//bool IsNaNL (const float__t ldVal)
 //{
 // return IsNaN ((double)ldVal);
+//}
+//
+//bool IsInf (const double fVal)
+//{
+// return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
+//         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) == 0x0000000000000000ull));
+//}
+
+//bool isnan (float__t f)
+//{
+// return std::isnan (f);
 //}
 
 // Template function to get the minimum of two values
@@ -1156,7 +1208,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        break;
       case tComp:
        {
-        float__t cd = v_stack[n].get ();
+        double cd = (double)v_stack[n].get ();
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += b2scistr (dst, cd);
        }
@@ -1192,7 +1244,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        break;
       case tSci:
        {
-        float__t dd = v_stack[n].get (); // use float__t, not double
+        double dd = (double)v_stack[n].get (); 
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += d2scistr (dst, dd);
        }
@@ -1200,7 +1252,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
       case tFract:
        {
         int en      = 0;
-        float__t dd = v_stack[n].get (); // use float__t, not double
+        double dd = (double)v_stack[n].get (); 
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (param[0]) en = atoi (param);
         if (dst < dst_end) dst += d2frcstr (dst, dd, en);
@@ -1208,7 +1260,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        break;
       case tNrm:
        {
-        float__t dd = v_stack[n].get (); // use float__t, not double
+        double dd = (double)v_stack[n].get (); // use double, not float__t
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += d2nrmstr (dst, dd);
        }
@@ -1248,7 +1300,7 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        {
         if (cc == 'L')
          {
-          long double Ld = (long double)v_stack[n].get ();
+          double Ld = (double)v_stack[n].get ();
           if (dst < dst_end) dst += sprintf (dst, pfmt, Ld);
          }
         else
@@ -1669,7 +1721,7 @@ void CosC (float__t x, float__t y, float__t &re, float__t &im)
 void ExpC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
- long double ex = expl (x);
+ float__t ex = expl (x);
  re             = ex * cosl (y);
  im             = ex * sinl (y);
 #else
@@ -1837,9 +1889,9 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
 void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
 {
 #ifdef _long_double_
- long double r   = hypotl (x, y);
- //long double phi = atan2l (y, x);
- long double phi = (y == 0.0 && x < 0.0) ? M_PI : atan2l (y, x);
+ float__t r   = hypotl (x, y);
+ //float__t phi = atan2l (y, x);
+ float__t phi = (y == 0.0 && x < 0.0) ? M_PI : atan2l (y, x);
  r               = sqrtl (r);
  re              = r * cosl (phi / 2);
  im              = r * sinl (phi / 2);

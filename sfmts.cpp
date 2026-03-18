@@ -31,6 +31,10 @@
 #include "scalc.h"
 #include "sfmts.h"
 
+#ifdef _float128_
+#define _long_double_
+#endif
+
 //---------------------------------------------------------------------------
 #ifdef __BORLANDC__
 #pragma package(smart_init)
@@ -39,8 +43,10 @@
 #pragma warn -8004 // assigned a value that is never used
 
 #else
+#ifndef __GNUC__
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4244)
+#endif
 
 #define M_PI    3.1415926535897932384626433832795L
 #define M_PI_2l 1.5707963267948966192313216916398L
@@ -174,7 +180,7 @@ int b2str (char *str, const char *fmt, uint64_t b)
 }
 //---------------------------------------------------------------------------
 // Convert a floating-point number to a string with SI prefixes (e.g., "1.23k" for 1230)
-int d2scistr (char *str, float__t d)
+int d2scistr (char *str, double d)
 {
  const char csci[]
      = { 'q', 'r', 'y', 'z', 'a', 'f', 'p', 'n', 'u', 'm', ' ', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q' };
@@ -204,14 +210,10 @@ int d2scistr (char *str, float__t d)
  };
 
  if (isnan (d))
-  return sprintf (str, "%Le", d);
+  return sprintf (str, "%e", d);
  else
   {
-#ifdef _long_double_
-   float__t dd = fabsl (d);
-#else  /*_long_double_*/
-   float__t dd = fabs (d);
-#endif /*_long_double_*/
+   double dd = fabs (d);
    int rng = empty;
    if (dd > 0)
     {
@@ -240,29 +242,20 @@ int d2scistr (char *str, float__t d)
       }
     }
    if (d < 0) dd = -dd;
-#ifdef _long_double_
-   if (rng == empty)
-    return sprintf (str, "%.4Lg", d);
-   else if ((rng >= quecto) && (rng <= quetta))
-    return sprintf (str, "%.4Lg%c", dd, csci[rng]);
-   else
-    return sprintf (str, "%.2Le", d);
-#else  /*_long_double_*/
    if (rng == empty)
     return sprintf (str, "%.4g", d);
    else if ((rng >= yocto) && (rng <= yotta))
     return sprintf (str, "%.4g%c", dd, csci[rng]);
    else
     return sprintf (str, "%.2e", d);
-#endif /*_long_double_*/
   }
 }
 //---------------------------------------------------------------------------
 // Normalize a complex number represented by its real and imaginary parts to prevent overflow in
 // calculations
-int normz (float__t &re, float__t &im)
+int normz (double &re, double &im)
  {
-  float__t d = sqrt (re * re + im * im);
+  double d = sqrt (re * re + im * im);
   if (isnan (d)) return 0;
   if (d == 0) return 0;
   if (re != 0 && (d / fabs(re) > 1000.0)) re = 0.0;
@@ -274,17 +267,13 @@ int normz (float__t &re, float__t &im)
 //---------------------------------------------------------------------------
  // Convert a floating-point number to a string with normalized scientific notation (e.g., "1.23e3"
  // for 1230)
- int d2nrmstr (char *str, float__t d)
+ int d2nrmstr (char *str, double d)
 {
  if (isnan (d))
-  return sprintf (str, "%Le", d);
+  return sprintf (str, "%e", d);
  else
   {
-#ifdef _long_double_
-   float__t dd = fabsl (d);
-#else  /*_long_double_*/
-   float__t dd = fabs (d);
-#endif /*_long_double_*/
+   double dd = fabs (d);
    int rng = 0;
    if (dd > 0)
     {
@@ -302,22 +291,15 @@ int normz (float__t &re, float__t &im)
       }
     }
    if (d < 0) dd = -dd;
-#ifdef _long_double_
-   if (rng == 0)
-    return sprintf (str, "%.4Lg", d);
-   else
-    return sprintf (str, "%.4Lge%i", dd, rng * 3);
-#else  /*_long_double_*/
    if (rng == 0)
     return sprintf (str, "%.4g", d);
    else
     return sprintf (str, "%.4ge%i", dd, rng * 3);
-#endif /*_long_double_*/
   }
 }
 //---------------------------------------------------------------------------
 // Convert a floating-point number to a string with binary prefixes (e.g., "1.23KiB" for 1258 bytes)
-int b2scistr (char *str, float__t d)
+int b2scistr (char *str, double d)
 {
  const char csci_plus[] = { ' ', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y', 'R', 'Q'};
  enum
@@ -336,14 +318,10 @@ int b2scistr (char *str, float__t d)
  };
 
  if (isnan (d))
-  return sprintf (str, "%Le", d);
+  return sprintf (str, "%e", d);
  else
   {
-#ifdef _long_double_
-   float__t dd = fabsl (d);
-#else  /*_long_double_*/
-   float__t dd = fabs (d);
-#endif /*_long_double_*/
+   double dd = fabs (d);
    int rng = Empty;
    if (dd > 0)
     {
@@ -355,23 +333,16 @@ int b2scistr (char *str, float__t d)
     }
    if (d < 0) dd = -dd;
 
-#ifdef _long_double_
-   if ((rng > Empty) && (rng <= Quetta))
-    return sprintf (str, "%.4Lg%ciB", dd, csci_plus[rng]);
-   else
-    return sprintf (str, "%.4Lg", d);
-#else  /*_long_double_*/
    if ((rng > Empty) && (rng <= Quetta))
     return sprintf (str, "%.4g%ciB", dd, csci_plus[rng]);
    else
     return sprintf (str, "%.4g", d);
-#endif /*_long_double_*/
   }
 }
 //---------------------------------------------------------------------------
 // Convert an angle in radians to a string in degrees, minutes, and seconds format (e.g.,
 // "30°15'20"")
-int dgr2str (char *str, float__t radians)
+int dgr2str (char *str, double radians)
 {
  const char cdeg[] = { 96, 39, 34 }; // ` ' "
  double degrees    = radians * 180.0 / M_PI;
@@ -572,7 +543,7 @@ void fraction (double val, double eps, int &num, int &denum)
 }
 //---------------------------------------------------------------------------
 // Convert a floating-point number to a string representation as a fraction
-int d2frcstr (char *str, float__t d, int eps_order)
+int d2frcstr (char *str, double d, int eps_order)
 {
  int num, denum;
  double val;
@@ -597,7 +568,7 @@ int d2frcstr (char *str, float__t d, int eps_order)
       return sprintf (str, "-%.0f-%d/%d", intpart, num, denum);
     }
    else
-    return sprintf (str, "%Lf", d);
+    return sprintf (str, "%f", d);
   }
  else
   {
@@ -610,7 +581,7 @@ int d2frcstr (char *str, float__t d, int eps_order)
       return sprintf (str, "-%d/%d", num, denum);
     }
    else
-    return sprintf (str, "%Lf", d);
+    return sprintf (str, "%f", d);
   }
 }
 //---------------------------------------------------------------------------

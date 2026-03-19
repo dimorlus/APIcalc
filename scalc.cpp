@@ -723,11 +723,11 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
  if (result_tag == tvMATRIX)
   {
    // compute Frobenius norm (RMS) for threshold
-   float__t norm = 0.0L;
+   double norm = 0.0L;
    int nm = res_rows * res_cols;
-   for (int i = 0; i < nm; i++) norm += res_mval[i] * res_mval[i];
-   norm = sqrtl (norm);
-   float__t threshold = norm * 1e-9L;
+   for (int i = 0; i < nm; i++) norm += (double)res_mval[i] * (double)res_mval[i];
+   norm = sqrt (norm);
+   double threshold = norm * 1e-9L;
 
    char mstr[80];
    for (int i = 0; i < res_rows; i++)
@@ -740,8 +740,8 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
        for (int j = 0; j < res_cols; j++)
         {
          char elemstr[20];
-         float__t elem = res_mval[i * res_cols + j];
-         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
+         double elem = (double)res_mval[i * res_cols + j];
+         if (fabs (elem) < threshold) elem = 0.0L; // suppress numerical noise
          d2scistr (elemstr, elem);
          if (j < res_cols - 1) cp += sprintf (cp, "%6.6s, ", elemstr);
          else
@@ -761,8 +761,8 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
        for (int j = 0; j < res_cols; j++)
         {
          char elemstr[20];
-         float__t elem = res_mval[i * res_cols + j];
-         if (fabsl (elem) < threshold) elem = 0.0L; // suppress numerical noise
+         double elem = (double)res_mval[i * res_cols + j];
+         if (fabs (elem) < threshold) elem = 0.0L; // suppress numerical noise
          d2scistr (elemstr, elem);
          if (j < res_cols - 1)
           cp += sprintf (cp, "%s, ", elemstr);

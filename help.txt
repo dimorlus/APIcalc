@@ -34,7 +34,7 @@ abs(x|z)                 (1,3)  Absolute value|Complex
 
 sin(x|z)                  (1)   Sin of radian|Complex
 sing(x)                         Sin of degrees
-cos(x|z                   (1)   Cos of radian|Complex
+cos(x|z)                  (1)   Cos of radian|Complex
 cosg(x)                         Cos of degrees
 tg(x|z), tan(x|z)         (1)   Tangent of radian|Complex
 tgg(x)                          Tangent of degrees
@@ -146,6 +146,7 @@ binwide(32)                     Set binary width
 menu(0)                         Hide (0) or show (1) menu.
 vars(0)                         Show variables list
 font(x)                         Set calculator font size.
+prec(n)                         Set decimal digits in output.
 (1) Also for complex operands.
 (3) Also for matrix operands.
 
@@ -173,7 +174,7 @@ Normalized          1.8e6                       1800000
 Scientific          1.8M                        1800000
 Engineering         1k33                        1330
 Computing           1KB, 1KiB                   1024
-Fractional          3+9/64                      Pi
+Fractional          3+9/64                      Pi (best rational approximation)
 Gauge               #28, awg(28)                0.3211265489669004
 Inch                2"5                         0.0635=2+1/2 "
 Complex             3+4i, 3+j4, j4+3            3+4i
@@ -404,6 +405,14 @@ maxu32, maxuint     Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
 max64, maxlong      Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
 maxu64, maxulong    Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
 
+Floating point parameters
+fp_dig              Significant decimal digits
+fp_mant_dig         Bits in the mantissa
+fp_max_exp          Maximum exponent (base 2)
+fp_max_10_exp       Maximum exponent (base 10)
+fp_sz               Size of floating point number in bits
+int_sz              Size of integer number in bits
+ 
 System:
 version             Calculator version
 timezone            System timezone offset in hours

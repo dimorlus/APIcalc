@@ -238,8 +238,6 @@ const float__t qnan = 0.0 / 0.0;
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
 #endif
 
-//#define _STATIC_MM_
-
 class value;
 class symbol;
 
@@ -510,7 +508,6 @@ class value // value represents a value in the calculator, which can be an integ
  }
 
  inline float__t get () { return tag == tvINT ? (float__t)ival : fval; }
- inline float__t get_dbl () { return tag == tvINT ? (double)ival : (double)fval; }
  inline int_t get_int () { return tag == tvINT ? ival : (int_t)fval; }
  inline char *get_str () { return tag == tvSTR ? sval : nullptr; }
  inline bool is_scalar () { return tag == tvINT || tag == tvFLOAT; }
@@ -669,14 +666,7 @@ class calculator // calculator represents the main class for the expression calc
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
-
- #ifdef _STATIC_MM_
- void *mem_list[max_stack_size]; // Memory for temporary strings used during expression parsing and
-                            // evaluation
- int mem_idx;               // Index for the mem array  to manage temporary string memory
-#else //_STATIC_MM_
  MemList mem_list; // Memory list for temporary strings used during expression parsing and evaluation
-#endif //_STATIC_MM_
 
  int v_sp; // Value stack pointer
  int o_sp; // Operator stack pointer
@@ -706,18 +696,6 @@ class calculator // calculator represents the main class for the expression calc
  void copy_symbols (symbol **symtab = nullptr, int mask = MASK_DEFAULT);
 
  //memory management
-#ifdef _STATIC_MM_
- void init_mem_list (); // Initialize the mem array and mem_idx for memory management of temporary
-                        // strings and matrix values
- int search_mem (void *mem); // Search for a pointer in the mem array and return its index, or -1 if not found
-  void *register_mem (void *mem); // Register a pointer in the mem array and return the registered pointer
- void *unregister_mem (void *mem); // Unregister a pointer from the mem array by setting its entry to nullptr
-  void clear_mem_list (void); // Clear all strings in the string list
- void *sf_alloc (int size); // Allocate memory for a temporary string and register it in the mem
-                            // array for memory management
- void sf_free (void *dat);  // Free memory for a temporary string and unregister it from the mem
-                            // array for memory management
-#else //_STATIC_MM_
  void init_mem_list () { mem_list.init_mem_list (); }
  int search_mem (void *mem) { return mem_list.search_mem (mem); }
  void *register_mem (void *mem) { return mem_list.register_mem (mem); }
@@ -725,7 +703,6 @@ class calculator // calculator represents the main class for the expression calc
  void *sf_alloc (int size) { return mem_list.sf_alloc (size); }
  void sf_free (void *dat) { mem_list.sf_free (dat); }
  void clear_mem_list (void) { mem_list.free_all (); }
-#endif //_STATIC_MM_
 
  // sybol table management
  void save_vars_mem (void); // Save the current variables in the hash table to the mem array for
@@ -771,10 +748,10 @@ class calculator // calculator represents the main class for the expression calc
  int xscanf (char *str, int len, int_t &ival, int &nn); // Scan a hexadecimal number from the string 
                                                //with a specified length and store it in ival, with nn being 
                                                // the number of characters processed
- float__t dstrtod (char *s, char **endptr); // Convert a string to a double-precision floating-point number
- float__t tstrtod (char *s, char **endptr); // Convert a string to a long double-precision floating-point number
- void engineering (float__t mul, char *&fpos, float__t &fval); // Perform engineering notation conversion
- void scientific (char *&fpos, float__t &fval); // Perform scientific notation conversion
+ double dstrtod (char *s, char **endptr); // Convert a string to a double-precision floating-point number
+ double tstrtod (char *s, char **endptr); // Convert a string to a double-precision floating-point number
+ void engineering (double mul, char *&fpos, double &fval); // Perform engineering notation conversion
+ void scientific (char *&fpos, double &fval); // Perform scientific notation conversion
  
  bool set_op (); // Assign a value to a variable
  void clear_v_stack (); // Clear the value stack
@@ -872,9 +849,11 @@ class calculator // calculator represents the main class for the expression calc
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
                           
- double evaluate (char *expr, // Evaluate an expression   
+ float__t evaluate_f (char *expr, // Evaluate an expression   
            __int64 *piVal = nullptr, float__t *pimval = nullptr); 
-                       
+
+  double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
+
  inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 
                                                        //expression  
  int64_t get_int_res () { return result_ival; };
@@ -890,15 +869,19 @@ class calculator // calculator represents the main class for the expression calc
   res.mval = res_mval;
   return res;
  };
-
-
  ~calculator (void); // Destructor to clean up resources
 };
 
-//extern bool IsNaN (const double fVal); // Function to check if a double-precision floating-point
-//                                       // value is NaN (Not a Number)
-//extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision floating-point
-                                              // value is NaN (Not a Number)
-//#define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to itself
+#ifdef __BORLANDC__
+ extern bool IsNaN (const double fVal); // Function to check if a double-precision floating-point
+                                        // value is NaN (Not a Number)
+ extern bool IsNaNL (const long double ldVal); // Function to check if a long double-precision
+                                              // floating-point
+//  value is NaN (Not a Number)
+// #define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to
+                             // itself
+#define isnan(a) IsNaNL (a)
+#endif
+
 
 #endif // scalcH

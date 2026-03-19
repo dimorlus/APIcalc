@@ -88,8 +88,10 @@ float__t Factorial(float__t x);
 float__t Farenheit (float__t x);
 float__t Cmp (float__t x, float__t y, float__t prec);
 float__t Vout(float__t Vref, float__t Rh, float__t Rl);
-//bool IsNaN(const double fVal);
-//bool IsNaNL(const long double ldVal);
+#ifdef __BORLANDC__
+bool IsNaN(const double fVal);
+bool IsNaNL(const long double ldVal);
+#endif //__BORLANDC__
 int_t fprn(char *dest, char *sfmt, int args, value* v_stack);
 int_t datatime(char *tstr);
 

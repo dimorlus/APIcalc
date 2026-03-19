@@ -1,7 +1,7 @@
 ; -- TesterAll.iss --
 [Setup]
 AppName=fcalc
-AppVerName=fcalc (Scientific formula calculator) 2.132 files
+AppVerName=fcalc (Scientific formula calculator) 2.142 files
 VersionInfoVersion=1.0.0.0
 AppContact=http://dorlov.no-ip.com
 DefaultDirName={autopf}\FC
@@ -36,12 +36,12 @@ Name: "ccalc\dll";   Description: "DLL CLI (higher precision)";       Types: dll
 Source: ".\bin64\Release\std\fcalc.exe";         DestDir: "{app}"; DestName: "fcalc.exe"; Components: program\std; Flags: ignoreversion
 ; GUI DLL version
 Source: ".\bin64\Release\dll\fcalc.exe";         DestDir: "{app}"; DestName: "fcalc.exe"; Components: program\dll; Flags: ignoreversion
-Source: ".\bin64\Release\dll\calclib.dll";        DestDir: "{app}";                        Components: program\dll; Flags: ignoreversion
+Source: ".\gcc_release\calclib.dll";             DestDir: "{app}";                        Components: program\dll; Flags: ignoreversion
 ; CLI Standard version
 Source: ".\ccalc\bin\x64\Release\ccalc.exe";     DestDir: "{app}"; DestName: "ccalc.exe"; Components: ccalc\std;   Flags: ignoreversion
 ; CLI DLL version
 Source: ".\ccalc\bin\x64\Release\dll\ccalc.exe"; DestDir: "{app}"; DestName: "ccalc.exe"; Components: ccalc\dll;   Flags: ignoreversion
-Source: ".\bin64\Release\dll\calclib.dll";        DestDir: "{app}";                        Components: ccalc\dll;   Flags: ignoreversion skipifsourcedoesntexist
+Source: ".\gcc_release\calclib.dll";             DestDir: "{app}";                        Components: ccalc\dll;   Flags: ignoreversion skipifsourcedoesntexist
 
 Source: ".\fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify

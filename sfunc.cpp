@@ -970,71 +970,32 @@ float__t Vout (float__t Vref, float__t Rh, float__t Rl)
  return Vref * (Rh + Rl) / Rl;
 }
 
-// int __CRTDECL _matherr(struct _exception *e)
-//{
-//   return 0;             /* error has been handled */
-// }
-
- //Check if a double value is NaN (Not a Number)
-//bool IsNaN (const double fVal)
-//{
-// return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
-//         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
-//}
-//
-//// Check if a float__t value is NaN (Not a Number)
-//bool IsNaNL (const float__t ldVal)
-//{
-// return IsNaN ((double)ldVal);
-//}
-//
-//bool IsInf (const double fVal)
-//{
-// return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
-//         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) == 0x0000000000000000ull));
-//}
-
-//bool isnan (float__t f)
-//{
-// return std::isnan (f);
-//}
-
-// Template function to get the minimum of two values
-template <class T> T tmax (T x, T y)
-{
- return (x > y) ? x : y;
-}
-
-
-template <class T> bool tisnan (T f)
-{
- T _nan = (T)0.0 / (T)0.0;
- return 0 == memcmp ((void *)&f, (void *)&_nan, sizeof (T));
-}
-
-/*
-bool IsNaNL(const long float__t ldVal)
-{
- typedef union
+#ifdef __BORLANDC__
+int __CRTDECL _matherr(struct _exception *e)
  {
-  long float__t ld;
-  short w[5];
-  struct Parts
-   {
-    __int64 frac;
-    short exp;
-   }parts;
- } *pextrec;
+   return 0;             /* error has been handled */
+ }
 
- short e = (*(pextrec)&ldVal).parts.exp;
- __int64 f = (*(pextrec)&ldVal).parts.frac;
- short ww[5];
- for(int i=0; i<5; i++) ww[i] = (*(pextrec)&ldVal).w[i];
- return IsNaN((float__t)ldVal);
- return (((*(pextrec)&ldVal).parts.exp & 0x7fff == 0x7fff) &&
-         ((*(pextrec)&ldVal).parts.frac & 0x7FFFFFFFFFFFFFFFi64 != 0));
+//Check if a double value is NaN (Not a Number)
+bool IsNaN (const double fVal)
+{
+ return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
+         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) != 0x0000000000000000ull));
 }
-*/
+
+// Check if a float__t value is NaN (Not a Number)
+bool IsNaNL (const float__t ldVal)
+{
+ return IsNaN ((double)ldVal);
+}
+
+bool IsInf (const double fVal)
+{
+ return (((*(__int64 *)(&fVal) & 0x7FF0000000000000ull) == 0x7FF0000000000000ull)
+         && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) == 0x0000000000000000ull));
+}
+#endif
+
 
 // Extract the format string from a printf-style format and copy it to the destination buffer
 int fmtc (char *dst, char *fmt)

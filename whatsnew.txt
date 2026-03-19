@@ -1,4 +1,4 @@
-19.03.26 (2.142)
+19.03.26 (2.143)
 + The DLL version has been completely rewritten. It now implements calculations with 
   quadruple precision (__float128), approximately 34 significant digits. 
 + Constants indicating the parameters of floating-precision numbers have been added.

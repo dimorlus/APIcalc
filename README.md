@@ -16,6 +16,10 @@ This calculator project on WinAPI (VS2022) is based on my old project on Cbuilde
 //-------------------------------------------------------------------*--------* 
 ```
 
+## Important note. 
+
+The DLL version is only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
+
 ## Two Versions Available
 
 ### 📊 GUI Version (WinApiCalc / fcalc.exe)

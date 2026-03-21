@@ -1,3 +1,13 @@
+21.03.26 (2.145)
++ Now the sove and calc operators also works with complex numbers (it also searches for complex roots).
+	solve(x^2+x+1, x:=0+1i)->|1|(120`0'0") -0.4999999999999997+0.8660254037844385i
+	solve(x^2+x+1, x:=0-1i)->|1|(-119`-59'-59") -0.4999999999999997-0.8660254037844385i
+	solve(exp(x)-i, x:=0+1i)->|1.5707963|(90`0'0") 6.716738115361317e-17+1.570796326794896i
+	solve(exp(x)+1, x:=0+3i)->|3.1415927|(90`0'0") 1.834914962530226e-16+3.141592653589793i
+	solve(sin(x)-2, x:=0+1i)->|2.0498242|(39`58'35") 1.570796326794897+1.316957896924818i
+	solve(cos(x), x:=0+1i)->Solution diverged
+	solve(cos(x), x:=1+0.1i)->Solution diverged
+	solve(cos(x), x:=1.5+0i)->1.570796326794897 
 19.03.26 (2.143)
 + The DLL version has been completely rewritten. It now implements calculations with 
   quadruple precision (__float128), approximately 34 significant digits. 

@@ -760,6 +760,7 @@ class calculator // calculator represents the main class for the expression calc
  // Math for solving, integrating and differentiating
  float__t Solve (const char *expr, t_symbol tag); // Solve an equation given by the expression and
                                                   // return the solution as a floating-point value
+ bool Solve_c (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res);
 
  float__t gkEval (calculator *pCalc, char *sexpr, // Evaluate a function for a given expression, variable name, and
                   const char *svar, float__t x); // variable value, and return the result as a floating-point value
@@ -827,7 +828,8 @@ class calculator // calculator represents the main class for the expression calc
 
  void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
- void addfvar (const char *name, float__t val); // Add a floating-point variable to the calculator
+ // Add or assign if existing a floating-point or complex variable to the calculator
+ void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);                
  void addivar (const char *name, int_t val); // Add an integer variable to the calculator
  void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
  void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator

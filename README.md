@@ -238,11 +238,12 @@ x %% y  →  (x / y - 1) * 100
   
   This function is built-in (previously defined in `consts.txt`).
 
-* **solve(expr, var:=estimate)**: Find root of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
+* **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
   
   ```
   solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
   solve(x*(2x+2)-2, x:=-1)  →  -1.61803398875005
+  solve(z^2+z+1, z:=0+1i)   →  |1|(120`0'0") -0.4999999999999997+0.8660254037844385i
   ```
   
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
@@ -251,6 +252,7 @@ x %% y  →  (x / y - 1) * 100
   
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
+  calc(z^2+z+1, z:=0+1i)   →  |1|(90`0'0") 0+1i
   ```
 
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:

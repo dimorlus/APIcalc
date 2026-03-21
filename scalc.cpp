@@ -50,6 +50,10 @@
 #ifdef __BORLANDC__
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
+#define M_PId   3.1415926535897932384626433832795L
+#define M_PI_2d 1.5707963267948966192313216916398
+#define M_Ed    2.71828182845904523536028747135266250
+#define PHId    1.61803398874989484820458683436563812 //(1+sqrt(5))/2 golden ratio
 #pragma warn -8004 // assigned a value that is never used
 #pragma warn -8080
 #pragma warn -8060
@@ -1787,13 +1791,14 @@ void calculator::addfconst (const char *name, float__t val)
 }
 
 // Add a float variable to the hash table
-void calculator::addfvar (const char *name, float__t val)
+void calculator::addfvar (const char *name, float__t fval, float__t imval)
 {
  symbol *sp   = add (tsVARIABLE, name);
- sp->val.tag  = tvFLOAT;
- sp->val.fval = val;
+ sp->val.fval = fval;
  sp->val.ival  = 0;
- sp->val.imval = ((float__t)0.0L);
+ sp->val.imval = imval;
+ if (imval == (float__t)0.0L) sp->val.tag  = tvFLOAT;
+ else sp->val.tag  = tvCOMPLEX;
  sp->val.sval  = nullptr;
  sp->val.mcols = 0;
  sp->val.mrows = 0;
@@ -2367,6 +2372,180 @@ void calculator::mxerror (const char *msg)
  strcpy (mxerr, msg);
 }
 
+// Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
+// expr -> x(2x+2)-2, x:=0
+// Complex support
+bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
+{
+ if (!expr || !*expr)
+  {
+   errorf (0, "empty expression");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
+ char *p = sexpr;
+ while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
+ *p = '\0';
+ if (*expr != ',')
+  {
+   errorf (pos, "solve: missing initial estimate");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+ expr++;
+ p = svar;
+ while (*expr && (p - svar < STRBUF - 1)) *p++ = *expr++;
+ *p = '\0';
+
+ calculator *pC = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+ if (!pC)
+  {
+   errorf (pos, "Out of memory");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ pC->evaluate_f (svar);
+ if (pC->err[0])
+  {
+   errorf (pos, "%s", pC->err);
+   delete pC;
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+ strcpy (nvar, (char *)pC->get_last_var ());
+ float__t xr = pC->get_re_res ();
+ float__t xi = pC->get_im_res (); // 0 if real initial approximation
+
+ if (tag == tsCALC)
+  {
+   pC->addfvar (nvar, xr, xi);
+   pC->evaluate_f (sexpr);
+   if (pC->err[0])
+    {
+     errorf (pos, "%s", pC->err);
+     delete pC;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+   re_res  = pC->get_re_res ();
+   im_res = pC->get_im_res ();
+   fflags |= pC->isfflags ();
+   delete pC;
+   return true;
+  }
+
+#ifdef _float128_
+ const float__t tol   = 1e-28Q;
+ const float__t delta = 1.5e-17Q;
+#else
+ const float__t tol   = 1e-12L;
+ const float__t delta = 1.5e-10L;
+#endif
+ const int maxIter = 100;
+ bool converged    = false;
+
+ for (int i = 0; i < maxIter; i++)
+  {
+   // f(z)
+   pC->addfvar (nvar, xr, xi);
+   pC->evaluate_f (sexpr);
+   if (pC->err[0])
+    {
+     errorf (pos, "%s", pC->err);
+     delete pC;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+   float__t fr = pC->get_re_res ();
+   float__t fi = pC->get_im_res ();
+
+   // |f(z)|
+   float__t fabs_f = sqrt (fr * fr + fi * fi);
+   if (fabs_f < tol)
+    {
+     converged = true;
+     break;
+    }
+
+   // step d = max(|z|, 1) * delta
+#ifdef _float128_
+   float__t d = fmaxq (sqrtq (xr * xr + xi * xi), 1.0Q) * delta;
+#else
+   float__t d = fmaxl (sqrtl (xr * xr + xi * xi), 1.0L) * delta;
+#endif
+   // f(z+d) and f(z-d)  on the real axis
+   pC->addfvar (nvar, xr + d, xi);
+   pC->evaluate_f (sexpr);
+   float__t fpr_r = pC->get_re_res (), fpr_i = pC->get_im_res ();
+
+   pC->addfvar (nvar, xr - d, xi);
+   pC->evaluate_f (sexpr);
+   float__t fmr_r = pC->get_re_res (), fmr_i = pC->get_im_res ();
+
+   // f'(z) ≈ (f(z+d) - f(z-d)) / (2d)
+   float__t fp_r = (fpr_r - fmr_r) / ((float__t)2.0 * d);
+   float__t fp_i = (fpr_i - fmr_i) / ((float__t)2.0 * d);
+
+   float__t fp2 = fp_r * fp_r + fp_i * fp_i;
+   if (fp2 < tol * tol)
+    {
+     xr += d * (float__t)1000.0;
+     continue;
+    }
+
+   // Newton step: z -= f(z)/f'(z)
+   float__t step_r = (fr * fp_r + fi * fp_i) / fp2;
+   float__t step_i = (fi * fp_r - fr * fp_i) / fp2;
+   float__t xr_new = xr - step_r;
+   float__t xi_new = xi - step_i;
+
+   if (isnan (xr_new) || isnan (xi_new))
+    {
+     errorf (pos, "Solution diverged");
+     delete pC;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+
+   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = sqrt (xr * xr + xi * xi);
+   if (step_abs < tol * ((float__t)1.0 + z_abs))
+    {
+     xr        = xr_new;
+     xi        = xi_new;
+     converged = true;
+     break;
+    }
+
+   xr = xr_new;
+   xi = xi_new;
+  }
+
+ fflags |= pC->isfflags ();
+ delete pC;
+
+ if (!converged)
+  {
+   errorf (pos, "No solution found");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ re_res  = xr;
+ im_res = xi;
+ return true;
+}
 
 // Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
 // expr -> x(2x+2)-2, x:=0
@@ -6886,11 +7065,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (v_stack[v_sp - 1].tag == tvSOLVE)
                {
                 const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                float__t result = Solve (equation, sym->tag);
-                v_stack[v_sp - 2].fval = result;
-                v_stack[v_sp - 2].imval = 0.0;
-                v_stack[v_sp - 2].ival  = (int_t)result;
-                v_stack[v_sp - 2].tag  = tvFLOAT;
+                Solve_c (equation, sym->tag, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+                if (v_stack[v_sp - 2].imval == (float_t)0.0L) v_stack[v_sp - 2].tag = tvFLOAT;
+                else v_stack[v_sp - 2].tag = tvCOMPLEX;
+                //float__t result = Solve (equation, sym->tag);
+                //v_stack[v_sp - 2].fval = result;
+                //v_stack[v_sp - 2].imval = 0.0;
+                //v_stack[v_sp - 2].ival  = (int_t)result;
+                //v_stack[v_sp - 2].tag  = tvFLOAT;
                 v_sp -= 1;
                }
               else

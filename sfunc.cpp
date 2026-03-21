@@ -19,6 +19,8 @@
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define nullptr NULL
 #pragma warn -8066
+#pragma warn -8017
+#pragma warn -8008
 
 #else
 #include <cstdint>
@@ -971,10 +973,10 @@ float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 }
 
 #ifdef __BORLANDC__
-int __CRTDECL _matherr(struct _exception *e)
- {
-   return 0;             /* error has been handled */
- }
+//int __CRTDECL _matherr(struct _exception *e)
+// {
+//   return 0;             /* error has been handled */
+// }
 
 //Check if a double value is NaN (Not a Number)
 bool IsNaN (const double fVal)

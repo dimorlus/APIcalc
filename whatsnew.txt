@@ -1,4 +1,4 @@
-21.03.26 (2.145)
+22.03.26 (2.146)
 + Now the sove and calc operators also works with complex numbers (it also searches for complex roots).
 	solve(x^2+x+1, x:=0+1i)->|1|(120`0'0") -0.4999999999999997+0.8660254037844385i
 	solve(x^2+x+1, x:=0-1i)->|1|(-119`-59'-59") -0.4999999999999997-0.8660254037844385i

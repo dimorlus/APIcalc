@@ -758,9 +758,9 @@ class calculator // calculator represents the main class for the expression calc
  void addim (void); // Add imaginary unit
  
  // Math for solving, integrating and differentiating
- float__t Solve (const char *expr, t_symbol tag); // Solve an equation given by the expression and
-                                                  // return the solution as a floating-point value
- bool Solve_c (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res);
+ 
+ // Solve an equation given by the expression and return the solution as a complex value
+ bool Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res);
 
  float__t gkEval (calculator *pCalc, char *sexpr, // Evaluate a function for a given expression, variable name, and
                   const char *svar, float__t x); // variable value, and return the result as a floating-point value

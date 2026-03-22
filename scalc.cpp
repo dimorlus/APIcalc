@@ -2375,7 +2375,8 @@ void calculator::mxerror (const char *msg)
 // Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
 // expr -> x(2x+2)-2, x:=0
 // Complex support
-bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
+//#define _DAMPED_
+bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
 {
  if (!expr || !*expr)
   {
@@ -2480,7 +2481,12 @@ bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, floa
 #ifdef _float128_
    float__t d = fmaxq (sqrtq (xr * xr + xi * xi), 1.0Q) * delta;
 #else
+#ifdef __BORLANDC__
+     float__t ax    = sqrtl (xr * xr + xi * xi);
+     float__t d = ((ax > 1.0L) ? ax : 1.0L) * delta;
+#else
    float__t d = fmaxl (sqrtl (xr * xr + xi * xi), 1.0L) * delta;
+#endif
 #endif
    // f(z+d) and f(z-d)  on the real axis
    pC->addfvar (nvar, xr + d, xi);
@@ -2517,6 +2523,20 @@ bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, floa
      return false;
     }
 
+#ifdef _DAMPED_
+   // damped Newton:
+   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = sqrt (xr * xr + xi * xi);
+   float__t max_step = ((float__t)1.0 + z_abs) * (float__t)10.0; // step limit
+   if (step_abs > max_step)
+    {
+     float__t scale = max_step / step_abs;
+     step_r *= scale;
+     step_i *= scale;
+    }
+   xr = xr - step_r;
+   xi = xi - step_i;
+#else
    float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
    float__t z_abs    = sqrt (xr * xr + xi * xi);
    if (step_abs < tol * ((float__t)1.0 + z_abs))
@@ -2526,9 +2546,9 @@ bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, floa
      converged = true;
      break;
     }
-
    xr = xr_new;
    xi = xi_new;
+#endif
   }
 
  fflags |= pC->isfflags ();
@@ -2545,177 +2565,6 @@ bool calculator::Solve_c (const char *expr, t_symbol tag, float__t &re_res, floa
  re_res  = xr;
  im_res = xi;
  return true;
-}
-
-// Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
-// expr -> x(2x+2)-2, x:=0
-float__t calculator::Solve (const char *expr, t_symbol tag)
-{
- if (expr && *expr)
-  {
-   char sexpr[STRBUF];
-   char svar[STRBUF];
-   char nvar[MAXOP];
-   char *p = sexpr;
-   float__t vvar = qnan;
-   // copy all characters from expr (i. e. 'x(2x+2)-2' ) to sexpr until the first ',' or 
-   // end of string is reached or  buffer limit is reached
-   while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1))
-    {
-     *p++ = *expr++;
-    }
-   *p = '\0'; // null-terminate the string
-   // copy the remaining characters (i. e. 'x:=0' ) from expr to svar (if any) until the end 
-   // of string is reached or buffer limit is reached
-   if (*expr == ',')
-    {
-     expr++;
-     p = svar;
-     while (*expr && (p - svar < STRBUF - 1))
-      {
-       *p++ = *expr++;
-      }
-     *p = '\0'; // null-terminate the string
-    }
-
-   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
-   if (!pCalculator)
-    {
-     errorf (pos, "Out of memory");
-     result_fval = qnan;
-     return qnan;
-    }
-
-   float__t result = pCalculator->evaluate_f (svar);
-   if (isnan(result) || pCalculator->err[0])
-    {
-     errorf (pos, "%s", pCalculator->err);
-     delete pCalculator;
-     result_fval = qnan;
-     return qnan;
-    }
-
-   char *lv = (char *)pCalculator->get_last_var ();
-   strcpy (nvar, lv);
-   vvar = result;
-
-   if (tag == tsSOLVE)
-   {
-    // Newton-Raphson iteration
-    const float__t tol = 1e-12L;
-    const int maxIter  = 100;
-    float__t x         = vvar;
-    bool converged     = false;
-
-    for (int i = 0; i < maxIter; i++)
-     {
-      pCalculator->addfvar (nvar, x);
-      float__t fx = pCalculator->evaluate_f (sexpr);
-      if (isnan (fx) || pCalculator->err[0])
-       {
-        errorf (pos, "%s", pCalculator->err[0] ? pCalculator->err : "Error evaluating expression");
-        result_fval = qnan;
-        delete pCalculator;
-        return qnan;
-       }
-
-      if (fabsl (fx) < tol)
-       {
-        converged = true;
-        vvar      = x;
-        break;
-       }
-
-      // Numerical derivative (central difference)
-      #ifdef __BORLANDC__
-      float__t ax = fabsl (x);
-      float__t delta = ((ax>1.0L)?ax:1.0L) * 1.5e-10L; // slightly smaller for float__t
-      #else
-      float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L; // slightly smaller for float__t
-      #endif
-      pCalculator->addfvar (nvar, x + delta);
-      float__t fxp = pCalculator->evaluate_f (sexpr);
-      if (isnan (fxp) || pCalculator->err[0])
-       {
-        errorf (pos, "%s", pCalculator->err);
-        result_fval = qnan;
-        delete pCalculator;
-        return qnan;
-       }
-
-      pCalculator->addfvar (nvar, x - delta);
-      float__t fxm = pCalculator->evaluate_f (sexpr);
-      if (isnan (fxm) || pCalculator->err[0])
-       {
-        errorf (pos, "%s", pCalculator->err);
-        result_fval = qnan;
-        delete pCalculator;
-        return qnan;
-       }
-
-      float__t fp = (fxp - fxm) / (2.0L * delta);
-      if (fabsl (fp) < tol)
-       {
-        // Derivative is close to zero - try to shift
-        x += delta * 1000.0L;
-        continue;
-       }
-
-      float__t x_new = x - fx / fp;
-      #ifdef __BORLANDC__
-      if (isnan (x_new) || isinf_l (x_new))
-      #else
-      if (isnan (x_new) || isinf (x_new))
-      #endif
-       {
-        errorf (pos, "Solution diverged");
-        result_fval = qnan;
-        delete pCalculator;
-        return qnan;
-       }
-
-      if (fabsl (x_new - x) < tol * (1.0L + fabsl (x)))
-       {
-        converged = true;
-        vvar      = x_new;
-        break;
-       }
-
-      x = x_new;
-     }
-
-    if (!converged)
-     {
-      errorf (pos, "No solution found");
-      result_fval = qnan;
-      delete pCalculator;
-      return qnan;
-     }
-   }
-   if (tag == tsCALC)
-   {
-    pCalculator->addfvar (nvar, vvar);
-    float__t fx = pCalculator->evaluate_f (sexpr);
-    if (isnan (fx) || pCalculator->err[0])
-     {
-      errorf (pos, "%s", pCalculator->err[0] ? pCalculator->err : "Error evaluating expression");
-      result_fval = qnan;
-      delete pCalculator;
-      return qnan;
-     }
-    vvar = fx;
-   }
-
-   fflags |= pCalculator->isfflags ();
-   delete pCalculator;
-   return vvar;
-  }
- else
-  {
-   errorf (0, "empty expression");
-   return qnan;
-  }
- return qnan;
 }
 
 
@@ -7065,14 +6914,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (v_stack[v_sp - 1].tag == tvSOLVE)
                {
                 const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                Solve_c (equation, sym->tag, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
-                if (v_stack[v_sp - 2].imval == (float_t)0.0L) v_stack[v_sp - 2].tag = tvFLOAT;
+                Solve (equation, sym->tag, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+                if (v_stack[v_sp - 2].imval == (float__t)0.0L) v_stack[v_sp - 2].tag = tvFLOAT;
                 else v_stack[v_sp - 2].tag = tvCOMPLEX;
-                //float__t result = Solve (equation, sym->tag);
-                //v_stack[v_sp - 2].fval = result;
-                //v_stack[v_sp - 2].imval = 0.0;
-                //v_stack[v_sp - 2].ival  = (int_t)result;
-                //v_stack[v_sp - 2].tag  = tvFLOAT;
                 v_sp -= 1;
                }
               else

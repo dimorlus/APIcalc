@@ -369,6 +369,15 @@ void calculator::AddPredefined (void)
  add (tsFFUNCI1, "floatd", (void *)floatd);
 
  // Mathematical constants
+ #ifdef __BORLANDC__
+ addfconst ("pi", M_PId);
+ addfconst ("e", M_Ed);
+ addfconst ("phi", PHId);
+ addfconst ("tau", 2.0 * M_PId);
+ addfconst ("turn", 2.0 * M_PId);
+ addfconst ("gon", M_PId / 200.0);
+ addfconst ("deg", M_PId / 180.0);
+ #else
  addfconst ("pi", M_PI);
  addfconst ("e", M_E);
  addfconst ("phi", PHI);
@@ -376,7 +385,7 @@ void calculator::AddPredefined (void)
  addfconst ("turn", 2.0 * M_PI);
  addfconst ("gon", M_PI / 200.0);
  addfconst ("deg", M_PI / 180.0);
-
+ #endif
  // Other imperial constants
  // Distance and length
  addfconst ("inch", 0.0254);     // Inch (m)
@@ -1245,7 +1254,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
        quadmath_snprintf (fbuf, (size_t)80, "%.*Qg", fprec, result_fval);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", fbuf);
        #else
-       bsize += sprintf (str + bsize, "%65.*g f\r\n", fprec, result_fval);
+       bsize += sprintf (str + bsize, "%65.*Lg f\r\n", fprec, result_fval);
        #endif
        n++;
       }

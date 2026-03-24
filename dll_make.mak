@@ -50,6 +50,9 @@ LDFLAGS = -shared -static-libgcc -static-libstdc++ \
           -Wl,-Bstatic -lquadmath -Wl,-Bdynamic
 
 DEFFILE  = calclib.def
+WINDRES  = c:/MinGW64-gcc14/mingw64/bin/windres.exe
+RCFILE   = calclib.rc
+RCOBJ    = $(OUTDIR)/calclib_res.o
 
 SRCS = scalc.cpp sfmts.cpp sfunc.cpp calclib.cpp
 OBJS = $(patsubst %.cpp,$(OUTDIR)/%.o,$(notdir $(SRCS)))
@@ -61,11 +64,14 @@ all: $(OUTDIR) $(TARGET)
 $(OUTDIR):
 	mkdir $(OUTDIR)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(RCOBJ)
 	$(CXX) $(CXXFLAGS) $^ $(DEFFILE) $(LDFLAGS) -o $@
 
 $(OUTDIR)/%.o: %.cpp $(MAKEFILE_LIST) ver.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(RCOBJ): $(RCFILE) ver.h
+	$(WINDRES) -I../.. $(RCFILE) -o $@
 
 clean:
 	del /Q $(OUTDIR)\*.o $(OUTDIR)\*.dll 2>nul || rm -f $(OUTDIR)/*.o $(OUTDIR)/*.dll

@@ -225,7 +225,7 @@ BEGIN
         BLOCK "040904b0" // Язык: English (US), Кодировка: Unicode
         BEGIN
             VALUE "CompanyName", "Home"
-            VALUE "FileDescription", "Scientific formula calculator"
+            VALUE "FileDescription", "Scientific formula calculator GUI"
             VALUE "FileVersion", VER_STRING
             VALUE "InternalName", "Fcalc"
             VALUE "LegalCopyright", "Copyright (C) Dmitry Orlov 2008, 2026"

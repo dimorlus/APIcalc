@@ -1710,7 +1710,7 @@ float__t calculator::AddConst (const char *name, float__t val)
  if (find (name))
   {
    error ("constant redefinition");
-   return std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;;
+   return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;;
   } 
  addfconst (name, val);
  return val;

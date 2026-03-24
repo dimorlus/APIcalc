@@ -250,7 +250,7 @@ float__t Erfc (float__t x)
 // Generate a random float in the range [0, x)
 float__t Random (float__t x)
 {
- return rand () * x / RAND_MAX;
+ return (float__t)(rand () * x / RAND_MAX);
 }
 
 // Arctangent: atan(x)
@@ -287,7 +287,7 @@ float__t Atan2l (float__t x, float__t y)
 #endif
   }
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
+  return qnan; //std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
 }
 
 // Trigonometric functions
@@ -372,7 +372,7 @@ float__t Pow (float__t x, float__t y)
 #endif
   }
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; //std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 }
 
 // Square root function
@@ -383,12 +383,12 @@ float__t Sqrt (float__t x)
  if (x >= 0)
   return sqrtl (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
 #else
  if (x >= 0)
   return sqrt (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -405,12 +405,12 @@ float__t Acos (float__t x)
  if ((x <= 1) && (x >= -1))
   return acosl (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;
 #else
  if ((x <= 1) && (x >= -1))
   return acos (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -421,12 +421,12 @@ float__t Asin (float__t x)
  if ((x <= 1) && (x >= -1))
   return asinl (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else
  if ((x <= 1) && (x >= -1))
   return asin (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -437,12 +437,12 @@ float__t Log (float__t x)
  if (x > 0)
   return logl (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else
  if (x > 0)
   return log (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -453,12 +453,12 @@ float__t Lg (float__t x)
  if (x > 0)
   return log10l (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else
  if (x > 0)
   return log10 (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -469,12 +469,12 @@ float__t NP (float__t x)
  if (x > 0)
   return 20 * log10l (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else
  if (x > 0)
   return 20 * log10 (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -485,12 +485,12 @@ float__t DB (float__t x)
  if (x > 0)
   return 10 * log10l (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else
  if (x > 0)
   return 10 * log10 (x);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif
 }
 
@@ -501,12 +501,12 @@ float__t Ctanh (float__t x) // cth
  if (x > 0)
   return (expl (2 * x) + 1) / (expl (2 * x) - 1);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #else                                                 /*_long_double_*/
  if (x > 0)
   return (exp (2 * x) + 1) / (exp (2 * x) - 1);
  else
-  return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #endif                                                /*_long_double_*/
 }
 
@@ -533,7 +533,8 @@ float__t Arch (float__t x)
 // Inverse hyperbolic tangent function
 float__t Arth (float__t x)
 {
- if ((x == 1) || (x == -1)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if ((x == 1) || (x == -1))
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #ifdef _long_double_
  return logl ((1 + x) / (1 - x)) / 2;
 #else  /*_long_double_*/
@@ -544,7 +545,8 @@ float__t Arth (float__t x)
 // Inverse hyperbolic cotangent function
 float__t Arcth (float__t x)
 {
- if ((x == 1) || (x == -1)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if ((x == 1) || (x == -1))
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #ifdef _long_double_
  return logl ((x + 1) / (x - 1)) / 2;
 #else  /*_long_double_*/
@@ -607,7 +609,7 @@ float__t Tgg (float__t x)
 // Cotangent function with degree input
 float__t Ctgg (float__t x)
 {
- if (x == 0) return std::numeric_limits<float__t>::infinity (); // 1/0.0;
+ if (x == 0) return qnan; // std::numeric_limits<float__t>::infinity (); // 1/0.0;
 #ifdef _long_double_
  return 1 / tanl (M_PI * x / 180);
 #else  /*_long_double_*/
@@ -618,7 +620,7 @@ float__t Ctgg (float__t x)
 // Cotangent function
 float__t Ctg (float__t x)
 {
- if (x == 0) return std::numeric_limits<float__t>::infinity (); // 1/0.0;
+ if (x == 0) return qnan; // std::numeric_limits<float__t>::infinity (); // 1/0.0;
 #ifdef _long_double_
  return 1 / tanl (x);
 #else  /*_long_double_*/
@@ -674,7 +676,7 @@ float__t Max (float__t x, float__t y)
 // Get the base-2 logarithm of a float
 float__t Log2 (float__t x)
 {
- if (x <= 0) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if (x <= 0) return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #ifdef _long_double_
  return logl (x) / logl (2.0);
 #else  /*_long_double_*/
@@ -692,8 +694,8 @@ float__t powl(float__t x, float__t y)
 // Get the logarithm of y to the base x
 float__t Logn (float__t x, float__t y)
 {
- if (x <= 0) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
- if (y <= 0) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if (x <= 0) return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if (y <= 0) return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
 #ifdef _long_double_
  return logl (y) / logl (x);
 #else  /*_long_double_*/
@@ -734,32 +736,37 @@ float__t Swg (float__t x) // SWG to mm
 {
  int n = x;
  if ((n >= -6) && (n <= 50))
-  return tswg[n + 6];
+  return (float__t)tswg[n + 6];
  else
-  return 0;
+  return (float__t)0.0L;
 }
 
 // Convert SWG to mm^2
 float__t SSwg (float__t x) // SWG to mm^2
 {
+#ifdef _long_double_
+ return powl (Swg (x), 2) * M_PI / 4.0;
+#else  /*_long_double_*/
  return pow (Swg (x), 2) * M_PI / 4.0;
+#endif /*_long_double_*/
 }
 
 // Convert mm to SWG
 float__t Aswg (float__t x) // mm to SWG
 {
- if ((x < 0.0254) || (x > 12.7)) return std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+ if ((x < 0.0254) || (x > 12.7))
+  return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
  int n = 0;
  while (tswg[n] >= x) n++;
  if (n)
   {
    if (fabs (tswg[n] - x) < fabs (tswg[n - 1] - x))
-    return n - 6;
+    return (float__t)(n - 6);
    else
-    return n - 7;
+    return (float__t)(n - 7);
   }
  else
-  return -6;
+  return (float__t)(-6);
 }
 
 
@@ -767,30 +774,50 @@ float__t Aswg (float__t x) // mm to SWG
 // AWG to mm: d = 0.127 * 92^((36-n)/39) = exp(2.1104 - 0.11594 * n)
 float__t Awg (float__t x) // AWG to mm
 {
+#ifdef _long_double_
+ return expl (2.1104 - 0.11594 * x);
+#else  /*_long_double_*/
  return exp (2.1104 - 0.11594 * x);
+#endif /*_long_double_*/
 }
 
 // AWG to mm^2: A = pi * (d/2)^2 = pi * (exp(2.1104 - 0.11594 * n)/2)^2
 float__t SAwg (float__t x) // AWG to mm^2
 {
- return pow (exp (2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
+#ifdef _long_double_
+ return powl (exp(2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
+#else  /*_long_double_*/
+ return pow (exp(2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
+#endif /*_long_double_*/
 }
 
 // Convert diameter to mm^2: A = pi * (d/2)^2 = pi * d^2 / 4
 float__t Cs (float__t x) // diameter to mm^2
 {
+#ifdef _long_double_
+ return powl (x, 2) * M_PI / 4.0;
+#else  /*_long_double_*/
  return pow (x, 2) * M_PI / 4.0;
+#endif /*_long_double_*/
 }
 // Convert mm^2 to diameter: d = sqrt(4 * A / pi)
 float__t Acs (float__t x) // mm^2 to diameter
 {
+#ifdef _long_double_
+ return sqrtl (4.0 * x / M_PI);
+#else  /*_long_double_*/
  return sqrt (4.0 * x / M_PI);
+#endif /*_long_double_*/
 }
 
 // Convert mm to AWG: n = 36 - 39 * log(d/0.127) / log(92) = (2.1104 - log(x)) / 0.11594
 float__t Aawg (float__t x) // mm to AWG
 {
- return (2.1104 - log (x)) / 0.11594;
+#ifdef _long_double_
+ return (float__t)((2.1104 - logl (x)) / 0.11594);
+#else  /*_long_double_*/
+ return (float__t)((2.1104 - log (x)) / 0.11594);
+#endif /*_long_double_*/
 }
 
 /* https://en.wikipedia.org/wiki/E_series_of_preferred_numbers */
@@ -833,7 +860,7 @@ float__t Ee (float__t x, float__t y) // find standard value
    unsigned int N = x;
    double delta_n = 10;
    double delta_n1;
-   double V = fabs (y);
+   double V = fabs ((double)y);
 
    /* normalize */
    int ex = 0;
@@ -858,46 +885,46 @@ float__t Ee (float__t x, float__t y) // find standard value
        if ((nn >= 0) && (nn < sizeof (E3)))
         V = E3[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 6:
        if ((nn >= 0) && (nn < sizeof (E6)))
         V = E6[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 12:
        if ((nn >= 0) && (nn < sizeof (E12)))
         V = E12[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 24:
        if ((nn >= 0) && (nn < sizeof (E24)))
         V = E24[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 48:
        if ((nn >= 0) && (nn < sizeof (E48)))
         V = E48[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 96:
        if ((nn >= 0) && (nn < sizeof (E96)))
         V = E96[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       case 192:
        if ((nn >= 0) && (nn < sizeof (E192)))
         V = E192[nn];
        else
-        V = std::numeric_limits<float__t>::quiet_NaN ();
+        V = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
        break;
       default:
-       V = std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
+       V = qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0 / 0.0;
        break;
       }
     }
@@ -929,12 +956,12 @@ float__t Ee (float__t x, float__t y) // find standard value
      }
 
    if (y < 0)
-    return -V;
+    return (float__t)(-V);
    else
-    return V;
+    return (float__t)V;
   }
  else
-  return 0;
+  return (float__t)0.0L;
 }
 
 // Calculate the factorial of a number
@@ -949,13 +976,17 @@ float__t Factorial (float__t x)
 // Convert Celsius to Farenheit
 float__t Farenheit (float__t x)
 {
- return (x - 32.0) * 5.0 / 9.0;
+ return (float__t)((x - 32.0) * 5.0 / 9.0);
 }
 
 // Compare two floats with a given precision
 float__t Cmp (float__t x, float__t y, float__t prec)
 {
+#ifdef _long_double_
+ float__t rel_diff = fabsl (x - y) / (x > y ? x : y);
+#else
  float__t rel_diff = fabs (x - y) / (x > y ? x : y);
+#endif
  if (rel_diff < prec)
   return 0;
  else if (x < y)
@@ -1335,10 +1366,10 @@ int_t datatime (char *tstr)
 }
 
 // Get information about the type of electromagnetic wave based on its wavelength in meters
-const char *wavelength_info (float__t wavelength_m)
+const char *wavelength_info (float__t wavelength)
 {
  // wavelength_m - wavelength in meters
-
+ double wavelength_m = (double)wavelength; // use double for more precision in comparisons
  if (wavelength_m > 10000)
   {
    return "VLF radio waves (3-30 kHz, 10-100 km, mid: 31.6 km)";
@@ -1479,7 +1510,7 @@ const char *wavelength_info (float__t wavelength_m)
 uint32_t wavelength_to_rgb (float__t wavelength_m)
 {
  // Convert to nanometers for convenience
- double wavelength_nm = wavelength_m * 1e9;
+ double wavelength_nm = (double)(wavelength_m * 1e9);
 
  // Visible range: approximately 380-780 nm
  if (wavelength_nm < 380 || wavelength_nm > 780)
@@ -1714,8 +1745,8 @@ void TanC (float__t x, float__t y, float__t &re, float__t &im)
  float__t denom = cos_re * cos_re + cos_im * cos_im;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  re = (sin_re * cos_re + sin_im * cos_im) / denom;
@@ -1730,8 +1761,8 @@ void CotC (float__t x, float__t y, float__t &re, float__t &im)
  float__t denom = tan_re * tan_re + tan_im * tan_im;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  re = tan_re / denom;
@@ -1827,8 +1858,8 @@ void TanhC (float__t x, float__t y, float__t &re, float__t &im)
  float__t denom = cosh_re * cosh_re + cosh_im * cosh_im;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  re = (sinh_re * cosh_re + sinh_im * cosh_im) / denom;
@@ -1884,8 +1915,8 @@ void CothC (float__t x, float__t y, float__t &re, float__t &im)
  float__t denom = tanh_re * tanh_re + tanh_im * tanh_im;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  re = tanh_re / denom;
@@ -1990,8 +2021,8 @@ void RootNC (float__t xr, float__t xi, float__t yr, float__t yi, float__t &re, f
  float__t denom = yr * yr + yi * yi;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  float__t pow_re = yr / denom;
@@ -2016,8 +2047,8 @@ void LognC (float__t x, float__t y, float__t u, float__t v, float__t &re, float_
  float__t denom = ln_den_re * ln_den_re + ln_den_im * ln_den_im;
  if (denom == 0)
   {
-   re = std::numeric_limits<float__t>::quiet_NaN ();
-   im = std::numeric_limits<float__t>::quiet_NaN ();
+   re = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
+   im = qnan; // std::numeric_limits<float__t>::quiet_NaN ();
    return;
   }
  re = (ln_num_re * ln_den_re + ln_num_im * ln_den_im) / denom;

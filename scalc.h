@@ -72,6 +72,10 @@ typedef char int8_t;
 typedef __int64 int_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 unsigned_t;
+
+
+typedef unsigned int uint32_t;
+typedef int int32_t;
 #else //__BORLANDC__
 
 #include <cstdint>
@@ -85,6 +89,13 @@ typedef unsigned __int64 unsigned_t;
 typedef int64_t int_t;
 typedef uint64_t unsigned_t;
 #endif //__BORLANDC__
+
+
+#ifdef __BORLANDC__
+#include <alloc.h>
+#include <process.h>
+#endif
+
 
 #ifdef _float128_
 #include <quadmath.h>

@@ -73,7 +73,6 @@ typedef __int64 int_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 unsigned_t;
 
-
 typedef unsigned int uint32_t;
 typedef int int32_t;
 #else //__BORLANDC__

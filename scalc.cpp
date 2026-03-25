@@ -216,7 +216,7 @@ float__t Size (void *clc, value &M)
  return ((calculator *)clc)->mxDim (M, mxSize);
 }
 
-int SetPrecision (void *clc, int prec)
+int_t SetPrecision (void *clc, int_t prec)
 {
  calculator *calc = (calculator *)clc;
  if (prec < 0) prec = 0;
@@ -1745,6 +1745,7 @@ symbol *calculator::find (const char *name)
 // Add a user-defined function to the hash table, or return an error if it already exists
 symbol *calculator::addUF (const char *name, const char *expr)
 {
+ if (!expr) return nullptr;
  symbol *sp = find (name);
  
  if (sp && sp->tag == tsUFUNCT)
@@ -1824,7 +1825,8 @@ void calculator::addvar (const char *name, value &val)
  sp->val.ival = val.ival;
  sp->val.imval = val.imval;
  // For string and matrix types, we need to copy the values
- sp->val.sval = strdup(val.sval);
+ if (val.sval) sp->val.sval = strdup(val.sval);
+ else sp->val.sval = nullptr;
  register_mem (sp->val.sval);
  if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
   {

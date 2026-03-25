@@ -1,0 +1,39 @@
+;; AWG round-trips
+aawg(awg(28))  ;; ~28
+aawg(awg(22))  ;; ~22
+aawg(awg(14))  ;; ~14
+
+;; SWG round-trips  
+aswg(swg(28))  ;; ~28
+aswg(swg(20))  ;; ~20
+
+;; cs/acs round-trips
+acs(cs(0.5))   ;; ~0.5  (0.5 mm diameter)
+acs(cs(1.0))   ;; ~1.0
+cs(acs(1.0))   ;; ~1.0  (1.0 mm²)
+
+;; физически осмысленные
+acs(cs(awg(28))*50)/.65  ;; 3.5
+;; AWG - known values (diameter in mm)
+awg(0)   ;; 8.251 mm  (AWG 0 = 0000... wait, AWG 0 = 8.251)
+awg(10)  ;; 2.588 mm
+awg(20)  ;; 0.8128 mm
+awg(28)  ;; 0.3211 mm
+awg(36)  ;; 0.127 mm  (base case: 92^0 * 0.127)
+awg(40)  ;; 0.07874 mm
+
+;; round-trip
+aawg(awg(10))  ;; 10
+aawg(awg(28))  ;; 28
+
+;; E series edges
+ee(12, 1.0)   ;; 1.0  (начало ряда)
+ee(12, 9.9)   ;; 8.2  (конец ряда)
+ee(24, 1.0)   ;; 1.0
+ee(24, 9.9)   ;; 9.1
+ee(96, 1.0)   ;; 1.0
+
+cs(1.0)   ;; 0.7853981... = pi/4
+cs(2.0)   ;; 3.1415926... = pi
+acs(pi/4) ;; 1.0
+acs(pi)   ;; 2.0

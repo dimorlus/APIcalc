@@ -1,3 +1,6 @@
+24.03.26 (2.154)
+* Cosmetic changes.
+
 24.03.26 (2.152)
 + Now fileinfo with the version is available for both the CLI version and the dll file.
 

@@ -1,5 +1,5 @@
-#include "pch.h"
 #include <windows.h>
+#include <system.hpp>
 #include "ccalc.h"
 #include <fstream>
 #include <cctype>
@@ -9,12 +9,12 @@
 #include <stdio.h>
 #include <io.h>
 
-#ifdef __BORLANDC__
 #include <alloc.h>
 #include <process.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 
 #define MAX_PATH          260
 #pragma warn -8004 // assigned a value that is never used
@@ -24,7 +24,6 @@
 #pragma warn -8070
 #pragma warn -8027
 
-#endif
 
 #include "..\scalc.h"
 
@@ -387,6 +386,8 @@ void load_user_constants (calculator &calc, const char *Fname)
 
 int main ()
 {
+ Set8087CW(0x133f);
+
  // Get the original command line
  char *cmdline = GetCommandLineA ();
 

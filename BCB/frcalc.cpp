@@ -88,11 +88,8 @@ void __fastcall TCalcForm::CBStrChange(TObject *Sender)
  Binarywidth->Caption = AnsiString().sprintf("Binary width = %u", binwide);
  float__t op = 100.0*(float__t)opacity/255.0;
  Opacity->Caption = AnsiString().sprintf("Opacity(%-1.0Lf)", op);
- //enum TFPUException { exInvalidOp, exDenormalized, exZeroDivide, exOverflow,
- //exUnderflow, exPrecision };
  Set8087CW(0x133f);
- SetExceptionMask(GetExceptionMask() << exZeroDivide << exInvalidOp 
-       << exDenormalized << exOverflow << exUnderflow << exPrecision);
+
  memset(strings, 0, sizeof(strings));
 
  if (!errMsg[0])

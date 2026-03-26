@@ -895,7 +895,7 @@ int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary)
   return sprintf (str, "%.*Lg%+.*Lg%c", prec, re, prec, im, c_imaginary);
 #endif
 }
- 
+
 // Print the result string to the input
 int calculator::printres(char* str, int options, int binwide)
 {
@@ -963,17 +963,17 @@ int calculator::printres(char* str, int options, int binwide)
        char cphi[20];
        char cr[20];
        char *cp       = scistr;
-       double imval = (double)result_imval;
-       double fval  = (double)result_fval;
-       double phi   = atan2 (imval, fval);
-       double r     = hypot (fval, imval);
+       double im = (double)result_imval;
+       double re  = (double)result_fval;
+       double phi   = atan2 (im, re);
+       double r     = hypot (re, im);
        d2scistr (cr, r);
        dgr2str (cphi, phi);
        cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
-       normz (fval, imval);
-       cp += d2scistr (cp, fval);
-       if (imval >= 0) *cp++ = '+';
-       cp += d2scistr (cp, imval);
+       normz (re, im);
+       cp += d2scistr (cp, re);
+       if (im >= 0) *cp++ = '+';
+       cp += d2scistr (cp, im);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }
@@ -983,19 +983,19 @@ int calculator::printres(char* str, int options, int binwide)
    if (options & NRM)
     {
      char nrmstr[80];
-     double imval = (double)result_imval;
-     double fval  = (double)result_fval;
-     normz (fval, imval);
-     if (imval == 0) d2nrmstr (nrmstr, fval);
+     double im = (double)result_imval;
+     double re  = (double)result_fval;
+     normz (re, im);
+     if (im == 0.0) d2nrmstr (nrmstr, re);
      else
       {
        char cphi[20];
        char cr[20];
-       double phi = atan2 (imval, fval);
-       double r   = hypot (fval, imval);
+       double phi = atan2 (im, re);
+       double r   = hypot (re, im);
        d2nrmstr (cr, r);
        dgr2str (cphi, phi);
-       sprintf (nrmstr, "|%s|(%s) %.*g%+.*g%c", cr, cphi, fprec, fval, fprec, imval, c_imaginary);
+       sprintf (nrmstr, "|%s|(%s) %.*g%+.*g%c", cr, cphi, fprec, re, fprec, im, c_imaginary);
       }
      return sprintf (str, "%s", nrmstr);
     }
@@ -1145,20 +1145,22 @@ int calculator::printres(char* str, int options, int binwide)
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += sprintf (cp, "%.6g rad|", (double)result_fval);
-     cp += dgr2str (cp, (double)result_fval);
-     cp += sprintf (cp, " (%.6g`)", (double)result_fval * 180.0 / M_PId);
-     cp += sprintf (cp, "|%.4g gon", (double)result_fval * 200.0 / M_PId);
-     cp += sprintf (cp, "|%.4g turn", (double)result_fval * 0.5 / M_PId);
+     double angle = (double)result_fval;
+     cp += sprintf (cp, "%.6g rad|", angle);
+     cp += dgr2str (cp, angle);
+     cp += sprintf (cp, " (%.6g`)", (double)(angle * 180.0 / (double)M_PId));
+     cp += sprintf (cp, "|%.4g gon", (double)(angle * 200.0 / (double)M_PId));
+     cp += sprintf (cp, "|%.4g turn", (double)(angle * 0.5 / (double)M_PId));
      return sprintf (str, "%s", dgrstr);
     }
 
    if ((options & FRH) && (result_fval > -273.15))
     {
      char frhstr[80];
-     sprintf (frhstr, "%.6g K|%.6g `C|%.6g `F", (double)(result_fval + 273.15),
-              (double)result_fval, (double)(result_fval * 9.0 / 5.0 + 32.0));
-     return sprintf (str, "%s", frhstr); 
+     double temperature = (double)result_fval;
+     sprintf (frhstr, "%.6g K|%.6g `C|%.6g `F", (double)(temperature + 273.15),
+              temperature, (double)(temperature * 9.0 / 5.0 + 32.0));
+     return sprintf (str, "%s", frhstr);
     }
 
    if (options & STR) return sprintf (str, "'%s'", sres);
@@ -1237,13 +1239,13 @@ int calculator::print (char *str, int Options, int binwide, int *size)
   }
  else
   {
-   if (result_tag == tvMATRIX) 
+   if (result_tag == tvMATRIX)
     {
      n += mxprint (res_rows, res_cols, res_mval, str, true, &bsize);
      if (size) *size = bsize;
      return n;
     }
-   
+
    // (WO) Forced float
    if (Options & FFLOAT)
     {
@@ -1262,11 +1264,13 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       {
        char imstr[80];
        char cphi[20];
-       double phi = atan2 ((double)result_imval, (double)result_fval);
-       double r   = hypot ((double)result_fval, (double)result_imval);
+       double re = (double)result_fval;
+       double im = (double)result_imval;
+       double phi = atan2 (im, re);
+       double r   = hypot (re, im);
        dgr2str (cphi, phi);
        sprintf (imstr, "|%.8g|(%s) %.*g%+.*g%c", r, cphi,
-                16, (double)result_fval, 16, (double)result_imval, c_imaginary);
+                16, re, 16, im, c_imaginary);
        bsize += sprintf (str + bsize, "%65.64s f\r\n", imstr);
        n++;
       }
@@ -1281,19 +1285,19 @@ int calculator::print (char *str, int Options, int binwide, int *size)
       {
        char cphi[20];
        char cr[20];
-       char *cp       = scistr;
-       double imval = (double)result_imval;
-       double fval  = (double)result_fval;
-       double phi   = atan2 (imval, fval);
-       double r     = hypot (fval, imval);
+       char *cp  = scistr;
+       double im = (double)result_imval;
+       double re  = (double)result_fval;
+       double phi = atan2 (im, re);
+       double r = hypot (re, im);
        d2scistr (cr, r);
        dgr2str (cphi, phi);
        cp += sprintf (cp, "|%s|(%s) ", cr, cphi);
-       normz (fval, imval);
-       cp += d2scistr (cp, fval);
-       if (imval >= 0) *cp++ = '+';
+       normz (re, im);
+       cp += d2scistr (cp, re);
+       if (im >= 0.0) *cp++ = '+';
 
-       cp += d2scistr (cp, imval);
+       cp += d2scistr (cp, im);
        *cp++ = c_imaginary;
        *cp   = '\0';
       }
@@ -1520,23 +1524,25 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     {
      char dgrstr[80];
      char *cp = dgrstr;
-     cp += sprintf (cp, "%.6g rad|", (double)result_fval);
-     cp += dgr2str (cp, (double)result_fval);
-     cp += sprintf (cp, " (%.6g`)", (double)result_fval * 180.0 / M_PId);
-     cp += sprintf (cp, "|%.4g gon", (double)result_fval * 200.0 / M_PId);
-     cp += sprintf (cp, "|%.4g turn", (double)result_fval * 0.5 / M_PId);
+     double angle = (double)result_fval;
+     cp += sprintf (cp, "%.6g rad|", angle);
+     cp += dgr2str (cp, angle);
+     cp += sprintf (cp, " (%.6g`)", (double)(angle * 180.0 / (double)M_PId));
+     cp += sprintf (cp, "|%.4g gon", (double)(angle * 200.0 / (double)M_PId));
+     cp += sprintf (cp, "|%.4g turn", (double)(angle * 0.5 / (double)M_PId));
 
      bsize += sprintf (str + bsize, "%65.64s  \r\n", dgrstr);
      n++;
     }
 
    // (UI) Temperature format
-   if (((Options & FRH) || (fflags & FRH)) && ((double)result_imval == 0.0) && 
+   if (((Options & FRH) || (fflags & FRH)) && ((double)result_imval == 0.0) &&
        ((double)result_fval > -273.15) && (result_tag == tvFLOAT))
     {
      char frhstr[80];
-     sprintf (frhstr, "%.6g K|%.6g `C|%.6g `F", (double)(result_fval + 273.15),
-              (double)result_fval, (double)(result_fval * 9.0 / 5.0 + 32.0));
+     double temerature = (double)result_fval;
+     sprintf (frhstr, "%.6g K|%.6g `C|%.6g `F", (double)(temerature + 273.15),
+              temerature, (double)(temerature * 9.0 / 5.0 + 32.0));
 
      bsize += sprintf (str + bsize, "%65.64s  \r\n", frhstr);
      n++;

@@ -31,7 +31,7 @@ DEBUGLIBPATH = $(BCB)\lib\debug
 RELEASELIBPATH = $(BCB)\lib\release
 USERDEFINES = 
 SYSDEFINES = NO_STRICT;_NO_VCL
-INCLUDEPATH = ..\;$(BCB)\include;..
+INCLUDEPATH = ..\;..;$(BCB)\include;$(BCB)\include\vcl
 LIBPATH = ..\;..;$(BCB)\lib\obj;$(BCB)\lib
 WARNINGS= -w-par
 PATHCPP = .;..;..;..
@@ -41,7 +41,7 @@ PATHRC = .;
 PATHOBJ = .;$(LIBPATH)
 # ---------------------------------------------------------------------------
 CFLAG1 = -O2 -Vx -Ve -X- -a8 -6 -b- -k- -vi -tWC -tWM- -c
-IDLCFLAGS = -I..\. -I$(BCB)\include -I.. -src_suffix cpp -boa
+IDLCFLAGS = -I..\. -I.. -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp -boa
 PFLAGS = -$Y- -$L- -$D- -$A8 -v -JPHNE -M
 RFLAGS = 
 AFLAGS = /mx /w2 /zn

@@ -24,13 +24,13 @@
     <USERDEFINES value=""/>
     <SYSDEFINES value="NO_STRICT;_NO_VCL"/>
     <MAINSOURCE value="ccalc.bpf"/>
-    <INCLUDEPATH value="..\;$(BCB)\include;.."/>
+    <INCLUDEPATH value="..\;..;$(BCB)\include;$(BCB)\include\vcl"/>
     <LIBPATH value="..\;..;$(BCB)\lib\obj;$(BCB)\lib"/>
     <WARNINGS value="-w-par"/>
     <OTHERFILES value=""/>
   </MACROS>
   <OPTIONS>
-    <IDLCFLAGS value="-I..\. -I$(BCB)\include -I.. -src_suffix cpp -boa"/>
+    <IDLCFLAGS value="-I..\. -I.. -I$(BCB)\include -I$(BCB)\include\vcl -src_suffix cpp -boa"/>
     <CFLAG1 value="-O2 -Vx -Ve -X- -a8 -6 -b- -k- -vi -tWC -tWM- -c"/>
     <PFLAGS value="-$Y- -$L- -$D- -$A8 -v -JPHNE -M"/>
     <RFLAGS value=""/>
@@ -59,12 +59,12 @@
 
   <IDEOPTIONS>
 [Version Info]
-IncludeVerInfo=0
+IncludeVerInfo=1
 AutoIncBuild=0
-MajorVer=1
+MajorVer=0
 MinorVer=0
-Release=0
-Build=0
+Release=2
+Build=155
 Debug=0
 PreRelease=1
 Special=0
@@ -74,15 +74,15 @@ Locale=1033
 CodePage=1252
 
 [Version Info Keys]
-CompanyName=Metrolight LTD
-FileDescription=Scientific formula calculator
-FileVersion=1.0.0.0
+CompanyName=Home
+FileDescription=Scientific formula calculator CLI
+FileVersion=2.155
 InternalName=ccalc
-LegalCopyright=Metrolight LTD
-LegalTrademarks=Copyright 2008 Dmitry Orlov.
+LegalCopyright=Home
+LegalTrademarks=Copyright 2008, 2026 Dmitry Orlov.
 OriginalFilename=ccalc.exe
 ProductName=Scientific formula calculator
-ProductVersion=1.00.0000
+ProductVersion=2.155
 Comments=Scientific formula calculator
 Date=08-14-08. 00:52:02
 
@@ -126,15 +126,18 @@ c:\program files (x86)\borland\cbuilder6\Bin\bcb2kaxserver60.bpl=Borland C++Buil
 c:\program files (x86)\borland\cbuilder6\Bin\dclite60.bpl=Borland Integrated Translation Environment
 
 [HistoryLists\hlIncludePath]
-Count=2
-Item0=$(BCB)\include;..\
-Item1=
+Count=4
+Item0=..\;$(BCB)\include;$(BCB)\include\vcl;..
+Item1=..\;$(BCB)\include;..
+Item2=$(BCB)\include;..\
+Item3=
 
 [HistoryLists\hlLibraryPath]
-Count=3
-Item0=..\;$(BCB)\lib\obj;$(BCB)\lib
-Item1=$(BCB)\lib\obj;$(BCB)\lib
+Count=4
+Item0=..\;..;$(BCB)\lib\obj;$(BCB)\lib
+Item1=..\;$(BCB)\lib\obj;$(BCB)\lib
 Item2=$(BCB)\lib\obj;$(BCB)\lib
+Item3=$(BCB)\lib\obj;$(BCB)\lib
 
 [HistoryLists\hlDebugSourcePath]
 Count=1

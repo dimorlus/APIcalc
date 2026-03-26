@@ -1,15 +1,10 @@
 #ifndef CCALC_H
 #define CCALC_H
 
-#ifdef USE_DLL
-#include "scalc_dll.h"
-#else
 #include "scalc.h"
-#endif
 
 struct option_def
 {
-  //const char* name;    // Option name 
  char name[8]; // Option name (макс 7 символов + null-терминатор)
  int flag;            // Битовая маска
 };

@@ -1,4 +1,9 @@
-24.03.26 (2.154)
+26.03.26 (2.155)
++ A BCB6 version compatible with older versions of Windows (I think starting with Win95, but 
+  definitely WinXP) has been added to the repository. A corresponding Setup has been added to 
+  the releases.
+
+25.03.26 (2.154)
 * Cosmetic changes.
 
 24.03.26 (2.152)

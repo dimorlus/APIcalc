@@ -1,0 +1,99 @@
+#ifndef CCALC_H
+#define CCALC_H
+
+#ifdef USE_DLL
+#include "scalc_dll.h"
+#else
+#include "scalc.h"
+#endif
+
+struct option_def
+{
+  //const char* name;    // Option name 
+ char name[8]; // Option name (макс 7 символов + null-терминатор)
+ int flag;            // Битовая маска
+};
+
+
+// All supported options definitions
+static const option_def all_options[] = 
+{
+    { "PAS",    PAS    },
+    { "SCI",    SCI    },
+    { "UPCASE", UPCASE },
+    { "FFLOAT", FFLOAT },
+    { "IMUL",   IMUL   },
+    { "DEG",    DEG    },
+    { "STR",    STR    },
+    { "HEX",    HEX    },
+    { "OCT",    OCT    },
+    { "BIN",    FBIN   },
+    { "DAT",    DAT    },
+    { "CHR",    CHR    },
+    { "WCH",    WCH    },
+    { "CMP",    CMP    },
+    { "NRM",    NRM    },
+    { "IGR",    IGR    },
+    { "UNS",    UNS    },
+    { "ALL",    DEG+STR+HEX+OCT+FBIN+DAT+CHR+WCH+CMP+NRM+IGR+UNS+FRC+FRI+UTM+FRH+FLT},
+    { "FRC",    FRC    },
+    { "FRI",    FRI    },
+    { "FRH",    FRH    },
+    { "FLT",    FLT    },
+    { "UTM",    UTM    },
+    { "OPT",    OPT    },
+    { "SRC",    SRC    },
+    { "AUTO",   AUTO   },
+    { "", 0 } // Sentinel
+};
+
+#define OPTS sizeof(all_options)/sizeof(option_def)
+
+struct ccalc_options
+{
+    int calc_flags;     // Flags for calculator and output
+    int binary_width;   // Width for binary format
+    char filename[256]; // Optional source filename
+    
+    ccalc_options()
+    {
+        // Default values
+        calc_flags = PAS | SCI | UPCASE | FFLOAT | IMUL;
+        binary_width = 64;
+    }
+};
+
+class ccalc_config
+{
+private:
+    //ccalc_options opts;
+    
+    bool parse_single_option(const char* opt);
+    
+public:
+    ccalc_options opts;
+
+    ccalc_config(uint32_t dconf);
+    
+    bool load_config(const char* filename = "ccalc.cfg");
+    int parse_cmdline_options(char* cmdline);
+    
+    const ccalc_options& get_options() const { return opts; }
+    ccalc_options& get_options() { return opts; }
+};
+
+void show_options_help();
+void show_usage();
+void show_help(int page);
+void print_options(int32_t flags, int binary_width);
+
+// Help functions (from help.cpp)
+void show_help_overview();
+void show_help_functions();
+void show_help_operators();
+void show_help_formats();
+void show_help_constants();
+void show_help_prefixes();
+void show_help_examples();
+
+#endif // CCALC_H

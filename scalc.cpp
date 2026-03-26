@@ -1,7 +1,6 @@
 
 #include <windows.h>
 #include "pch.h"
-
 #ifdef __BORLANDC__
 #include <stdint.h>
 #include <time.h>
@@ -16,6 +15,7 @@
 #include <limits>
 
 #else //__BORLANDC__
+
 #define __USE_MINGW_ANSI_STDIO 1
 #include <cstdint>
 #include <ctime>

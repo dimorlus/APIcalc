@@ -2,6 +2,7 @@ for /f %%V in ('getver.bat') do set VER=%%V
 
 gh release create v%VER% ^
   Setup\fcalc_setup.exe ^
+  Setup\fcalc_bcb_setup.exe ^
   Setup\fcalc_setup32.exe ^
   Setup\fcalc_w10+64_setup.exe ^
   Setup\fcalc_w10+64_std_dll_setup.exe ^

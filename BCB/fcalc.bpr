@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.06.00"/>
+    <PROJECT value="fcalc.exe"/>
+    <OBJFILES value="fcalc.obj ..\sfmts.obj ViewVars.obj ..\scalc.obj HTMLHelpViewer.obj 
+      UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj"/>
+    <RESFILES value="fcalc.res"/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES) fcalc.dfm ViewVars.dfm frcalc.dfm"/>
+    <LIBFILES value="hhctrl.lib"/>
+    <LIBRARIES value="rtl.lib vcl.lib"/>
+    <SPARELIBS value="vcl.lib rtl.lib"/>
+    <PACKAGES value="vcl.bpi rtl.bpi vclx.bpi BC100R61.bpi BCDB100R61.bpi bcqr100r61.bpi 
+      aprdlgs60.bpi XLSRWII20_CPP6.bpi"/>
+    <PATHCPP value=".;..;..;.."/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="_DEBUG"/>
+    <SYSDEFINES value="NO_STRICT"/>
+    <MAINSOURCE value="fcalc.cpp"/>
+    <INCLUDEPATH value="..\;$(BCB)\include;$(BCB)\include\vcl;.."/>
+    <LIBPATH value="..\;..;$(BCB)\lib;$(BCB)\lib\obj"/>
+    <WARNINGS value="-w-par"/>
+    <OTHERFILES value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-I..\. -I$(BCB)\include -I$(BCB)\include\vcl -I.. -src_suffix cpp -D_DEBUG 
+      -boa"/>
+    <CFLAG1 value="-Od -Vx -Ve -X- -r- -a8 -6 -b- -k -y -v -vi- -c -tW -tWM"/>
+    <PFLAGS value="-$Y+ -$W -$O- -$A8 -v -JPHNE -M"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zi"/>
+    <LFLAGS value="-D&quot;&quot; -aa -Tpe -x -Gn -v"/>
+    <OTHERFILES value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0w32.obj sysinit.obj $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
+    <OTHERFILES value=""/>
+  </LINKER>
+  <FILELIST>
+      <FILE FILENAME="fcalc.res" FORMNAME="" UNITNAME="fcalc.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="fcalc.cpp" FORMNAME="Form1" UNITNAME="fcalc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\sfmts.cpp" FORMNAME="" UNITNAME="sfmts" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ViewVars.cpp" FORMNAME="VarsFrm" UNITNAME="ViewVars" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\scalc.cpp" FORMNAME="" UNITNAME="scalc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="HTMLHelpViewer.pas" FORMNAME="" UNITNAME="HTMLHelpViewer" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="UseHTMLHelp.pas" FORMNAME="" UNITNAME="UseHTMLHelp" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="StrUtils.cpp" FORMNAME="" UNITNAME="StrUtils" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="hhctrl.lib" FORMNAME="" UNITNAME="hhctrl.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="frcalc.cpp" FORMNAME="CalcForm" UNITNAME="frcalc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\sfunc.cpp" FORMNAME="" UNITNAME="sfunc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+  </FILELIST>
+  <BUILDTOOLS>
+  </BUILDTOOLS>
+
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=0
+MajorVer=0
+MinorVer=0
+Release=2
+Build=153
+Debug=0
+PreRelease=1
+Special=0
+Private=0
+DLL=0
+Locale=1033
+CodePage=1200
+
+[Version Info Keys]
+CompanyName=Home
+FileDescription=Scientific formula calculator GUI
+FileVersion=2.153
+InternalName=Fcalc
+LegalCopyright=Home
+LegalTrademarks=Copyright 2008 Dmitry Orlov.
+OriginalFilename=fcalc.exe
+ProductName=Scientific formula calculator
+ProductVersion=2.153
+Comments=Scientific formula calculator
+Date=08-14-08. 00:52:02
+
+[Excluded Packages]
+C:\Program Files (x86)\Borland\CBuilder6\Bin\dbx60.bpl=Borland SQL Explorer UI Package
+c:\program files (x86)\borland\cbuilder6\Bin\dclado60.bpl=Borland ADO DB Components
+C:\Program Files (x86)\Borland\CBuilder6\Bin\dcldb60.bpl=Borland Database Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclbde60.bpl=Borland BDE DB Components
+c:\program files (x86)\borland\cbuilder6\Bin\DCLIB60.bpl=InterBase Data Access Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclcds60.bpl=Borland Base Cached ClientDataset Component
+C:\Program Files (x86)\Borland\CBuilder6\Bin\dclmid60.bpl=Borland MyBase DataAccess Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclbdecds60.bpl=Borland Local BDE ClientDataset Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclqrt60.bpl=QuickReport Components
+c:\program files (x86)\borland\cbuilder6\Bin\dcltee60.bpl=TeeChart Components
+c:\program files (x86)\borland\cbuilder6\Bin\dcldss60.bpl=Borland Decision Cube Components
+c:\program files (x86)\borland\cbuilder6\Bin\dcltqr60.bpl=TeeChart for QuickReport Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclclxdb60.bpl=Borland CLX Database Components
+C:\Program Files (x86)\Borland\CBuilder6\Bin\dclclxstd60.bpl=Borland CLX Standard Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclmcn60.bpl=Borland DataSnap Connection Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclsmpedit60.bpl=Borland Editor Script Enhancements
+c:\program files (x86)\borland\cbuilder6\Bin\applet60.bpl=Borland Control Panel Applet Package
+c:\program files (x86)\borland\cbuilder6\Bin\dclemacsedit60.bpl=Borland Editor Emacs Enhancements
+c:\program files (x86)\borland\cbuilder6\Bin\dclact60.bpl=Borland ActionBar Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclmlwiz60.bpl=Borland Markup Language Wizards
+c:\program files (x86)\borland\cbuilder6\Bin\idefilters60.bpl=IDE Filter for CPP32
+c:\program files (x86)\borland\cbuilder6\Bin\dcl31w60.bpl=Delphi 1.0 Compatibility Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclbcbsmp60.bpl=Borland Sample Controls Design Time Package
+c:\program files (x86)\borland\cbuilder6\Bin\dclnet60.bpl=Borland Internet Components
+c:\program files (x86)\borland\cbuilder6\Bin\DBWEBXPRT.BPL=Borland Web Wizard Package
+c:\program files (x86)\borland\cbuilder6\Bin\DCLNMF60.bpl=NetMasters Fastnet Tools
+c:\program files (x86)\borland\cbuilder6\Bin\dclwbm60.bpl=Borland InternetExpress Components
+c:\program files (x86)\borland\cbuilder6\Bin\bcbie60.bpl=Borland C++Builder Internet Explorer 5 Components Package
+c:\program files (x86)\borland\cbuilder6\Bin\dclwebsnap60.bpl=Borland WebSnap Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclsoap60.bpl=Borland SOAP Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclocx60.bpl=Borland Sample Imported ActiveX Controls
+c:\program files (x86)\borland\cbuilder6\Bin\dcldbx60.bpl=Borland dbExpress Components
+c:\program files (x86)\borland\cbuilder6\Bin\dcldbxcds60.bpl=Borland Local DBX ClientDataset Components
+c:\program files (x86)\borland\cbuilder6\Bin\dclindy60.bpl=Internet Direct (Indy) for D6 Property and Component Editors
+c:\program files (x86)\borland\cbuilder6\Bin\bcb2kaxserver60.bpl=Borland C++Builder COM Server Components Sample Package
+c:\program files (x86)\borland\cbuilder6\Bin\dclite60.bpl=Borland Integrated Translation Environment
+
+[HistoryLists\hlIncludePath]
+Count=7
+Item0=$(BCB)\include;$(BCB)\include\vcl;..\
+Item1=C:\Program Files (x86)\Borland\CBuilder6\Projects;$(BCB)\include;$(BCB)\include\vcl;..\
+Item2=C:\Program Files (x86)\Borland\CBuilder6\Projects;$(BCB)\include;$(BCB)\include\vcl
+Item3=$(BCB)\include;$(BCB)\include\vcl
+Item4=UseHTMLHelp;$(BCB)\include;$(BCB)\include\vcl
+Item5=$(BCB)\include;$(BCB)\include\vcl
+Item6=UseHTMLHelp;C:\Program Files\Borland\CBuilder6\Projects;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=8
+Item0=..\;$(BCB)\lib;$(BCB)\lib\obj
+Item1=..\;C:\Program Files (x86)\Borland\CBuilder6\Projects;$(BCB)\lib;$(BCB)\lib\obj;..\Bpl
+Item2=C:\Program Files (x86)\Borland\CBuilder6\Projects;$(BCB)\lib;$(BCB)\lib\obj;..\Bpl
+Item3=C:\Program Files (x86)\Borland\CBuilder6\Projects;$(BCB)\lib;$(BCB)\lib\obj
+Item4=$(BCB)\lib;$(BCB)\lib\obj
+Item5=$(BCB)\lib;$(BCB)\lib\obj
+Item6=UseHTMLHelp;$(BCB)\lib;$(BCB)\lib\obj;
+Item7=
+
+[HistoryLists\hlDebugSourcePath]
+Count=2
+Item0=$(BCB)\source\vcl
+Item1=
+
+[HistoryLists\hlConditionals]
+Count=1
+Item0=_DEBUG
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=
+Launcher=
+UseLauncher=0
+DebugCWD=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteLauncher=
+RemoteCWD=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+  </IDEOPTIONS>
+</PROJECT>

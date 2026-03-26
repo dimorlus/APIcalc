@@ -36,6 +36,7 @@
 *.p1
 *.pre
 *.obj
+*.res
 *.lst
 *.map
 *.dcu
@@ -47,6 +48,7 @@
 *.~cpp
 *.~pas
 *.~c
+*.~rc
 *.~hmx
 *.~ddp
 *.~dfm
@@ -54,6 +56,7 @@
 *.~bpr
 *.~dsk
 *.~mak
+*.dsk
 *.bak
 *.GID
 *.cnt

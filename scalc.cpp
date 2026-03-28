@@ -896,6 +896,13 @@ int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary)
 #endif
 }
 
+bool is_integer (float__t val)
+{
+ if (isnan (val) || isinf (val)) return false;
+ if (val > (float__t)INT64_MAX || val < (float__t)INT64_MIN) return false;
+ return true;
+}
+
 // Print the result string to the input
 int calculator::printres(char* str, int options, int binwide)
 {
@@ -1089,21 +1096,21 @@ int calculator::printres(char* str, int options, int binwide)
       }
     }
 
-   if (options & HEX)
+   if ((options & HEX) && is_integer (result_fval))
     {
      char binfstr[16];
      sprintf (binfstr, "0x%%0.%illx", binwide / 4);
      return sprintf (str, binfstr, result_ival);
     }
 
-   if (options & OCT)
+   if ((options & OCT) && is_integer (result_fval))
     {
      char binfstr[16];
      sprintf (binfstr, "0o%%0.%illo", binwide / 3);
      return sprintf (str, binfstr, result_ival);
     }
 
-   if (options & fBIN)
+   if ((options & fBIN) && is_integer (result_fval))
     {
      char binfstr[16];
      char binstr[80];
@@ -1112,14 +1119,14 @@ int calculator::printres(char* str, int options, int binwide)
      return sprintf (str, "%s", binstr);
     }
 
-   if (options & CHR)
+   if ((options & CHR) && is_integer (result_fval))
     {
      char chrstr[10];
      chr2str (chrstr, result_ival);
      return sprintf (str, "%s", chrstr);
     }
 
-   if (options & WCH)
+   if ((options & WCH) && is_integer (result_fval))
     {
      char wchrstr[10];
      int i = result_ival & 0xffff;
@@ -1127,14 +1134,14 @@ int calculator::printres(char* str, int options, int binwide)
      return sprintf (str, "%s", wchrstr);
     }
 
-   if (options & DAT)
+   if ((options & DAT) && is_integer (result_fval))
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
      return sprintf (str, "%s", dtstr);
     }
 
-   if (options & UTM)
+   if ((options & UTM) && is_integer (result_fval))
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
@@ -1347,14 +1354,14 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (UI) Integer output
-   if ((Options & IGR) && (result_imval == 0))
+   if ((Options & IGR) && (result_imval == 0) && is_integer (result_fval))
     {
        bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
        n++;
     }
 
    // (UI) Unsigned output
-   if ((Options & UNS) && ((double)result_imval == 0.0))
+   if ((Options & UNS) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
        bsize += sprintf (str + bsize, "%65llu u\r\n", result_ival);//%llu|%zu
        n++;
@@ -1440,7 +1447,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Hex format found
-   if (((Options & HEX) || (fflags & HEX)) && ((double)result_imval == 0.0))
+   if (((Options & HEX) || (fflags & HEX)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illxh  \r\n", binwide / 4);
@@ -1451,7 +1458,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Octal format found
-   if (((Options & OCT) || (fflags & OCT)) && ((double)result_imval == 0.0))
+   if (((Options & OCT) || (fflags & OCT)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char binfstr[16];
      sprintf (binfstr, "%%64.%illoo  \r\n", binwide / 3);
@@ -1462,7 +1469,8 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Binary format found
-   if (((Options & fBIN) || (fflags & fBIN)) && ((double)result_imval == 0.0))
+   if (((Options & fBIN) || (fflags & fBIN)) && ((double)result_imval == 0.0)
+       && is_integer (result_fval))
     {
      char binfstr[16];
      char binstr[80];
@@ -1475,7 +1483,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Char format found
-   if (((Options & CHR) || (fflags & CHR)) && ((double)result_imval == 0.0))
+   if (((Options & CHR) || (fflags & CHR)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char chrstr[80];
      chr2str (chrstr, result_ival);
@@ -1486,7 +1494,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) WChar format found
-   if (((Options & WCH) || (fflags & WCH)) && ((double)result_imval == 0.0))
+   if (((Options & WCH) || (fflags & WCH)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char wchrstr[80];
      int i = result_ival & 0xffff;
@@ -1498,7 +1506,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Date time format found
-   if (((Options & DAT) || (fflags & DAT)) && ((double)result_imval == 0.0))
+   if (((Options & DAT) || (fflags & DAT)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char dtstr[80];
      t2str (dtstr, result_ival);
@@ -1509,7 +1517,7 @@ int calculator::print (char *str, int Options, int binwide, int *size)
     }
 
    // (RO) Unix time
-   if (((Options & UTM) || (fflags & UTM)) && ((double)result_imval == 0.0))
+   if (((Options & UTM) || (fflags & UTM)) && ((double)result_imval == 0.0) && is_integer (result_fval))
     {
      char dtstr[80];
      nx_time2str (dtstr, result_ival);
@@ -5848,8 +5856,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
+#ifdef _long_double_
+         v_stack[v_sp - 2].ival
+             = (int_t)powl ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
+#else
          v_stack[v_sp - 2].ival
              = (int_t)pow ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
+#endif
         }
        else
         {
@@ -5878,7 +5891,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           }
          else
           {
+#ifdef _long_double_
+           v_stack[v_sp - 2].fval = powl (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+#else
            v_stack[v_sp - 2].fval = pow (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+#endif
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
         }

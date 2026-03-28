@@ -1,3 +1,6 @@
+28.03.26 (2.157)
+* Integer formats are now not output when the number does not fit into 64 bits of an integer.
+
 26.03.26 (2.156)
 - Fixed a bug in the BCB version with displaying angles in turns, gons, etc.
 

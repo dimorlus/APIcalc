@@ -58,20 +58,11 @@ __fastcall TCalcForm::TCalcForm(TComponent* Owner)
         : TForm(Owner)
 {
  HelpFile = ExtractFilePath(Application->ExeName) + "fcalc.chm";
- _control87(MCW_EM, MCW_EM);
+ Set8087CW(0x133f);
 
  errMsg[0] = '\0';
- //_control87(PC_64, MCW_PC);
- //_control87(MCW_EM, MCW_EM);
- //_control87(MCW_PC | MCW_EM, MCW_PC | MCW_EM);
 }
 //---------------------------------------------------------------------------
-/*
-static void GetVars(char *Name, float_t fVal)
-{
-  CalcForm->Vars->Add(AnsiString().sprintf("%-10s=%g", Name, fVal));
-}
-*/
 //---------------------------------------------------------------------------
 
 //#define USE_calculator_format_out
@@ -88,7 +79,6 @@ void __fastcall TCalcForm::CBStrChange(TObject *Sender)
  Binarywidth->Caption = AnsiString().sprintf("Binary width = %u", binwide);
  float__t op = 100.0*(float__t)opacity/255.0;
  Opacity->Caption = AnsiString().sprintf("Opacity(%-1.0Lf)", op);
- Set8087CW(0x133f);
 
  memset(strings, 0, sizeof(strings));
 
@@ -167,7 +157,6 @@ void __fastcall TCalcForm::CBStrChange(TObject *Sender)
 
 void __fastcall TCalcForm::FormDestroy(TObject *Sender)
 {
- //delete Vars;
  delete ccalc;
 }
 //---------------------------------------------------------------------------

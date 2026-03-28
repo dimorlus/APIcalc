@@ -395,7 +395,12 @@ float__t Sqrt (float__t x)
 // Hypotenuse function: sqrt(x^2 + y^2)
 float__t Hypot (float__t x, float__t y)
 {
- return Sqrt (x * x + y * y);
+#ifdef _long_double_
+ return hypotl (x, y);
+#else
+ return hypot (x, y);
+#endif
+ //return Sqrt (x * x + y * y);
 }
 
 // Arccosine function

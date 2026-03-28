@@ -203,7 +203,7 @@ x %% y  →  (x / y - 1) * 100
 
 * **Trigonometric**: sin, cos, tan, asin, acos, atan
 * **Hyperbolic**: sinh, cosh, tanh
-* **Logarithmic**: ln (natural log), log (base 10)
+* **Logarithmic**: ln, log (natural log), lg (base 10)
 * **Other**: sqrt, exp, abs, floor, ceil, round
 
 ### Utility Functions

@@ -1216,7 +1216,7 @@ void WinApiCalc::EvaluateExpression ()
    // Evaluate expression
    m_hasPendingColor = false;
 
-   m_pCalculator->evaluate (exprBuf);
+   m_pCalculator->evaluate (exprBuf); 
 
    // Get syntax flags from calculator
    int scfg = m_pCalculator->issyntax ();
@@ -1232,7 +1232,8 @@ void WinApiCalc::EvaluateExpression ()
     }
    catch (...)
     {
-     // If print crashes, provide fallback
+     // If print crashes, provide fallback (never happen with current print implementation, but just
+     // in case)
      SetWindowTextA (m_hResultEdit, "Error: Number too large to display");
      m_resultLines = 1;
      ResizeWindow ();
@@ -2597,6 +2598,7 @@ void WinApiCalc::ResizeWindow ()
  UpdateLayout ();
 
  // Debug: log whether we have a measured result client height after UpdateLayout
+#if ENABLE_DEBUG_LOG
  {
   char mdbg[256];
   sprintf_s (mdbg, sizeof (mdbg),
@@ -2604,7 +2606,7 @@ void WinApiCalc::ResizeWindow ()
              m_lastResultClientHeight, displayLines);
   DebugLog (mdbg);
  }
-
+ #endif
  // Now compute final clientHeight using measured m_lastResultClientHeight if we have it
  // Compute desired result client height from the edit control's reported
  // line count (EM_GETLINECOUNT). This accounts for wrapped lines so the
@@ -2635,10 +2637,12 @@ void WinApiCalc::ResizeWindow ()
   {
    int wrapWidth = clientWidth - m_resultEditInternalHorzPadding;
    if (wrapWidth < 20) wrapWidth = clientWidth; // fallback
+#if ENABLE_DEBUG_LOG
    char dbgwrap[128];
    sprintf_s (dbgwrap, sizeof (dbgwrap), "ResizeWindow: wrapWidth=%d clientWidth=%d horzPad=%d",
               wrapWidth, clientWidth, m_resultEditInternalHorzPadding);
    DebugLog (dbgwrap);
+#endif
    measuredTextHeight = MeasureTextHeightForWidth (resultText, wrapWidth);
   }
 
@@ -2649,6 +2653,7 @@ void WinApiCalc::ResizeWindow ()
  if (computedResultClientHeight < rowHeight)
   computedResultClientHeight = rowHeight; // at least one row
  // Log measured vs computed for diagnostics
+#if ENABLE_DEBUG_LOG
  {
   char dbgmeas[256];
   sprintf_s (dbgmeas, sizeof (dbgmeas),
@@ -2656,6 +2661,7 @@ void WinApiCalc::ResizeWindow ()
              m_lastResultClientHeight, computedResultClientHeight, displayLines, rowHeight);
   DebugLog (dbgmeas);
  }
+#endif
 
  int clientHeight = inputHeight + gap + computedResultClientHeight;
 

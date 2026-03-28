@@ -20,6 +20,16 @@ This calculator project on WinAPI (VS2022) is based on my old project on Cbuilde
 
 The DLL version is only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
 
+|Type (bit) 		|Format	    	|Exponent (bit)	|Mantiss (bit)	|Precigion (digits)	|Range (approximatly)			|
+|-------------------|---------------|---------------|---------------|-------------------|-------------------------------|
+|Double (64)		|binary64		|11				|52				|15–17		        |+/-2.2E-308 ..  +/-1.8E+308	|
+|Long Double (80)	|x86 Extended	|15				|64				|18–19				|+/-3.4E-4932 .. +/-1.1E+4932	|
+|Quad (128)			|binary128		|15				|112 (+1)		|33–36	 			|+/-3.4E-4932 .. +/-1.2E+4932	|
+
+Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
+or 128-bit versions. However, you can enter 1.234*10^1234.
+
+
 ## Two Versions Available
 
 ### 📊 GUI Version (WinApiCalc / fcalc.exe)

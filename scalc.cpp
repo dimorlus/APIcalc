@@ -5870,7 +5870,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           {
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = pow (left, left * right / ((float__t)100.0));
+           v_stack[v_sp - 2].fval = Pow (left, left * right / ((float__t)100.0));
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else if (((v_stack[v_sp - 2].tag == tvCOMPLEX) || (v_stack[v_sp - 1].tag == tvCOMPLEX))

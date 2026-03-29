@@ -1027,6 +1027,11 @@ bool IsInf (const double fVal)
          && ((*(__int64 *)(&fVal) & 0x000FFFFFFFFFFFFFull) == 0x0000000000000000ull));
 }
 
+bool IsInfL (const float__t ldVal)
+{
+ return IsInf ((double)ldVal);
+}
+
 const unsigned short neg_inf_bits[5] = {0, 0, 0, 0x8000, 0xFFFF};
 const long double neg_inf = *(long double*)neg_inf_bits;
 #endif

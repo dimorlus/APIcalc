@@ -893,6 +893,7 @@ class calculator // calculator represents the main class for the expression calc
 // #define isnan(a) (a != a) // Macro to check if a value is NaN (Not a Number) by comparing it to
                              // itself
 #define isnan(a) IsNaNL (a)
+#define isinf(a) IsInfL (a)
 #endif
 
 

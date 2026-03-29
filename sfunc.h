@@ -91,6 +91,8 @@ float__t Vout(float__t Vref, float__t Rh, float__t Rl);
 #ifdef __BORLANDC__
 bool IsNaN(const double fVal);
 bool IsNaNL(const long double ldVal);
+bool IsInf (const double fVal);
+bool IsInfL (const float__t ldVal);
 #endif //__BORLANDC__
 int_t fprn(char *dest, char *sfmt, int args, value* v_stack);
 int_t datatime(char *tstr);

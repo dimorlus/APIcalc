@@ -29,7 +29,6 @@ The DLL version is only available for 64-bit systems and is compiled using 128-b
 Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
 or 128-bit versions. However, you can enter 1.234*10^1234.
 
-
 ## Two Versions Available
 
 ### 📊 GUI Version (WinApiCalc / fcalc.exe)
@@ -365,7 +364,6 @@ When the result is a matrix, it is displayed in engineering format, one row per 
  (     4,      5,      6);
  (     7,      8,      9)]
 ```
-
 Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise.
 
 #### Matrix Operations
@@ -536,7 +534,7 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 
 ### Engineering / Scientific Suffixes
 
-Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (10³⁰), **R** (10²⁷) and their lowercase counterparts **q** (10⁻³⁰), **r** (10⁻²⁷) are also supported.
+Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (1E30), **R** (1E27) and their lowercase counterparts **q** (1E-30), **r** (1E-27) are also supported.
 
 For complex numbers, suffixes apply independently to both the real and imaginary parts in output:
 

@@ -484,6 +484,8 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_cplx, // Complex number construction function
  vf_polar, // Polar coordinates construction function
 
+ vf_factorial, // Factorial function
+
  vf_num
 };
 

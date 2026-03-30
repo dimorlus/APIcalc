@@ -1,3 +1,7 @@
+30.03.26 (2.159)
++ Now the factorial is calculated not only from the integer (as cyclic multiplication), but 
+  also from the real and complex arguments using Spouge's approximation.
+
 29.03.26 (2.158)
 - Fixed a bug with output in the BCB version.
 

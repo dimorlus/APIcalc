@@ -307,6 +307,7 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_polar, "polar", (void *)vfunc2);
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
+ add (tsVFUNC1, vf_factorial, "fact", (void *)vfunc);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
  add (tsFFUNC2, "atan2", (void *)(float__t (*) (float__t, float__t))Atan2l);
@@ -340,7 +341,7 @@ void calculator::AddPredefined (void)
  add (tsFFUNC2, "min", (void *)(float__t (*) (float__t, float__t))Min);
  add (tsFFUNC2, "max", (void *)(float__t (*) (float__t, float__t))Max);
  add (tsFFUNC1, "log2", (void *)(float__t (*) (float__t))Log2);
- add (tsFFUNC1, "fact", (void *)(float__t (*) (float__t))Factorial);
+ //add (tsFFUNC1, "fact", (void *)(float__t (*) (float__t))Factorial);
  add (tsFFUNC1, "frh", (void *)(float__t (*) (float__t))Farenheit);
  add (tsFFUNC1, "root3", (void *)(float__t (*) (float__t))Root3);
  add (tsFFUNC1, "cbrt", (void *)(float__t (*) (float__t))Root3);
@@ -6700,9 +6701,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
+         float__t re;
+         float__t im;
+         FactorialC (v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, re, im);
+         v_stack[v_sp - 1].fval = re;
+         v_stack[v_sp - 1].imval = im;
+         v_stack[v_sp - 1].tag   = tvCOMPLEX;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
         {
@@ -6710,7 +6714,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
-       else if (v_stack[v_sp - 1].tag == tvINT)
+       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 1].ival >= 0)
         {
          v_stack[v_sp - 1].ival = (int_t)Factorial ((float__t)v_stack[v_sp - 1].ival);
         }

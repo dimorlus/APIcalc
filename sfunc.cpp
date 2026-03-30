@@ -965,10 +965,19 @@ float__t Ee (float__t x, float__t y) // find standard value
 // Calculate the factorial of a number
 float__t Factorial (float__t x)
 {
- int n        = (int)x;
- float__t res = (float__t)1.0L;
- for (; n > 1; n--) res = res * (float__t)n;
- return res;
+ if ((x >= 0) && (x - Floor (x) == 0.0))
+  {
+   int n        = (int)x;
+   float__t res = (float__t)1.0L;
+   for (; n > 1; n--) res = res * (float__t)n;
+   return res;
+  }
+ else 
+  {
+   float__t re, im;
+   FactorialC (x, 0, re, im);
+   return re;
+  }
 }
 
 // Convert Celsius to Farenheit
@@ -2071,6 +2080,95 @@ void LognC (float__t x, float__t y, float__t u, float__t v, float__t &re, float_
  im = (ln_num_im * ln_den_re - ln_num_re * ln_den_im) / denom;
 }
 
+// Coefficients of the Lanczos approximation for g=15, N=15 (precision for 128-bit)
+// Note: in GCC, use the Q suffix for __float128 (e.g., 1.0Q)
+
+#ifdef _float128_
+#define A_VAL   24.0Q // Параметр точности для 128 бит
+#define N_COUNT 24
+#define SQRT_2PI 2.50662827463100050241576528481104525Q
+#else
+#define A_VAL   12.0L // Для 80-bit BCB
+#define N_COUNT 12
+#define SQRT_2PI 2.50662827463100050241576528481104525L
+#endif
+
+void GammaC (float__t zr, float__t zi, float__t &re, float__t &im)
+{
+ // 1. Reflection formula for Re(z) < 0.5: Gamma(z) = PI / (sin(PI*z) * Gamma(1-z))
+ if (zr < 0.5L)
+  {
+   float__t szr, szi, gzr, gzi;
+   SinC (M_PI * zr, M_PI * zi, szr, szi);
+   GammaC (1.0L - zr, -zi, gzr, gzi);
+
+   float__t denr   = szr * gzr - szi * gzi;
+   float__t deni   = szr * gzi + szi * gzr;
+   float__t d_abs2 = denr * denr + deni * deni;
+
+   re = (M_PI * denr) / d_abs2;
+   im = (-M_PI * deni) / d_abs2;
+   return;
+  }
+
+ // 2. Spouge series
+ float__t z = zr - 1.0L;
+ // Constant c0 in Spouge's method is sqrt(2*PI)
+ float__t x_re = SQRT_2PI;
+ float__t x_im = 0.0L;
+
+ for (int k = 1; k < N_COUNT; k++)
+  {
+   float__t k_f = (float__t)k;
+
+   // Coefficient ck = ( (A-k)^(k-0.5) * exp(A-k) ) / (k-1)!
+   // The sign alternates: c1(+), c2(-), c3(+)...
+   float__t ck = Pow (A_VAL - k_f, k_f - 0.5L) * Exp (A_VAL - k_f);
+
+   if (k > 1)
+    {
+     // Using your Factorial function for integers
+     ck /= Factorial (k - 1);
+    }
+
+   if (k % 2 == 0) ck = -ck;
+
+   float__t dzr = z + k_f;
+   float__t den = dzr * dzr + zi * zi;
+
+   x_re += ck * dzr / den;
+   x_im -= ck * zi / den;
+  }
+
+ // 3. Main part of the formula: (z+A)^(z+0.5) * exp(-(z+A))
+ float__t tr = z + A_VAL;
+ float__t ppr, ppi, epr, epi;
+
+ // Using your complex PowC and ExpC
+ PowC (tr, zi, z + 0.5L, zi, ppr, ppi);
+ ExpC (-tr, -zi, epr, epi);
+
+ // Final multiplication (ppr+ppi*i) * (epr+epi*i) * (x_re+x_im*i)
+ float__t tr1 = ppr * epr - ppi * epi;
+ float__t ti1 = ppr * epi + ppi * epr;
+
+ re = tr1 * x_re - ti1 * x_im;
+ im = tr1 * x_im + ti1 * x_re;
+}
+
+// Factorial n! = Gamma(n + 1)
+void FactorialC (float__t nr, float__t ni, float__t &re, float__t &im)
+{
+ if (ni == 0.0L && nr < 0 && nr == Floor (nr))
+  {
+   re = qnan;
+   im = 0.0L;
+   return; // Factorial is not defined for negative integers
+  }
+ GammaC (nr + 1.0L, ni, re, im);
+}
+
+
 bool is_complex2 (value *arg1, value *arg2, int idx)
 {
  if (((arg1->tag == tvCOMPLEX) 
@@ -2352,6 +2450,11 @@ void vfunc (value *res, value *arg, int idx)
       SqrtC (re, im, out_re, out_im);
      }
      break;
+    case vf_factorial:
+     {
+      FactorialC (re, im, out_re, out_im);
+     }
+     break;
     case vf_re:
      {
       res->fval  = re; // argument
@@ -2369,6 +2472,7 @@ void vfunc (value *res, value *arg, int idx)
      }
      return;
     }
+
    res->fval  = out_re;
    res->imval = out_im;
    res->tag   = tvCOMPLEX;
@@ -2497,6 +2601,10 @@ void vfunc (value *res, value *arg, int idx)
       res->fval = 0.0;
      }
      break;
+     case vf_factorial:
+     {
+      res->fval = Factorial (arg->fval);
+     }
     }
    res->tag   = tvFLOAT;
    res->imval = 0.0;

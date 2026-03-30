@@ -108,7 +108,7 @@ im(z)                     (1)   Return imaginary part of complex
 pol(z)                    (1)   atan(im(z)/re(z))
 min(x,y)                        Minimum of x, y
 max(x,y)                        Maximum of x, y
-fact(n), n!                     Factorial (n!)
+fact(n|x|z), n|x|z!       (1)   Factorial (n!)
 prime(n)                        Smallest prime number
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.

@@ -1,8 +1,8 @@
 ; -- TesterAll.iss --
 [Setup]
 AppName=fcalc
-AppVerName=fcalc (Scientific formula calculator) 2.158 files
-VersionInfoVersion=2.158
+AppVerName=fcalc (Scientific formula calculator) 2.159 files
+VersionInfoVersion=2.159
 AppContact=http://dorlov.no-ip.com
 DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc
@@ -47,6 +47,7 @@ Source: ".\fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\help.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\README.pdf"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 [Registry]

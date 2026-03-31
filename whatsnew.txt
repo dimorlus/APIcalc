@@ -1,3 +1,10 @@
+31.03.26 (2.161)
++ Now hypot and atan2 functions can also accept complex arguments.
+
+30.03.26 (2.160)
++ Now the polar(module, angle) function can also accept complex arguments according
+  formula module*exp(i*angle).
+
 30.03.26 (2.159)
 + Now the factorial is calculated not only from the integer (as cyclic multiplication), but 
   also from the real and complex arguments using Spouge's approximation.
@@ -20,7 +27,7 @@
 * Cosmetic changes.
 
 24.03.26 (2.152)
-+ Now fileinfo with the version is available for both the CLI version and the dll file.
++ Now file info with the version is available for both the CLI version and the dll file.
 
 24.03.26 (2.151)
 - Fixed a bug in the dll version of the functions cs, acs, awg, aawg, swg, aswg.

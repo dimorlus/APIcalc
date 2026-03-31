@@ -292,10 +292,17 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_acoth, "arcth", (void *)vfunc);
 
  add (tsVFUNC1, vf_exp, "exp", (void *)vfunc);
+ add (tsVFUNC1, vf_exp10, "exp10", (void *)vfunc);
  add (tsVFUNC1, vf_log, "log", (void *)vfunc);
  add (tsVFUNC1, vf_log, "ln", (void *)vfunc);
+ add (tsVFUNC1, vf_log10, "log10", (void *)vfunc);
+ add (tsVFUNC1, vf_log10, "lg", (void *)vfunc);
+ add (tsVFUNC1, vf_log2, "log2", (void *)vfunc);
  add (tsVFUNC1, vf_sqrt, "sqrt", (void *)vfunc);
  add (tsVFUNC1, vf_sqrt, "root2", (void *)vfunc);
+ add (tsVFUNC1, vf_root3, "root3", (void *)vfunc);
+ add (tsVFUNC1, vf_root3, "cbrt", (void *)vfunc);
+
 
  add (tsVFUNC2, vf_pow, "pow", (void *)vfunc2);
  add (tsVFUNC2, vf_rootn, "rootn", (void *)vfunc2);
@@ -308,11 +315,10 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
  add (tsVFUNC1, vf_factorial, "fact", (void *)vfunc);
+ add (tsVFUNC2, vf_hypot, "hypot", (void *)vfunc2);
+ add (tsVFUNC2, vf_atan2, "atan2", (void *)vfunc2);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
- add (tsFFUNC2, "atan2", (void *)(float__t (*) (float__t, float__t))Atan2l);
- add (tsFFUNC2, "hypot", (void *)(float__t (*) (float__t, float__t))Hypot);
- add (tsFFUNC1, "log10", (void *)(float__t (*) (float__t))Lg);
  add (tsFFUNC1, "np", (void *)(float__t (*) (float__t))NP);
  add (tsFFUNC1, "db", (void *)(float__t (*) (float__t))DB);
  add (tsFFUNC1, "anp", (void *)(float__t (*) (float__t))ANP);
@@ -322,16 +328,18 @@ void calculator::AddPredefined (void)
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
  add (tsIFUNC1, "prime", (void *)Prime);
+ 
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
  add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
+ 
  add (tsSIFUNC1, "datatime", (void *)datatime);
- add (tsFFUNC1, "lg", (void *)(float__t (*) (float__t))Lg);
- add (tsFFUNC1, "exp10", (void *)(float__t (*) (float__t))Exp10);
+ 
  add (tsFFUNC1, "sing", (void *)(float__t (*) (float__t))Sing);
  add (tsFFUNC1, "cosg", (void *)(float__t (*) (float__t))Cosg);
  add (tsFFUNC1, "tgg", (void *)(float__t (*) (float__t))Tgg);
  add (tsFFUNC1, "ctgg", (void *)(float__t (*) (float__t))Ctgg);
+
  add (tsFFUNC1, "frac", (void *)(float__t (*) (float__t))Frac);
  add (tsFFUNC1, "round", (void *)(float__t (*) (float__t))Round);
  add (tsFFUNC1, "ceil", (void *)(float__t (*) (float__t))Ceil);
@@ -340,11 +348,7 @@ void calculator::AddPredefined (void)
  add (tsIFUNC1, "now", (void *)Now);
  add (tsFFUNC2, "min", (void *)(float__t (*) (float__t, float__t))Min);
  add (tsFFUNC2, "max", (void *)(float__t (*) (float__t, float__t))Max);
- add (tsFFUNC1, "log2", (void *)(float__t (*) (float__t))Log2);
- //add (tsFFUNC1, "fact", (void *)(float__t (*) (float__t))Factorial);
  add (tsFFUNC1, "frh", (void *)(float__t (*) (float__t))Farenheit);
- add (tsFFUNC1, "root3", (void *)(float__t (*) (float__t))Root3);
- add (tsFFUNC1, "cbrt", (void *)(float__t (*) (float__t))Root3);
 
  add (tsFFUNC1, "swg", (void *)(float__t (*) (float__t))Swg);
  add (tsFFUNC1, "sswg", (void *)(float__t (*) (float__t))SSwg);
@@ -374,169 +378,159 @@ void calculator::AddPredefined (void)
  addfconst ("pi", M_PId);
  addfconst ("e", M_Ed);
  addfconst ("phi", PHId);
- addfconst ("tau", 2.0 * M_PId);
- addfconst ("turn", 2.0 * M_PId);
- addfconst ("gon", M_PId / 200.0);
- addfconst ("deg", M_PId / 180.0);
+ addfconst ("tau", (float__t)2.0L * M_PId);
+ addfconst ("turn", (float__t)2.0L * M_PId);
+ addfconst ("gon", M_PId / (float__t)200.0L);
+ addfconst ("deg", M_PId / (float__t)180.0L);
  #else
  addfconst ("pi", M_PI);
  addfconst ("e", M_E);
  addfconst ("phi", PHI);
- addfconst ("tau", 2.0 * M_PI);
- addfconst ("turn", 2.0 * M_PI);
- addfconst ("gon", M_PI / 200.0);
- addfconst ("deg", M_PI / 180.0);
+ addfconst ("tau", ((float__t)2.0L * M_PI));
+ addfconst ("turn",((float__t)2.0L * M_PI));
+ addfconst ("gon", (M_PI / (float__t)200.0L));
+ addfconst ("deg", (M_PI / (float__t)180.0L));
  #endif
  // Other imperial constants
  // Distance and length
- addfconst ("inch", 0.0254);     // Inch (m)
- addfconst ("mil", 0.0000254);   // 1/1000Inch (m)
- addfconst ("ft", 0.3048);       // Foot (m)
- addfconst ("yd", 0.9144);       // Yard (m)
- addfconst ("foot", 0.3048);     // Foot (m)
- addfconst ("yard", 0.9144);     // Yard (m)
- addfconst ("mi", 1609.344);     // Mile (m)
- addfconst ("mile", 1609.344);   // Mile (m)
- addfconst ("nmi", 1852.0);      // Nautical mile
- addfconst ("ptt", 0.0254 / 72); // Point (m)
-
+ addfconst ("inch", (float__t)0.0254);     // Inch (m)
+ addfconst ("mil", (float__t)0.0000254);   // 1/1000Inch (m)
+ addfconst ("ft", (float__t)0.3048);       // Foot (m)
+ addfconst ("yd", (float__t)0.9144);       // Yard (m)
+ addfconst ("foot", (float__t)0.3048);     // Foot (m)
+ addfconst ("yard", (float__t)0.9144);     // Yard (m)
+ addfconst ("mi", (float__t)1609.344);     // Mile (m)
+ addfconst ("mile", (float__t)1609.344);   // Mile (m)
+ addfconst ("nmi", (float__t)1852.0);      // Nautical mile
+ addfconst ("ptt", (float__t)0.0254 / 72); // Point (m)
  // Mass
- addfconst ("lb", 0.45359237L);     // Pound (kg)
- addfconst ("oz", 0.028349523125L); // Ounce (kg)
- addfconst ("st", 6.35029318L);     // Stone (kg)
- addfconst ("gr", 0.001);           // Gram (kg)
- addfconst ("kg", 1.0);             // Kilogram (kg)
+ addfconst ("lb", (float__t)0.45359237);     // Pound (kg)
+ addfconst ("oz", (float__t)0.028349523125); // Ounce (kg)
+ addfconst ("st", (float__t)6.35029318);     // Stone (kg)
+ addfconst ("gr", (float__t)0.001);           // Gram (kg)
+ addfconst ("kg", (float__t)1.0);            // Kilogram (kg)
 
  // Volume
- addfconst ("gal", 0.003785411784L);     // US Gallon (m³)
- addfconst ("qt", 0.000946352946L);      // US Quart (m³)
- addfconst ("pt", 0.000473176473L);      // US Pint (m³)
- addfconst ("cup", 0.0002365882365L);    // US Cup (m³)
- addfconst ("floz", 2.95735295625e-5L);  // US Fluid Ounce (m³)
- addfconst ("tbsp", 1.478676478125e-5L); // US Tablespoon (m³)
- addfconst ("tsp", 4.92892159375e-6L);   // US Teaspoon (m³)
- addfconst ("lt", 0.001);                // liters (m³)
- addfconst ("ml", 0.000001);             // milliliters (m³)
- addfconst ("cc", 0.000001);             // milliliters (m³)
-
+ addfconst ("gal", (float__t)0.003785411784);     // US Gallon (m³)
+ addfconst ("qt", (float__t)0.000946352946);      // US Quart (m³)
+ addfconst ("pt", (float__t)0.000473176473);      // US Pint (m³)
+ addfconst ("cup", (float__t)0.0002365882365);    // US Cup (m³)
+ addfconst ("floz", (float__t)2.95735295625e-5);  // US Fluid Ounce (m³)
+ addfconst ("tbsp", (float__t)1.478676478125e-5); // US Tablespoon (m³)
+ addfconst ("tsp", (float__t)4.92892159375e-6);   // US Teaspoon (m³)
+ addfconst ("lt", (float__t)0.001);                // liters (m³)
+ addfconst ("ml", (float__t)0.000001);             // milliliters (m³)
+ addfconst ("cc", (float__t)0.000001);             // milliliters (m³)
  // Energy
- addfconst ("cal", 4.184);           // Calorie (J)
- addfconst ("kcal", 4184.0);         // Kilocalorie (J)
- addfconst ("btu", 1055.05585262);   // British thermal unit (J)
- addfconst ("wh", 3600.0);           // Watt hour (J)
- addfconst ("kwh", 3600000.0);       // Kilowatt hour (J)
- addfconst ("mwh", 3600000000.0);    // Megawatt hour (J)
- addfconst ("gtnt", 4184);           // Gram of TNT (Joules)
- addfconst ("ttnt", 4.184e9);        // Tonne of TNT (Joules)
- addfconst ("ktnt", 4.184e12);       // Kiloton of TNT (Joules)
- addfconst ("mtnt", 4.184e15);       // Megaton of TNT (Joules)
- addfconst ("ev", 1.602176634e-19);  // Electronvolt (J)
- addfconst ("kev", 1.602176634e-16); // Kiloelectronvolt (J)
- addfconst ("mev", 1.602176634e-13); // Megaelectronvolt (J)
- addfconst ("gev", 1.602176634e-10); // Gigaelectronvolt (J)
+ addfconst ("cal", (float__t)4.184);           // Calorie (J)
+ addfconst ("kcal", (float__t)4184.0);         // Kilocalorie (J)
+ addfconst ("btu", (float__t)1055.05585262);   // British thermal unit (J)
+ addfconst ("wh", (float__t)3600.0);           // Watt hour (J)
+ addfconst ("kwh", (float__t)3600000.0);       // Kilowatt hour (J)
+ addfconst ("mwh", (float__t)3600000000.0);    // Megawatt hour (J)
+ addfconst ("gtnt", (float__t)4184);           // Gram of TNT (Joules)
+ addfconst ("ttnt", (float__t)4.184e9);        // Tonne of TNT (Joules)
+ addfconst ("ktnt", (float__t)4.184e12);       // Kiloton of TNT (Joules)
+ addfconst ("mtnt", (float__t)4.184e15);       // Megaton of TNT (Joules)
+ addfconst ("ev", (float__t)1.602176634e-19);  // Electronvolt (J)
+ addfconst ("kev", (float__t)1.602176634e-16); // Kiloelectronvolt (J)
+ addfconst ("mev", (float__t)1.602176634e-13); // Megaelectronvolt (J)
+ addfconst ("gev", (float__t)1.602176634e-10); // Gigaelectronvolt (J)
 
  // Power
- addfconst ("hps", 745.69987158227022L); // Horsepower (W)
- addfconst ("bhp", 745.69987158227022L); // Brake horsepower (W)
-
+ addfconst ("hps", (float__t)745.69987158227022); // Horsepower (W)
+ addfconst ("bhp", (float__t)745.69987158227022); // Brake horsepower (W)
  // Pressure
- addfconst ("atm", 101325.0);           // Standard atmosphere (Pa)
- addfconst ("bar", 100000.0);           // Bar (Pa)
- addfconst ("psi", 6894.757293168361L); // Pound-force per square inch (Pa)
-
+ addfconst ("atm", (float__t)101325.0);           // Standard atmosphere (Pa)
+ addfconst ("bar", (float__t)100000.0);           // Bar (Pa)
+ addfconst ("psi", (float__t)6894.757293168361); // Pound-force per square inch (Pa)
  // Speed
- addfconst ("kmh", 0.277777778);  // Kilometers per hour to meters per second
- addfconst ("mph", 0.44704);      // Miles per hour to meters per second
- addfconst ("knot", 0.514444444); // Nautical miles per hour to meters per second
-
+ addfconst ("kmh", (float__t)0.277777778);  // Kilometers per hour to meters per second
+ addfconst ("mph", (float__t)0.44704);      // Miles per hour to meters per second
+ addfconst ("knot", (float__t)0.514444444); // Nautical miles per hour to meters per second
  // Time
- addfconst ("hour", 3600); // Hour in seconds
- addfconst ("hr", 3600);   // Hour in seconds
- addfconst ("mnt", 60);    // Minute in seconds
-
+ addfconst ("hour", (float__t)3600); // Hour in seconds
+ addfconst ("hr", (float__t)3600);   // Hour in seconds
+ addfconst ("mnt", (float__t)60);    // Minute in seconds
  // Radiation units
- addfconst ("gy", 1.0);             // Gray (J/kg) - Base SI
- addfconst ("rad", 0.01);           // Rad (absorbed dose)
- addfconst ("sv", 1.0);             // Sievert (Equivalent dose) - Base SI
- addfconst ("rem", 0.01);           // Roentgen Equivalent Man (0.01 Sv)
- addfconst ("rn", 0.00877);         // Roentgen (approx in air)
- addfconst ("mrn", 0.00000877);     // Milli-roentgen
- addfconst ("urn", 0.00000000877);  // Micro-roentgen
- addfconst ("ngnt", 3.6 * 0.00877); // Not great, not terrible (3.6 R)
-
+ addfconst ("gy", (float__t)1.0);             // Gray (J/kg) - Base SI
+ addfconst ("rad", (float__t)0.01);           // Rad (absorbed dose)
+ addfconst ("sv", (float__t)1.0);             // Sievert (Equivalent dose) - Base SI
+ addfconst ("rem", (float__t)0.01);           // Roentgen Equivalent Man (0.01 Sv)
+ addfconst ("rn", (float__t)0.00877);         // Roentgen (approx in air)
+ addfconst ("mrn", (float__t)0.00000877);     // Milli-roentgen
+ addfconst ("urn", (float__t)0.00000000877);  // Micro-roentgen
+ addfconst ("ngnt", (float__t)(3.6 * 0.00877)); // Not great, not terrible (3.6 R)
  // Magnetic units
- addfconst ("tl", 1.0);  // Magnetic flux density (or magnetic induction) Tesla - Base SI
- addfconst ("wb", 1.0);  // Magnetic flux Weber - Base SI
- addfconst ("gs", 1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
- addfconst ("mw", 1e-8); // Magnetic flux Maxwell to Weber
- addfconst ("oe", (1000.0 / (4.0 * M_PI))); // Magnetic field strength (H) Oersted to A/m
- addfconst ("gb", (10.0 / (4.0 * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
+ addfconst ("tl", (float__t)1.0);  // Magnetic flux density (or magnetic induction) Tesla - Base SI
+ addfconst ("wb", (float__t)1.0);  // Magnetic flux Weber - Base SI
+ addfconst ("gs", (float__t)1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
+ addfconst ("mw", (float__t)1e-8); // Magnetic flux Maxwell to Weber
+ addfconst ("oe", (float__t)(1000.0 / (4.0 * M_PI))); // Magnetic field strength (H) Oersted to A/m
+ addfconst ("gb", (float__t)(10.0 / (4.0 * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
 
  // Physical constants (CODATA 2018)
  // Fundamental constants
- addfconst ("c0", 299792458.0);          // Speed of light in vacuum (m/s)
- addfconst ("hp", 6.62607015e-34);       // Planck constant (J·s)
- addfconst ("hb", 1.054571817e-34);      // Reduced Planck constant ℏ (J·s)
- addfconst ("gn", 6.67430e-11);          // Gravitational constant (m³/(kg·s²))
- addfconst ("na", 6.02214076e23);        // Avogadro constant (mol⁻¹)
- addfconst ("kb", 1.380649e-23);         // Boltzmann constant (J/K)
- addfconst ("rg", 8.314462618);          // Universal gas constant (J/(mol·K))
- addfconst ("sf", 5.670374419e-8);       // Stefan-Boltzmann constant (W/(m²·K⁴))
- addfconst ("rs", 8.314462618);          // Ideal gas constant kb*Na (J/(mol·K))
- addfconst ("nae", 2.1798723611035e-18); // Rydberg energy (J)
- addfconst ("mu", 1.66053906660e-27);    // Atomic mass constant (kg)
-
- addfconst ("stdt", 273.15); // Standard temperature (K)
+ addfconst ("c0", (float__t)299792458.0);          // Speed of light in vacuum (m/s)
+ addfconst ("hp", (float__t)6.62607015e-34);       // Planck constant (J·s)
+ addfconst ("hb", (float__t)1.054571817e-34);      // Reduced Planck constant ℏ (J·s)
+ addfconst ("gn", (float__t)6.67430e-11);          // Gravitational constant (m³/(kg·s²))
+ addfconst ("na", (float__t)6.02214076e23);        // Avogadro constant (mol⁻¹)
+ addfconst ("kb", (float__t)1.380649e-23);         // Boltzmann constant (J/K)
+ addfconst ("rg", (float__t)8.314462618);          // Universal gas constant (J/(mol·K))
+ addfconst ("sf", (float__t)5.670374419e-8);       // Stefan-Boltzmann constant (W/(m²·K⁴))
+ addfconst ("rs", (float__t)8.314462618);          // Ideal gas constant kb*Na (J/(mol·K))
+ addfconst ("nae", (float__t)2.1798723611035e-18); // Rydberg energy (J)
+ addfconst ("mu", (float__t)1.66053906660e-27);    // Atomic mass constant (kg)
+ addfconst ("stdt", (float__t)273.15); // Standard temperature (K)
 
  // Electromagnetic constants
- addfconst ("e0", 8.8541878128e-12); // Electric constant, vacuum permittivity (F/m)
- addfconst ("u0", 1.25663706212e-6); // Magnetic constant, vacuum permeability (H/m)
- addfconst ("z0", 376.730313668);    // Characteristic impedance of vacuum (Ω)
+ addfconst ("e0", (float__t)8.8541878128e-12); // Electric constant, vacuum permittivity (F/m)
+ addfconst ("u0", (float__t)1.25663706212e-6); // Magnetic constant, vacuum permeability (H/m)
+ addfconst ("z0", (float__t)376.730313668);    // Characteristic impedance of vacuum (Ω)
 
  // Particle constants
- addfconst ("qe", 1.602176634e-19);   // Elementary charge (C)
- addfconst ("me", 9.1093837015e-31);  // Electron mass (kg)
- addfconst ("mp", 1.67262192369e-27); // Proton mass (kg)
- addfconst ("mn", 1.67492749804e-27); // Neutron mass (kg)
- addfconst ("rel", 2.8179403262e-15); // Classical electron radius (m)
- addfconst ("a0", 5.29177210903e-11); // Bohr radius (m)
-
+ addfconst ("qe", (float__t)1.602176634e-19);   // Elementary charge (C)
+ addfconst ("me", (float__t)9.1093837015e-31);  // Electron mass (kg)
+ addfconst ("mp", (float__t)1.67262192369e-27); // Proton mass (kg)
+ addfconst ("mn", (float__t)1.67492749804e-27); // Neutron mass (kg)
+ addfconst ("rel", (float__t)2.8179403262e-15); // Classical electron radius (m)
+ addfconst ("a0", (float__t)5.29177210903e-11); // Bohr radius (m)
  // Astronomical constants
- addfconst ("au", 1.495978707e11L);     // Astronomical unit (m)
- addfconst ("ly", 9.4607304725808e15L); // Light year (m)
- addfconst ("pc", 3.0856775814914e16L); // Parsec (m)
- addfconst ("g0", 9.80665);             // Standard gravity (m/s²)
+ addfconst ("au", (float__t)1.495978707e11);     // Astronomical unit (m)
+ addfconst ("ly", (float__t)9.4607304725808e15); // Light year (m)
+ addfconst ("pc", (float__t)3.0856775814914e16); // Parsec (m)
+ addfconst ("g0", (float__t)9.80665);             // Standard gravity (m/s²)
 
  // Additional constants
- addfconst ("ry", 10973731.568160); // Rydberg constant (m⁻¹)
- addfconst ("sb", 5.670374419e-8);  // Stefan-Boltzmann constant (W/(m²·K⁴))
-
+ addfconst ("ry", (float__t)10973731.568160); // Rydberg constant (m⁻¹)
+ addfconst ("sb", (float__t)5.670374419e-8);  // Stefan-Boltzmann constant (W/(m²·K⁴))
  // Rainbow colors
- addfconst ("fir", 316e-6);
- addfconst ("lwir", 11.5e-6);
- addfconst ("mwir", 5.5e-6);
- addfconst ("swir", 2.2e-6);
- addfconst ("nir", 1.09e-6);
- addfconst ("red", 685e-9);
- addfconst ("orange", 605e-9);
- addfconst ("yellow", 580e-9);
- addfconst ("green", 532e-9);
- addfconst ("blue", 472e-9);
- addfconst ("indigo", 435e-9);
- addfconst ("violet", 400e-9);
- addfconst ("uva", 348e-9);
- addfconst ("uvb", 298e-9);
- addfconst ("uvc", 190e-9);
+ addfconst ("fir", (float__t)316e-6);
+ addfconst ("lwir", (float__t)11.5e-6);
+ addfconst ("mwir", (float__t)5.5e-6);
+ addfconst ("swir", (float__t)2.2e-6);
+ addfconst ("nir", (float__t)1.09e-6);
+ addfconst ("red", (float__t)685e-9);
+ addfconst ("orange", (float__t)605e-9);
+ addfconst ("yellow", (float__t)580e-9);
+ addfconst ("green", (float__t)532e-9);
+ addfconst ("blue", (float__t)472e-9);
+ addfconst ("indigo", (float__t)435e-9);
+ addfconst ("violet", (float__t)400e-9);
+ addfconst ("uva", (float__t)348e-9);
+ addfconst ("uvb", (float__t)298e-9);
+ addfconst ("uvc", (float__t)190e-9);
 
  // Integer Limits:
- addlvar ("max32", 2147483647.0L, 0x7fffffff);
- addlvar ("maxint", 2147483647.0L, 0x7fffffff);
- addlvar ("maxu32", 4294967295.0L, 0xffffffff);
- addlvar ("maxuint", 4294967295.0L, 0xffffffff);
- addlvar ("max64", 9223372036854775807.0L, 0x7fffffffffffffffull);
- addlvar ("maxlong", 9223372036854775807.0L, 0x7fffffffffffffffull);
- addlvar ("maxu64", 18446744073709551615.0L, 0xffffffffffffffffull);
- addlvar ("maxulong", 18446744073709551615.0L, 0xffffffffffffffffull);
+ addlvar ("max32", (float__t)2147483647.0L, 0x7fffffff);
+ addlvar ("maxint", (float__t)2147483647.0L, 0x7fffffff);
+ addlvar ("maxu32", (float__t)4294967295.0L, 0xffffffff);
+ addlvar ("maxuint", (float__t)4294967295.0L, 0xffffffff);
+ addlvar ("max64", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlvar ("maxlong", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlvar ("maxu64", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
+ addlvar ("maxulong", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
 
  addlvar ("fp_sz", sizeof (float__t)*8, sizeof (float__t)*8);
  addlvar ("int_sz", sizeof (int_t)*8, sizeof (int_t)*8);
@@ -555,10 +549,10 @@ void calculator::AddPredefined (void)
  double tzHours    = -timezoneBias / 60.0;
  double currentTz  = tzHours + (daylight ? -tzi.DaylightBias / 60.0 : 0);
 
- addlvar ("timezone", tzHours, (int)tzHours);
+ addlvar ("timezone", (float__t)tzHours, (int)tzHours);
  addlvar ("daylight", (float__t)daylight, daylight);
- addlvar ("tz", currentTz, (int)currentTz);
- addfconst ("version", _ver_);
+ addlvar ("tz", (float__t)currentTz, (int)currentTz);
+ addfconst ("version", (float__t)_ver_);
  addim (); // Add imaginary unit 'i', 'j' as a predefined constant
 }
  

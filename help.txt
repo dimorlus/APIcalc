@@ -30,7 +30,7 @@ First using of ':=' switches engine to 'Pas'-style syntax.
 Default is 'Pas'-style syntax.
 
             Functions:
-abs(x|z)                 (1,3)  Absolute value|Complex
+abs(x|z|M)               (1,3)  Absolute value|Complex|Matrix
 
 sin(x|z)                  (1)   Sin of radian|Complex
 sing(x)                         Sin of degrees
@@ -45,7 +45,7 @@ arcsin(x|z), asin(x|z)    (1)   ArcSin in radian|Complex
 arccos(x|z), acos(x|z)    (1)   ArcCos in radian|Complex
 arctg(x|z), atan(x|z)     (1)   ArcTg in radian|Complex
 arcctg(x|z), acot(x|z)    (1)   ArcCtg in radian|Complex
-atan2(y,x)                      Arc tangent of y/x.
+atan2(y|z,x|z)            (1)   Arc tangent of y/x.
 
 sinh(x|z), sh(x|z)        (1)   Hyperbolic sine
 cosh(x|z), ch(x|z)        (1)   Hyperbolic cosine
@@ -57,18 +57,18 @@ atanh(x|z), arth(x|z)     (1)   Hyperbolic arctangent
 acoth(x|z), arcth(x|z)    (1)   Hyperbolic arccotangent
 
 exp(x|z)                  (1)   Exponent, e^x
-exp10(x)                        10^x 
+exp10(x|z)                (1)   10^x 
 pow(x|z,y|z)              (1)   x^y
 
 ln(x|z), log(x|z)         (1)   Natural logarithm
-lg(x), log10(x)                 Logarithm base 10, Log10(x)
-log2(x)                         Logarithm base 2, Log2(x)
+lg(x|z), log10(x|z)       (1)   Logarithm base 10, Log10(x)
+log2(x|z)                 (1)   Logarithm base 2, Log2(x)
 logn(x|z,y|z)             (1)   Log x(y)
 
 sqrt(x|z) root2(x|z)      (1)   Square root
-root3(x), cbrt(x)               Cube root, x^(1/3)
+root3(x|z), cbrt(x|z)     (1)   Cube root, x^(1/3)
 rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
-hypot(x,y)                      Hypotenuse
+hypot(x|z,y|z)            (1)   Hypotenuse
 
 int(x)                          Convert to int
 float(n)                        Convert to float
@@ -101,7 +101,7 @@ swg(n)                          British standard wire gauge to mm
 sswg(n)                         British standard wire gauge to mm2
 aswg(x)                         mm to British standard wire gauge
 
-polar(r,θ)                      Return complex value r*cos(θ)+ir*sin(θ)
+polar(r,θ)                      Return complex value r*exp(iθ)
 cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
 re(z)                     (1)   Return real part of complex
 im(z)                     (1)   Return imaginary part of complex

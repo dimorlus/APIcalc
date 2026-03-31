@@ -33,7 +33,8 @@ float__t Erf(float__t x);
 
 float__t Erfc(float__t x);
 float__t Random(float__t x);
-float__t Atan(float__t x);
+float__t Abs (float__t x);
+float__t Atan (float__t x);
 float__t Acot(float__t x);
 float__t Atan2l(float__t x, float__t y);
 float__t Cos(float__t x);
@@ -122,14 +123,22 @@ void AcoshC(float__t x, float__t y, float__t& re, float__t& im);
 void AtanhC(float__t x, float__t y, float__t& re, float__t& im);
 void AcothC(float__t x, float__t y, float__t& re, float__t& im);
 
-void ExpC(float__t x, float__t y, float__t& re, float__t& im);
-void LnC(float__t x, float__t y, float__t& re, float__t& im);
-void SqrtC(float__t x, float__t y, float__t& re, float__t& im);
+void SqrtC (float__t x, float__t y, float__t &re, float__t &im);
+void Root3C (float__t x, float__t y, float__t &re, float__t &im);
+void ExpC (float__t x, float__t y, float__t &re, float__t &im);
+void Exp10C (float__t x, float__t y, float__t &re, float__t &im);
+void LnC (float__t x, float__t y, float__t &re, float__t &im);
+void Log10C (float__t x, float__t y, float__t &re, float__t &im);
+void Log2C (float__t x, float__t y, float__t &re, float__t &im);
 
 void PowC(float__t x1, float__t y1, float__t x2, float__t y2, float__t& re, float__t& im);
 void RootNC(float__t xr, float__t xi, float__t yr, float__t yi, float__t& re, float__t& im);
 void LognC(float__t x, float__t y, float__t u, float__t v, float__t& re, float__t& im);
 void FactorialC (float__t nr, float__t ni, float__t &re, float__t &im);
+void HypotC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+             float__t &out_im);
+void Atan2C (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+             float__t &out_im);
 
 void vfunc(value* res, value* arg, int idx);
 void vfunc2(value* res, value* arg1, value* arg2, int idx);

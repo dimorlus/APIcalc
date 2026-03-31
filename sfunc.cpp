@@ -223,20 +223,19 @@ int_t Now (int_t n)
 float__t Erf (float__t x)
 {
  // constants
- float__t a1 = 0.254829592;
- float__t a2 = -0.284496736;
- float__t a3 = 1.421413741;
- float__t a4 = -1.453152027;
- float__t a5 = 1.061405429;
- float__t p  = 0.3275911;
-
+ float__t a1 = (float__t)0.254829592L;
+ float__t a2 = (float__t)-0.284496736L;
+ float__t a3 = (float__t)1.421413741L;
+ float__t a4 = (float__t)-1.453152027L;
+ float__t a5 = (float__t)1.061405429L;
+ float__t p  = (float__t)0.3275911L;
  // Save the sign of x
- int sign = (x < 0) ? -1 : 1;
+ int sign = (x < (float__t)0.0L) ? -1 : 1;
  x        = fabsl (x);
 
  // A&S formula 7.1.26
- float__t t = 1.0 / (1.0 + p * x);
- float__t y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * expl (-x * x);
+ float__t t = (float__t)1.0L / ((float__t)1.0L + p * x);
+ float__t y = (float__t)1.0L - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * expl (-x * x);
 
  return sign * y;
 }
@@ -244,14 +243,25 @@ float__t Erf (float__t x)
 // Complementary error function: erfc(x) = 1 - erf(x)
 float__t Erfc (float__t x)
 {
- return 1 - Erf (x);
+ return (float__t)1.0L - Erf (x);
 }
 
 // Generate a random float in the range [0, x)
 float__t Random (float__t x)
 {
- return (float__t)(rand () * x / RAND_MAX);
+ return (float__t)(rand () * x / (float__t)RAND_MAX);
 }
+
+// Absolute value: Abs(x)
+float__t Abs (float__t x)
+{
+#ifdef _long_double_
+ return fabsl (x);
+#else
+ return fabs (x);
+#endif
+}
+
 
 // Arctangent: atan(x)
 float__t Atan (float__t x)
@@ -267,10 +277,10 @@ float__t Atan (float__t x)
 float__t Acot (float__t x)
 {
 #ifdef _long_double_
- if (x == 0) return M_PI_2l; // pi/2
- return atanl (1.0L / x);
+ if (x == (float__t)0.0L) return M_PI_2l; // pi/2
+ return atanl ((float__t)1.0L / x);
 #else
- if (x == 0) return M_PI_2; // pi/2
+ if (x == (float__t)0.0L) return M_PI_2; // pi/2
  return atan (1.0 / x);
 #endif
 }
@@ -278,7 +288,7 @@ float__t Acot (float__t x)
 // Arctangent of y/x: atan2(y, x)
 float__t Atan2l (float__t x, float__t y)
 {
- if (x != 0 && y != 0)
+ if (x != (float__t)0.0L && y != (float__t)0.0L )
   {
 #ifdef _long_double_
    return atan2l (x, y);
@@ -363,7 +373,9 @@ float__t Tanh (float__t x)
 // Power function: x^y
 float__t Pow (float__t x, float__t y)
 {
- if ((x > 0) || ((x == 0) && (y > 0)) || ((x < 0) && (y - floor (y) == 0)))
+ if ((x > (float__t)0.0L) || ((x == (float__t)0.0L) && 
+     (y > (float__t)0.0L)) || ((x < (float__t)0.0L) && 
+     (y - floor (y) == (float__t)0.0L)))
   {
 #ifdef _long_double_
    return powl (x, y); // x^y
@@ -380,12 +392,12 @@ float__t Sqrt (float__t x)
 {
 // return sqrtl(x);
 #ifdef _long_double_
- if (x >= 0)
+ if (x >= (float__t)0.0L)
   return sqrtl (x);
  else
   return qnan; 
 #else
- if (x >= 0)
+ if (x >= (float__t)0.0L)
   return sqrt (x);
  else
   return qnan; 
@@ -407,12 +419,12 @@ float__t Hypot (float__t x, float__t y)
 float__t Acos (float__t x)
 {
 #ifdef _long_double_
- if ((x <= 1) && (x >= -1))
+ if ((x <= (float__t)1.0L) && (x >= (float__t)-1.0L))
   return acosl (x);
  else
   return qnan; 
 #else
- if ((x <= 1) && (x >= -1))
+ if ((x <= (float__t)1.0L) && (x >= (float__t)-1.0L))
   return acos (x);
  else
   return qnan; 
@@ -423,12 +435,12 @@ float__t Acos (float__t x)
 float__t Asin (float__t x)
 {
 #ifdef _long_double_
- if ((x <= 1) && (x >= -1))
+ if ((x <= (float__t)1.0L) && (x >= (float__t)-1.0L))
   return asinl (x);
  else
   return qnan; 
 #else
- if ((x <= 1) && (x >= -1))
+ if ((x <= (float__t)1.0L) && (x >= (float__t)-1.0L))
   return asin (x);
  else
   return qnan; 
@@ -439,12 +451,12 @@ float__t Asin (float__t x)
 float__t Log (float__t x)
 {
 #ifdef _long_double_
- if (x > 0)
+ if (x > (float__t)0.0L)
   return logl (x);
  else
   return qnan; 
 #else
- if (x > 0)
+ if (x > (float__t)0.0L)
   return log (x);
  else
   return qnan; 
@@ -455,12 +467,12 @@ float__t Log (float__t x)
 float__t Lg (float__t x)
 {
 #ifdef _long_double_
- if (x > 0)
+ if (x > (float__t)0.0L)
   return log10l (x);
  else
   return qnan; 
 #else
- if (x > 0)
+ if (x > (float__t)0.0L)
   return log10 (x);
  else
   return qnan; 
@@ -471,13 +483,13 @@ float__t Lg (float__t x)
 float__t NP (float__t x)
 {
 #ifdef _long_double_
- if (x > 0)
-  return 20 * log10l (x);
+ if (x > (float__t)0.0L)
+  return (float__t)20.0L * log10l (x);
  else
   return qnan; 
 #else
- if (x > 0)
-  return 20 * log10 (x);
+ if (x > (float__t)0.0L)
+  return (float__t)20.0L * log10 (x);
  else
   return qnan; 
 #endif
@@ -487,13 +499,13 @@ float__t NP (float__t x)
 float__t DB (float__t x)
 {
 #ifdef _long_double_
- if (x > 0)
-  return 10 * log10l (x);
+ if (x > (float__t)0.0L)
+  return (float__t)10.0L * log10l (x);
  else
   return qnan; 
 #else
- if (x > 0)
-  return 10 * log10 (x);
+ if (x > (float__t)0.0L)
+  return (float__t)10.0L * log10 (x);
  else
   return qnan; 
 #endif
@@ -504,12 +516,12 @@ float__t Ctanh (float__t x) // cth
 {
 #ifdef _long_double_
  if (x > 0)
-  return (expl (2 * x) + 1) / (expl (2 * x) - 1);
+  return (expl ((float__t)2.0L * x) + 1) / (expl ((float__t)2.0L * x) - 1);
  else
   return qnan; 
 #else                                                 /*_long_double_*/
  if (x > 0)
-  return (exp (2 * x) + 1) / (exp (2 * x) - 1);
+  return (exp ((float__t)2.0L * x) + 1) / (exp ((float__t)2.0L * x) - 1);
  else
   return qnan; 
 #endif                                                /*_long_double_*/
@@ -519,9 +531,9 @@ float__t Ctanh (float__t x) // cth
 float__t Arsh (float__t x)
 {
 #ifdef _long_double_
- return logl (x + sqrt (x * x + 1));
+ return logl (x + sqrt (x * x + (float__t)1.0L));
 #else  /*_long_double_*/
- return log (x + sqrt (x * x + 1));
+ return log (x + sqrt (x * x + (float__t)1.0L));
 #endif /*_long_double_*/
 }
 
@@ -529,33 +541,33 @@ float__t Arsh (float__t x)
 float__t Arch (float__t x)
 {
 #ifdef _long_double_
- return logl (x + sqrtl (x * x - 1));
+ return logl (x + sqrtl (x * x - (float__t)1.0L));
 #else  /*_long_double_*/
- return log (x + sqrt (x * x - 1));
+ return log (x + sqrt (x * x - (float__t)1.0L));
 #endif /*_long_double_*/
 }
 
 // Inverse hyperbolic tangent function
 float__t Arth (float__t x)
 {
- if ((x == 1) || (x == -1))
+ if ((x == (float__t)1.0L) || (x == (float__t)-1.0L))
   return qnan; 
 #ifdef _long_double_
- return logl ((1 + x) / (1 - x)) / 2;
+ return logl ((1 + x) / (1 - x)) / (float__t)2.0L;
 #else  /*_long_double_*/
- return log ((1 + x) / (1 - x)) / 2;
+ return log ((1 + x) / (1 - x)) / (float__t)2.0L;
 #endif /*_long_double_*/
 }
 
 // Inverse hyperbolic cotangent function
 float__t Arcth (float__t x)
 {
- if ((x == 1) || (x == -1))
+ if ((x == (float__t)1.0L) || (x == (float__t)-1.0L))
   return qnan; 
 #ifdef _long_double_
- return logl ((x + 1) / (x - 1)) / 2;
+ return logl ((x + (float__t)1.0L) / (x - (float__t)1.0L)) / (float__t)2.0L;
 #else  /*_long_double_*/
- return log ((x + 1) / (x - 1)) / 2;
+ return log ((x + (float__t)1.0L) / (x - (float__t)1.0L)) / (float__t)2.0L;
 #endif /*_long_double_*/
 }
 
@@ -563,31 +575,31 @@ float__t Arcth (float__t x)
 float__t Exp10 (float__t x)
 {
 #ifdef _long_double_
- return expl (x * logl (10.0));
+ return expl (x * logl ((float__t)10.0L));
 #else  /*_long_double_*/
- return exp (x * log (10.0));
+ return exp (x * log ((float__t)10.0L));
 #endif /*_long_double_*/
 }
 
 // Convert decibels to linear scale (10^(x/20))
 float__t ANP (float__t x)
 {
- return Exp10 (x / 20);
+ return Exp10 (x / (float__t)20.0L);
 }
 
 // Convert decibels to linear scale (10^(x/10))
 float__t ADB (float__t x)
 {
- return Exp10 (x / 10);
+ return Exp10 (x / (float__t)10.0L);
 }
 
 // Trigonometric functions with degree input
 float__t Sing (float__t x)
 {
 #ifdef _long_double_
- return sinl (M_PI * x / 180);
+ return sinl (M_PI * x / (float__t)180.0L);
 #else  /*_long_double_*/
- return sin (M_PI * x / 180);
+ return sin (M_PI * x / (float__t)180.0L);
 #endif /*_long_double_*/
 }
 
@@ -595,9 +607,9 @@ float__t Sing (float__t x)
 float__t Cosg (float__t x)
 {
 #ifdef _long_double_
- return cosl (M_PI * x / 180);
+ return cosl (M_PI * x / (float__t)180.0L);
 #else  /*_long_double_*/
- return cos (M_PI * x / 180);
+ return cos (M_PI * x / (float__t)180.0L);
 #endif /*_long_double_*/
 }
 
@@ -605,27 +617,27 @@ float__t Cosg (float__t x)
 float__t Tgg (float__t x)
 {
 #ifdef _long_double_
- return tanl (M_PI * x / 180);
+ return tanl (M_PI * x / (float__t)180.0L);
 #else  /*_long_double_*/
- return tan (M_PI * x / 180);
+ return tan (M_PI * x / (float__t)180.0L);
 #endif /*_long_double_*/
 }
 
 // Cotangent function with degree input
 float__t Ctgg (float__t x)
 {
- if (x == 0) return qnan; 
+ if (x == (float__t)0.0L) return qnan; 
 #ifdef _long_double_
- return 1 / tanl (M_PI * x / 180);
+ return 1 / tanl (M_PI * x / (float__t)180.0L);
 #else  /*_long_double_*/
- return 1 / tan (M_PI * x / 180);
+ return 1 / tan (M_PI * x / (float__t)180.0L);
 #endif /*_long_double_*/
 }
 
 // Cotangent function
 float__t Ctg (float__t x)
 {
- if (x == 0) return qnan; 
+ if (x == (float__t)0.0L) return qnan; 
 #ifdef _long_double_
  return 1 / tanl (x);
 #else  /*_long_double_*/
@@ -636,13 +648,13 @@ float__t Ctg (float__t x)
 // Round a float to the nearest integer
 float__t Round (float__t x)
 {
- return (float__t)((int)(x + 0.5));
+ return (float__t)((int)(x + (float__t)0.5L));
 }
 
 // Round a float to the nearest integer towards positive infinity
 float__t Ceil (float__t x)
 {
- return (float__t)((int)(x + 1));
+ return (float__t)((int)(x + (float__t)1.0L));
 }
 
 // Round a float to the nearest integer towards negative infinity
@@ -681,19 +693,19 @@ float__t Max (float__t x, float__t y)
 // Get the base-2 logarithm of a float
 float__t Log2 (float__t x)
 {
- if (x <= 0) return qnan; 
+ if (x <= (float__t)0.0L) return qnan; 
 #ifdef _long_double_
- return logl (x) / logl (2.0);
+ return logl (x) / logl ((float__t)2.0L);
 #else  /*_long_double_*/
- return log (x) / log (2.0);
+ return log (x) / log ((float__t)2.0L);
 #endif /*_long_double_*/
 }
 
 // Get the logarithm of y to the base x
 float__t Logn (float__t x, float__t y)
 {
- if (x <= 0) return qnan; 
- if (y <= 0) return qnan; 
+ if (x <= (float__t)0.0L) return qnan; 
+ if (y <= (float__t)0.0L) return qnan; 
 #ifdef _long_double_
  return logl (y) / logl (x);
 #else  /*_long_double_*/
@@ -705,9 +717,17 @@ float__t Logn (float__t x, float__t y)
 float__t Root3 (float__t x)
 {
 #ifdef _long_double_
- return powl (x, 1 / 3.0);
-#else  /*_long_double_*/
- return pow (x, 1 / 3.0);
+#ifdef __BORLANDC__
+ return powl (x, (float__t)1.0L / (float__t)3.0L);
+#else
+ return cbrtl (x);
+#endif
+ #else  /*_long_double_*/
+#ifdef __BORLANDC__
+ return pow (x, (float__t)1.0L / (float__t)3.0L);
+#else
+ return cbrt (x);
+#endif
 #endif /*_long_double_*/
 }
 
@@ -715,9 +735,9 @@ float__t Root3 (float__t x)
 float__t Rootn (float__t x, float__t y)
 {
 #ifdef _long_double_
- return powl (x, 1 / y);
+ return powl (x, (float__t)1.0L / y);
 #else  /*_long_double_*/
- return pow (x, 1 / y);
+ return pow (x, (float__t)1.0L / y);
 #endif /*_long_double_*/
 }
 
@@ -743,9 +763,9 @@ float__t Swg (float__t x) // SWG to mm
 float__t SSwg (float__t x) // SWG to mm^2
 {
 #ifdef _long_double_
- return powl (Swg (x), 2) * M_PI / 4.0;
+ return powl (Swg (x), (float__t)2.0L) * M_PI / (float__t)4.0L;
 #else  /*_long_double_*/
- return pow (Swg (x), 2) * M_PI / 4.0;
+ return pow (Swg (x), (float__t)2.0L) * M_PI / (float__t)4.0L;
 #endif /*_long_double_*/
 }
 
@@ -773,9 +793,9 @@ float__t Aswg (float__t x) // mm to SWG
 float__t Awg (float__t x) // AWG to mm
 {
 #ifdef _long_double_
- return expl (2.1104 - 0.11594 * x);
+ return expl ((float__t)2.1104L - (float__t)0.11594L * x);
 #else  /*_long_double_*/
- return exp (2.1104 - 0.11594 * x);
+ return exp ((float__t)2.1104L - (float__t)0.11594L * x);
 #endif /*_long_double_*/
 }
 
@@ -783,9 +803,9 @@ float__t Awg (float__t x) // AWG to mm
 float__t SAwg (float__t x) // AWG to mm^2
 {
 #ifdef _long_double_
- return powl (exp(2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
+ return powl (exp ((float__t)2.1104L - (float__t)0.11594L * x), (float__t)2.0L) * M_PI / (float__t)4.0L;
 #else  /*_long_double_*/
- return pow (exp(2.1104 - 0.11594 * x), 2) * M_PI / 4.0;
+ return pow (exp ((float__t)2.1104L - (float__t)0.11594L * x), (float__t)2.0L) * M_PI / (float__t)4.0L;
 #endif /*_long_double_*/
 }
 
@@ -793,18 +813,18 @@ float__t SAwg (float__t x) // AWG to mm^2
 float__t Cs (float__t x) // diameter to mm^2
 {
 #ifdef _long_double_
- return powl (x, 2) * M_PI / 4.0;
+ return powl (x, (float__t)2.0L) * M_PI / ((float__t)4.0L);
 #else  /*_long_double_*/
- return pow (x, 2) * M_PI / 4.0;
+ return pow (x, (float__t)2.0L) * M_PI / (float__t)4.0L;
 #endif /*_long_double_*/
 }
 // Convert mm^2 to diameter: d = sqrt(4 * A / pi)
 float__t Acs (float__t x) // mm^2 to diameter
 {
 #ifdef _long_double_
- return sqrtl (4.0 * x / M_PI);
+ return sqrtl ((float__t)4.0L * x / M_PI);
 #else  /*_long_double_*/
- return sqrt (4.0 * x / M_PI);
+ return sqrt ((float__t)4.0L * x / M_PI);
 #endif /*_long_double_*/
 }
 
@@ -812,9 +832,9 @@ float__t Acs (float__t x) // mm^2 to diameter
 float__t Aawg (float__t x) // mm to AWG
 {
 #ifdef _long_double_
- return (float__t)((2.1104 - logl (x)) / 0.11594);
+ return (float__t)(((float__t)2.1104L - logl (x)) / (float__t)0.11594L);
 #else  /*_long_double_*/
- return (float__t)((2.1104 - log (x)) / 0.11594);
+ return (float__t)(((float__t)2.1104L - log (x)) / (float__t)0.11594L);
 #endif /*_long_double_*/
 }
 
@@ -852,7 +872,7 @@ double E192[]
 // Find the nearest standard value from E-series
 float__t Ee (float__t x, float__t y) // find standard value
 {
- if (x >= 0.0 && y >= 0.0)
+ if (x >= (float__t)0.0L && y >= (float__t)0.0L)
   {
    unsigned int n;
    unsigned int N = (unsigned int)x;
@@ -983,7 +1003,7 @@ float__t Factorial (float__t x)
 // Convert Celsius to Farenheit
 float__t Farenheit (float__t x)
 {
- return (float__t)((x - 32.0) * 5.0 / 9.0);
+ return (float__t)((x - (float__t)32.0L) * (float__t)5.0L / (float__t)9.0L);
 }
 
 // Compare two floats with a given precision
@@ -995,11 +1015,11 @@ float__t Cmp (float__t x, float__t y, float__t prec)
  float__t rel_diff = fabs (x - y) / (x > y ? x : y);
 #endif
  if (rel_diff < prec)
-  return 0;
+  return (float__t)0.0L;
  else if (x < y)
-  return -1;
+  return (float__t)-1.0L;
  else
-  return 1;
+  return (float__t)1.0L;
 }
 
 // Vref=Vout*Rl/(Rh+Rl)
@@ -1741,6 +1761,21 @@ void ExpC (float__t x, float__t y, float__t &re, float__t &im)
 #endif
 }
 
+// Exponential of a complex number with base 10: exp10(z) = 10^z = exp(z * ln(10))
+void Exp10C(float__t x, float__t y, float__t& re, float__t& im)
+{
+ #ifdef _long_double_
+ float__t ex = powl ((float__t)10.0L, x);
+ re = ex * cosl (y);
+ im = ex * sinl (y);
+#else
+ double ex = pow (10.0, x);
+ re = ex * cos (y);
+ im = ex * sin (y);
+#endif
+}
+
+
 // Absolute value (magnitude) of a complex number: abs(z) = sqrt(x^2 + y^2)
 float__t AbsC (float__t x, float__t y)
 {
@@ -1759,7 +1794,7 @@ void TanC (float__t x, float__t y, float__t &re, float__t &im)
  CosC (x, y, cos_re, cos_im);
  // (a+bi)/(c+di) = [(ac+bd) + i(bc-ad)] / (c^2 + d^2)
  float__t denom = cos_re * cos_re + cos_im * cos_im;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -1775,7 +1810,7 @@ void CotC (float__t x, float__t y, float__t &re, float__t &im)
  float__t tan_re, tan_im;
  TanC (x, y, tan_re, tan_im);
  float__t denom = tan_re * tan_re + tan_im * tan_im;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -1789,8 +1824,8 @@ void CotC (float__t x, float__t y, float__t &re, float__t &im)
 void AsinC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // iz = -y + ix
- float__t a = 1 - (x * x - y * y);
- float__t b = -2 * x * y;
+ float__t a = (float__t)1.0L - (x * x - y * y);
+ float__t b = -(float__t)2.0L * x * y;
  float__t sqrt_re, sqrt_im;
  // sqrt(1 - z^2)
  SqrtC (a, b, sqrt_re, sqrt_im);
@@ -1808,8 +1843,8 @@ void AsinC (float__t x, float__t y, float__t &re, float__t &im)
 void AcosC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // z^2 - 1
- float__t a = x * x - y * y - 1;
- float__t b = 2 * x * y;
+ float__t a = x * x - y * y - (float__t)1.0L;
+ float__t b = (float__t)2.0L * x * y;
  float__t sqrt_re, sqrt_im;
  SqrtC (a, b, sqrt_re, sqrt_im);
  // z + sqrt(...)
@@ -1837,8 +1872,8 @@ void AtanC (float__t x, float__t y, float__t &re, float__t &im)
  float__t ln2_re, ln2_im;
  LnC (a2, b2, ln2_re, ln2_im);
 
- re = 0.5 * (ln1_im - ln2_im);
- im = 0.5 * (ln2_re - ln1_re);
+ re = (float__t)0.5L * (ln1_im - ln2_im);
+ im = (float__t)0.5L * (ln2_re - ln1_re);
 }
 
 // Hyperbolic sine of a complex number: sinh(z) = sinh(x) * cos(y) + i * cosh(x) * sin(y)
@@ -1872,7 +1907,7 @@ void TanhC (float__t x, float__t y, float__t &re, float__t &im)
  SinhC (x, y, sinh_re, sinh_im);
  CoshC (x, y, cosh_re, cosh_im);
  float__t denom = cosh_re * cosh_re + cosh_im * cosh_im;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -1894,14 +1929,35 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
  }
 #endif
 #ifdef _long_double_
- re = 0.5L * logl (x * x + y * y);
+ re = (float__t)0.5L * logl (x * x + y * y);
  //im = atan2l (y, x);
- im = (y == 0.0L && x < 0.0L) ? M_PI : atan2l (y, x);
+ im = (y == (float__t)0.0L && x < (float__t)0.0L) ? M_PI : atan2l (y, x);
 #else
  re = 0.5 * log (x * x + y * y);
  im = (y == 0.0 && x < 0.0) ? M_PI : atan2 (y, x);
 #endif
 }
+
+// Logarithm base 10 of a complex number: log10(z) = ln(z) / ln(10)
+void Log10C(float__t x, float__t y, float__t& re, float__t& im)
+{
+    float__t ln10 = (float__t)2.3025850929940456840179914546844L; // ln(10)
+    float__t ln_re, ln_im;
+    LnC(x, y, ln_re, ln_im);
+    re = ln_re / ln10;
+    im = ln_im / ln10;
+}
+
+// Logarithm base 2 of a complex number: log2(z) = ln(z) / ln(2)
+void Log2C (float__t x, float__t y, float__t &re, float__t &im)
+{
+    float__t ln2 = (float__t)0.69314718055994530941723212145818L; // ln(2)
+    float__t ln_re, ln_im;
+    LnC(x, y, ln_re, ln_im);
+    re = ln_re / ln2;
+    im = ln_im / ln2;
+}
+
 
 // Square root of a complex number: sqrt(z) = sqrt(r) * [cos(phi/2) + i*sin(phi/2)]
 void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
@@ -1909,16 +1965,42 @@ void SqrtC (float__t x, float__t y, float__t &re, float__t &im)
 #ifdef _long_double_
  float__t r   = hypotl (x, y);
  //float__t phi = atan2l (y, x);
- float__t phi = (y == 0.0 && x < 0.0) ? M_PI : atan2l (y, x);
+ float__t phi = (y == (float__t)0.0L && x < (float__t)0.0L) ? M_PI : atan2l (y, x);
  r = sqrtl (r);
- re = r * cosl (phi / 2);
- im = r * sinl (phi / 2);
+ re = r * cosl (phi / (float__t)2.0L);
+ im = r * sinl (phi / (float__t)2.0L);
 #else
  double r = hypot (x, y);
  double phi = atan2 (y, x);
  r = sqrt (r);
- re = r * cos (phi / 2);
- im = r * sin (phi / 2);
+ re = r * cos (phi / (float__t)2.0L);
+ im = r * sin (phi / (float__t)2.0L);
+#endif
+}
+
+// Cube root of a complex number: cbrt(z) = cbrt(r) * [cos(phi/3) + i*sin(phi/3)]
+void Root3C(float__t x, float__t y, float__t& re, float__t& im)
+{
+#ifdef _long_double_
+    float__t r = hypotl(x, y);
+    float__t phi = (y == (float__t)0.0L && x < (float__t)0.0L) ? M_PI : atan2l(y, x);
+   #ifdef __BORLANDC__
+    r = Root3(r);
+   #else
+    r = cbrtl(r);
+   #endif
+    re = r * cosl(phi / (float__t)3.0L);
+    im = r * sinl (phi / (float__t)3.0L);
+#else
+    double r = hypot(x, y);
+    double phi = (y == 0.0 && x < 0.0) ? M_PI : atan2(y, x);
+   #ifdef __BORLANDC__
+    r = Root3(r);
+   #else
+    r = cbrt(r);
+   #endif
+    re = r * cos(phi / (float__t)3.0L);
+    im = r * sin (phi / (float__t)3.0L);
 #endif
 }
 
@@ -1938,7 +2020,7 @@ void CothC (float__t x, float__t y, float__t &re, float__t &im)
  float__t tanh_re, tanh_im;
  TanhC (x, y, tanh_re, tanh_im);
  float__t denom = tanh_re * tanh_re + tanh_im * tanh_im;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -1952,8 +2034,8 @@ void CothC (float__t x, float__t y, float__t &re, float__t &im)
 void AsinhC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // z^2 + 1
- float__t a = x * x - y * y + 1;
- float__t b = 2 * x * y;
+ float__t a = x * x - y * y + (float__t)1.0L;
+ float__t b = (float__t)2.0L * x * y;
  float__t sqrt_re, sqrt_im;
  SqrtC (a, b, sqrt_re, sqrt_im);
  // z + sqrt(...)
@@ -1967,10 +2049,10 @@ void AcoshC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // sqrt(z + 1)
  float__t sqrt1_re, sqrt1_im;
- SqrtC (x + 1, y, sqrt1_re, sqrt1_im);
+ SqrtC (x + (float__t)1.0L, y, sqrt1_re, sqrt1_im);
  // sqrt(z - 1)
  float__t sqrt2_re, sqrt2_im;
- SqrtC (x - 1, y, sqrt2_re, sqrt2_im);
+ SqrtC (x - (float__t)1.0L, y, sqrt2_re, sqrt2_im);
  // sqrt(z+1) * sqrt(z-1)
  float__t mul_re = sqrt1_re * sqrt2_re - sqrt1_im * sqrt2_im;
  float__t mul_im = sqrt1_re * sqrt2_im + sqrt1_im * sqrt2_re;
@@ -1984,19 +2066,19 @@ void AcoshC (float__t x, float__t y, float__t &re, float__t &im)
 void AtanhC (float__t x, float__t y, float__t &re, float__t &im)
 {
  // 1 + z
- float__t a1 = 1 + x;
+ float__t a1 = (float__t)1.0L + x;
  float__t b1 = y;
  float__t ln1_re, ln1_im;
  LnC (a1, b1, ln1_re, ln1_im);
 
  // 1 - z
- float__t a2 = 1 - x;
- float__t b2 = -y;
+ float__t a2 = (float__t)1.0L - x;
+ float__t b2 = -(float__t)1.0L * y;
  float__t ln2_re, ln2_im;
  LnC (a2, b2, ln2_re, ln2_im);
 
- re = 0.5 * (ln1_re - ln2_re);
- im = 0.5 * (ln1_im - ln2_im);
+ re = (float__t)0.5L * (ln1_re - ln2_re);
+ im = (float__t)0.5L * (ln1_im - ln2_im);
 }
 
 // Hyperbolic arccotangent of a complex number: acoth(z) = 0.5 * [ln(1 + 1/z) - ln(1 - 1/z)]
@@ -2008,19 +2090,19 @@ void AcothC (float__t x, float__t y, float__t &re, float__t &im)
  float__t inv_im = -y / denom;
 
  // 1 + 1/z
- float__t a1 = 1 + inv_re;
+ float__t a1 = (float__t)1.0L + inv_re;
  float__t b1 = inv_im;
  float__t ln1_re, ln1_im;
  LnC (a1, b1, ln1_re, ln1_im);
 
  // 1 - 1/z
- float__t a2 = 1 - inv_re;
- float__t b2 = -inv_im;
+ float__t a2 = (float__t)1.0L - inv_re;
+ float__t b2 = -(float__t)1.0L * inv_im;
  float__t ln2_re, ln2_im;
  LnC (a2, b2, ln2_re, ln2_im);
 
- re = 0.5 * (ln1_re - ln2_re);
- im = 0.5 * (ln1_im - ln2_im);
+ re = (float__t)0.5L * (ln1_re - ln2_re);
+ im = (float__t)0.5L * (ln1_im - ln2_im);
 }
 
 // Complex exponentiation of a complex number: PowC(z1, z2) = exp(z2 * ln(z1))
@@ -2044,7 +2126,7 @@ void RootNC (float__t xr, float__t xi, float__t yr, float__t yi, float__t &re, f
 {
  // 1/(yr + i*yi)
  float__t denom = yr * yr + yi * yi;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -2070,7 +2152,7 @@ void LognC (float__t x, float__t y, float__t u, float__t v, float__t &re, float_
 
  // (a + bi) / (c + di) = [(ac + bd) + i(bc - ad)] / (c^2 + d^2)
  float__t denom = ln_den_re * ln_den_re + ln_den_im * ln_den_im;
- if (denom == 0)
+ if (denom == (float__t)0.0L)
   {
    re = qnan; 
    im = qnan; 
@@ -2112,10 +2194,10 @@ void GammaC (float__t zr, float__t zi, float__t &re, float__t &im)
   }
 
  // 2. Spouge series
- float__t z = zr - 1.0L;
+ float__t z = zr - (float__t)1.0L;
  // Constant c0 in Spouge's method is sqrt(2*PI)
  float__t x_re = SQRT_2PI;
- float__t x_im = 0.0L;
+ float__t x_im = (float__t)0.0L;
 
  for (int k = 1; k < N_COUNT; k++)
   {
@@ -2159,22 +2241,74 @@ void GammaC (float__t zr, float__t zi, float__t &re, float__t &im)
 // Factorial n! = Gamma(n + 1)
 void FactorialC (float__t nr, float__t ni, float__t &re, float__t &im)
 {
- if (ni == 0.0L && nr < 0 && nr == Floor (nr))
+ if (ni == (float__t)0.0L && nr < (float__t)0.0L && nr == Floor (nr))
   {
    re = qnan;
-   im = 0.0L;
+   im = (float__t)0.0L;
    return; // Factorial is not defined for negative integers
   }
- GammaC (nr + 1.0L, ni, re, im);
+ GammaC (nr + (float__t)1.0L, ni, re, im);
 }
 
+
+void PolarC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+             float__t &out_im)
+{
+ // 1. Calculate the argument for the exponent: i * y
+ // i * (re2 + i*im2) = -im2 + i*re2
+ float__t exp_arg_re = -im2;
+ float__t exp_arg_im = re2;
+
+ // 2. Calculate the complex exponent e^(i*y)
+ float__t e_re, e_im;
+ ExpC (exp_arg_re, exp_arg_im, e_re, e_im);
+
+ // 3. Multiply the result by the complex "radius" x: (re1 + i*im1) * (e_re + i*e_im)
+ out_re = re1 * e_re - im1 * e_im;
+ out_im = re1 * e_im + im1 * e_re;
+}
+
+// Square root of the sum of squares of two complex numbers: sqrt(z1^2 + z2^2)
+void HypotC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+             float__t &out_im)
+{
+ // 1. Calculate z1^2 = (re1 + i*im1)^2
+ float__t z1sq_re = re1 * re1 - im1 * im1;
+ float__t z1sq_im = (float__t)2.0L * re1 * im1;
+
+ // 2. Calculate z2^2 = (re2 + i*im2)^2
+ float__t z2sq_re = re2 * re2 - im2 * im2;
+ float__t z2sq_im = (float__t)2.0L * re2 * im2;
+ // 3. Calculate the sum: z1^2 + z2^2
+ float__t sum_re = z1sq_re + z2sq_re;
+ float__t sum_im = z1sq_im + z2sq_im;
+
+ // 4. Calculate the square root: sqrt(z1^2 + z2^2)
+ SqrtC (sum_re, sum_im, out_re, out_im);
+}
+
+void Atan2C(float__t re1, float__t im1, float__t re2, float__t im2, float__t& out_re,
+    float__t& out_im)
+{
+ // atan2(z1, z2) = atan(z1/z2)
+ float__t denom_re = re2 * re2 + im2 * im2;
+ if (denom_re == (float__t)0.0L)
+  {
+   out_re = qnan; 
+   out_im = qnan; 
+   return;
+  }
+ float__t z_re = (re1 * re2 + im1 * im2) / denom_re;
+ float__t z_im = (im1 * re2 - re1 * im2) / denom_re;
+ AtanC (z_re, z_im, out_re, out_im);
+}
 
 bool is_complex2 (value *arg1, value *arg2, int idx)
 {
  if (((arg1->tag == tvCOMPLEX) 
      || (arg2->tag == tvCOMPLEX)) 
-     || ((arg1->imval != 0.0) 
-     || (arg2->imval != 0.0))) return true;
+     || ((arg1->imval != (float__t)0.0L) 
+     || (arg2->imval != (float__t)0.0L))) return true;
  switch (idx)
   {
   case vf_pow:
@@ -2182,14 +2316,14 @@ bool is_complex2 (value *arg1, value *arg2, int idx)
    {
     if (arg2->fval == (float__t)arg2->ival)
      return false; // If the exponent is an integer, we can use real exponentiation for real bases
-    if (arg1->fval >= 0.0)
+    if (arg1->fval >= (float__t)0.0L)
      return false; // if the base is non-negative, we can use real exponentiation for real bases
     return true;   // Otherwise, we need complex exponentiation
    }
    break;
    case vf_logn:
    {
-    if (arg1->fval > 0.0) return false; // For positive values — regular log
+    if (arg1->fval > (float__t)0.0L) return false; // For positive values — regular log
     return true;                       // For negative values and ZERO — complex log
                                        // (although log(0) will throw an error in both cases)
    }
@@ -2203,10 +2337,10 @@ bool is_complex2 (value *arg1, value *arg2, int idx)
 void vfunc2 (value *res, value *arg1, value *arg2, int idx)
 {
  if (res == nullptr || arg1 == nullptr || arg2 == nullptr) return;
- if (is_complex2 (arg1, arg2, idx) || (res->tag == tvCOMPLEX) || (res->imval != 0.0))
+ if (is_complex2 (arg1, arg2, idx) || (res->tag == tvCOMPLEX) || (res->imval != (float__t)0.0L))
   {
-   float__t out_re = 0.0;
-   float__t out_im = 0.0;
+   float__t out_re = (float__t)0.0L;
+   float__t out_im = (float__t)0.0L;
    float__t re1 = arg1->get ();
    float__t im1 = arg1->imval;
    float__t re2 = arg2->get ();
@@ -2236,11 +2370,19 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
      break;
     case vf_polar:
      {
-      out_re = re1*cos(re2);
-      out_im = re1*sin(re2);
+      PolarC (re1, im1, re2, im2, out_re, out_im);
      }
      break;
-
+    case vf_hypot:
+    {
+      HypotC (re1, im1, re2, im2, out_re, out_im);
+    }
+    break;
+    case vf_atan2:
+     {
+      Atan2C (re1, im1, re2, im2, out_re, out_im);
+     }
+     break;
     }
    res->fval  = out_re;
    res->imval = out_im;
@@ -2277,15 +2419,25 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
     case vf_polar:
      {
 
-      res->fval  = arg1->get () * cos(arg2->get ());
-      res->imval = arg1->get () * sin (arg2->get ());
+      res->fval  = arg1->get () * Cos (arg2->get ());
+      res->imval = arg1->get () * Sin (arg2->get ());
       res->tag   = tvCOMPLEX;
       res->ival  = (int64_t)res->fval;
       return;
      }
+    case vf_hypot:
+     {
+      res->fval = Hypot (arg1->get (), arg2->get ());
+     }
+     break;
+    case vf_atan2:
+     {
+      res->fval = Atan2l (arg1->get (), arg2->get ());
+     }
+     break;
 
     }
-   res->imval = 0;
+   res->imval = (float__t)0.0L;
    res->tag   = tvFLOAT;
    res->ival  = (int64_t)res->fval;
   }
@@ -2293,25 +2445,28 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
 
 bool is_complex1 (value *arg, int idx)
 {
- if (((arg->tag == tvCOMPLEX) || (arg->imval != 0.0))) return true;
+ if (((arg->tag == tvCOMPLEX) || (arg->imval != (float__t)0.0L))) return true;
  switch (idx)
   {
   case vf_sqrt:
    {
-    if (arg->fval >= 0.0) return false; // If the input is non-negative, we can use real square root
+    if (arg->fval >= (float__t)0.0L)
+     return false; // If the input is non-negative, we can use real square root
     return true;                        // Otherwise, we need complex square root
    }
    break;
   case vf_acos:
   case vf_asin:
    {
-    if (fabs (arg->fval) <= 1.0) return false;
+    if (Abs (arg->fval) <= (float__t)1.0L) return false;
     return true;
    }
    break;
   case vf_log:
+  case vf_log10:
+  case vf_log2:
    {
-    if (arg->fval > 0.0) return false; // For positive values — regular log
+    if (arg->fval > (float__t)0.0L) return false; // For positive values — regular log
     return true;                       // For negative values and ZERO — complex log
                                        // (although log(0) will throw an error in both cases)
    }
@@ -2324,28 +2479,27 @@ bool is_complex1 (value *arg, int idx)
 void vfunc (value *res, value *arg, int idx)
 {
  if (res == nullptr || arg == nullptr) return;
- if ((res->tag == tvCOMPLEX)
-     || (res->imval != 0.0)
+ if ((res->tag == tvCOMPLEX) || (res->imval != (float__t)0.0L)
      || is_complex1 (arg, idx))
   {
-   float__t out_re = 0.0;
-   float__t out_im = 0.0;
+   float__t out_re = (float__t)0.0L;
+   float__t out_im = (float__t)0.0L;
    float__t re     = arg->get ();
    float__t im     = arg->imval;
    switch (idx)
     {
     case vf_abs:
      {
-      res->fval  = hypotl (re, im);
+      res->fval  = Hypot (re, im);
       res->tag   = tvFLOAT;
-      res->imval = 0.0;
+      res->imval = (float__t)0.0L;
       res->ival  = (int64_t)res->fval;
      }
      return;
     case vf_pol:
      {
       res->fval  = atan2l (im, re); // argument
-      res->imval = 0.0;
+      res->imval = (float__t)0.0L;
       res->tag   = tvFLOAT;
       res->ival  = (int64_t)res->fval;
      }
@@ -2440,14 +2594,34 @@ void vfunc (value *res, value *arg, int idx)
       ExpC (re, im, out_re, out_im);
      }
      break;
+    case vf_exp10:
+     {
+      Exp10C (re, im, out_re, out_im);
+     }
+     break;
     case vf_log:
      {
       LnC (re, im, out_re, out_im);
      }
      break;
+    case vf_log10:
+     {
+      Log10C (re, im, out_re, out_im);
+     }
+     break;
+    case vf_log2:
+     {
+      Log2C (re, im, out_re, out_im);
+     }
+     break;
     case vf_sqrt:
      {
       SqrtC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_root3:
+     {
+      Root3C (re, im, out_re, out_im);
      }
      break;
     case vf_factorial:
@@ -2458,7 +2632,7 @@ void vfunc (value *res, value *arg, int idx)
     case vf_re:
      {
       res->fval  = re; // argument
-      res->imval = 0.0;
+      res->imval = (float__t)0.0L;
       res->tag   = tvFLOAT;
       res->ival  = (int64_t)res->fval;
      }
@@ -2466,7 +2640,7 @@ void vfunc (value *res, value *arg, int idx)
     case vf_im:
      {
       res->fval  = im; // argument
-      res->imval = 0.0;
+      res->imval = (float__t)0.0L;
       res->tag   = tvFLOAT;
       res->ival  = (int64_t)res->fval;
      }
@@ -2484,12 +2658,12 @@ void vfunc (value *res, value *arg, int idx)
     {
     case vf_abs:
      {
-      res->fval = fabsl (arg->fval);
+      res->fval = Abs (arg->fval);
      }
      break;
     case vf_pol:
      {
-      res->fval = 0.0;
+      res->fval = (float__t)0.0L;
      }
      break;
     case vf_sin:
@@ -2581,14 +2755,34 @@ void vfunc (value *res, value *arg, int idx)
       res->fval = Exp (arg->fval);
      }
      break;
+    case vf_exp10:
+     {
+      res->fval = Exp10 (arg->fval);
+     }
+     break;
     case vf_log:
      {
       res->fval = Log (arg->fval);
      }
      break;
+    case vf_log10:
+     {
+      res->fval = Lg (arg->fval);
+     }
+     break;
+    case vf_log2:
+     {
+      res->fval = Log2   (arg->fval);
+     }
+     break;
     case vf_sqrt:
      {
       res->fval = Sqrt (arg->fval);
+     }
+     break;
+    case vf_root3:
+     {
+      res->fval = Root3 (arg->fval);
      }
      break;
     case vf_re:
@@ -2598,7 +2792,7 @@ void vfunc (value *res, value *arg, int idx)
      break;
     case vf_im:
      {
-      res->fval = 0.0;
+      res->fval = (float__t)0.0L;
      }
      break;
      case vf_factorial:
@@ -2607,7 +2801,7 @@ void vfunc (value *res, value *arg, int idx)
      }
     }
    res->tag   = tvFLOAT;
-   res->imval = 0.0;
+   res->imval = (float__t)0.0L;
    res->ival  = (int64_t)res->fval;
   }
 }

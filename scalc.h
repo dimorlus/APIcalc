@@ -167,6 +167,10 @@ inline __float128 sqrt (__float128 x)
 {
  return sqrtq (x);
 }
+inline __float128 cbrt (__float128 x)
+{
+ return cbrtq (x);
+}
 inline __float128 exp (__float128 x)
 {
  return expq (x);
@@ -228,6 +232,7 @@ using std::round;
 using std::sin;
 using std::sinh;
 using std::sqrt;
+using std::cbrt;
 using std::tan;
 using std::tanh;
 #endif
@@ -473,9 +478,13 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  vf_exp, // Exponential function
  vf_log, // Natural logarithm function
+ vf_log10, // Logarithm base 10 function
+ vf_log2, // Logarithm base 2 function
+ vf_exp10, // Exponential function with base 10
  vf_sqrt, // Square root function
 
  vf_pow, // Power function
+ vf_root3,
  vf_rootn, // N-th root function
  vf_logn,  // Logarithm with specified base function
 
@@ -483,6 +492,8 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_im, // Imaginary part of a complex number function
  vf_cplx, // Complex number construction function
  vf_polar, // Polar coordinates construction function
+ vf_hypot, // Hypotenuse function
+ vf_atan2,
 
  vf_factorial, // Factorial function
 

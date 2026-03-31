@@ -46,6 +46,7 @@ endif
 # ──────────────────────────────────────────────────────────────
 LDFLAGS = -shared -static-libgcc -static-libstdc++ \
           -Wl,--allow-multiple-definition \
+		  -Wl,--enable-auto-image-base \
           -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive \
           -Wl,-Bstatic -lquadmath -Wl,-Bdynamic
 

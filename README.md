@@ -239,12 +239,11 @@ x %% y  →  (x / y - 1) * 100
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
 
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
-  
   ```
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
   polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
   ```
-  
+  m and a also can be complex according formula   $$z = m \cdot e^{ia}$$.
   This function is built-in (previously defined in `consts.txt`).
 
 * **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:

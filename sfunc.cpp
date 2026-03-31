@@ -55,6 +55,7 @@ typedef __float128 float__t;
 #define coshl  coshq
 #define tanhl  tanhq
 #define sqrtl  sqrtq
+#define cbrtl  cbrtq
 #define expl   expq
 #define logl   logq
 #define log10l log10q

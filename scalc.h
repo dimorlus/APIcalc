@@ -80,6 +80,8 @@ typedef int int32_t;
 #include <cstdint>
 #include <cstring> 
 
+//#define __GNUC__
+
 #ifdef __GNUC__
 #define _float128_
 #else

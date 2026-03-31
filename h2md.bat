@@ -1,0 +1,1 @@
+python help2md.py help.txt help.md strict

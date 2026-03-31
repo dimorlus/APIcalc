@@ -1,16 +1,17 @@
-                            ##Operators:
-|                           #Common										                                        |
-|__+__<sup>1,3</sup>|Plus (also for string)             |__-__<sup>1,3</sup>|Minus                              |
-|__++__             |Increment pre and post (_++V, V++_)|__--__             |Decrement pre and post (_--V, V--_)|
-|__!__<sup>4</sup>  |Not                                |__~__<sup>2,3</sup>|Complement                         |
-|__*__<sup>1,3</sup>|Multiplication                     |__/__<sup>1</sup>  |Division							|
-%           Remainder                           **   (1,3)  Power
+```
+                            Operators:
+                            Common
++    <sup>[1](#fn1),[3](#fn3)</sup>  Plus (also for string)              -    <sup>[1](#fn1),[3](#fn3)</sup>  Minus
+++          Increment pre and post (++V, V++)   --          Decrement pre and post (--V, V--)
+!    <sup>[4](#fn4)</sup>    Not                                 ~    <sup>[2](#fn2),[3](#fn3)</sup>  Complement
+*    <sup>[1](#fn1),[3](#fn3)</sup>  Multiplication                      /    <sup>[1](#fn1)</sup>    Division
+%           Remainder                           **   <sup>[1](#fn1),[3](#fn3)</sup>  Power
 &&          Logical AND                         &           AND
 ||          Logical OR                          |           OR
 <<          Shift left                          >>          Shift right
 >>>         Unsign shift right                  #           XOR
 <           Less                                >           Greater
-!=   (1,3)  Not equal                           <>   (1,3)  Not equal
+!=   <sup>[1](#fn1),[3](#fn3)</sup>  Not equal                           <>   <sup>[1](#fn1),[3](#fn3)</sup>  Not equal
 +=          Increase                            -=          Decrease
 *=          Mul and assign                      /=          Div and assign
 %=          Rem and assign                      **=         Pow and assign
@@ -18,76 +19,76 @@
 #=          XOR and assign                      &=          AND and assign
 ^=          XOR and assign                      >>>=        Shift and assign
                             'Pascal' - style
-:=   (1,3)  Assign                              =    (1,3)  Compare
-^    (1,3)  Power                               //   (1,3)  Parallel resistors
+:=   <sup>[1](#fn1),[3](#fn3)</sup>  Assign                              =    <sup>[1](#fn1),[3](#fn3)</sup>  Compare
+^    <sup>[1](#fn1),[3](#fn3)</sup>  Power                               //   <sup>[1](#fn1),[3](#fn3)</sup>  Parallel resistors
                             'C' - style
-=    (1)    Assign                              ==   (1,3)  Compare
-^           XOR                                 //   (1,3)  Parallel resistors
-(1) Also for complex operands.                  (2) Complex conjugate: ~(1+2i)=1-2i
-(3) Also for matrix operands.                   (4) Matrix inversion.
+=    <sup>[1](#fn1)</sup>    Assign                              ==   <sup>[1](#fn1),[3](#fn3)</sup>  Compare
+^           XOR                                 //   <sup>[1](#fn1),[3](#fn3)</sup>  Parallel resistors
+<sup>[1](#fn1)</sup> Also for complex operands.                  <sup>[2](#fn2)</sup> Complex conjugate: ~(1+2i)=1-2i
+<sup>[3](#fn3)</sup> Also for matrix operands.                   <sup>[4](#fn4)</sup> Matrix inversion.
 First using of '==' switches engine to 'C'-style syntax.
 First using of ':=' switches engine to 'Pas'-style syntax.
 Default is 'Pas'-style syntax.
 
             Functions:
-abs(x|z|M)               (1,3)  Absolute value|Complex|Matrix
+abs(x|z|M)               <sup>[1](#fn1),[3](#fn3)</sup>  Absolute value|Complex|Matrix
 
-sin(x|z)                  (1)   Sin of radian|Complex
+sin(x|z)                  <sup>[1](#fn1)</sup>   Sin of radian|Complex
 sing(x)                         Sin of degrees
-cos(x|z)                  (1)   Cos of radian|Complex
+cos(x|z)                  <sup>[1](#fn1)</sup>   Cos of radian|Complex
 cosg(x)                         Cos of degrees
-tg(x|z), tan(x|z)         (1)   Tangent of radian|Complex
+tg(x|z), tan(x|z)         <sup>[1](#fn1)</sup>   Tangent of radian|Complex
 tgg(x)                          Tangent of degrees
-ctg(x|z), cot(x|z)        (1)   Cotangent of radian|Complex
+ctg(x|z), cot(x|z)        <sup>[1](#fn1)</sup>   Cotangent of radian|Complex
 ctgg(x)                         Cotangent of degrees
 
-arcsin(x|z), asin(x|z)    (1)   ArcSin in radian|Complex
-arccos(x|z), acos(x|z)    (1)   ArcCos in radian|Complex
-arctg(x|z), atan(x|z)     (1)   ArcTg in radian|Complex
-arcctg(x|z), acot(x|z)    (1)   ArcCtg in radian|Complex
-atan2(y|z,x|z)            (1)   Arc tangent of y/x.
+arcsin(x|z), asin(x|z)    <sup>[1](#fn1)</sup>   ArcSin in radian|Complex
+arccos(x|z), acos(x|z)    <sup>[1](#fn1)</sup>   ArcCos in radian|Complex
+arctg(x|z), atan(x|z)     <sup>[1](#fn1)</sup>   ArcTg in radian|Complex
+arcctg(x|z), acot(x|z)    <sup>[1](#fn1)</sup>   ArcCtg in radian|Complex
+atan2(y|z,x|z)            <sup>[1](#fn1)</sup>   Arc tangent of y/x.
 
-sinh(x|z), sh(x|z)        (1)   Hyperbolic sine
-cosh(x|z), ch(x|z)        (1)   Hyperbolic cosine
-tanh(x|z), th(x|z)        (1)   Hyperbolic tangent
-ctanh(x|z), cth(x|z)      (1)   Hyperbolic cotangent
-asinh(x|z), arsh(x|z)     (1)   Hyperbolic arcsine
-acosh(x|z), arch(x|z)     (1)   Hyperbolic arccosine
-atanh(x|z), arth(x|z)     (1)   Hyperbolic arctangent
-acoth(x|z), arcth(x|z)    (1)   Hyperbolic arccotangent
+sinh(x|z), sh(x|z)        <sup>[1](#fn1)</sup>   Hyperbolic sine
+cosh(x|z), ch(x|z)        <sup>[1](#fn1)</sup>   Hyperbolic cosine
+tanh(x|z), th(x|z)        <sup>[1](#fn1)</sup>   Hyperbolic tangent
+ctanh(x|z), cth(x|z)      <sup>[1](#fn1)</sup>   Hyperbolic cotangent
+asinh(x|z), arsh(x|z)     <sup>[1](#fn1)</sup>   Hyperbolic arcsine
+acosh(x|z), arch(x|z)     <sup>[1](#fn1)</sup>   Hyperbolic arccosine
+atanh(x|z), arth(x|z)     <sup>[1](#fn1)</sup>   Hyperbolic arctangent
+acoth(x|z), arcth(x|z)    <sup>[1](#fn1)</sup>   Hyperbolic arccotangent
 
-exp(x|z)                  (1)   Exponent, e^x
-exp10(x|z)                (1)   10^x 
-pow(x|z,y|z)              (1)   x^y
+exp(x|z)                  <sup>[1](#fn1)</sup>   Exponent, e^x
+exp10(x|z)                <sup>[1](#fn1)</sup>   10^x 
+pow(x|z,y|z)              <sup>[1](#fn1)</sup>   x^y
 
-ln(x|z), log(x|z)         (1)   Natural logarithm
-lg(x|z), log10(x|z)       (1)   Logarithm base 10, Log10(x)
-log2(x|z)                 (1)   Logarithm base 2, Log2(x)
-logn(x|z,y|z)             (1)   Log x(y)
+ln(x|z), log(x|z)         <sup>[1](#fn1)</sup>   Natural logarithm
+lg(x|z), log10(x|z)       <sup>[1](#fn1)</sup>   Logarithm base 10, Log10(x)
+log2(x|z)                 <sup>[1](#fn1)</sup>   Logarithm base 2, Log2(x)
+logn(x|z,y|z)             <sup>[1](#fn1)</sup>   Log x(y)
 
-sqrt(x|z) root2(x|z)      (1)   Square root
-root3(x|z), cbrt(x|z)     (1)   Cube root, x^(1/3)
-rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
-hypot(x|z,y|z)            (1)   Hypotenuse
-round(x|z)                (1)   Round value
-int(x|z)                  (1)   Convert to int
-float(x|z)                (1)   Convert to float (do nothing)
-ceil(x|z)                 (1)   Rounds the number x up
-floor(x|z)                (1)   Rounds the number x down
-frac(x|z)                 (1)   Returns the fractional part
+sqrt(x|z) root2(x|z)      <sup>[1](#fn1)</sup>   Square root
+root3(x|z), cbrt(x|z)     <sup>[1](#fn1)</sup>   Cube root, x^(1/3)
+rootn(x|z,n|z)            <sup>[1](#fn1)</sup>   nth root, x^(1/n) 
+hypot(x|z,y|z)            <sup>[1](#fn1)</sup>   Hypotenuse
+round(x|z)                <sup>[1](#fn1)</sup>   Round value
+int(x|z)                  <sup>[1](#fn1)</sup>   Convert to int
+float(x|z)                <sup>[1](#fn1)</sup>   Convert to float (do nothing)
+ceil(x|z)                 <sup>[1](#fn1)</sup>   Rounds the number x up
+floor(x|z)                <sup>[1](#fn1)</sup>   Rounds the number x down
+frac(x|z)                 <sup>[1](#fn1)</sup>   Returns the fractional part
 not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
-mod, fmod(x|z,y|z)        (1)   Reminder
-rnd(x|x)                  (1)   Random value 0..x
+mod, fmod(x|z,y|z)        <sup>[1](#fn1)</sup>   Reminder
+rnd(x|x)                  <sup>[1](#fn1)</sup>   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function
 
-db(x|z)                   (1)   Decibel, 10*lg(x), 10*lg(abs(z)) 
-np(x|z)                   (1)   Neper, 20*lg(x), 20*lg(abs(z))
-adb(x|z)                  (1)   10^(x/10), 10^(z/10)  
-anp(x|z)                  (1)   10^(x/20), 10^(z/20) 
+db(x|z)                   <sup>[1](#fn1)</sup>   Decibel, 10*lg(x), 10*lg(abs(z)) 
+np(x|z)                   <sup>[1](#fn1)</sup>   Neper, 20*lg(x), 20*lg(abs(z))
+adb(x|z)                  <sup>[1](#fn1)</sup>   10^(x/10), 10^(z/10)  
+anp(x|z)                  <sup>[1](#fn1)</sup>   10^(x/20), 10^(z/20) 
 Vout(Vref,Rh,Rl)                Vout=Vref*(Rh+Rl)/Rl
 
 frh(x)                          Fahrenheit to Celsius.
@@ -103,13 +104,13 @@ aswg(x)                         mm to British standard wire gauge
 
 polar(r,θ)                      Return complex value r*exp(iθ)
 cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
-re(z)                     (1)   Return real part of complex
-im(z)                     (1)   Return imaginary part of complex
-conj(z)                   (1)   Complex conjugate  
-pol(z)                    (1)   atan(im(z)/re(z))
+re(z)                     <sup>[1](#fn1)</sup>   Return real part of complex
+im(z)                     <sup>[1](#fn1)</sup>   Return imaginary part of complex
+conj(z)                   <sup>[1](#fn1)</sup>   Complex conjugate  
+pol(z)                    <sup>[1](#fn1)</sup>   atan(im(z)/re(z))
 min(x,y)                        Minimum of x, y
 max(x,y)                        Maximum of x, y
-fact(n|x|z), n|x|z!       (1)   Factorial (n!)
+fact(n|x|z), n|x|z!       <sup>[1](#fn1)</sup>   Factorial (n!)
 prime(n)                        Smallest prime number
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
@@ -123,14 +124,14 @@ integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation
 sum(expr, from, to, x)          ∑expr(x)
 
-tr(A)                     (3)   trace = sum of diagonal
-det(A)                    (3)   Determinant of matrix
-norm(A)                   (3)   Frobenius norm
-dot(A, B)                 (3)   Dot product of two vectors (1×N or N×1), any length
-cross(A, B)               (3)   Cross product of two 3-element vectors (1×3 or 3×1)
-rows(A)                   (3)   Return matrix rows
-cols(A)                   (3)   Return matrix columns
-size(A)                   (3)   Return matrix rows*columns
+tr(A)                     <sup>[3](#fn3)</sup>   trace = sum of diagonal
+det(A)                    <sup>[3](#fn3)</sup>   Determinant of matrix
+norm(A)                   <sup>[3](#fn3)</sup>   Frobenius norm
+dot(A, B)                 <sup>[3](#fn3)</sup>   Dot product of two vectors (1×N or N×1), any length
+cross(A, B)               <sup>[3](#fn3)</sup>   Cross product of two 3-element vectors (1×3 or 3×1)
+rows(A)                   <sup>[3](#fn3)</sup>   Return matrix rows
+cols(A)                   <sup>[3](#fn3)</sup>   Return matrix columns
+size(A)                   <sup>[3](#fn3)</sup>   Return matrix rows*columns
 
 bind(x)                         Reinterpret a floating-point value as an integer 64
 floatd(i)                       Reinterpret an integer as a floating-point 64
@@ -141,24 +142,24 @@ printf(fmt, ...),fprn, prn      C-style printf. Result in the string value.
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
             Special:
-help(0)                         Call help
-opacity(100)                    Set opacity level in percent
-binwide(32)                     Set binary width
-menu(0)                         Hide (0) or show (1) menu.
-vars(0)                         Show variables list
+help<sup>0</sup>                         Call help
+opacity<sup>100</sup>                    Set opacity level in percent
+binwide<sup>32</sup>                     Set binary width
+menu<sup>0</sup>                         Hide <sup>0</sup> or show <sup>[1](#fn1)</sup> menu.
+vars<sup>0</sup>                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
-(1) Also for complex operands.
-(3) Also for matrix operands.
+<sup>[1](#fn1)</sup> Also for complex operands.
+<sup>[3](#fn3)</sup> Also for matrix operands.
 
         User defined functions:
 {frq(L, C)1/(2 pi sqrt(L C))}           frq(130u, 2n2)
         Newton-Raphson solution of the equation:
-solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
-solve(z^2+z+1, z:=0+1i) (1)             |1|(120`0'0") -500m+866mi
-solve(x(2x+2)-2, x:=-1) (1)             -1.61803398875005
-calc(x(2x+2)-2, x:=-1)  (1)             -2
-calc(z^2+z+1, z:=0+1i)  (1)             |1|(90`0'0") 0+1i
+solve(x(2x+2)-2, x:=0)  <sup>[1](#fn1)</sup>             0.6180339887500326
+solve(z^2+z+1, z:=0+1i) <sup>[1](#fn1)</sup>             |1|(120`0'0") -500m+866mi
+solve(x(2x+2)-2, x:=-1) <sup>[1](#fn1)</sup>             -1.61803398875005
+calc(x(2x+2)-2, x:=-1)  <sup>[1](#fn1)</sup>             -2
+calc(z^2+z+1, z:=0+1i)  <sup>[1](#fn1)</sup>             |1|(90`0'0") 0+1i
 solve(expr, var:=est) expr is the left side of the equation, 
 expr(var)=0, est is the first approximation of the root.
 
@@ -178,11 +179,11 @@ Scientific          1.8M                        1800000
 Engineering         1k33                        1330
 Computing           1KB, 1KiB                   1024
 Fractional          3+9/64                      Pi (best rational approximation)
-Gauge               #28, awg(28)                0.3211265489669004
+Gauge               #28, awg<sup>28</sup>                0.3211265489669004
 Inch                2"5                         0.0635=2+1/2 "
 Complex             3+4i, 3+j4, j4+3            3+4i
-Temperature         frh(75), 75F                297.039 K|23.8889 `C|75 `F
-Matrix              A := [(1,2,3);(4,5,6);(7,8,9)];C := [(1,2);(3,4);(5,6)]
+Temperature         frh<sup>75</sup>, 75F                297.039 K|23.8889 `C|75 `F
+Matrix              A := [<sup>[1](#fn1),[2](#fn2),[3](#fn3)</sup>;<sup>[4](#fn4),5,6</sup>;<sup>7,8,9</sup>];C := [<sup>[1](#fn1),[2](#fn2)</sup>;<sup>[3](#fn3),[4](#fn4)</sup>;<sup>5,6</sup>]
 
                     Examples:
 L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant             297.6k
@@ -197,9 +198,9 @@ integr(1/sqrt(x), 0.001, 1, x)                              1.93675444679663
 time:=2*pi;sqrt((1/time)integral((10sin(x))^2, 0, time, x)) 7.071067811865472
 diff(tg(x), 0, x)                                           1
 sum(1/x!,20,0,x)                                            2.718281828459045
-A := [(1,2,3);(4,5,6);(7,8,9)];tr(A)                        15
-A := [(1,2,3);(4,5,6);(7,8,9)];norm(A)                      16.881943016134134
-A := [(1,2,3);(4,5,6);(7,8,9)];cols(A)                      3
+A := [<sup>[1](#fn1),[2](#fn2),[3](#fn3)</sup>;<sup>[4](#fn4),5,6</sup>;<sup>7,8,9</sup>];tr(A)                        15
+A := [<sup>[1](#fn1),[2](#fn2),[3](#fn3)</sup>;<sup>[4](#fn4),5,6</sup>;<sup>7,8,9</sup>];norm(A)                      16.881943016134134
+A := [<sup>[1](#fn1),[2](#fn2),[3](#fn3)</sup>;<sup>[4](#fn4),5,6</sup>;<sup>7,8,9</sup>];cols(A)                      3
 
     Implicit Multiplication:
 3PI             3*PI                9.424777960
@@ -422,3 +423,13 @@ timezone            System timezone offset in hours
 daylight            Daylight saving time flag (0 or 1)
 tz                  Current timezone with DST applied
 Note: All constants are case-insensitive without Case sensitive option.
+```
+
+---
+
+## Footnotes
+
+<a id="fn1"></a>(1) Also for complex operands.  
+<a id="fn2"></a>(2) Complex conjugate: ~(1+2i)=1-2i  
+<a id="fn3"></a>(3) Also for matrix operands.  
+<a id="fn4"></a>(4) Matrix inversion.  

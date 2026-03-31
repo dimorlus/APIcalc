@@ -253,6 +253,7 @@ typedef __float128 float__t;
 const float__t qnan = 0.0 / 0.0;
 #else
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
+constexpr float__t inf = std::numeric_limits<float__t>::infinity ();
 #endif
 
 class value;
@@ -506,6 +507,11 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_frac,  // Fractional part function
  vf_int,   // Integer part function
  vf_float, // Float function
+
+ vf_db, // Decibel function (10*log10(x) for power quantities, 20*log10(x) for field quantities)
+ vf_np, // Neper function (20*log10(x) for power quantities)
+ vf_adb, // Inverse decibel function (10^(x/10) for power quantities, 10^(x/20) for field quantities)
+ vf_anp, // Inverse neper function (10^(x/20) for power quantities)
 
  vf_factorial, // Factorial function
 

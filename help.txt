@@ -84,10 +84,10 @@ rnd(x|x)                  (1)   Random value 0..x
 erf(x)                          Error function
 erfc(x)                         Complementary error function
 
-db(x)                           Decibel, 10*lg(x)
-np(x)                           Neper, 20*lg(x)
-adb(x)                          10^(x/10) 
-anp(x)                          10^(x/20) 
+db(x|z)                   (1)   Decibel, 10*lg(x), 10*lg(abs(z)) 
+np(x|z)                   (1)   Neper, 20*lg(x), 20*lg(abs(z))
+adb(x|z)                  (1)   10^(x/10), 10^(z/10)  
+anp(x|z)                  (1)   10^(x/20), 10^(z/20) 
 Vout(Vref,Rh,Rl)                Vout=Vref*(Rh+Rl)/Rl
 
 frh(x)                          Fahrenheit to Celsius.

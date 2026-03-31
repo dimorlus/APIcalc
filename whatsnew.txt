@@ -1,3 +1,9 @@
+31.03.26 (2.164)
++ The db, np, adb, anp functions can now also accepts a complex argument. In this case, 
+  db and np from the complex argument are applied to its modulus, and for the inverse 
+  functions adb and anp the result is calculated as a complex number using the formulas 
+  10^(z/10) and 10^(z/20), respectively.
+
 31.03.26 (2.163)
 + The conj and fmod (mod) functions have been added to the ~ and % operators. 
 + The % (fmod (x, y)) operation now works with complex numbers. 

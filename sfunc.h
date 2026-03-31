@@ -125,6 +125,10 @@ void FloorC (float__t x, float__t y, float__t &re, float__t &im);
 void FracC (float__t x, float__t y, float__t &re, float__t &im);
 void IntC (float__t x, float__t y, float__t &re, float__t &im);
 
+void AdbC (float__t re_in, float__t im_in, float__t &re_out, float__t &im_out);
+void AnpC (float__t re_in, float__t im_in, float__t &re_out, float__t &im_out);
+
+
 void SinC(float__t x, float__t y, float__t& re, float__t& im);
 void CosC(float__t x, float__t y, float__t& re, float__t& im);
 void TanC(float__t x, float__t y, float__t& re, float__t& im);

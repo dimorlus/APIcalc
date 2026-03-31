@@ -131,7 +131,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  res_mval      = nullptr; // Clear the matrix result pointer
 
  result_fval  = qnan; // Clear the floating-point result
- result_imval = 0.0;  // Clear the imaginary result
+ result_imval = (float__t)0.0L;  // Clear the imaginary result
  result_ival  = 0;    // Clear the integer result
  buf           = nullptr;
  errpos        = 0;
@@ -310,6 +310,11 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_int, "int", (void *)vfunc);
  add (tsVFUNC1, vf_float, "float", (void *)vfunc);
 
+ add (tsVFUNC1, vf_db, "db", (void *)vfunc);
+ add (tsVFUNC1, vf_np, "np", (void *)vfunc);
+ add (tsVFUNC1, vf_adb, "adb", (void *)vfunc);
+ add (tsVFUNC1, vf_anp, "anp", (void *)vfunc);
+
  add (tsVFUNC2, vf_pow, "pow", (void *)vfunc2);
  add (tsVFUNC2, vf_rootn, "rootn", (void *)vfunc2);
  add (tsVFUNC2, vf_logn, "logn", (void *)vfunc2);
@@ -328,11 +333,11 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_fmod, "mod", (void *)vfunc2);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
- add (tsFFUNC1, "np", (void *)(float__t (*) (float__t))NP);
- add (tsFFUNC1, "db", (void *)(float__t (*) (float__t))DB);
- add (tsFFUNC1, "anp", (void *)(float__t (*) (float__t))ANP);
- add (tsFFUNC1, "adb", (void *)(float__t (*) (float__t))ADB);
- //add (tsFFUNC1, "float", (void *)To_float);
+ //add (tsFFUNC1, "np", (void *)(float__t (*) (float__t))NP);
+ //add (tsFFUNC1, "db", (void *)(float__t (*) (float__t))DB);
+ //add (tsFFUNC1, "anp", (void *)(float__t (*) (float__t))ANP);
+ //add (tsFFUNC1, "adb", (void *)(float__t (*) (float__t))ADB);
+ 
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
  add (tsIFUNC1, "prime", (void *)Prime);

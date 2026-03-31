@@ -1747,6 +1747,26 @@ uint32_t temperature_to_rgb (float__t temp_kelvin)
  return (uint32_t)(blue) + 256 * (uint32_t)(green) + 65536 * (uint32_t)(red);
 }
 
+// Convert decibels to a linear scale for complex numbers: adb(z) = 10^(z/10)
+void AdbC (float__t re_in, float__t im_in, float__t &re_out, float__t &im_out)
+{
+ // adb(z) = 10^(z/10)
+ float__t tmp_re = re_in / (float__t)10.0L;
+ float__t tmp_im = im_in / (float__t)10.0L;
+
+ Exp10C (tmp_re, tmp_im, re_out, im_out);
+}
+
+// Convert nepers to a linear scale for complex numbers: anp(z) = exp(z)
+void AnpC (float__t re_in, float__t im_in, float__t &re_out, float__t &im_out)
+{
+ float__t tmp_re = re_in / (float__t)20.0L;
+ float__t tmp_im = im_in / (float__t)20.0L;
+
+ Exp10C (tmp_re, tmp_im, re_out, im_out);
+}
+
+
 // Sine of a complex number: sin(z) = sin(x + iy) = sin(x) * cosh(y) + i * cos(x) * sinh(y)
 void SinC (float__t x, float__t y, float__t &re, float__t &im)
 {
@@ -1990,7 +2010,14 @@ void LnC (float__t x, float__t y, float__t &re, float__t &im)
   im = 0;
   return;
  }
-#endif
+#else
+ if ((x == (float__t)0.0L) && (y == (float__t)0.0L))
+  {
+   re = -inf;
+   im = 0;
+   return;
+  }
+ #endif
 #ifdef _long_double_
  re = (float__t)0.5L * logl (x * x + y * y);
  //im = atan2l (y, x);
@@ -2798,37 +2825,37 @@ void vfunc (value *res, value *arg, int idx)
       Root3C (re, im, out_re, out_im);
      }
      break;
-     case vf_rnd:
+    case vf_rnd:
      {
-      res->fval = Random (re);
+      res->fval  = Random (re);
       res->imval = Random (im);
       res->tag   = tvCOMPLEX;
       res->ival  = (int64_t)res->fval;
      }
      return;
-     case vf_round:
+    case vf_round:
      {
-       RoundC (re, im, out_re, out_im);
+      RoundC (re, im, out_re, out_im);
      }
      break;
     case vf_ceil:
      {
-       CeilC (re, im, out_re, out_im);
+      CeilC (re, im, out_re, out_im);
      }
      break;
     case vf_floor:
      {
-       FloorC (re, im, out_re, out_im);
+      FloorC (re, im, out_re, out_im);
      }
      break;
     case vf_frac:
      {
-       FracC (re, im, out_re, out_im);
+      FracC (re, im, out_re, out_im);
      }
      break;
     case vf_int:
      {
-       IntC (re, im, out_re, out_im);
+      IntC (re, im, out_re, out_im);
      }
      break;
     case vf_float:
@@ -2858,14 +2885,40 @@ void vfunc (value *res, value *arg, int idx)
       res->ival  = (int64_t)res->fval;
      }
      return;
-     case vf_conj:
+    case vf_conj:
      {
-      res->fval  = re; // argument
+      res->fval  = re;  // argument
       res->imval = -im; // conjugate
       res->tag   = tvCOMPLEX;
       res->ival  = (int64_t)res->fval;
      }
      return;
+    case vf_db:
+     {
+       res->fval = DB (Hypot (re, im));
+       res->imval = (float__t)0.0L;
+       res->tag   = tvFLOAT;
+       res->ival  = (int64_t)res->fval;
+     }
+     return;
+    case vf_np:
+     {
+       res->fval = NP (Hypot (re, im));
+       res->imval = (float__t)0.0L;
+       res->tag   = tvFLOAT;
+       res->ival  = (int64_t)res->fval;
+     }
+     return;
+    case vf_adb:
+     {
+      AdbC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_anp:
+     {
+      AnpC (re, im, out_re, out_im);
+     }
+     break;
     }
 
    res->fval  = out_re;
@@ -3057,10 +3110,32 @@ void vfunc (value *res, value *arg, int idx)
      }
      break;
 
+     case vf_db:
+     {
+      res->fval = DB (arg->fval);
+     }
+     break;
+     case vf_np:
+     {
+      res->fval = NP (arg->fval);
+     }
+     break;
+     case vf_adb:
+     {
+      res->fval = ADB (arg->fval);
+     }
+     break;
+     case vf_anp:
+     {
+      res->fval = ANP (arg->fval);
+     }
+     break;
+
     case vf_factorial:
      {
       res->fval = Factorial (arg->fval);
      }
+     break;
     }
    res->tag   = tvFLOAT;
    res->imval = (float__t)0.0L;

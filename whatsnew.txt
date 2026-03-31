@@ -2,6 +2,7 @@
 + The conj and fmod (mod) functions have been added to the ~ and % operators. 
 + The % (fmod (x, y)) operation now works with complex numbers. 
 + The rnd function can now also accept a complex argument and return a random complex number.
++ The round, ceil, floor, int, float functions can now also accepts a complex argument.
 
 31.03.26 (2.162)
 + Now root3 (cbrt), hypot, atan2, exp10, lg (log10), log2 functions can also accepts 

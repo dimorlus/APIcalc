@@ -303,7 +303,12 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_root3, "root3", (void *)vfunc);
  add (tsVFUNC1, vf_root3, "cbrt", (void *)vfunc);
  add (tsVFUNC1, vf_rnd, "rnd", (void *)vfunc);
-
+ add (tsVFUNC1, vf_round, "round", (void *)vfunc);
+ add (tsVFUNC1, vf_ceil, "ceil", (void *)vfunc);
+ add (tsVFUNC1, vf_floor, "floor", (void *)vfunc);
+ add (tsVFUNC1, vf_frac, "frac", (void *)vfunc);
+ add (tsVFUNC1, vf_int, "int", (void *)vfunc);
+ add (tsVFUNC1, vf_float, "float", (void *)vfunc);
 
  add (tsVFUNC2, vf_pow, "pow", (void *)vfunc2);
  add (tsVFUNC2, vf_rootn, "rootn", (void *)vfunc2);
@@ -327,8 +332,7 @@ void calculator::AddPredefined (void)
  add (tsFFUNC1, "db", (void *)(float__t (*) (float__t))DB);
  add (tsFFUNC1, "anp", (void *)(float__t (*) (float__t))ANP);
  add (tsFFUNC1, "adb", (void *)(float__t (*) (float__t))ADB);
- add (tsFFUNC1, "float", (void *)To_float);
- add (tsIFUNC1, "int", (void *)To_int);
+ //add (tsFFUNC1, "float", (void *)To_float);
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
  add (tsIFUNC1, "prime", (void *)Prime);
@@ -344,10 +348,6 @@ void calculator::AddPredefined (void)
  add (tsFFUNC1, "tgg", (void *)(float__t (*) (float__t))Tgg);
  add (tsFFUNC1, "ctgg", (void *)(float__t (*) (float__t))Ctgg);
 
- add (tsFFUNC1, "frac", (void *)(float__t (*) (float__t))Frac);
- add (tsFFUNC1, "round", (void *)(float__t (*) (float__t))Round);
- add (tsFFUNC1, "ceil", (void *)(float__t (*) (float__t))Ceil);
- add (tsFFUNC1, "floor", (void *)(float__t (*) (float__t))Floor);
  add (tsIFUNC1, "not", (void *)Not);
  add (tsIFUNC1, "now", (void *)Now);
  add (tsFFUNC2, "min", (void *)(float__t (*) (float__t, float__t))Min);

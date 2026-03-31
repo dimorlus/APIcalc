@@ -500,6 +500,13 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_fmod,   // Modulo function
  vf_rnd,   // Random function
 
+ vf_floor, // Floor function
+ vf_ceil,  // Ceiling function
+ vf_round, // Round function
+ vf_frac,  // Fractional part function
+ vf_int,   // Integer part function
+ vf_float, // Float function
+
  vf_factorial, // Factorial function
 
  vf_num

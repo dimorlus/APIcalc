@@ -689,6 +689,19 @@ float__t Frac (float__t x)
 #endif
 }
 
+// Get the integer part of a float
+float__t Int (float__t x)
+{
+ return (float__t)((int_t)x);
+}
+
+// Identity function for floats
+float__t Float (float__t x)
+{
+ return x;
+}
+
+
 // Get the minimum of two floats
 float__t Min (float__t x, float__t y)
 {
@@ -1797,6 +1810,45 @@ float__t AbsC (float__t x, float__t y)
 #endif
 }
 
+// Round the real and imaginary parts of a complex number to the nearest integer
+void RoundC(float__t x, float__t y, float__t& re, float__t& im)
+{
+ re = Round (x);
+ im = Round (y);
+}
+// Round the real and imaginary parts of a complex number up to the nearest integer
+void CeilC(float__t x, float__t y, float__t& re, float__t& im)
+{
+ re = Ceil (x);
+ im = Ceil (y);
+}
+// Round the real and imaginary parts of a complex number down to the nearest integer
+void FloorC(float__t x, float__t y, float__t& re, float__t& im)
+{
+ re = Floor (x);
+ im = Floor (y);
+}
+// Get the fractional part of the real and imaginary parts of a complex number
+void FracC(float__t x, float__t y, float__t& re, float__t& im)
+{
+ re = Frac (x);
+ im = Frac (y);
+}
+// Get the integer part of the real and imaginary parts of a complex number
+void IntC (float__t x, float__t y, float__t &re, float__t &im)
+{
+ re = Int (x);
+ im = Int (y);
+}
+// Get the real and imaginary parts of a complex number as floats (essentially a no-op, but included
+// for completeness)
+void FloatC (float__t x, float__t y, float__t &re, float__t &im)
+{
+ re = Float (x);
+ im = Float (y);
+}
+
+
 // Tangent of a complex number: tan(z) = sin(z) / cos(z)
 void TanC (float__t x, float__t y, float__t &re, float__t &im)
 {
@@ -2754,6 +2806,37 @@ void vfunc (value *res, value *arg, int idx)
       res->ival  = (int64_t)res->fval;
      }
      return;
+     case vf_round:
+     {
+       RoundC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_ceil:
+     {
+       CeilC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_floor:
+     {
+       FloorC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_frac:
+     {
+       FracC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_int:
+     {
+       IntC (re, im, out_re, out_im);
+     }
+     break;
+    case vf_float:
+     {
+      FloatC (re, im, out_re, out_im);
+     }
+     break;
+
     case vf_factorial:
      {
       FactorialC (re, im, out_re, out_im);
@@ -2943,7 +3026,38 @@ void vfunc (value *res, value *arg, int idx)
       res->fval = Random (arg->fval);
      }
      break;
-     case vf_factorial:
+    case vf_round:
+     {
+      res->fval = Round (arg->fval);
+     }
+     break;
+    case vf_ceil:
+     {
+      res->fval = Ceil (arg->fval);
+     }
+     break;
+    case vf_floor:
+     {
+      res->fval = Floor (arg->fval);
+     }
+     break;
+    case vf_frac:
+     {
+      res->fval = Frac (arg->fval);
+     }
+     break;
+    case vf_int:
+     {
+      res->fval = Int (arg->fval);
+     }
+     break;
+    case vf_float:
+     {
+      res->fval = Float (arg->fval);
+     }
+     break;
+
+    case vf_factorial:
      {
       res->fval = Factorial (arg->fval);
      }

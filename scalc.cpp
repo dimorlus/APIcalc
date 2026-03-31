@@ -333,18 +333,14 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_fmod, "mod", (void *)vfunc2);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
- //add (tsFFUNC1, "np", (void *)(float__t (*) (float__t))NP);
- //add (tsFFUNC1, "db", (void *)(float__t (*) (float__t))DB);
- //add (tsFFUNC1, "anp", (void *)(float__t (*) (float__t))ANP);
- //add (tsFFUNC1, "adb", (void *)(float__t (*) (float__t))ADB);
  
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
  add (tsIFUNC1, "prime", (void *)Prime);
  
- add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
- add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
- add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, value *))fprn);
+ add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
+ add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
+ add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  
  add (tsSIFUNC1, "datatime", (void *)datatime);
  
@@ -7449,9 +7445,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                return qnan;
               }
 
-             (*(int_t (*) (char *, char *, int, value *))sym->func) // call prn(...)
+             (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prn(...)
                  (sres, // put result string in sres first
-                  v_stack[v_sp - n_args].get_str (), n_args - 1, &v_stack[v_sp - n_args + 1]);
+                  v_stack[v_sp - n_args].get_str (), n_args - 1,
+                  c_imaginary, & v_stack[v_sp - n_args + 1]);
              if (sres[0]) 
               {
                //fflags |= STR;

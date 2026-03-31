@@ -137,7 +137,7 @@ floatd(i)                       Reinterpret an integer as a floating-point 64
 binf(x)                         Reinterpret a floating-point value as an integer 32
 floatf(i)                       Reinterpret an integer as a floating-point 32
 
-printf(fmt, ...),fprn, prn      C-style printf. Result in the string value.
+printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
             Special:
@@ -152,7 +152,7 @@ prec(n)                         Set decimal digits in output.
 (3) Also for matrix operands.
 
         User defined functions:
-{frq(L, C)1/(2 pi sqrt(L C))}           frq(130u, 2n2)
+{frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
         Newton-Raphson solution of the equation:
 solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
 solve(z^2+z+1, z:=0+1i) (1)             |1|(120`0'0") -500m+866mi

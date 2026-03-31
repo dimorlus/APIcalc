@@ -1,3 +1,10 @@
+31.03.26 (2.165)
++ Now the prn (fprn, printf) function prints complex numbers (for fp formats) if the 
+  imaginary part is not zero. Both parts (real and imaginary) are printed in the same 
+  format.
+	prn("%SW",3k3-4k7j) ->  '3.3k-4.7kjW'
+	prn("%.2fW",3k3-4k7j) -> '3300.00-4700.00jW'
+	
 31.03.26 (2.164)
 + The db, np, adb, anp functions can now also accepts a complex argument. In this case, 
   db and np from the complex argument are applied to its modulus, and for the inverse 

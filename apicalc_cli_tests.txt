@@ -2,7 +2,7 @@
 ;; Format: expression  ->  expected result (or ERROR)
 ;; Run each line in the calculator and verify the result.
 ;; Lines starting with # are comments, blank lines are separators.
-
+prec(20)
 ;; ============================================================
 ;; OPERATOR PRECEDENCE & UNARY MINUS
 ;; ============================================================

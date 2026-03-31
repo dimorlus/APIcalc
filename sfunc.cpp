@@ -1114,7 +1114,7 @@ int fmtc (char *dst, char *fmt)
 //   - added dest size limit (STRBUF) to prevent buffer overrun
 //   - clarified sfmt-- comment at end of inner loop
 
-int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
+int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
 {
  char pfmt[STRBUF];
  enum ftypes
@@ -1298,9 +1298,25 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
        break;
       case tSci:
        {
-        double dd = (double)v_stack[n].get (); 
+        double dd = (double)v_stack[n].get ();
+        double di = (double)v_stack[n].imval;
+        normz (dd, di);
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += d2scistr (dst, dd);
+        if (di != 0.0)
+         {
+          if (di > 0.0)
+           {
+            if (dst < dst_end) *dst++ = '+';
+           }
+          else
+           {
+            if (dst < dst_end) *dst++ = '-';
+           }
+          di = fabs (di);
+          if (dst < dst_end) dst += d2scistr (dst, di);
+          if (dst < dst_end) *dst++ = ic;
+         }
        }
        break;
       case tFract:
@@ -1315,8 +1331,24 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
       case tNrm:
        {
         double dd = (double)v_stack[n].get (); // use double, not float__t
+        double di = (double)v_stack[n].imval;
+        normz (dd, di);
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += d2nrmstr (dst, dd);
+        if (di != 0.0)
+         {
+          if (di > 0.0)
+           {
+            if (dst < dst_end) *dst++ = '+';
+           }
+          else
+           {
+            if (dst < dst_end) *dst++ = '-';
+           }
+          di = fabs (di);
+          if (dst < dst_end) dst += d2nrmstr (dst, di);
+          if (dst < dst_end) *dst++ = ic;
+         }
        }
        break;
       case tTime:
@@ -1355,12 +1387,42 @@ int_t fprn (char *dest, char *sfmt, int args, value *v_stack)
         if (cc == 'L')
          {
           long double Ld = (long double)v_stack[n].get ();
+          long double Li = (long double)v_stack[n].imval;
           if (dst < dst_end) dst += sprintf (dst, pfmt, Ld);
+          if (Li != 0.0L)
+          {
+            if (Li > 0.0L)
+             {
+              if (dst < dst_end) *dst++ = '+';
+             }
+            else 
+             {
+              if (dst < dst_end) *dst++ = '-';
+             }
+            Li = fabsl (Li);
+            dst += sprintf (dst, pfmt, Li);
+            if (dst < dst_end) *dst++ = ic;
+          }
          }
         else
          {
           double dd = (double)v_stack[n].get ();
+          double di = (double)v_stack[n].imval;
           if (dst < dst_end) dst += sprintf (dst, pfmt, dd);
+          if (di != 0.0)
+           {
+            if (di > 0.0)
+             {
+              if (dst < dst_end) *dst++ = '+';
+             }
+            else
+             {
+              if (dst < dst_end) *dst++ = '-';
+             }
+            di = fabs (di);
+            dst += sprintf (dst, pfmt, di);
+            if (dst < dst_end) *dst++ = ic;
+           }
          }
        }
        break;

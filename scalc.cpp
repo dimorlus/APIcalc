@@ -302,6 +302,7 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_sqrt, "root2", (void *)vfunc);
  add (tsVFUNC1, vf_root3, "root3", (void *)vfunc);
  add (tsVFUNC1, vf_root3, "cbrt", (void *)vfunc);
+ add (tsVFUNC1, vf_rnd, "rnd", (void *)vfunc);
 
 
  add (tsVFUNC2, vf_pow, "pow", (void *)vfunc2);
@@ -314,9 +315,12 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_polar, "polar", (void *)vfunc2);
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
+ add (tsVFUNC1, vf_conj, "conj", (void *)vfunc);
  add (tsVFUNC1, vf_factorial, "fact", (void *)vfunc);
  add (tsVFUNC2, vf_hypot, "hypot", (void *)vfunc2);
  add (tsVFUNC2, vf_atan2, "atan2", (void *)vfunc2);
+ add (tsVFUNC2, vf_fmod, "fmod", (void *)vfunc2);
+ add (tsVFUNC2, vf_fmod, "mod", (void *)vfunc2);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
  add (tsFFUNC1, "np", (void *)(float__t (*) (float__t))NP);
@@ -358,7 +362,6 @@ void calculator::AddPredefined (void)
  add (tsFFUNC1, "aawg", (void *)(float__t (*) (float__t))Aawg);
  add (tsFFUNC1, "cs", (void *)(float__t (*) (float__t))Cs);
  add (tsFFUNC1, "acs", (void *)(float__t (*) (float__t))Acs);
- add (tsFFUNC1, "rnd", (void *)(float__t (*) (float__t))Random);
  add (tsFFUNC3, "vout", (void *)(float__t (*) (float__t, float__t, float__t))Vout);
  add (tsFFUNC3, "cmp", (void *)(float__t (*) (float__t, float__t, float__t))Cmp);
  add (tsFFUNC2, "ee", (void *)(float__t (*) (float__t, float__t))Ee);
@@ -5777,9 +5780,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
+         FmodC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+         v_stack[v_sp - 2].tag = tvCOMPLEX;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
@@ -5803,11 +5805,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           {
            float__t left          = v_stack[v_sp - 2].get ();
            float__t right         = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = fmod (left, left * right / ((float__t)100.0));
+           v_stack[v_sp - 2].fval = Fmod (left, left * right / ((float__t)100.0));
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
          else
-          v_stack[v_sp - 2].fval = fmod (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+          v_stack[v_sp - 2].fval = Fmod (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
          v_stack[v_sp - 2].tag = tvFLOAT;
         }
        v_sp -= 1;

@@ -492,10 +492,13 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  vf_re, // Real part of a complex number function
  vf_im, // Imaginary part of a complex number function
+ vf_conj,  // Complex conjugate function
  vf_cplx, // Complex number construction function
  vf_polar, // Polar coordinates construction function
  vf_hypot, // Hypotenuse function
- vf_atan2,
+ vf_atan2, // Arctangent of two variables function
+ vf_fmod,   // Modulo function
+ vf_rnd,   // Random function
 
  vf_factorial, // Factorial function
 

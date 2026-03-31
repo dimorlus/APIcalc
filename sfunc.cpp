@@ -60,7 +60,7 @@ typedef __float128 float__t;
 #define logl   logq
 #define log10l log10q
 #define powl   powq
-#define fabsl fabsq
+#define fabsl  fabsq
 #define floorl floorq
 #define ceill  ceilq
 #define roundl roundq
@@ -260,6 +260,16 @@ float__t Abs (float__t x)
  return fabsl (x);
 #else
  return fabs (x);
+#endif
+}
+
+// fmod function: Fmod(x, y) = x - n*y where n is the quotient of x/y rounded towards zero
+float__t Fmod (float__t x, float__t y)
+{
+#ifdef _long_double_
+ return fmodl (x, y);
+#else
+ return fmod (x, y);
 #endif
 }
 
@@ -2288,7 +2298,56 @@ void HypotC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &o
  SqrtC (sum_re, sum_im, out_re, out_im);
 }
 
-void Atan2C(float__t re1, float__t im1, float__t re2, float__t im2, float__t& out_re,
+void Atan2C (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+             float__t &out_im)
+{
+ // atan2(z1, z2) = atan(z1/z2)
+ float__t denom_re = re2 * re2 + im2 * im2;
+
+ if (denom_re == (float__t)0.0L)
+  {
+   // If both numbers are zero — this is the classic NaN for atan2
+   if (re1 == 0.0L && im1 == 0.0L)
+    {
+     out_re = qnan;
+     out_im = qnan;
+    }
+   else if (re1 > (float__t)0.0L)
+    {
+     out_re = M_PI/(float__t)2.0L; // PI / 2
+     out_im = (float__t)0.0L;
+    }
+   else
+    {
+     out_re = -(M_PI/(float__t)2.0L); // -PI / 2
+     out_im = (float__t)0.0L;
+    }
+   return;
+  }
+
+ // complex division (z1 / z2)
+ float__t z_re = (re1 * re2 + im1 * im2) / denom_re;
+ float__t z_im = (im1 * re2 - re1 * im2) / denom_re;
+
+ // Calculate the base arctangent
+ AtanC (z_re, z_im, out_re, out_im);
+
+ // WARNING: Quadrant correction based on real parts!
+ // This behavior mimics the classic real atan2
+ if (re2 < (float__t)0.0L) // x < 0
+  {
+   if (re1 >= (float__t)0.0L)
+    {
+     out_re += M_PI; // Shift up for the 2nd quadrant
+    }
+   else
+    {
+     out_re -= M_PI; // Shift down for the 3rd quadrant
+    }
+  }
+}
+
+void Atan2C1(float__t re1, float__t im1, float__t re2, float__t im2, float__t& out_re,
     float__t& out_im)
 {
  // atan2(z1, z2) = atan(z1/z2)
@@ -2302,6 +2361,63 @@ void Atan2C(float__t re1, float__t im1, float__t re2, float__t im2, float__t& ou
  float__t z_re = (re1 * re2 + im1 * im2) / denom_re;
  float__t z_im = (im1 * re2 - re1 * im2) / denom_re;
  AtanC (z_re, z_im, out_re, out_im);
+}
+
+// Complex modulus (remainder) of two complex numbers: z1 mod z2 = z1 - n * z2, where n = trunc(z1 /
+// z2)
+void FmodC (float__t x1, float__t y1, float__t x2, float__t y2, float__t &re, float__t &im)
+{
+ // z1 = x1 + i*y1, z2 = x2 + i*y2
+ // Find the quotient n = z1 / z2
+ float__t denom = x2 * x2 + y2 * y2;
+
+ if (denom == 0.0L)
+  {
+   re = qnan;
+   im = qnan;
+   return;
+  }
+
+ // Real and imaginary parts of the exact quotient
+ float__t quot_re = (x1 * x2 + y1 * y2) / denom;
+ float__t quot_im = (y1 * x2 - x1 * y2) / denom;
+
+ // Round the parts of the quotient towards zero (analog of trunc() for fmod)
+ // You can use your int() or floor() with sign check
+ float__t n_re = (quot_re >= 0) ? floorl (quot_re) : ceill (quot_re);
+ float__t n_im = (quot_im >= 0) ? floorl (quot_im) : ceill (quot_im);
+
+ // Remainder r = z1 - n * z2
+ // n * z2:
+ float__t prod_re = n_re * x2 - n_im * y2;
+ float__t prod_im = n_re * y2 + n_im * x2;
+
+ // Final result
+ re = x1 - prod_re;
+ im = y1 - prod_im;
+}
+
+// Complex division: z1 / z2 = (z1 * conj(z2)) / |z2|^2
+void FdivC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re, float__t &out_im)
+{
+ float__t denom = re2 * re2 + im2 * im2;
+ if (denom == (float__t)0.0L)
+  {
+   out_re = qnan; 
+   out_im = qnan; 
+   return;
+  }
+ out_re = (re1 * re2 + im1 * im2) / denom;
+ out_im = (im1 * re2 - re1 * im2) / denom;
+}
+
+// Complex multiplication: (re1 + i*im1) * (re2 + i*im2) = (re1*re2 - im1*im2) + i*(re1*im2 +
+// im1*re2)
+void FmulC (float__t re1, float__t im1, float__t re2, float__t im2, float__t &out_re,
+            float__t &out_im)
+{
+ out_re = re1 * re2 - im1 * im2;
+ out_im = re1 * im2 + im1 * re2;
 }
 
 bool is_complex2 (value *arg1, value *arg2, int idx)
@@ -2382,6 +2498,11 @@ void vfunc2 (value *res, value *arg1, value *arg2, int idx)
     case vf_atan2:
      {
       Atan2C (re1, im1, re2, im2, out_re, out_im);
+     }
+     break;
+    case vf_fmod:
+     {
+      FmodC (re1, im1, re2, im2, out_re, out_im);
      }
      break;
     }
@@ -2625,6 +2746,14 @@ void vfunc (value *res, value *arg, int idx)
       Root3C (re, im, out_re, out_im);
      }
      break;
+     case vf_rnd:
+     {
+      res->fval = Random (re);
+      res->imval = Random (im);
+      res->tag   = tvCOMPLEX;
+      res->ival  = (int64_t)res->fval;
+     }
+     return;
     case vf_factorial:
      {
       FactorialC (re, im, out_re, out_im);
@@ -2643,6 +2772,14 @@ void vfunc (value *res, value *arg, int idx)
       res->fval  = im; // argument
       res->imval = (float__t)0.0L;
       res->tag   = tvFLOAT;
+      res->ival  = (int64_t)res->fval;
+     }
+     return;
+     case vf_conj:
+     {
+      res->fval  = re; // argument
+      res->imval = -im; // conjugate
+      res->tag   = tvCOMPLEX;
       res->ival  = (int64_t)res->fval;
      }
      return;
@@ -2794,6 +2931,16 @@ void vfunc (value *res, value *arg, int idx)
     case vf_im:
      {
       res->fval = (float__t)0.0L;
+     }
+     break;
+    case vf_conj:
+     {
+      res->fval = arg->fval;
+     }
+     break;
+    case vf_rnd:
+     {
+      res->fval = Random (arg->fval);
      }
      break;
      case vf_factorial:

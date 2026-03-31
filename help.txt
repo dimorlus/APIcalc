@@ -69,7 +69,7 @@ sqrt(x|z) root2(x|z)      (1)   Square root
 root3(x|z), cbrt(x|z)     (1)   Cube root, x^(1/3)
 rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
 hypot(x|z,y|z)            (1)   Hypotenuse
-
+round(x)                        Round value
 int(x)                          Convert to int
 float(n)                        Convert to float
 round(x)                        Round value
@@ -79,7 +79,8 @@ frac(x)                         Returns the fractional part
 not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
-rnd(x)                          Random value 0..x
+mod, fmod(x|z,y|z)        (1)   Reminder
+rnd(x|x)                  (1)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function
@@ -105,6 +106,7 @@ polar(r,θ)                      Return complex value r*exp(iθ)
 cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
 re(z)                     (1)   Return real part of complex
 im(z)                     (1)   Return imaginary part of complex
+conj(z)                   (1)   Complex conjugate  
 pol(z)                    (1)   atan(im(z)/re(z))
 min(x,y)                        Minimum of x, y
 max(x,y)                        Maximum of x, y

@@ -85,6 +85,34 @@ static int FontFunction (int x);
 static int VarsFunction (int x);
 static int ColorFunction (int x);
 
+int EscFn ()
+{
+ if (GetAsyncKeyState (VK_ESCAPE) & 0x8000)
+  {
+   // Wait for ESC key to be released to avoid multiple error messages
+   while (GetAsyncKeyState (VK_ESCAPE) & 0x8000) Sleep (1);
+
+   // Clear all messages about pressing Esc from this thread's queue
+   MSG msg;
+   // Remove all keyboard messages for Esc (WM_KEYFIRST to WM_KEYLAST)
+   while (PeekMessage (&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE))
+    {
+     // If it's not our Esc — we can return it to the queue (but usually in a loop it's not
+     // critical)
+     if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE) continue;
+     if (msg.message == WM_KEYUP && msg.wParam == VK_ESCAPE) continue;
+     if (msg.message == WM_CHAR && msg.wParam == VK_ESCAPE) continue;
+
+     // If something else is encountered (although unlikely), it can be dispatched back
+     DispatchMessage (&msg);
+    }
+   return 1; // Esc was pressed and handled
+  }
+ return 0; // Esc was not pressed
+}
+
+
+
 WinApiCalc::WinApiCalc ()
     : m_hInst (nullptr), m_hWnd (nullptr), m_hExpressionEdit (nullptr), m_hResultEdit (nullptr),
       m_hComboBox (nullptr), m_hHelpWindow (nullptr), m_hMenu (nullptr), m_pCalculator (nullptr),
@@ -740,6 +768,8 @@ void WinApiCalc::OnCreate ()
  m_pCalculator->addfn ("vars", (void *)(int (*) (int))VarsFunction);
  m_pCalculator->addfn ("color", (void *)(int (*) (int))ColorFunction);
  m_pCalculator->addfn ("home", (void *)(int (*) (int))HomeFunction);
+
+ m_pCalculator->setEscFn (EscFn);
 
  // Initialize Common Controls
  INITCOMMONCONTROLSEX icex;

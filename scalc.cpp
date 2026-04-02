@@ -126,6 +126,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  v_sp         = 0;    // Clear the value stack pointer
  o_sp         = 0;    // Clear the operator stack pointer
 
+ EscFn         = nullptr; // Clear the escape function pointer
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count
  res_mval      = nullptr; // Clear the matrix result pointer
@@ -2732,6 +2733,7 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  return combined;
 }
 
+
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // expr -> sin(x)/x, x
 float__t calculator::Integr (const char *expr, t_symbol tag)
@@ -2833,18 +2835,46 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    else if (tag == tsSUM)
     {
      uint64_t init_ms = GetTickCount64 ();
+     uint64_t last_gui_check = 0;
 
      float__t fvx = 0.0;
      if (vfrom > vto)
       {
        do
         {
-         if (GetTickCount64 () - init_ms > TIMEOUT) // 5 second time limit for summation
+         uint64_t current_ms = GetTickCount64 ();
+
+         if (current_ms - init_ms > 1000)
           {
-           errorf (pos, "Summation took too long");
-           result_fval = qnan;
-           delete pCalculator;
-           return qnan;
+           if (!EscFn)
+            {
+             errorf (pos, "Summation took too long");
+             result_fval = qnan;
+             delete pCalculator;
+             return qnan;
+            }
+           if (EscFn && EscFn ())
+            {
+             errorf (pos, "Summation cancelled by user");
+             result_fval = qnan;
+             delete pCalculator;
+             return qnan;
+            }
+           else
+            {
+             if (current_ms - last_gui_check > 100)
+              {
+               last_gui_check = current_ms;
+               Sleep (1); // Sleep briefly to allow GUI to remain responsive
+              }
+             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+              {
+               errorf (pos, "Summation took too long");
+               result_fval = qnan;
+               delete pCalculator;
+               return qnan;
+              }
+            }
           }
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
@@ -2866,12 +2896,39 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       {
        do
         {
-         if (GetTickCount64 () - init_ms > TIMEOUT) // 5 second time limit for summation
+         uint64_t current_ms = GetTickCount64 ();
+
+         if (current_ms - init_ms > 1000)
           {
-           errorf (pos, "Summation took too long");
-           result_fval = qnan;
-           delete pCalculator;
-           return qnan;
+           if (!EscFn)
+            {
+             errorf (pos, "Summation took too long");
+             result_fval = qnan;
+             delete pCalculator;
+             return qnan;
+            }
+           if (EscFn && EscFn ())
+            {
+             errorf (pos, "Summation cancelled by user");
+             result_fval = qnan;
+             delete pCalculator;
+             return qnan;
+            }
+           else
+            {
+             if (current_ms - last_gui_check > 100)
+              {
+               last_gui_check = current_ms;
+               Sleep (1); // Sleep briefly to allow GUI to remain responsive
+              }
+             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+              {
+               errorf (pos, "Summation took too long");
+               result_fval = qnan;
+               delete pCalculator;
+               return qnan;
+              }
+            }
           }
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
@@ -7629,6 +7686,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   return qnan;
                  }
 
+
                 const char *funcdef = (const char *)sym->func;
                 const char *p = strchr (funcdef, '(');
                 if (!p)
@@ -7721,6 +7779,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
                 // Rest of the string — expression
                 while (*p && isspace (*p)) p++;
+
+                pCalculator->setEscFn (EscFn);
+
                 float__t res = pCalculator->evaluate_f ((char *)p);
 
                if (isnan (res) || pCalculator->error ()[0])

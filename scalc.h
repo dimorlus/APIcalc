@@ -319,7 +319,7 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MAX_R 7
 #define MAX_C 7
 
-#define TIMEOUT 1000 // Timeout in milliseconds for long calculations
+#define TIMEOUT 10000 // Timeout in milliseconds for long calculations
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
@@ -732,6 +732,8 @@ class calculator // calculator represents the main class for the expression calc
  char sres[STRBUF]; // String result buffer
  char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
 
+ int (*EscFn) (void);
+
  uint8_t res_cols; // Number of columns in the matrix result
  uint8_t res_rows;   // Number of rows in the matrix result
  float__t *res_mval; // Matrix result (pointer to array of floats)
@@ -857,6 +859,8 @@ class calculator // calculator represents the main class for the expression calc
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
+
+ inline void setEscFn (int (*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
 
  inline int isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration

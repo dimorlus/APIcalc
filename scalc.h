@@ -250,6 +250,7 @@ typedef __float128 float__t;
 
 
 #ifdef __BORLANDC__
+#define GetTickCount64 GetTickCount
 const float__t qnan = 0.0 / 0.0;
 #else
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
@@ -314,8 +315,11 @@ enum t_value // t_value represents the type of a value in the calculator
  tvDIFF
 };
 
+
 #define MAX_R 7
 #define MAX_C 7
+
+#define TIMEOUT 1000 // Timeout in milliseconds for long calculations
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
@@ -446,13 +450,16 @@ enum t_mxDim
 #define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
 #define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
 #define MASK_SOLVE  (1 << tsSOLVE)  // tsSOLVE represents a solve operator for solving equations
+#define MASK_SUM    (1 << tsSUM)   // tsSUM represents a summation operator for numerical summation
+#define MASK_CALC   (1 << tsCALC) // tsCALC represents a calculate operator for evaluating expressions
 #define MASK_INTEGR (1 << tsINTEGR) // tsINTEGR represents an integration operator for numerical integration
 #define MASK_DIFF   (1 << tsDIFF) // tsDIFF represents a differentiation operator for numerical differentiation
 #define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 \
                     | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
                     | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
                     | MASK_FFUNCM |MASK_FFUNCM2 | MASK_MFUNCM | MASK_MFUNCM2 \
-                    | MASK_VFUNC2 | MASK_UFUNCT| MASK_FFUNCI1 | MASK_CIFUNC1 )
+                    | MASK_VFUNC2 | MASK_UFUNCT| MASK_FFUNCI1 | MASK_CIFUNC1 \
+                    | MASK_SOLVE | MASK_SUM | MASK_CALC | MASK_INTEGR | MASK_DIFF )
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -523,6 +530,8 @@ class value // value represents a value in the calculator, which can be an integ
 {
  public:
  t_value tag; // Type of value
+ uint32_t info; // Additional info for the value (e.g., flags, precision, etc.)
+ char ic;     // imaginary unit character, 'j' or 'i'
  symbol *var; // Uses for variables and functions
  int pos;     // Position in expression for error reporting
  
@@ -537,6 +546,8 @@ class value // value represents a value in the calculator, which can be an integ
  inline value ()
  {
   tag   = tvERR; //tvINT;
+  ic    = '\0';
+  info  = 0;
   var   = nullptr; // Uses for variables and functions
   ival  = 0;
   fval  = 0.0;
@@ -731,6 +742,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t result_fval; // Float result
  float__t result_imval; // Imaginary part of complex result
  t_value result_tag; // Type of result
+ uint32_t result_info;  // Additional info for the result (e.g., flags, precision, etc.)
 
  void AddPredefined (void);
 
@@ -903,6 +915,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t get_re_res () { return result_fval; };
  float__t get_im_res () { return result_imval; };
  t_value get_res_tag () { return result_tag; };
+ uint32_t get_res_info () { return result_info; };
  char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
  inline mxresult_t get_mx_res ()
  {

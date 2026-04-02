@@ -1,3 +1,7 @@
+04.04.26 (2.166)
++ Fixed a bug that prevented sum (and some other solvers) from being used within user-defined functions.
++ Added a 1-second limit on sum execution time.
+
 31.03.26 (2.165)
 + Now the prn (fprn, printf) function prints complex numbers (for fp formats) if the 
   imaginary part is not zero. Both parts (real and imaginary) are printed in the same 

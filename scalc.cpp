@@ -129,6 +129,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count
  res_mval      = nullptr; // Clear the matrix result pointer
+ result_info   = 0;    // Clear the result info
 
  result_fval  = qnan; // Clear the floating-point result
  result_imval = (float__t)0.0L;  // Clear the imaginary result
@@ -2798,8 +2799,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
     {
      {
       pCalculator->addfvar (svar, vfrom);
-      float__t fvx
-          = pCalculator->evaluate_f (sexpr); // evaluate the function for
+      float__t fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
                                            // the syntax check before starting the integration
 
       if (isnan (fvx) || pCalculator->err[0])
@@ -2832,11 +2832,20 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
     }
    else if (tag == tsSUM)
     {
+     uint64_t init_ms = GetTickCount64 ();
+
      float__t fvx = 0.0;
      if (vfrom > vto)
       {
        do
         {
+         if (GetTickCount64 () - init_ms > TIMEOUT) // 5 second time limit for summation
+          {
+           errorf (pos, "Summation took too long");
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
+          }
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
@@ -2857,6 +2866,13 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       {
        do
         {
+         if (GetTickCount64 () - init_ms > TIMEOUT) // 5 second time limit for summation
+          {
+           errorf (pos, "Summation took too long");
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
+          }
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
@@ -3472,10 +3488,11 @@ void calculator::isNRM(char* start, char* end)
 // backslash for base prefix
 t_operator calculator::dscan (bool operand, bool percent)
  {
-  int_t ival     = 0;
-  double fval  = 0;
+  uint32_t info = 0;
+  int_t ival = 0;
+  double fval = 0;
   double sfval = 0;
-  int ierr       = 0, ferr;
+  int ierr = 0, ferr;
   char *ipos, *fpos, *sfpos;
   int n = 0;
 
@@ -3483,30 +3500,35 @@ t_operator calculator::dscan (bool operand, bool percent)
    {
     ierr = xscanf (buf + pos, 1, ival, n);
     ipos = buf + pos + n;
+    if (n) info |= ESC;
     fflags |= ESC;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
    {
     ierr = bscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
+    if (n) info |= fBIN;
     fflags |= fBIN;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
    {
     ierr = oscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
+    if (n) info |= OCT;
     fflags |= OCT;
    }
   else if (buf[pos - 1] == '$')
    {
     ierr = hscanf (buf + pos, ival, n);
     ipos = buf + pos + n;
+    if (n) info |= HEX;
     fflags |= HEX;
    }
   else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
    {
     ierr = hscanf (buf + pos + 1, ival, n);
     ipos = buf + pos + n + 1;
+    if (n) info |= HEX;
     fflags |= HEX;
    }
   else
@@ -3532,11 +3554,20 @@ t_operator calculator::dscan (bool operand, bool percent)
 
   //` - degrees, ' - minutes, " - seconds
   if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
-   fval = dstrtod (buf + pos - 1, &fpos);
+   {
+    fval = dstrtod (buf + pos - 1, &fpos);
+    if ((fval != qnan) && (fpos > sfpos)) info |= DEG;
+   }
   else if (*fpos == ':')
-   fval = tstrtod (buf + pos - 1, &fpos);
+   {
+    fval = tstrtod (buf + pos - 1, &fpos);
+    if ((fval != qnan) && (fpos > sfpos)) info |= DAT;
+   }
   else if (scfg & (ENG | SCI | FRI))
-   scientific (fpos, fval);
+   {
+    scientific (fpos, fval);
+    if (fpos > sfpos) info |= ENG;
+   }
   if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
    {
     fpos++;
@@ -3545,6 +3576,7 @@ t_operator calculator::dscan (bool operand, bool percent)
     else
      fval = (fval - 32.0) * 5.0 / 9.0;
     fflags |= FRH;
+    info |= FRH;
    }
 #ifdef _KELVIN_
   if ((scfg & FRH) && (*fpos == 'K')) // Kelvin to Celsius
@@ -3570,11 +3602,12 @@ t_operator calculator::dscan (bool operand, bool percent)
     fpos++;
     fflags |= CPX;
     v_stack[v_sp].tag = tvCOMPLEX;
+    v_stack[v_sp].ic  = c_imaginary;
    }
   if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
    { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
-    fpos              = sfpos;
-    fval              = sfval;
+    fpos = sfpos;
+    fval = sfval;
     v_stack[v_sp].tag = tvFLOAT;
    }
 
@@ -3618,7 +3651,8 @@ t_operator calculator::dscan (bool operand, bool percent)
       pos = ipos - buf;
      }
    }
-  v_stack[v_sp].pos   = pos;
+  v_stack[v_sp].info = info;
+  v_stack[v_sp].pos  = pos;
   if (v_stack[v_sp].tag == tvFLOAT) fflags |= FLT;
   v_stack[v_sp++].var = nullptr;
   return toOPERAND;
@@ -3879,6 +3913,7 @@ t_operator calculator::scan (bool operand, bool percent)
   case '\'':
    {
     int_t ival;
+    uint32_t info = 0;
     char *ipos;
     int n = 0;
 
@@ -3886,8 +3921,7 @@ t_operator calculator::scan (bool operand, bool percent)
      {
       xscanf (buf + pos + 1, 1, ival, n);
       ipos = buf + pos + n + 1;
-      if (*ipos == '\'')
-       ipos++;
+      if (*ipos == '\'') ipos++;
       else
        {
         error ("bad char constant");
@@ -3915,13 +3949,15 @@ t_operator calculator::scan (bool operand, bool percent)
           memcpy (&ival, &wbuf[0], 2);
           ipos += 2;
           fflags |= WCH;
+          info |= WCH;
          }
         else
 #endif /*_WIN_*/
 #endif /*_WCHAR_*/
          {
           fflags |= CHR;
-          ival               = *(unsigned char *)(ipos - 1);
+          info |= CHR;
+          ival = *(unsigned char *)(ipos - 1);
           v_stack[v_sp].sval = (char *)sf_alloc (2);
           if (v_stack[v_sp].sval)
            {
@@ -3938,6 +3974,7 @@ t_operator calculator::scan (bool operand, bool percent)
      }
     pos = ipos - buf;
     v_stack[v_sp].tag   = tvINT;
+    v_stack[v_sp].info  = info;
     v_stack[v_sp].ival  = ival;
     v_stack[v_sp].pos   = pos;
     v_stack[v_sp++].var = nullptr;
@@ -3950,7 +3987,7 @@ t_operator calculator::scan (bool operand, bool percent)
     int_t ival;
     char *ipos;
     int n = 0;
-
+    uint32_t info = 0;
     if (buf[pos] == '\'')
      {
       if (buf[pos + 1] == '\\')
@@ -3982,6 +4019,7 @@ t_operator calculator::scan (bool operand, bool percent)
           memcpy (&ival, &wbuf[0], 2);
           ipos += 3;
           fflags |= WCH;
+          info |= WCH;
          }
         else
          {
@@ -3991,6 +4029,7 @@ t_operator calculator::scan (bool operand, bool percent)
        }
       pos = ipos - buf;
       v_stack[v_sp].tag   = tvINT;
+      v_stack[v_sp].info  = info;
       v_stack[v_sp].ival  = ival;
       v_stack[v_sp].pos   = pos;
       v_stack[v_sp++].var = nullptr;
@@ -4007,13 +4046,16 @@ t_operator calculator::scan (bool operand, bool percent)
  case 'i': 
  case 'j':
    {
+    uint32_t info = 0;
     char *fpos;
     if (buf[pos] && (isdigit (buf[pos] & 0x7f) || buf[pos] == '.'))
      {
       double fval = strtod (buf + pos, &fpos);
       if (scfg & (ENG | SCI | FRI))
        {
+        char *spos = fpos;
         scientific (fpos, fval);
+        if (fpos > spos) info |= ENG;
        }
       int ferr = errno;
       if ((ferr) && (*fpos == '.'))
@@ -4029,14 +4071,17 @@ t_operator calculator::scan (bool operand, bool percent)
        }
 
       c_imaginary         = buf[pos - 1];
-      v_stack[v_sp].tag   = tvCOMPLEX;
+      
+      v_stack[v_sp].tag  = tvCOMPLEX;
+      v_stack[v_sp].ic  = c_imaginary;
+      v_stack[v_sp].info = info;
       scfg |= CPX;
       fflags |= CPX;
       v_stack[v_sp].imval = (float__t)fval;
       v_stack[v_sp].fval  = (float__t)0.0;
       v_stack[v_sp].pos   = pos;
       v_stack[v_sp++].var = nullptr;
-      pos                 = fpos - buf;
+      pos = fpos - buf;
       return toOPERAND;
      }
     else
@@ -4988,29 +5033,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  bool operand            = true;
  bool percent            = false;
  int n_args              = 0;
- //const __int64 i64maxdbl = 0x7feffffffffffffeull;
- //const __int64 i64mindbl = 0x0010000000000001ull;
- //const double maxdbl     = *(double *)&i64maxdbl;
- //const double mindbl     = *(double *)&i64mindbl;
-
- //const uint64_t i64maxdbl = 0x7feffffffffffffeull;
- //const uint64_t i64mindbl = 0x0010000000000001ull;
- //double maxdbl, mindbl;
- //memcpy (&maxdbl, &i64maxdbl, sizeof (double));
- //memcpy (&mindbl, &i64mindbl, sizeof (double));
 
  const double maxdbl = DBL_MAX; // 1.7976931348623157e+308
- //const double mindbl = DBL_MIN; // 2.2250738585072014e-308
-//#ifdef _float128_
-// static const float__t maxdbl = FLT128_MAX;
-//#else
-// static const float__t maxdbl = DBL_MAX; // for double and long double одинаково
-//#endif
- #ifdef __BORLANDC__
- const float__t qnan = 0.0/0.0;
- #else
- 
- #endif
+ //#ifdef __BORLANDC__
+ //const float__t qnan = 0.0/0.0;
+ //#else
+ //
+ //#endif
 
  t_operator saved_oper   = toBEGIN;
  value saved_val;
@@ -5163,6 +5192,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        return qnan;
       }
 
+     if (BINARY(cop))
+     {
+       v_stack[v_sp - 2].info |= v_stack[v_sp - 1].info;
+     }
+
      switch (cop)
       {
       case toBEGIN:
@@ -5187,6 +5221,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_imval = v_stack[0].imval;
          result_ival  = v_stack[0].ival;
          result_tag   = v_stack[0].tag;
+         result_info  = v_stack[0].info;
          if (piVal) *piVal = v_stack[0].ival;
          if (pimval) *pimval = v_stack[0].imval;
 
@@ -7024,6 +7059,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        if (o_stack[o_sp - 1] == toFUNC)
         {
          symbol *sym = v_stack[v_sp - n_args - 1].var;
+         if (n_args > 0)
+         {
+          uint32_t info = 0;
+          for (int i = 0; i < n_args; i++)
+           {
+            info |= v_stack[v_sp - n_args + i].info;
+           }
+          v_stack[v_sp - n_args - 1].info = info;
+         }
          if (sym)
           {
            switch (sym->tag)

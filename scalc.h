@@ -531,7 +531,6 @@ class value // value represents a value in the calculator, which can be an integ
  public:
  t_value tag; // Type of value
  uint32_t info; // Additional info for the value (e.g., flags, precision, etc.)
- char ic;     // imaginary unit character, 'j' or 'i'
  symbol *var; // Uses for variables and functions
  int pos;     // Position in expression for error reporting
  
@@ -546,7 +545,6 @@ class value // value represents a value in the calculator, which can be an integ
  inline value ()
  {
   tag   = tvERR; //tvINT;
-  ic    = '\0';
   info  = 0;
   var   = nullptr; // Uses for variables and functions
   ival  = 0;

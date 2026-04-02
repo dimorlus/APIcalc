@@ -3602,7 +3602,6 @@ t_operator calculator::dscan (bool operand, bool percent)
     fpos++;
     fflags |= CPX;
     v_stack[v_sp].tag = tvCOMPLEX;
-    v_stack[v_sp].ic  = c_imaginary;
    }
   if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
    { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
@@ -4073,7 +4072,6 @@ t_operator calculator::scan (bool operand, bool percent)
       c_imaginary         = buf[pos - 1];
       
       v_stack[v_sp].tag  = tvCOMPLEX;
-      v_stack[v_sp].ic  = c_imaginary;
       v_stack[v_sp].info = info;
       scfg |= CPX;
       fflags |= CPX;

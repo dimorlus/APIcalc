@@ -75,17 +75,27 @@ typedef __float128 float__t;
 #pragma warning(disable : 4244)
 #endif // __GNUC__
 
+
 #ifdef _float128_
 #define M_PI    3.14159265358979323846264338327950288Q
-#define M_PI_2l 1.5707963267948966192313216916398Q
+#define M_2PI   6.283185307179586476925286766559005768394Q
+#define M_PI_2l 1.57079632679489661923132169163975144Q
 #define M_E     2.71828182845904523536028747135266250Q
 #define PHI     1.61803398874989484820458683436563812Q //(1+sqrt(5))/2 golden ratio
+#define M_PId   3.14159265358979323846264338327950288
+#define M_PI_2d 1.57079632679489661923132169163975144
+#define M_Ed    2.71828182845904523536028747135266250
+#define PHId    1.61803398874989484820458683436563812 //(1+sqrt(5))/2 golden ratio
 #else
 #define M_PI    3.1415926535897932384626433832795L
+#define M_2PI   6.283185307179586476925286766559005768394L
+#define M_PId   3.1415926535897932384626433832795L
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
+#define M_Ed    2.7182818284590452353602874713527L
 #define PHI     1.6180339887498948482045868343656L //(1+sqrt(5))/2 golden ratio
-#endif  //_float128_
+#define PHId    1.6180339887498948482045868343656L
+#endif /*_float128_*/
 
 int_t To_int (int_t val)
 {
@@ -1382,19 +1392,6 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
         char *sstr_end = sstr + sizeof (sstr) - 16; // leave room for '\0' and potential extra chars
         if (cc == 'L')
          {
-#ifdef __BORLANDC__
-          long double Ld = (long double)v_stack[n].get ();
-          long double Li = (long double)v_stack[n].imval;
-          sptr += snprintf (sptr, sstr_end - sptr, pfmt, Ld);
-          if (Li != 0.0L)
-           {
-            *sptr++ = (Li > 0.0L) ? '+' : '-';
-            Li      = (Li > 0.0L) ? Li : -Li;
-            sptr += snprintf (sptr, sstr_end - sptr, pfmt, Li);
-            *sptr++ = ic;
-           }
-          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
-#else
 #ifdef __GNUC__
           __float80 Ld = (__float80)v_stack[n].get ();
           __float80 Li = (__float80)v_stack[n].imval;
@@ -1408,8 +1405,8 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
            }
           while (dst < dst_end && sp < sptr) *dst++ = *sp++;
 #else
-          double Ld = (double)v_stack[n].get ();
-          double Li = (double)v_stack[n].imval;
+          long double Ld = (long double)v_stack[n].get ();
+          long double Li = (long double)v_stack[n].imval;
           sptr += snprintf (sptr, sstr_end - sptr, pfmt, Ld);
           if (Li != 0.0L)
            {
@@ -1420,23 +1417,9 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
            }
           while (dst < dst_end && sp < sptr) *dst++ = *sp++;
 #endif
-#endif
          }
         else
          {
-#ifdef __BORLANDC__
-          double dd = (double)v_stack[n].get ();
-          double di = (double)v_stack[n].imval;
-          sptr += sprintf (sptr, pfmt, dd);
-          if (di != 0.0)
-           {
-            *sptr++ = (di > 0.0) ? '+' : '-';  
-            di = fabs (di);
-            sptr += sprintf (sptr, pfmt, di);
-            *sptr++ = ic;
-           }
-          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
-#else
           double dd = (double)v_stack[n].get ();
           double di = (double)v_stack[n].imval;
           sptr += snprintf (sptr, sstr_end - sptr, pfmt, dd);
@@ -1448,7 +1431,6 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
             *sptr++ = ic;
            }
           while (dst < dst_end && sp < sptr) *dst++ = *sp++;
-#endif
          }
        }
        break;
@@ -2481,12 +2463,12 @@ void Atan2C (float__t re1, float__t im1, float__t re2, float__t im2, float__t &o
     }
    else if (re1 > (float__t)0.0L)
     {
-     out_re = M_PI/(float__t)2.0L; // PI / 2
+     out_re = M_PI_2l; //M_PI / (float__t)2.0L; // PI / 2
      out_im = (float__t)0.0L;
     }
    else
     {
-     out_re = -(M_PI/(float__t)2.0L); // -PI / 2
+     out_re = -M_PI_2l;//-(M_PI/(float__t)2.0L); // -PI / 2
      out_im = (float__t)0.0L;
     }
    return;

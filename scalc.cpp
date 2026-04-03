@@ -69,15 +69,17 @@ int isinf_l(float__t x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 
 #ifdef _float128_
 #define M_PI    3.14159265358979323846264338327950288Q 
-#define M_PI_2l 1.5707963267948966192313216916398Q
+#define M_2PI   6.283185307179586476925286766559005768394Q
+#define M_PI_2l 1.57079632679489661923132169163975144Q
 #define M_E     2.71828182845904523536028747135266250Q 
 #define PHI     1.61803398874989484820458683436563812Q //(1+sqrt(5))/2 golden ratio
 #define M_PId   3.14159265358979323846264338327950288
-#define M_PI_2d 1.5707963267948966192313216916398
+#define M_PI_2d 1.57079632679489661923132169163975144
 #define M_Ed    2.71828182845904523536028747135266250
 #define PHId    1.61803398874989484820458683436563812 //(1+sqrt(5))/2 golden ratio
 #else
 #define M_PI    3.1415926535897932384626433832795L
+#define M_2PI   6.283185307179586476925286766559005768394L
 #define M_PId   3.1415926535897932384626433832795L
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
@@ -392,8 +394,8 @@ void calculator::AddPredefined (void)
  addfconst ("pi", M_PI);
  addfconst ("e", M_E);
  addfconst ("phi", PHI);
- addfconst ("tau", ((float__t)2.0L * M_PI));
- addfconst ("turn",((float__t)2.0L * M_PI));
+ addfconst ("tau", ((float__t)M_2PI));
+ addfconst ("turn",((float__t)M_2PI));
  addfconst ("gon", (M_PI / (float__t)200.0L));
  addfconst ("deg", (M_PI / (float__t)180.0L));
  #endif
@@ -472,8 +474,8 @@ void calculator::AddPredefined (void)
  addfconst ("wb", (float__t)1.0);  // Magnetic flux Weber - Base SI
  addfconst ("gs", (float__t)1e-4); // Magnetic flux density (or magnetic induction) Gauss to Tesla
  addfconst ("mw", (float__t)1e-8); // Magnetic flux Maxwell to Weber
- addfconst ("oe", (float__t)(1000.0 / (4.0 * M_PI))); // Magnetic field strength (H) Oersted to A/m
- addfconst ("gb", (float__t)(10.0 / (4.0 * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
+ addfconst ("oe", (float__t)(1000.0 / (4.0L * M_PI))); // Magnetic field strength (H) Oersted to A/m
+ addfconst ("gb", (float__t)(10.0 / (4.0L * M_PI)));   // Magnetomotive force (MMF) Gilbert to Ampere-turn
 
  // Physical constants (CODATA 2018)
  // Fundamental constants
@@ -2122,8 +2124,8 @@ int calculator::xscanf (char *str, int len, int_t &ival, int &nn)
 // Parse a string that may contain degrees, minutes, and seconds, and convert it to radians
 double calculator::dstrtod (char *s, char **endptr)
 {
- const char cdeg[]     = { '`', '\'', '\"' }; //` - degrees, ' - minutes, " - seconds
- const double mdeg[] = { M_PI / 180.0, M_PI / (180.0 * 60), M_PI / (180.0 * 60 * 60) };
+ const char cdeg[]   = { '`', '\'', '\"' }; //` - degrees, ' - minutes, " - seconds
+ const double mdeg[] = { M_PId / 180.0, M_PId / (180.0 * 60), M_PId / (180.0 * 60 * 60) };
  double res          = 0;
  double d;
  char *end = s;
@@ -2201,7 +2203,6 @@ void calculator::engineering (double mul, char *&fpos, double &fval)
    div *= 10;
    fract *= 10;
    fract += *fpos++ - '0';
-   fflags |= ENG;
   }
  fval *= mul;
  fval += (fract * mul) / div;
@@ -2508,7 +2509,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    float__t d = fmaxq (sqrtq (xr * xr + xi * xi), 1.0Q) * delta;
 #else
 #ifdef __BORLANDC__
-     float__t ax    = sqrtl (xr * xr + xi * xi);
+     float__t ax = sqrtl (xr * xr + xi * xi);
      float__t d = ((ax > 1.0L) ? ax : 1.0L) * delta;
 #else
    float__t d = fmaxl (sqrtl (xr * xr + xi * xi), 1.0L) * delta;
@@ -3011,7 +3012,6 @@ float__t calculator::Diff (const char *expr)
      // Numerical derivative (central difference)
 #ifdef _float128_
      float__t delta = fmaxq (fabsq (x), 1.0Q) * 1.5e-17Q;
-     //float__t delta = fmaxq (fabsq (x), 1.0Q) * 1.5e-11Q;
 #elif defined(__BORLANDC__)
      float__t ax    = fabsl (x);
      float__t delta = ((ax > 1.0L) ? ax : 1.0L) * 1.5e-10L;
@@ -3135,14 +3135,12 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
     {
-     //char *sval = strdup (sbuf);
      char *sval = dupString (sbuf); // dup and register the string in the string table 
      if (!sval)
       {
        error ("memory allocation failed");
        return toERROR;
       }
-     //registerString (sval);
 
      pos = ipos - buf - 1;
      v_stack[v_sp].sval   = sval;
@@ -3318,7 +3316,7 @@ t_operator calculator::sqbraces (void)
  for (int r = 0; r < rows; r++)
   for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
 
- pos                 = ipos - buf + 1;
+ pos = ipos - buf + 1;
  v_stack[v_sp].sval  = nullptr;
  v_stack[v_sp].var   = nullptr;
  v_stack[v_sp].pos   = pos;
@@ -3348,7 +3346,7 @@ t_operator calculator::sqbraces (void)
 t_operator calculator::braces (void) //{...}
 {
  char sbuf[STRBUF];
- int sidx   = 0;
+ int sidx = 0;
  char *ipos = buf + pos;
  while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
  sbuf[sidx] = '\0';
@@ -3357,7 +3355,7 @@ t_operator calculator::braces (void) //{...}
    // extract user function name here and put it as symbol in the hash table
    char fname[STRBUF];
    char *fnp;
-   fnp      = fname;
+   fnp = fname;
    int spos = 0;
    while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
     {
@@ -3423,7 +3421,7 @@ t_operator calculator::dqscan (char qc)
  char *ipos;
  char sbuf[STRBUF];
  int sidx = 0;
- ipos     = buf + pos;
+ ipos = buf + pos;
 
  while (*ipos && (sidx < STRBUF - 1))
   {

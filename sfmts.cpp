@@ -49,6 +49,8 @@
 #endif
 
 #define M_PI    3.1415926535897932384626433832795L
+#define M_PId   3.1415926535897932384626433832795L
+#define M_2PI   6.283185307179586476925286766559005768394L
 #define M_PI_2l 1.5707963267948966192313216916398L
 #define M_E     2.7182818284590452353602874713527L
 #endif
@@ -345,7 +347,7 @@ int b2scistr (char *str, double d)
 int dgr2str (char *str, double radians)
 {
  const char cdeg[] = { 96, 39, 34 }; // ` ' "
- double degrees    = radians * 180.0 / M_PI;
+ double degrees    = radians * 180.0 / M_PId;
  int deg           = (int)degrees;
  double min_full   = (degrees - deg) * 60.0;
  int min           = (int)min_full;

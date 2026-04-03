@@ -249,9 +249,11 @@ typedef __float128 float__t;
 #endif
 
 
+//const double maxdbl = DBL_MAX; // 1.7976931348623157e+308
 #ifdef __BORLANDC__
 #define GetTickCount64 GetTickCount
 const float__t qnan = 0.0 / 0.0;
+const float__t inf = 1.0 / 0.0;
 #else
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
 constexpr float__t inf = std::numeric_limits<float__t>::infinity ();
@@ -860,7 +862,7 @@ class calculator // calculator represents the main class for the expression calc
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
 
- inline void setEscFn (int (*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
+ void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
 
  inline int isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration

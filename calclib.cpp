@@ -73,4 +73,9 @@ char *__cdecl calc_error (HCALC h)
  return c->error ();
 }
 
+void __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void))
+{
+ calculator *c = (calculator *)h;
+ c->setEscFn (fn);
+}
 } // extern "C"

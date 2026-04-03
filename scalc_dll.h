@@ -13,6 +13,7 @@ public:
  calculator (const calculator&)            = delete;
  calculator& operator= (const calculator&) = delete;
 
+ void setEscFn (int (__cdecl *fn) (void)) { calc_setEscFn (h, fn); }
  double evaluate (char *expr)  { return calc_evaluate(h, expr); } 
  char *error() {return calc_error(h);}
  int print (char *str, int options, int binw, int *size = nullptr)

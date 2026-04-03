@@ -11,3 +11,4 @@ EXPORTS
     calc_set_syntax
     calc_varlist
     calc_error
+    calc_setEscFn

@@ -5088,18 +5088,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  bool operand            = true;
  bool percent            = false;
  int n_args              = 0;
-
- const double maxdbl = DBL_MAX; // 1.7976931348623157e+308
- //#ifdef __BORLANDC__
- //const float__t qnan = 0.0/0.0;
- //#else
- //
- //#endif
-
  t_operator saved_oper   = toBEGIN;
  value saved_val;
  bool has_saved_val = false;
-
  expr   = (expression && expression[0]); 
  buf    = expression; // Set the input buffer to the provided expression
  v_sp   = 0;// Clear the value stack pointer
@@ -5130,7 +5121,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  o_stack[o_sp++] = toBEGIN;
 
  memset (sres, 0, STRBUF); // Clear the string result buffer
- while (true)
+ while (true)              // Loop to process each token in the expression
   {
  next_token:
    t_operator oper;
@@ -5164,7 +5155,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
      result_fval = qnan;
      return qnan;
     }
-   //if (oper == toSOLVE) operand = true;  
   loper:
    switch (oper)
     {
@@ -5300,7 +5290,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           {
            result_ival = v_stack[0].ival;
            if (piVal) *piVal = v_stack[0].ival;
-           if (pimval) *pimval = 0;
+           if (pimval) *pimval = (float__t)0.0L;
            if (v_stack[0].sval)
             {
              strncpy (sres, v_stack[0].sval, STRBUF - 1); // Ensuring no buffer overflow
@@ -5871,7 +5861,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
         {
-         FmodC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+         FmodC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, 
+                v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
+                v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
          v_stack[v_sp - 2].tag = tvCOMPLEX;
         }
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
@@ -5944,13 +5936,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
-#ifdef _long_double_
          v_stack[v_sp - 2].ival
-             = (int_t)powl ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
-#else
-         v_stack[v_sp - 2].ival
-             = (int_t)pow ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
-#endif
+             = (int_t)Pow ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
         }
        else
         {
@@ -5961,29 +5948,16 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            v_stack[v_sp - 2].fval = Pow (left, left * right / ((float__t)100.0));
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
-         else if (((v_stack[v_sp - 2].tag == tvCOMPLEX) || (v_stack[v_sp - 1].tag == tvCOMPLEX))
-                  || ((v_stack[v_sp - 1].imval != (float__t)0.0) || (v_stack[v_sp - 2].imval != (float__t)0.0))
-                  || is_complex2 (&v_stack[v_sp - 2], &v_stack[v_sp - 1], vf_pow))
+         else if (is_complex2 (&v_stack[v_sp - 2], &v_stack[v_sp - 1], vf_pow))
           {
-           float__t x1 = v_stack[v_sp - 2].get ();
-           float__t y1 = v_stack[v_sp - 2].imval; // x1 + i*y1
-           float__t x2 = v_stack[v_sp - 1].get ();
-           float__t y2 = v_stack[v_sp - 1].imval; // x2 + i*y2
-           float__t re, im;
-
-           PowC (x1, y1, x2, y2, re, im);
-
-           v_stack[v_sp - 2].fval  = re;
-           v_stack[v_sp - 2].imval = im;
+           PowC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, 
+                 v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
+                 v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
            v_stack[v_sp - 2].tag   = tvCOMPLEX;
           }
          else
           {
-#ifdef _long_double_
-           v_stack[v_sp - 2].fval = powl (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-#else
-           v_stack[v_sp - 2].fval = pow (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-#endif
+           v_stack[v_sp - 2].fval = Pow (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
            v_stack[v_sp - 2].tag  = tvFLOAT;
           }
         }
@@ -6788,11 +6762,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
         {
-         float__t re;
-         float__t im;
-         FactorialC (v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, re, im);
-         v_stack[v_sp - 1].fval = re;
-         v_stack[v_sp - 1].imval = im;
+         FactorialC (v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
+                     v_stack[v_sp - 1].fval,   v_stack[v_sp - 1].imval);
          v_stack[v_sp - 1].tag   = tvCOMPLEX;
         }
        else if (v_stack[v_sp - 1].tag == tvSTR)
@@ -7127,7 +7098,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           {
            switch (sym->tag)
             {
-            case tsFFUNCM:
+            case tsFFUNCM: // float f(matrix x)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -7435,7 +7406,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              v_sp -= 2;
              break;
 
-            case tsFFUNC1: // float f(float x) (sin(x) function)
+            case tsFFUNC1: // float f(float x) (sing(x) function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
@@ -7467,7 +7438,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              v_sp -= 1;
              break;
 
-            case tsFFUNC2: // float f(float x, float y) (atan2(), pow() functions)
+            case tsFFUNC2: // float f(float x, float y) (min(), max(), ee() functions)
              if (n_args != 2)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
@@ -7560,15 +7531,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                              // the value of the first argument as well
               {
                v_stack[v_sp - n_args - 1].ival = v_stack[v_sp - n_args + 1].ival;
-               if (v_stack[v_sp - n_args + 1].fval > maxdbl)
-                v_stack[v_sp - n_args - 1].fval = qnan;
-               else
-                v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
+               v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
               }
              v_sp -= n_args;
              break;
 
-            case tsCIFUNC1: // int f(this, int x)
+            case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
+                            // prec() function)
              if (n_args != 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");

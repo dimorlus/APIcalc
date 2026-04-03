@@ -1,5 +1,9 @@
-04.04.26 (2.166)
-+ Fixed a bug that prevented sum (and some other solvers) from being used within user-defined functions.
+04.04.26 (2.167)
+- Fixed several bugs in the prn function (fprn, printf).
+
+02.04.26 (2.166)
+- Fixed a bug that prevented sum (and some other solvers) from being used within 
+  user-defined functions.
 + Added a 1-second limit on sum execution time.
 	{feu(z)sum(1/x,1,z,x)-ln(z)} feu(100000);;Euler constant -> 0.5772206648931995
 	{eul(z)sum(1/x,1,z,x)-integr(1/x,1,z,x)}eul(100000) ->0.5772206648932103

@@ -1141,7 +1141,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
  int n = 0;
  bool flag;
  char *dst     = dest;
- char *dst_end = dest + STRBUF - 1; // leave room for '\0'
+ char *dst_end = dest + 128; // leave room 
  if (!sfmt) return 0;
  do
   {
@@ -1159,6 +1159,12 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
      pfmt[i]       = '\0';
      if (flag)
       {
+       if (c == '*')
+        {
+         i--;      // step back to overwrite '*' with next character in format string
+         continue; // skip '*' width/precision specifier; we don't support it, but we also don't
+                   // want to treat it as part of the format type
+        }
        if (c == '%')
         {
          flag = false;
@@ -1305,14 +1311,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
         if (dst < dst_end) dst += d2scistr (dst, dd);
         if (di != 0.0)
          {
-          if (di > 0.0)
-           {
-            if (dst < dst_end) *dst++ = '+';
-           }
-          else
-           {
-            if (dst < dst_end) *dst++ = '-';
-           }
+          *dst++ = (di > 0.0) ? '+' : '-';
           di = fabs (di);
           if (dst < dst_end) dst += d2scistr (dst, di);
           if (dst < dst_end) *dst++ = ic;
@@ -1337,14 +1336,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
         if (dst < dst_end) dst += d2nrmstr (dst, dd);
         if (di != 0.0)
          {
-          if (di > 0.0)
-           {
-            if (dst < dst_end) *dst++ = '+';
-           }
-          else
-           {
-            if (dst < dst_end) *dst++ = '-';
-           }
+          *dst++ = (di > 0.0) ? '+' : '-'; 
           di = fabs (di);
           if (dst < dst_end) dst += d2nrmstr (dst, di);
           if (dst < dst_end) *dst++ = ic;
@@ -1384,51 +1376,85 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
        break;
       case tFloat:
        {
+        char sstr[2048];
+        char *sptr = sstr;
+        char *sp = sstr;
+        char *sstr_end = sstr + sizeof (sstr) - 16; // leave room for '\0' and potential extra chars
         if (cc == 'L')
          {
+#ifdef __BORLANDC__
           long double Ld = (long double)v_stack[n].get ();
           long double Li = (long double)v_stack[n].imval;
-          if (dst < dst_end) dst += sprintf (dst, pfmt, Ld);
+          sptr += snprintf (sptr, sstr_end - sptr, pfmt, Ld);
           if (Li != 0.0L)
-          {
-            if (Li > 0.0L)
-             {
-              if (dst < dst_end) *dst++ = '+';
-             }
-            else 
-             {
-              if (dst < dst_end) *dst++ = '-';
-             }
-            Li = fabsl (Li);
-            dst += sprintf (dst, pfmt, Li);
-            if (dst < dst_end) *dst++ = ic;
-          }
+           {
+            *sptr++ = (Li > 0.0L) ? '+' : '-';
+            Li      = (Li > 0.0L) ? Li : -Li;
+            sptr += snprintf (sptr, sstr_end - sptr, pfmt, Li);
+            *sptr++ = ic;
+           }
+          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
+#else
+#ifdef __GNUC__
+          __float80 Ld = (__float80)v_stack[n].get ();
+          __float80 Li = (__float80)v_stack[n].imval;
+          sptr += snprintf (sptr, sstr_end - sptr, pfmt, Ld);
+          if (Li != 0.0L)
+           {
+            *sptr++ = (Li > 0.0L) ? '+' : '-';
+            Li      = (Li > 0.0L) ? Li  : -Li;
+            sptr += snprintf (sptr, sstr_end - sptr, pfmt, Li);
+            *sptr++ = ic;
+           }
+          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
+#else
+          double Ld = (double)v_stack[n].get ();
+          double Li = (double)v_stack[n].imval;
+          sptr += snprintf (sptr, sstr_end - sptr, pfmt, Ld);
+          if (Li != 0.0L)
+           {
+            *sptr++ = (Li > 0.0L) ? '+' : '-';
+            Li      = (Li > 0.0L) ? Li : -Li;
+            sptr += snprintf (sptr, sstr_end - sptr, pfmt, Li);
+            *sptr++ = ic;
+           }
+          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
+#endif
+#endif
          }
         else
          {
+#ifdef __BORLANDC__
           double dd = (double)v_stack[n].get ();
           double di = (double)v_stack[n].imval;
-          if (dst < dst_end) dst += sprintf (dst, pfmt, dd);
+          sptr += sprintf (sptr, pfmt, dd);
           if (di != 0.0)
            {
-            if (di > 0.0)
-             {
-              if (dst < dst_end) *dst++ = '+';
-             }
-            else
-             {
-              if (dst < dst_end) *dst++ = '-';
-             }
+            *sptr++ = (di > 0.0) ? '+' : '-';  
             di = fabs (di);
-            dst += sprintf (dst, pfmt, di);
-            if (dst < dst_end) *dst++ = ic;
+            sptr += sprintf (sptr, pfmt, di);
+            *sptr++ = ic;
            }
+          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
+#else
+          double dd = (double)v_stack[n].get ();
+          double di = (double)v_stack[n].imval;
+          sptr += snprintf (sptr, sstr_end - sptr, pfmt, dd);
+          if (di != 0.0)
+           {
+            *sptr++  = (di > 0.0) ? '+' : '-';
+            di = fabs (di);
+            sptr += snprintf (sptr,sstr_end - sptr, pfmt, di);
+            *sptr++ = ic;
+           }
+          while (dst < dst_end && sp < sptr) *dst++ = *sp++;
+#endif
          }
        }
        break;
       case tDeg:
        {
-        float__t dd = v_stack[n].get (); // use float__t, not double
+        double dd = (double)v_stack[n].get ();
         if (dst < dst_end) dst += fmtc (dst, pfmt);
         if (dst < dst_end) dst += dgr2str (dst, dd);
        }
@@ -1441,7 +1467,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
     }
    else
     {
-     // no more arguments — output remaining literal text from format string
+     // no more arguments - output remaining literal text from format string
      if (dst < dst_end) dst += sprintf (dst, pfmt);
     }
   }

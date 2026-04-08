@@ -66,33 +66,6 @@ int ones (unsigned char *cp, int from, int to)
 }
 //---------------------------------------------------------------------------
 
-// Check if a floating-point number is NaN (Not a Number) by examining its bit pattern
-//bool isNan (float__t d)
-//{
-// int fr, ex;
-// if (d < 0) d = -d;
-// if (sizeof (d) == 80 / 8) // IEEE 754 80 bits
-//  {
-//   fr = ones ((unsigned char *)&d, 0, 64);
-//   ex = ones ((unsigned char *)&d, 64, 80);
-//   return ((ex >= 15) && fr);
-//  }
-// else if (sizeof (d) == 64 / 8) // IEEE 754 64 bits
-//  {
-//   fr = ones ((unsigned char *)&d, 0, 52);
-//   ex = ones ((unsigned char *)&d, 52, 64);
-//   return ((ex >= 11) && fr);
-//  }
-// else if (sizeof (d) == 32 / 8) // IEEE 754 32 bits
-//  {
-//   fr = ones ((unsigned char *)&d, 0, 23);
-//   ex = ones ((unsigned char *)&d, 23, 32);
-//   return ((ex >= 8) && fr);
-//  }
-// return false;
-//}
-//---------------------------------------------------------------------------
-
 const uint64_t dms[] = { (60ull * 60 * 60 * 24 * 36525ull),
                          (6ull * 6 * 24 * 36525),
                          (60ull * 60 * 24),

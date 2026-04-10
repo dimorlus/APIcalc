@@ -291,7 +291,7 @@ x %% y  →  (x / y - 1) * 100
   ```
 * **for(expr, from, to, var)**: Execution over integer range, return expr value (any type including matrix and complex). Supports both ascending and descending order:
   ```
-  r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) -> [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
+  r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) → [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
   ```
 
 ### **Complex Number Support**

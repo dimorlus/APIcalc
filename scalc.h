@@ -795,7 +795,7 @@ class calculator // calculator represents the main class for the expression calc
                               // type, used for main scan
  t_operator dscan (bool operand, bool percent); // Scan the digits in the expression and return its 
                                                 //operator type, used for main scan
- t_operator scan (bool &operand, bool percent); // Scan the next token in the expression and return 
+ t_operator scan (bool operand, bool percent); // Scan the next token in the expression and return 
                                                // its operator type
  bool mx_idx (int &row, int &col); // Scan the matrix index in the expression and return true if it is valid,
                                    // with row and col being the parsed row and column indices
@@ -845,9 +845,11 @@ class calculator // calculator represents the main class for the expression calc
                      int &callCount, 
                      int maxCalls);
 
- bool Split (const char *expr, char *sexpr, 
-      char *sfrom, char *sto, char *svar); //
- bool Split1 (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar); //
+ bool Split (const char *expr, // Split "expr, from, to, var" into its components and return true if
+             char *sexpr, int ex_l, // successful, with the components being
+             char *sfrom, int fr_l, 
+             char *sto, int to_l,
+             char *svar, int vr_l);
 
  bool For (const char *expr, value &res);
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the

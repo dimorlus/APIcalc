@@ -906,7 +906,7 @@ double E192[]
 // Find the nearest standard value from E-series
 float__t Ee (float__t x, float__t y) // find standard value
 {
- if (x >= (float__t)0.0L && y >= (float__t)0.0L)
+ if (x >= (float__t)0.0L && y > (float__t)0.0L)
   {
    unsigned int n;
    unsigned int N = (unsigned int)x;
@@ -918,13 +918,15 @@ float__t Ee (float__t x, float__t y) // find standard value
    int ex = 0;
    while (V >= 1)
     {
-     V /= 10;
+     V /= 10.0;
      ex++;
+     if (ex > 308) break;
     }
    while (V < 1)
     {
-     V *= 10;
+     V *= 10.0;
      ex--;
+     if (ex < -308) break;
     }
 
    if (N <= 192)
@@ -1000,11 +1002,13 @@ float__t Ee (float__t x, float__t y) // find standard value
      {
       V *= 10.0;
       ex--;
+      if (ex < -308) break;
      }
     else
      {
       V /= 10.0;
       ex++;
+      if (ex > 308) break;
      }
 
    if (y < 0)

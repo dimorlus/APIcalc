@@ -2745,7 +2745,11 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  return combined;
 }
 
-bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar)
+bool calculator::Split (const char *expr, 
+                        char *sexpr, int ex_l, 
+                        char *sfrom, int fr_l,
+                        char *sto, int to_l,
+                        char *svar, int vr_l)
 {
  if (expr && *expr)
   {
@@ -2821,7 +2825,7 @@ bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, c
      bool copied = false;
      if (current_part == 0 && sexpr)
       {
-       if (idx < STRBUF - 1)
+       if (idx < ex_l - 1)
         {
          sexpr[idx++] = ch;
          copied       = true;
@@ -2834,7 +2838,7 @@ bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, c
       }
      else if (current_part == 1 && sfrom)
       {
-       if (idx < MAXOP - 1)
+       if (idx < fr_l - 1)
         {
          sfrom[idx++] = ch;
          copied       = true;
@@ -2847,7 +2851,7 @@ bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, c
       }
      else if (current_part == 2 && sto)
       {
-       if (idx < MAXOP - 1)
+       if (idx < to_l - 1)
         {
          sto[idx++] = ch;
          copied     = true;
@@ -2860,7 +2864,7 @@ bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, c
       }
      else if (current_part == 3 && svar)
       {
-       if (idx < STRBUF - 1)
+       if (idx < vr_l - 1)
         {
          svar[idx++] = ch;
          copied      = true;
@@ -2902,154 +2906,6 @@ bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, c
  return false;
 }
 
-bool calculator::Split1 (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar)
-{
- if (expr && *expr)
-  {
-   // char sexpr[STRBUF];
-   // char sfrom[MAXOP];
-   // char sto[MAXOP];
-   // char svar[STRBUF];
-
-   // Initialize buffers
-   sexpr[0] = '\0';
-   sfrom[0] = '\0';
-   sto[0]   = '\0';
-   svar[0]  = '\0';
-
-   const char *p = expr;
-   int part      = 0; // 0 = expr, 1 = from, 2 = to, 3 = var
-   int depth     = 0; // depth of nested parentheses and brackets
-   int idx       = 0;
-
-   // Skip leading whitespace
-   while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
-   
-   while (*p)
-    {
-     char ch = *p;
-
-     // Track bracket/parenthesis depth
-     if (ch == '(' || ch == '[')
-      {
-       depth++;
-      }
-     else if (ch == ')' || ch == ']')
-      {
-       depth--;
-       if (depth < 0)
-        {
-         error (p - expr, "Unmatched closing bracket");
-         return false;
-        }
-      }
-     // Process comma only at depth 0 (outside of all brackets)
-     else if (ch == ',' && depth == 0)
-      {
-       // Terminate current part
-       switch (part)
-        {
-        case 0:
-         sexpr[idx] = '\0';
-         break;
-        case 1:
-         sfrom[idx] = '\0';
-         break;
-        case 2:
-         sto[idx] = '\0';
-         break;
-        }
-
-       part++;
-       if (part > 3)
-        {
-         error (p - expr, "Too many arguments in for loop");
-         return false;
-        }
-
-       idx = 0;
-       p++;
-       // Skip whitespace after comma
-       while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
-       continue;
-      }
-
-     // Copy character to appropriate buffer
-     switch (part)
-      {
-      case 0: // expr
-       if (idx < STRBUF - 1)
-        sexpr[idx++] = ch;
-       else
-        {
-         error (p - expr, "Expression too long");
-         return false;
-        }
-       break;
-      case 1: // from
-       if (idx < MAXOP - 1)
-        sfrom[idx++] = ch;
-       else
-        {
-         error (p - expr, "From expression too long");
-         return false;
-        }
-       break;
-      case 2: // to
-       if (idx < MAXOP - 1)
-        sto[idx++] = ch;
-       else
-        {
-         error (p - expr, "To expression too long");
-         return false;
-        }
-       break;
-      case 3: // var
-       if (idx < STRBUF - 1)
-        svar[idx++] = ch;
-       else
-        {
-         error (p - expr, "Variable name too long");
-         return false;
-        }
-       break;
-      }
-
-     p++;
-    }
-
-   // Terminate the last part
-   switch (part)
-    {
-    case 0:
-     sexpr[idx] = '\0';
-     break;
-    case 1:
-     sfrom[idx] = '\0';
-     break;
-    case 2:
-     sto[idx] = '\0';
-     break;
-    case 3:
-     svar[idx] = '\0';
-     break;
-    }
-
-   if (depth != 0)
-    {
-     error (0, "Unmatched opening bracket");
-     return false;
-    }
-
-   if (part < 3)
-    {
-     error (0, "Not enough arguments");
-     return false;
-    }
-   return true;
-  }
- return false;
-}
 
 bool calculator::For(const char* expr, value& res)
 {
@@ -3066,7 +2922,7 @@ bool calculator::For(const char* expr, value& res)
    float__t result = 0;
    int callCount   = 0;
 
-   if (!Split (expr, sexpr, sfrom, sto, svar))
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
     {
      result_fval = qnan;
      return false;
@@ -3271,7 +3127,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    float__t result = 0;
    int callCount   = 0;
 
-   if (!Split (expr, sexpr, sfrom, sto, svar))
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
     {
      result_fval = qnan;
      return false;
@@ -3479,7 +3335,7 @@ float__t calculator::Diff (const char *expr)
      float__t fvx    = qnan;
      float__t result = 0;
 
-     if (!Split (expr, sexpr, sfrom, svar, nullptr))
+     if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF, nullptr, 1))
       {
        result_fval = qnan;
        return false;
@@ -3554,7 +3410,7 @@ t_operator calculator::sscan (symbol *sym)
  char sbuf[STRBUF];
  int sidx              = 0;
  int comma_count       = 0;
- int parenthesis_count = 1;
+ int parenthesis_count = 1; // we start after the opening parenthesis, so we are already at depth 1
 
  char *ipos = buf + pos;
  if (*ipos == ')')
@@ -3570,15 +3426,19 @@ t_operator calculator::sscan (symbol *sym)
 
  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
   {
-   if (*ipos == ',' && parenthesis_count == 1)  comma_count++;
+   if (*ipos == ',' && parenthesis_count == 1)
+    comma_count++; // count commas only at the top level of parentheses
    else 
-   if (*ipos == '(' || *ipos == '[') parenthesis_count++;
+   if (*ipos == '(' || *ipos == '[')
+    parenthesis_count++; // increase depth for nested parentheses and brackets
    else 
-   if (*ipos == ')' || *ipos == ']') parenthesis_count--;
+   if (*ipos == ')' || *ipos == ']')
+    parenthesis_count--; // decrease depth for closing parentheses and brackets
    sbuf[sidx++] = *ipos++;
   }
- if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
- sbuf[STRBUF - 1] = '\0'; // null-terminate the string
+ if (sidx && sbuf[sidx - 1] == ')')
+  sbuf[sidx - 1] = '\0';  // remove the closing parenthesis from the string
+ sbuf[STRBUF - 1] = '\0'; // null-terminate the string in case of overflow
 
  if (sym)
   {
@@ -4316,7 +4176,7 @@ t_operator calculator::dscan (bool operand, bool percent)
  }
 
 // parse the next operator from the input buffer, returning the operator type
-t_operator calculator::scan (bool &operand, bool percent)
+t_operator calculator::scan (bool operand, bool percent)
 {
  char name[max_expression_length], *np;
 
@@ -4590,12 +4450,11 @@ t_operator calculator::scan (bool &operand, bool percent)
          v_stack[v_sp].icols = col;
          v_stack[v_sp].mval  = v_stack[v_sp - 1].mval; // keep pointer to matrix for later updates
          v_sp++;
-         //operand = true;
          return toMX_ELEM;
         }
        else
         {
-         errorf (pos, "Matrix index out of bounds: %d, %d", row, col);
+         errorf (pos, "Matrix index out of bounds: [%d,%d]", row, col);
          return toERROR;
         }
       }
@@ -7909,7 +7768,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (For (equation, v_stack[v_sp - 2])) v_sp -= 1;
                 else
                  {
-                  error (v_stack[v_sp - 1].pos, "Error in 'for'");
+                  //error (v_stack[v_sp - 1].pos, "Error in 'for'");
                   result_fval = qnan;
                   return qnan;
                  }

@@ -1,3 +1,7 @@
+10.04.26 (2.170)
+- Fixed a bug in the rnd function; when called from for(...), it gave the same results.
+	r:=7;A:=zeros(r,r);for(A[n/r,n%r]:=rnd(100);A, 0, r*r-1, n)
+	
 10.04.26 (2.169)
 - Fixed a critical error in the ee(n, x) function that caused a loop when x = 0.
 * Improved error diagnostics within for(...).
@@ -10,11 +14,11 @@
 + Added the for(expr, from, to, var) operator, which executes expr a specified number 
   of times, incrementing var by 1 each time and returning the result of expr, regardless 
   of its type (including complex and matrix).
-  A := [(1,2,3);(4,5,6);(7,8,9)]
-  A[1,1] -> 5
-  A[1,1]:=10;A -> [(1,2,3);(4,10,6);(7,8,9)]
-  A:=zeros(3,3);for(A[n,0]:=2*n;A, 0, 2, n) -> [(0, 0, 0); (2, 0, 0); (4, 0, 0)]
-  r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) -> [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
+	A := [(1,2,3);(4,5,6);(7,8,9)]
+	A[1,1] -> 5
+	A[1,1]:=10;A -> [(1,2,3);(4,10,6);(7,8,9)]
+	A:=zeros(3,3);for(A[n,0]:=2*n;A, 0, 2, n) -> [(0, 0, 0); (2, 0, 0); (4, 0, 0)]
+	r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) -> [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
   
 04.04.26 (2.167)
 - Fixed several bugs in the prn function (fprn, printf).

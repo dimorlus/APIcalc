@@ -1,5 +1,6 @@
 #include "pch.h"
 #ifdef __BORLANDC__
+#include <windows.h>
 #include <stdint.h>
 #include <time.h>
 #include <stdio.h>
@@ -22,7 +23,11 @@
 #pragma warn -8017
 #pragma warn -8008
 
+#define GetTickCount64 GetTickCount
+
 #else
+#define __USE_MINGW_ANSI_STDIO 1
+#include <windows.h>
 #include <cstdint>
 #include <ctime>
 #include <ctype.h>
@@ -258,9 +263,21 @@ float__t Erfc (float__t x)
 }
 
 // Generate a random float in the range [0, x)
+
+static uint32_t randomi=0;
+void Randomize (void)
+{
+ if (!randomi) randomi = (uint32_t)GetTickCount();
+}
+
 float__t Random (float__t x)
 {
- return (float__t)(rand () * x / (float__t)RAND_MAX);
+ static uint32_t y = randomi; 
+ if (!y) y = 0xACE1;
+ y ^= y << 13;
+ y ^= y >> 17;
+ y ^= y << 5;
+ return (float__t)y / (float__t)UINT32_MAX * x;
 }
 
 // Absolute value: Abs(x)

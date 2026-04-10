@@ -61,6 +61,7 @@ float__t Tgg(float__t x);
 float__t Ctgg(float__t x);
 float__t Ctg(float__t x);
 
+void Randomize (void);
 float__t Random (float__t x);
 float__t Round (float__t x);
 float__t Ceil(float__t x);

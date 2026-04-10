@@ -150,7 +150,7 @@ calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
 
  fprec         = 16; // Default precision for output formatting
  c_imaginary   = 'i';
- // randomize();
+ Randomize ();
  srand (static_cast<unsigned int> (time (nullptr)));
  memset (hash_table, 0, sizeof hash_table);
 
@@ -2906,7 +2906,7 @@ bool calculator::Split (const char *expr,
  return false;
 }
 
-
+//#define TIMELIMIT
 bool calculator::For(const char* expr, value& res)
 {
  if (expr && *expr)
@@ -2953,14 +2953,15 @@ bool calculator::For(const char* expr, value& res)
      return false;
     }
     {
+     float__t fvx = (float__t)0.0L;
      uint64_t init_ms = GetTickCount64 ();
      uint64_t last_gui_check = 0;
 
-     float__t fvx = 0.0;
      if (vfrom > vto)
       {
        do
         {
+#ifdef TIMELIMIT
          uint64_t current_ms = GetTickCount64 ();
 
          if (current_ms - init_ms > 1000)
@@ -2995,6 +2996,7 @@ bool calculator::For(const char* expr, value& res)
               }
             }
           }
+#endif // end of TIMELIMIT
          pCalculator->addfvar (svar, vfrom);
          fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                  // the syntax check before starting the integration
@@ -3006,7 +3008,7 @@ bool calculator::For(const char* expr, value& res)
            delete pCalculator;
            return false;
           }
-         vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
+         vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
                        // step sizes
         }
        while (vfrom >= vto);
@@ -3015,6 +3017,7 @@ bool calculator::For(const char* expr, value& res)
       {
        do
         {
+#ifdef TIMELIMIT
          uint64_t current_ms = GetTickCount64 ();
 
          if (current_ms - init_ms > 1000)
@@ -3049,6 +3052,7 @@ bool calculator::For(const char* expr, value& res)
               }
             }
           }
+#endif // end of TIMELIMIT  
          pCalculator->addfvar (svar, vfrom);
          fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                  // the syntax check before starting the integration
@@ -3060,7 +3064,7 @@ bool calculator::For(const char* expr, value& res)
            delete pCalculator;
            return false;
           }
-         vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
+         vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
                        // step sizes
         }
        while (vfrom <= vto);

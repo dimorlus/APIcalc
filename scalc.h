@@ -462,13 +462,14 @@ enum t_mxDim
 #define MASK_CALC       (1 << tsCALC)       // calculate operator for evaluating expressions
 #define MASK_INTEGR     (1 << tsINTEGR)     // integration operator for numerical integration
 #define MASK_DIFF       (1 << tsDIFF)       // differentiation operator for numerical differentiation
+#define MASK_FOR        (1 << tsFOR)        // for operator for numerical summation
 #define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1  \
                     | MASK_IFUNC2   | MASK_FFUNC1  | MASK_FFUNC2  | MASK_FFUNC3  \
                     | MASK_PFUNCn   | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1  \
                     | MASK_FFUNCM   | MASK_FFUNCM2 | MASK_MFUNCM  | MASK_MFUNCM2 \
                     | MASK_MFUNCI2  | MASK_VFUNC2  | MASK_UFUNCT  | MASK_FFUNCI1 \
                     | MASK_CIFUNC1  | MASK_SOLVE   | MASK_SUM     | MASK_CALC    \
-                    | MASK_INTEGR   | MASK_DIFF )
+                    | MASK_INTEGR   | MASK_DIFF    | MASK_FOR )
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

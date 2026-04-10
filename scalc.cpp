@@ -2906,7 +2906,7 @@ bool calculator::Split (const char *expr,
  return false;
 }
 
-//#define TIMELIMIT
+#define TIMELIMIT
 bool calculator::For(const char* expr, value& res)
 {
  if (expr && *expr)
@@ -8524,6 +8524,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 v_stack[v_sp - n_args - 1].fval  = pCalculator->get_re_res ();
                 v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
                 v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
+                v_stack[v_sp - n_args - 1].sval  = dupString (pCalculator->get_str_res ());
 
                 if (v_stack[v_sp - n_args - 1].imval != 0.0)
                  v_stack[v_sp - n_args - 1].tag = tvCOMPLEX;
@@ -8558,7 +8559,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                else
                 if (pCalculator->get_res_tag() == tvSTR)
                  {
-                  v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
+                  //v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
                   v_stack[v_sp - n_args - 1].tag  = tvSTR;
                   fflags |= STR;
                  }

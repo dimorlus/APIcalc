@@ -1,3 +1,7 @@
+10.04.26 (2.171)
+- Fixed a bug in the user defined function when calling for(...) in it.
+	{mrnd(Rng, mx)r:=Rng;A:=zeros(r,r);A:=for(A[n/r,n%r]:=rnd(mx);A, 0, r*r-1, n)}mrnd(3,10)
+	
 10.04.26 (2.170)
 - Fixed a bug in the rnd function; when called from for(...), it gave the same results.
 	r:=7;A:=zeros(r,r);for(A[n/r,n%r]:=rnd(100);A, 0, r*r-1, n)

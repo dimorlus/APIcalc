@@ -1,3 +1,6 @@
+10.04.26 (2.172)
+- Now 0^0 -> 1, not NaN as before.
+
 10.04.26 (2.171)
 - Fixed a bug in the user defined function when calling for(...) in it.
 	{mrnd(Rng, mx)r:=Rng;A:=zeros(r,r);A:=for(A[n/r,n%r]:=rnd(mx);A, 0, r*r-1, n)}mrnd(3,10)

@@ -263,8 +263,8 @@ float__t Erfc (float__t x)
 }
 
 // Generate a random float in the range [0, x)
-
 static uint32_t randomi=0;
+
 void Randomize (void)
 {
  if (!randomi) randomi = (uint32_t)GetTickCount();
@@ -411,6 +411,7 @@ float__t Tanh (float__t x)
 // Power function: x^y
 float__t Pow (float__t x, float__t y)
 {
+ if (x == (float__t)0.0L && y == (float__t)0.0L) return (float__t)1.0L; // 0^0 is defined as 1
  if ((x > (float__t)0.0L) || ((x == (float__t)0.0L) && 
      (y > (float__t)0.0L)) || ((x < (float__t)0.0L) && 
      (y - floor (y) == (float__t)0.0L)))

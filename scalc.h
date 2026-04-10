@@ -311,10 +311,12 @@ enum t_value // t_value represents the type of a value in the calculator
  tvCOMPLEX,
  tvSTR,
  tvMATRIX,
+ tvMX_ELEM,
  tvUFUNCT,
  tvSOLVE,
  tvINTEGR,
- tvDIFF
+ tvDIFF,
+ tvFOR,
 };
 
 
@@ -325,92 +327,95 @@ enum t_value // t_value represents the type of a value in the calculator
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
- toBEGIN,   // 0  toBEGIN must be the first operator in the list
- toOPERAND, // 1  toOPERAND represents an operand in the expression
- toERROR,   // 2  toERROR represents an error in the expression
- toEND,     // 3  toEND represents the end of the expression
- toLPAR,    // 4  toLPAR represents a left parenthesis '('
- toRPAR,    // 5  toRPAR represents a right parenthesis ')'
- toFUNC,    // 6  toFUNC represents a function
- toSOLVE,   // 7  toSOLVE represents a solve, integr and diff function
- toPOSTINC, // 8  toPOSTINC represents a post-increment (v++) operator
- toPOSTDEC, // 9  toPOSTDEC represents a post-decrement (v--) operator
- toFACT,    // 10 toFACT represents a factorial 'n!' operator
- toPREINC,  // 11 toPREINC represents a pre-increment (++v) operator
- toPREDEC,  // 12 toPREDEC represents a pre-decrement (--v) operator
- toPLUS,    // 13 toPLUS represents an '+v' operator
- toMINUS,   // 14 toMINUS represents a '-v' operator
- toNOT,     // 15 toNOT represents a logical NOT operator
- toCOM,     // 16 toCOM represents a bitwise complement '~' operator
- toPOW,     // 17 toPOW represents a power '^' operator
- toPERCENT, // 18 toPERCENT represents a percentage '%' operator
- toMUL,     // 19 toMUL represents a multiplication operator
- toDIV,     // 20 toDIV represents a division operator
- toMOD,     // 21 toMOD represents a modulo operator
- toPAR,     // 22 toPAR represents a parenthesis operator
- toADD,     // 23 toADD represents an addition operator
- toSUB,     // 24 toSUB represents a subtraction operator
- toASL,     // 25 toASL represents a arithmetic shift left operator
- toASR,     // 26 toASR represents a arithmetic shift right operator
- toLSR,     // 27 toLSR represents a logical shift right operator
- toGT,      // 28 toGT represents a greater than operator
- toGE,      // 29 toGE represents a greater than or equal operator
- toLT,      // 30 toLT represents a less than operator
- toLE,      // 31 toLE represents a less than or equal operator
- toEQ,      // 32 toEQ represents an equality operator
- toNE,      // 33 toNE represents a not equal operator
- toAND,     // 34 toAND represents a logical AND operator
- toXOR,     // 35 toXOR represents a logical XOR operator
- toOR,      // 36 toOR represents a logical OR operator
- toSET,     // 37 toSET represents a set operator
- toSETADD,  // 38 toSETADD represents a set addition operator
- toSETSUB,  // 39 toSETSUB represents a set subtraction operator
- toSETMUL,  // 40 toSETMUL represents a set multiplication operator
- toSETDIV,  // 41 toSETDIV represents a set division operator
- toSETMOD,  // 42 toSETMOD represents a set modulo operator
- toSETASL,  // 43 toSETASL represents a set arithmetic shift left operator
- toSETASR,  // 44 toSETASR represents a set arithmetic shift right operator
- toSETLSR,  // 45 toSETLSR represents a set logical shift right operator
- toSETAND,  // 46 toSETAND represents a set logical AND operator
- toSETXOR,  // 47 toSETXOR represents a set logical XOR operator
- toSETOR,   // 48 toSETOR represents a set logical OR operator
- toSETPOW,  // 49 toSETPOW represents a set power operator
- toSEMI,    // 50 toSEMI represents a semicolon operator
- toCOMMA,   // 51 toCOMMA represents a comma operator
- toCONTINUE, // 52 toCONTINUE represents a continue operator for continue scanning
- toTERMINALS // 53 toTERMINALS must be the last operator in the list and represents the total number of
+ toBEGIN,    // 0  toBEGIN must be the first operator in the list
+ toOPERAND,  // 1  toOPERAND represents an operand in the expression
+ toERROR,    // 2  toERROR represents an error in the expression
+ toEND,      // 3  toEND represents the end of the expression
+ toLPAR,     // 4  toLPAR represents a left parenthesis '('
+ toRPAR,     // 5  toRPAR represents a right parenthesis ')'
+ toFUNC,     // 6  toFUNC represents a function
+ toSOLVE,    // 7  toSOLVE represents a solve, integr and diff function
+ toPOSTINC,  // 8  toPOSTINC represents a post-increment (v++) operator
+ toPOSTDEC,  // 9  toPOSTDEC represents a post-decrement (v--) operator
+ toFACT,     // 10 toFACT represents a factorial 'n!' operator
+ toPREINC,   // 11 toPREINC represents a pre-increment (++v) operator
+ toPREDEC,   // 12 toPREDEC represents a pre-decrement (--v) operator
+ toPLUS,     // 13 toPLUS represents an '+v' operator
+ toMINUS,    // 14 toMINUS represents a '-v' operator
+ toNOT,      // 15 toNOT represents a logical NOT operator
+ toCOM,      // 16 toCOM represents a bitwise complement '~' operator
+ toPOW,      // 17 toPOW represents a power '^' operator
+ toPERCENT,  // 18 toPERCENT represents a percentage '%' operator
+ toMUL,      // 19 toMUL represents a multiplication operator
+ toDIV,      // 20 toDIV represents a division operator
+ toMOD,      // 21 toMOD represents a modulo operator
+ toPAR,      // 22 toPAR represents a parenthesis operator
+ toADD,      // 23 toADD represents an addition operator
+ toSUB,      // 24 toSUB represents a subtraction operator
+ toASL,      // 25 toASL represents a arithmetic shift left operator
+ toASR,      // 26 toASR represents a arithmetic shift right operator
+ toLSR,      // 27 toLSR represents a logical shift right operator
+ toGT,       // 28 toGT represents a greater than operator
+ toGE,       // 29 toGE represents a greater than or equal operator
+ toLT,       // 30 toLT represents a less than operator
+ toLE,       // 31 toLE represents a less than or equal operator
+ toEQ,       // 32 toEQ represents an equality operator
+ toNE,       // 33 toNE represents a not equal operator
+ toAND,      // 34 toAND represents a logical AND operator
+ toXOR,      // 35 toXOR represents a logical XOR operator
+ toOR,       // 36 toOR represents a logical OR operator
+ toMX_ELEM,  // 37 toMX_ELEM represents a matrix element operator
+ toSET,      // 38 toSET represents a set operator
+ toSETADD,   // 39 toSETADD represents a set addition operator
+ toSETSUB,   // 40 toSETSUB represents a set subtraction operator
+ toSETMUL,   // 41 toSETMUL represents a set multiplication operator
+ toSETDIV,   // 42 toSETDIV represents a set division operator
+ toSETMOD,   // 43 toSETMOD represents a set modulo operator
+ toSETASL,   // 44 toSETASL represents a set arithmetic shift left operator
+ toSETASR,   // 45 toSETASR represents a set arithmetic shift right operator
+ toSETLSR,   // 46 toSETLSR represents a set logical shift right operator
+ toSETAND,   // 47 toSETAND represents a set logical AND operator
+ toSETXOR,   // 48 toSETXOR represents a set logical XOR operator
+ toSETOR,    // 49 toSETOR represents a set logical OR operator
+ toSETPOW,   // 50 toSETPOW represents a set power operator
+ toSEMI,     // 51 toSEMI represents a semicolon operator
+ toCOMMA,    // 52 toCOMMA represents a comma operator
+ toCONTINUE, // 53 toCONTINUE represents a continue operator for continue scanning
+ toTERMINALS // 54 toTERMINALS must be the last operator in the list and represents the total number of
              // operators
 };
 
 enum t_symbol // t_symbol represents the type of a symbol in the calculator
 {
- tsVARIABLE, // tsVARIABLE represents a variable symbol
- tsCONSTANT, // tsCONSTANT represents a constant symbol
- tsFFUNCI1,  // float f(int x)
- tsIFUNCF1,  // int f(float x)
- tsSFUNCF1,  // char* f(float x)
- tsCIFUNC1,  // int f(this, int x)
- tsIFUNC1,   // int f(int x)
- tsIFUNC2,   // int f(int x, int y)
- tsFFUNC1,   // float f(float x)
- tsFFUNC2,   // float f(float x, float y)
- tsFFUNC3,   // float f(float x, float y, float z)
- tsPFUNCn,   // int printf(char *format, ...)
- tsSFUNCF2,  // float const(char *name, float value)
- tsSIFUNC1,  // int f(char *s)
- tsFFUNCM,   // float f(matrix M)
- tsFFUNCM2,  // float f(matrix A, matrix B)
- tsMFUNCM,   // matrix f(matrix M)
- tsMFUNCM2,  // matrix f(matrix A, matrix B)
- tsVFUNC1,   // void vfunc(value* res, value* arg, int idx)
- tsVFUNC2,   // void vfunc(value* res, value* arg1, value* arg2, int idx)
- tsUFUNCT,   // User-defined function
- tsSOLVE,    // Solve operator for solving equations
- tsCALC,     // Calculate operator for evaluating expressions
- tsINTEGR,   // Integration operator for numerical integration
- tsSUM,      // Summation operator for numerical summation
- tsDIFF,     // Differentiation operator for numerical differentiation
- tsNUM
+ tsVARIABLE, // 0  tsVARIABLE represents a variable symbol
+ tsCONSTANT, // 1  tsCONSTANT represents a constant symbol
+ tsFFUNCI1,  // 2  float f(int x)
+ tsIFUNCF1,  // 3  int f(float x)
+ tsSFUNCF1,  // 4  char* f(float x)
+ tsCIFUNC1,  // 5  int f(this, int x)
+ tsIFUNC1,   // 6  int f(int x)
+ tsIFUNC2,   // 7  int f(int x, int y)
+ tsFFUNC1,   // 8  float f(float x)
+ tsFFUNC2,   // 9  float f(float x, float y)
+ tsFFUNC3,   // 10  float f(float x, float y, float z)
+ tsPFUNCn,   // 11  int printf(char *format, ...)
+ tsSFUNCF2,  // 12  float const(char *name, float value)
+ tsSIFUNC1,  // 13  int f(char *s)
+ tsFFUNCM,   // 14  float f(matrix M)
+ tsFFUNCM2,  // 15  float f(matrix A, matrix B)
+ tsMFUNCM,   // 16  matrix f(matrix M)
+ tsMFUNCM2,  // 17  matrix f(matrix A, matrix B)
+ tsMFUNCI2,  // 18  matrix f(int r, int c)
+ tsVFUNC1,   // 19  void vfunc(value* res, value* arg, int idx)
+ tsVFUNC2,   // 20  void vfunc(value* res, value* arg1, value* arg2, int idx)
+ tsUFUNCT,   // 21  User-defined function
+ tsSOLVE,    // 22  Solve operator for solving equations
+ tsCALC,     // 23  Calculate operator for evaluating expressions
+ tsINTEGR,   // 24  Integration operator for numerical integration
+ tsSUM,      // 25  Summation operator for numerical summation
+ tsDIFF,     // 26  Differentiation operator for numerical differentiation
+ tsFOR,      // 27  For operator 
+ tsNUM       // 28  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -430,38 +435,40 @@ enum t_mxDim
 
 #define MASK_ALL 0xffffffff
 #define MASK_NONE 0x00000000
-#define MASK_VARIABLE (1<< tsVARIABLE) // tsVARIABLE represents a variable symbol
-#define MASK_CONSTANT (1<< tsCONSTANT) // tsCONSTANT represents a constant symbol
-#define MASK_FFUNCI1 (1<< tsFFUNCI1) // tsFFUNCI1 represents a float function with one int argument
-#define MASK_IFUNCF1 (1<< tsIFUNCF1) // tsIFUNCF1 represents an int function with one float argument
-#define MASK_SFUNCF1 (1<< tsSFUNCF1) // tsSFUNCF1 represents a char* function with one float argument
-#define MASK_IFUNC1 (1<< tsIFUNC1) // tsIFUNC1 represents an int function with one int argument
-#define MASK_CIFUNC1 (1<< tsCIFUNC1) // tsCIFUNC1 represents an int function with one int argument and a this pointer
-#define MASK_IFUNC2 (1<< tsIFUNC2) // tsIFUNC2 represents an int function with two int arguments
-#define MASK_FFUNC1 (1<< tsFFUNC1) // tsFFUNC1 represents a float function with one float argument
-#define MASK_FFUNC2 (1<< tsFFUNC2) // tsFFUNC2 represents a float function with two float arguments
-#define MASK_FFUNC3 (1<< tsFFUNC3) // tsFFUNC3 represents a float function with three float arguments
-#define MASK_PFUNCn (1<< tsPFUNCn) // tsPFUNCn represents a printf function with a variable number of arguments
-#define MASK_SFUNCF2 (1<< tsSFUNCF2) // tsSFUNCF2 represents a float function with two float arguments
-#define MASK_SIFUNC1 (1<< tsSIFUNC1) // tsSIFUNC1 represents an int function with one char* argument
-#define MASK_FFUNCM (1<< tsFFUNCM) // float f(matrix M)
-#define MASK_FFUNCM2 (1<< tsFFUNCM2)  // float f(matrix A, matrix B)
-#define MASK_MFUNCM (1<< tsMFUNCM)     // matrix f(matrix M)
-#define MASK_MFUNCM2 (1<< tsMFUNCM2) // matrix f(matrix A, matrix B)
-#define MASK_VFUNC1 (1<< tsVFUNC1) // tsVFUNC1 represents a void function with one value argument and one int argument
-#define MASK_VFUNC2 (1<< tsVFUNC2) // tsVFUNC2 represents a void function with two value arguments and one int argument
-#define MASK_UFUNCT (1<< tsUFUNCT) // tsUFUNCT represents a user-defined function
-#define MASK_SOLVE  (1 << tsSOLVE)  // tsSOLVE represents a solve operator for solving equations
-#define MASK_SUM    (1 << tsSUM)   // tsSUM represents a summation operator for numerical summation
-#define MASK_CALC   (1 << tsCALC) // tsCALC represents a calculate operator for evaluating expressions
-#define MASK_INTEGR (1 << tsINTEGR) // tsINTEGR represents an integration operator for numerical integration
-#define MASK_DIFF   (1 << tsDIFF) // tsDIFF represents a differentiation operator for numerical differentiation
-#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1 \
-                    | MASK_IFUNC2 | MASK_FFUNC1  | MASK_FFUNC2 | MASK_FFUNC3  \
-                    | MASK_PFUNCn | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1 \
-                    | MASK_FFUNCM |MASK_FFUNCM2 | MASK_MFUNCM | MASK_MFUNCM2 \
-                    | MASK_VFUNC2 | MASK_UFUNCT| MASK_FFUNCI1 | MASK_CIFUNC1 \
-                    | MASK_SOLVE | MASK_SUM | MASK_CALC | MASK_INTEGR | MASK_DIFF )
+#define MASK_VARIABLE   (1<< tsVARIABLE)    // represents a variable symbol
+#define MASK_CONSTANT   (1<< tsCONSTANT)    // represents a constant symbol
+#define MASK_FFUNCI1    (1<< tsFFUNCI1)     // float f(int x)
+#define MASK_IFUNCF1    (1<< tsIFUNCF1)     // int f(float x)
+#define MASK_SFUNCF1    (1<< tsSFUNCF1)     // char* f(float x)
+#define MASK_IFUNC1     (1<< tsIFUNC1)      // int f(int x)
+#define MASK_CIFUNC1    (1<< tsCIFUNC1)     // int f(this, int x)
+#define MASK_IFUNC2     (1<< tsIFUNC2)      // int f(int x, int y)
+#define MASK_FFUNC1     (1<< tsFFUNC1)      // float f(float x)
+#define MASK_FFUNC2     (1<< tsFFUNC2)      // float f(float x, float y)
+#define MASK_FFUNC3     (1<< tsFFUNC3)      // float f(float x, float y, float z)
+#define MASK_PFUNCn     (1<< tsPFUNCn)      // int printf(char *format, ...)
+#define MASK_SFUNCF2    (1<< tsSFUNCF2)     // float const(char *name, float value)
+#define MASK_SIFUNC1    (1<< tsSIFUNC1)     // int f(char *name)
+#define MASK_FFUNCM     (1<< tsFFUNCM)      // float f(matrix M)
+#define MASK_FFUNCM2    (1<< tsFFUNCM2)     // float f(matrix A, matrix B)
+#define MASK_MFUNCM     (1<< tsMFUNCM)      // matrix f(matrix M)
+#define MASK_MFUNCM2    (1<< tsMFUNCM2)     // matrix f(matrix A, matrix B)
+#define MASK_MFUNCI2    (1<< tsMFUNCI2)     // matrix f(int r, int c)
+#define MASK_VFUNC1     (1<< tsVFUNC1)      // void vfunc(value* res, value* arg, int idx)
+#define MASK_VFUNC2     (1<< tsVFUNC2)      // void vfunc(value* res, value* arg1, value* arg2, int idx)
+#define MASK_UFUNCT     (1<< tsUFUNCT)      // user-defined function
+#define MASK_SOLVE      (1 << tsSOLVE)      // solve operator for solving equations
+#define MASK_SUM        (1 << tsSUM)        // summation operator for numerical summation
+#define MASK_CALC       (1 << tsCALC)       // calculate operator for evaluating expressions
+#define MASK_INTEGR     (1 << tsINTEGR)     // integration operator for numerical integration
+#define MASK_DIFF       (1 << tsDIFF)       // differentiation operator for numerical differentiation
+#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1  \
+                    | MASK_IFUNC2   | MASK_FFUNC1  | MASK_FFUNC2  | MASK_FFUNC3  \
+                    | MASK_PFUNCn   | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1  \
+                    | MASK_FFUNCM   | MASK_FFUNCM2 | MASK_MFUNCM  | MASK_MFUNCM2 \
+                    | MASK_MFUNCI2  | MASK_VFUNC2  | MASK_UFUNCT  | MASK_FFUNCI1 \
+                    | MASK_CIFUNC1  | MASK_SOLVE   | MASK_SUM     | MASK_CALC    \
+                    | MASK_INTEGR   | MASK_DIFF )
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -542,7 +549,9 @@ class value // value represents a value in the calculator, which can be an integ
  char *sval;     // String value
  uint8_t mrows;  // Number of rows in matrix
  uint8_t mcols;  // Number of columns in matrix
- float__t *mval; // Matrix value (pointer to array of floats)
+ uint8_t irows;  // Number of rows in matrix
+ uint8_t icols;  // Number of columns in matrix
+  float__t *mval; // Matrix value (pointer to array of floats)
 
  inline value ()
  {
@@ -556,6 +565,8 @@ class value // value represents a value in the calculator, which can be an integ
   sval  = nullptr;
   mrows = 0;
   mcols = 0;
+  irows = 0;
+  icols = 0;
   mval  = nullptr;
  }
 
@@ -784,8 +795,10 @@ class calculator // calculator represents the main class for the expression calc
                               // type, used for main scan
  t_operator dscan (bool operand, bool percent); // Scan the digits in the expression and return its 
                                                 //operator type, used for main scan
- t_operator scan (bool operand, bool percent); // Scan the next token in the expression and return 
+ t_operator scan (bool &operand, bool percent); // Scan the next token in the expression and return 
                                                // its operator type
+ bool mx_idx (int &row, int &col); // Scan the matrix index in the expression and return true if it is valid,
+                                   // with row and col being the parsed row and column indices
 
  // Error handling
  void error (int pos, const char *msg); // Report an error at the given position with the specified message
@@ -831,6 +844,12 @@ class calculator // calculator represents the main class for the expression calc
                      int maxDepth, 
                      int &callCount, 
                      int maxCalls);
+
+ bool Split (const char *expr, char *sexpr, 
+      char *sfrom, char *sto, char *svar); //
+ bool Split1 (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar); //
+
+ bool For (const char *expr, value &res);
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
@@ -882,6 +901,8 @@ class calculator // calculator represents the main class for the expression calc
 
  bool mxDot (value &res, value &A, value &B);
  bool mxCross (value &res, value &A, value &B);
+ bool mxZeros (value &res, int rows, int cols);
+ bool mxDiag (value &res, int rows, int cols);
 
  void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator

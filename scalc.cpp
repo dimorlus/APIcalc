@@ -205,6 +205,16 @@ bool Cross (void *clc, value &res, value &A, value &B)
  return ((calculator *)clc)->mxCross (res, A, B);
 }
 
+bool Zeros (void *clc, value &res, int rows, int cols)
+{
+ return ((calculator *)clc)->mxZeros (res, rows, cols);
+}
+
+bool Diag (void *clc, value &res, int rows, int cols)
+{
+ return ((calculator *)clc)->mxDiag (res, rows, cols);
+}
+
 float__t Rows (void *clc, value &M)
 {
  return ((calculator *)clc)->mxDim (M, mxRows);
@@ -239,6 +249,7 @@ void calculator::AddPredefined (void)
  add (tsINTEGR, "integr", nullptr);
  add (tsINTEGR, "integral", nullptr);
  add (tsSUM, "sum", nullptr);
+ add (tsFOR, "for", nullptr);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -252,6 +263,9 @@ void calculator::AddPredefined (void)
  add (tsFFUNCM, "rows", (void *)Rows);
  add (tsFFUNCM, "cols", (void *)Cols);
  add (tsFFUNCM, "size", (void *)Size);
+ add (tsMFUNCI2, "zeros", (void *)Zeros);
+ add (tsMFUNCI2, "diag", (void *)Diag);
+ add (tsMFUNCI2, "eye", (void *)Diag);
 
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
@@ -2731,6 +2745,514 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  return combined;
 }
 
+bool calculator::Split (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar)
+{
+ if (expr && *expr)
+  {
+   // Initialize buffers (only non-null ones)
+   if (sexpr) sexpr[0] = '\0';
+   if (sfrom) sfrom[0] = '\0';
+   if (sto) sto[0] = '\0';
+   if (svar) svar[0] = '\0';
+
+   const char *p = expr;
+   int part      = 0; // 0 = expr, 1 = from, 2 = to, 3 = var
+   int depth     = 0; // depth of nested parentheses and brackets
+   int idx       = 0;
+
+   // Count how many parts are expected (non-null pointers)
+   int expected_parts = 0;
+   if (sexpr) expected_parts++;
+   if (sfrom) expected_parts++;
+   if (sto) expected_parts++;
+   if (svar) expected_parts++;
+
+   int current_part = 0; // Current part index (0-based)
+
+   // Skip leading whitespace
+   while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+   while (*p)
+    {
+     char ch = *p;
+
+     // Track bracket/parenthesis depth
+     if (ch == '(' || ch == '[')
+      {
+       depth++;
+      }
+     else if (ch == ')' || ch == ']')
+      {
+       depth--;
+       if (depth < 0)
+        {
+         error (p - expr, "Unmatched closing bracket");
+         return false;
+        }
+      }
+     // Process comma only at depth 0 (outside of all brackets)
+     else if (ch == ',' && depth == 0)
+      {
+       // Terminate current part
+       if (current_part == 0 && sexpr)
+        sexpr[idx] = '\0';
+       else if (current_part == 1 && sfrom)
+        sfrom[idx] = '\0';
+       else if (current_part == 2 && sto)
+        sto[idx] = '\0';
+       else if (current_part == 3 && svar)
+        svar[idx] = '\0';
+
+       current_part++;
+       if (current_part >= expected_parts)
+        {
+         error (p - expr, "Too many arguments");
+         return false;
+        }
+
+       idx = 0;
+       p++;
+       // Skip whitespace after comma
+       while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+       continue;
+      }
+
+     // Copy character to appropriate buffer
+     bool copied = false;
+     if (current_part == 0 && sexpr)
+      {
+       if (idx < STRBUF - 1)
+        {
+         sexpr[idx++] = ch;
+         copied       = true;
+        }
+       else
+        {
+         error (p - expr, "Expression too long");
+         return false;
+        }
+      }
+     else if (current_part == 1 && sfrom)
+      {
+       if (idx < MAXOP - 1)
+        {
+         sfrom[idx++] = ch;
+         copied       = true;
+        }
+       else
+        {
+         error (p - expr, "From expression too long");
+         return false;
+        }
+      }
+     else if (current_part == 2 && sto)
+      {
+       if (idx < MAXOP - 1)
+        {
+         sto[idx++] = ch;
+         copied     = true;
+        }
+       else
+        {
+         error (p - expr, "To expression too long");
+         return false;
+        }
+      }
+     else if (current_part == 3 && svar)
+      {
+       if (idx < STRBUF - 1)
+        {
+         svar[idx++] = ch;
+         copied      = true;
+        }
+       else
+        {
+         error (p - expr, "Variable name too long");
+         return false;
+        }
+      }
+
+     p++;
+    }
+
+   // Terminate the last part
+   if (current_part == 0 && sexpr)
+    sexpr[idx] = '\0';
+   else if (current_part == 1 && sfrom)
+    sfrom[idx] = '\0';
+   else if (current_part == 2 && sto)
+    sto[idx] = '\0';
+   else if (current_part == 3 && svar)
+    svar[idx] = '\0';
+
+   if (depth != 0)
+    {
+     error (0, "Unmatched opening bracket");
+     return false;
+    }
+
+   if (current_part < expected_parts - 1)
+    {
+     error (0, "Not enough arguments");
+     return false;
+    }
+
+   return true;
+  }
+ return false;
+}
+
+bool calculator::Split1 (const char *expr, char *sexpr, char *sfrom, char *sto, char *svar)
+{
+ if (expr && *expr)
+  {
+   // char sexpr[STRBUF];
+   // char sfrom[MAXOP];
+   // char sto[MAXOP];
+   // char svar[STRBUF];
+
+   // Initialize buffers
+   sexpr[0] = '\0';
+   sfrom[0] = '\0';
+   sto[0]   = '\0';
+   svar[0]  = '\0';
+
+   const char *p = expr;
+   int part      = 0; // 0 = expr, 1 = from, 2 = to, 3 = var
+   int depth     = 0; // depth of nested parentheses and brackets
+   int idx       = 0;
+
+   // Skip leading whitespace
+   while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+   
+   while (*p)
+    {
+     char ch = *p;
+
+     // Track bracket/parenthesis depth
+     if (ch == '(' || ch == '[')
+      {
+       depth++;
+      }
+     else if (ch == ')' || ch == ']')
+      {
+       depth--;
+       if (depth < 0)
+        {
+         error (p - expr, "Unmatched closing bracket");
+         return false;
+        }
+      }
+     // Process comma only at depth 0 (outside of all brackets)
+     else if (ch == ',' && depth == 0)
+      {
+       // Terminate current part
+       switch (part)
+        {
+        case 0:
+         sexpr[idx] = '\0';
+         break;
+        case 1:
+         sfrom[idx] = '\0';
+         break;
+        case 2:
+         sto[idx] = '\0';
+         break;
+        }
+
+       part++;
+       if (part > 3)
+        {
+         error (p - expr, "Too many arguments in for loop");
+         return false;
+        }
+
+       idx = 0;
+       p++;
+       // Skip whitespace after comma
+       while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+       continue;
+      }
+
+     // Copy character to appropriate buffer
+     switch (part)
+      {
+      case 0: // expr
+       if (idx < STRBUF - 1)
+        sexpr[idx++] = ch;
+       else
+        {
+         error (p - expr, "Expression too long");
+         return false;
+        }
+       break;
+      case 1: // from
+       if (idx < MAXOP - 1)
+        sfrom[idx++] = ch;
+       else
+        {
+         error (p - expr, "From expression too long");
+         return false;
+        }
+       break;
+      case 2: // to
+       if (idx < MAXOP - 1)
+        sto[idx++] = ch;
+       else
+        {
+         error (p - expr, "To expression too long");
+         return false;
+        }
+       break;
+      case 3: // var
+       if (idx < STRBUF - 1)
+        svar[idx++] = ch;
+       else
+        {
+         error (p - expr, "Variable name too long");
+         return false;
+        }
+       break;
+      }
+
+     p++;
+    }
+
+   // Terminate the last part
+   switch (part)
+    {
+    case 0:
+     sexpr[idx] = '\0';
+     break;
+    case 1:
+     sfrom[idx] = '\0';
+     break;
+    case 2:
+     sto[idx] = '\0';
+     break;
+    case 3:
+     svar[idx] = '\0';
+     break;
+    }
+
+   if (depth != 0)
+    {
+     error (0, "Unmatched opening bracket");
+     return false;
+    }
+
+   if (part < 3)
+    {
+     error (0, "Not enough arguments");
+     return false;
+    }
+   return true;
+  }
+ return false;
+}
+
+bool calculator::For(const char* expr, value& res)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char sfrom[MAXOP];
+   char sto[MAXOP];
+   char svar[STRBUF];
+
+   float__t vfrom  = qnan;
+   float__t vto    = qnan;
+   float__t fvx    = qnan;
+   float__t result = 0;
+   int callCount   = 0;
+
+   if (!Split (expr, sexpr, sfrom, sto, svar))
+    {
+     result_fval = qnan;
+     return false;
+    }
+
+   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+   if (!pCalculator)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return false;
+    }
+
+   vfrom = pCalculator->evaluate_f (sfrom);
+   if (isnan (vfrom) || pCalculator->err[0])
+    {
+     errorf (pos, "%s", pCalculator->err);
+     result_fval = qnan;
+     delete pCalculator;
+     return false;
+    }
+   vto = pCalculator->evaluate_f (sto);
+   if (isnan (vto) || pCalculator->err[0])
+    {
+     errorf (pos, "%s", pCalculator->err);
+     result_fval = qnan;
+     delete pCalculator;
+     return false;
+    }
+    {
+     uint64_t init_ms = GetTickCount64 ();
+     uint64_t last_gui_check = 0;
+
+     float__t fvx = 0.0;
+     if (vfrom > vto)
+      {
+       do
+        {
+         uint64_t current_ms = GetTickCount64 ();
+
+         if (current_ms - init_ms > 1000)
+          {
+           if (!EscFn)
+            {
+             errorf (pos, "for took too long");
+             result_fval = qnan;
+             delete pCalculator;
+             return false;
+            }
+           if (EscFn && EscFn ())
+            {
+             errorf (pos, "for cancelled by user");
+             result_fval = qnan;
+             delete pCalculator;
+             return false;
+            }
+           else
+            {
+             if (current_ms - last_gui_check > 100)
+              {
+               last_gui_check = current_ms;
+               Sleep (1); // Sleep briefly to allow GUI to remain responsive
+              }
+             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+              {
+               errorf (pos, "for took too long");
+               result_fval = qnan;
+               delete pCalculator;
+               return false;
+              }
+            }
+          }
+         pCalculator->addfvar (svar, vfrom);
+         fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
+                                                 // the syntax check before starting the integration
+
+         if (isnan (fvx) || pCalculator->err[0])
+          {
+           errorf (pos, "%s", pCalculator->err);
+           result_fval = qnan;
+           delete pCalculator;
+           return false;
+          }
+         vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
+                       // step sizes
+        }
+       while (vfrom >= vto);
+      }
+     else
+      {
+       do
+        {
+         uint64_t current_ms = GetTickCount64 ();
+
+         if (current_ms - init_ms > 1000)
+          {
+           if (!EscFn)
+            {
+             errorf (pos, "for took too long");
+             result_fval = qnan;
+             delete pCalculator;
+             return false;
+            }
+           if (EscFn && EscFn ())
+            {
+             errorf (pos, "for cancelled by user");
+             result_fval = qnan;
+             delete pCalculator;
+             return false;
+            }
+           else
+            {
+             if (current_ms - last_gui_check > 100)
+              {
+               last_gui_check = current_ms;
+               Sleep (1); // Sleep briefly to allow GUI to remain responsive
+              }
+             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+              {
+               errorf (pos, "for took too long");
+               result_fval = qnan;
+               delete pCalculator;
+               return false;
+              }
+            }
+          }
+         pCalculator->addfvar (svar, vfrom);
+         fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
+                                                 // the syntax check before starting the integration
+
+         if (isnan (fvx) || pCalculator->err[0])
+          {
+           errorf (pos, "%s", pCalculator->err);
+           result_fval = qnan;
+           delete pCalculator;
+           return false;
+          }
+         vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
+                       // step sizes
+        }
+       while (vfrom <= vto);
+      }
+    }
+
+   res.tag = pCalculator->get_res_tag ();
+   if (res.tag == tvMATRIX)
+    {
+     res.fval  = pCalculator->get_re_res ();
+     res.ival  = pCalculator->get_int_res ();
+     res.imval = pCalculator->get_im_res ();
+     res.sval  = dupString (get_str_res ());
+     mxresult_t mxr = pCalculator->get_mx_res ();
+     res.mcols = mxr.cols;
+     res.mrows = mxr.rows;
+     int msize = mxr.rows * mxr.cols * sizeof (float__t);
+     if (msize)
+      {
+       float__t *new_mval = (float__t *)sf_alloc (msize);
+       if (new_mval)
+        {
+         memcpy (new_mval, mxr.mval, msize);
+         res.mval = new_mval;
+        }
+       else
+        {
+         errorf (res.pos, "Out of memory");
+         delete pCalculator;
+         result_fval = qnan;
+         return false;
+        }
+      }
+    }
+   else 
+    {
+     res.fval = pCalculator->get_re_res ();
+     res.ival = pCalculator->get_int_res ();
+     res.imval = pCalculator->get_im_res ();
+     res.sval  = dupString (get_str_res ());
+    }
+
+   fflags |= pCalculator->isfflags ();
+   delete pCalculator;
+   return true;
+  }
+ return false; 
+}
 
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // expr -> sin(x)/x, x
@@ -2749,26 +3271,11 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    float__t result = 0;
    int callCount   = 0;
 
-   char *p = sexpr;
-   
-   // copy all characters from expr (i. e. 'sin(x)/x' ) to sexpr until the first ',' or
-   // end of string is reached or  buffer limit is reached
-   while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
-   *p = '\0'; // null-terminate the string
-   if (*expr == ',') expr++; // skip the comma
-   p  = sfrom;
-   while (*expr && (*expr != ',') && (p - sfrom < MAXOP - 1)) *p++ = *expr++;
-   *p = '\0'; // null-terminate the string
-   if (*expr == ',') expr++; // skip the comma
-   p  = sto;
-   while (*expr && (*expr != ',') && (p - sto < MAXOP - 1)) *p++ = *expr++;
-   *p = '\0'; // null-terminate the string
-   if (*expr == ',') expr++; // skip the comma
-   p  = svar;
-   while (isspace (*expr & 0x7f)) expr++;
-   while (*expr && (*expr != ')') && (p - svar < STRBUF - 1)) 
-    if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
-   *p = '\0'; // null-terminate the string
+   if (!Split (expr, sexpr, sfrom, sto, svar))
+    {
+     result_fval = qnan;
+     return false;
+    }
 
    calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
    if (!pCalculator)
@@ -2972,22 +3479,11 @@ float__t calculator::Diff (const char *expr)
      float__t fvx    = qnan;
      float__t result = 0;
 
-     char *p = sexpr;
-
-     // copy all characters from expr (i. e. 'sin(x)/x' ) to sexpr until the first ',' or
-     // end of string is reached or  buffer limit is reached
-     while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
-     *p = '\0';                // null-terminate the string
-     if (*expr == ',') expr++; // skip the comma
-     p = sfrom;
-     while (*expr && (*expr != ',') && (p - sfrom < MAXOP - 1)) *p++ = *expr++;
-     *p = '\0';                // null-terminate the string
-     if (*expr == ',') expr++; // skip the comma
-     p = svar;
-     while (isspace (*expr & 0x7f)) expr++;
-     while (*expr && (*expr != ')') && (p - svar < STRBUF - 1))
-      if (*expr && (isalnum (*expr & 0x7f) || *expr == '_')) *p++ = *expr++;
-     *p = '\0'; // null-terminate the string
+     if (!Split (expr, sexpr, sfrom, svar, nullptr))
+      {
+       result_fval = qnan;
+       return false;
+      }
 
      calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
      if (!pCalculator)
@@ -3045,8 +3541,11 @@ float__t calculator::Diff (const char *expr)
 }
 
 // solve (x(2x+2)-2,x:=0)
+// calc (x(2x+2)-2,x:=0)
 // integr (x(2x+2)-2,0,10,x)
 // diff (x(2x+2)-2, 0, x)
+// for(expr, from, to, var)
+// sum(expr, from, to, var)
 // extract expression in () after the function name, and put it as string in the symbol table,
 // put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
 // and return toOPERAND or toERROR if something wrong.
@@ -3071,11 +3570,11 @@ t_operator calculator::sscan (symbol *sym)
 
  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
   {
-   if (*ipos == ',') comma_count++;
+   if (*ipos == ',' && parenthesis_count == 1)  comma_count++;
    else 
-   if (*ipos == '(') parenthesis_count++;
+   if (*ipos == '(' || *ipos == '[') parenthesis_count++;
    else 
-   if (*ipos == ')') parenthesis_count--;
+   if (*ipos == ')' || *ipos == ']') parenthesis_count--;
    sbuf[sidx++] = *ipos++;
   }
  if (sidx && sbuf[sidx - 1] == ')') sbuf[sidx - 1] = '\0';
@@ -3100,7 +3599,8 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
    else 
-   if (sym->tag == tsINTEGR || sym->tag == tsSUM) // integr (x(2x+2)-2,0,10,x)
+   if (sym->tag == tsINTEGR || // integr (x(2x+2)-2,0,10,x) 
+       sym->tag == tsSUM)      // sum (x(2x+2)-2,0,10,x)
     {
      if (parenthesis_count == 0 && comma_count == 3)
       {
@@ -3131,6 +3631,23 @@ t_operator calculator::sscan (symbol *sym)
        return toERROR;
       }
     }
+   else 
+   if (sym->tag == tsFOR) //for(expr, from, to, var)
+    {
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvFOR;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in for expression");
+       else
+        error ("wrong number of arguments in for expression");
+       return toERROR;
+      }
+    }
+
     {
      char *sval = dupString (sbuf); // dup and register the string in the string table 
      if (!sval)
@@ -3150,6 +3667,95 @@ t_operator calculator::sscan (symbol *sym)
     }
   }
  return toERROR;
+}
+
+// M[row, col] matrix element access
+bool calculator::mx_idx (int &row, int &col)
+{
+ int rows   = 0;
+ int cols   = 0;
+ int idx[2] = { 0, 0 };
+ int ii     = 0;
+ char *ipos = buf + pos;
+ while (isspace (*ipos & 0x7f)) ipos++;
+ // one child calculator for all elements — new names stay local to matrix
+ calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return false;
+  }
+ while (*ipos && *ipos != ']')
+  {
+   // collect element expression respecting parenthesis depth
+   char ebuf[STRBUF];
+   int eidx  = 0;
+   int depth = 0;
+   while (*ipos && *ipos != ']')
+    {
+     if (*ipos == '(')
+      depth++;
+     else if (*ipos == ')' && depth > 0)
+      depth--;
+     else if ((*ipos == ',' || *ipos == ']') && depth == 0)
+      break;
+     if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
+    }
+   ebuf[eidx] = '\0';
+   //if (*ipos == ']') break;
+   float__t res = child->evaluate_f (ebuf);
+   if (isnan (res) || child->error ()[0])
+    {
+     error (child->error ());
+     delete child;
+     return false;
+    }
+   if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
+    {
+     error ("Matrix index must be scalar");
+     delete child;
+     return false;
+    }
+
+   if (child->result_imval != 0.0L)
+    {
+     error ("Complex matrix indices not supported");
+     delete child;
+     return false;
+    }
+   if (ii < 2)
+    {
+     idx[ii++] = (int)child->result_fval;
+     if (idx[ii - 1] < 0)
+      {
+       error ("Matrix indices must be positive integers");
+       delete child;
+       return false;
+      }
+    }
+   else
+    {
+     error ("Too many indices for matrix access");
+     delete child;
+     return false;
+    }
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (*ipos == ',') ipos++;
+   while (isspace (*ipos & 0x7f)) ipos++;
+  }
+ fflags |= child->isfflags ();
+ delete child; // done with child calculator
+
+ if (*ipos != ']')
+  {
+   error ("Expected ']'");
+   return false;
+  }
+ row = idx[0];
+ col = idx[1];
+ pos = ipos - buf + 1;
+ return true;
 }
 
 //[(a11,a12,...);(a21,a22,...);...]
@@ -3710,7 +4316,7 @@ t_operator calculator::dscan (bool operand, bool percent)
  }
 
 // parse the next operator from the input buffer, returning the operator type
-t_operator calculator::scan (bool operand, bool percent)
+t_operator calculator::scan (bool &operand, bool percent)
 {
  char name[max_expression_length], *np;
 
@@ -3960,7 +4566,46 @@ t_operator calculator::scan (bool operand, bool percent)
   case '{':
    return braces ();
   case '[':
-   return sqbraces (); 
+   if (operand) return sqbraces ();
+   else
+    {
+     if (v_sp && v_stack[v_sp - 1].tag == tvMATRIX && v_stack[v_sp - 1].mval)
+      {
+       int row = 0, col = 0;
+       
+       if (mx_idx (row, col)  && 
+           (v_stack[v_sp - 1].mrows > row) && 
+           (v_stack[v_sp - 1].mcols > col))
+        {
+         v_stack[v_sp].tag   = tvMX_ELEM;
+         v_stack[v_sp].info  = v_stack[v_sp - 1].info;
+         v_stack[v_sp].imval = (float__t)0.0L;
+         v_stack[v_sp].fval  = v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col];
+         v_stack[v_sp].ival  = (int_t)v_stack[v_sp].fval;
+         v_stack[v_sp].pos   = pos;
+         v_stack[v_sp].var   = nullptr;
+         v_stack[v_sp].mrows = v_stack[v_sp - 1].mrows;
+         v_stack[v_sp].mcols = v_stack[v_sp - 1].mcols; 
+         v_stack[v_sp].irows = row;
+         v_stack[v_sp].icols = col;
+         v_stack[v_sp].mval  = v_stack[v_sp - 1].mval; // keep pointer to matrix for later updates
+         v_sp++;
+         //operand = true;
+         return toMX_ELEM;
+        }
+       else
+        {
+         errorf (pos, "Matrix index out of bounds: %d, %d", row, col);
+         return toERROR;
+        }
+      }
+     else
+      {
+        error ("syntax error");
+        return toERROR;
+      }
+    }
+
   case '\'':
    {
     int_t ival;
@@ -4198,11 +4843,11 @@ t_operator calculator::scan (bool operand, bool percent)
      if (sym->tag == tsSOLVE) return toSOLVE;
      else 
      if (sym->tag == tsCALC)  return toSOLVE;
-     else
+     else 
+     if (sym->tag == tsFOR) return toSOLVE;
      return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
     }
-   else
-    return toOPERAND;
+   else return toOPERAND;
   }
 }
 
@@ -4221,7 +4866,7 @@ static int lpr[toTERMINALS] = {
  40, 40,                     // EQ, NE,
  38,                         // AND,
  36,                         // XOR,
- 34,                         // OR,
+ 34, 100,                    // OR, MX_ELEM
  20, 20, 20, 20, 20, 20, 20, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
  20, 20, 20, 20, 20, 20,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
  8,                          // SEMI
@@ -4243,7 +4888,7 @@ static int rpr[toTERMINALS] = {
  40,  40,                     // EQ, NE,
  38,                          // AND,
  36,                          // XOR,
- 34,                          // OR,
+ 34, 130,                     // OR, MX_ELEM
  25,  25, 25, 25, 25, 25, 25, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
  25,  25, 25, 25, 25, 25,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
  10,                          // SEMI
@@ -4255,6 +4900,16 @@ static int rpr[toTERMINALS] = {
 bool calculator::set_op () 
 {
  value &v = v_stack[v_sp - 1];
+ if (v.tag == tvFLOAT &&
+     v.mval &&
+     v.mcols + v.mrows)
+  {
+   int row = v.irows;
+   int col = v.icols;
+   v.mval[row * v.mcols + col] = v.fval;
+   return true;
+  }
+ else
  if (v.var == nullptr)
   {
    error (v.pos, "variable expected");
@@ -4658,6 +5313,63 @@ bool calculator::mxTranspose (value &res, value &M)
  res.tag   = tvMATRIX;
  res.mrows = cols;
  res.mcols = rows;
+ res.mval  = mval;
+ return true;
+}
+
+// mxZeros: matrix of zeros
+bool calculator::mxZeros (value &res, int rows, int cols)
+{
+ if (rows <= 0 || cols <= 0)
+  {
+   mxerror ("dimensions must be positive");
+   return false;
+  }
+ if (rows > MAX_R || cols > MAX_C)
+  {
+   mxerror ("dimensions too large");
+   return false;
+  }
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) 
+  {
+   mxerror ("out of memory");
+   return false;
+  }
+ int n = rows * cols;
+ for (int i = 0; i < n; i++) mval[i] = (float__t)0.0L;
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// mxDiag: diagonal matrix 
+bool calculator::mxDiag (value &res, int rows, int cols)
+{
+ if (rows <= 0 || cols <= 0)
+  {
+   mxerror ("dimensions must be positive");
+   return false;
+  }
+ if (rows > MAX_R || cols > MAX_C)
+  {
+   mxerror ("dimensions too large");
+   return false;
+  }
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval)
+  {
+   mxerror ("out of memory");
+   return false;
+  }
+ int n = rows * cols;
+ for (int i = 0; i < n; i++) mval[i] = (float__t)0.0L;
+ for (int i = 0; i < rows && i < cols; i++) mval[i * cols + i] = (float__t)1.0L;
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
  res.mval  = mval;
  return true;
 }
@@ -5201,7 +5913,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          return qnan;
         }
       }
-     if (oper != toPOSTINC && oper != toPOSTDEC && oper != toRPAR && oper != toFACT)
+     if (oper != toPOSTINC && 
+         oper != toPOSTDEC && 
+         oper != toRPAR && 
+         oper != toFACT &&
+         oper != toMX_ELEM)
       {
        operand = true;
       }
@@ -5214,7 +5930,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        n_args += 1;
        continue;
       }
-     if (BINARY (oper) || oper == toRPAR)
+     if ((oper != toSET) && (BINARY (oper) || oper == toRPAR))
       {
        error (op_pos, "operand expected");
        result_fval = qnan;
@@ -6001,6 +6717,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+         result_fval = qnan;
+         return qnan;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival &= v_stack[v_sp - 1].ival;
@@ -6055,6 +6780,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+         result_fval = qnan;
+         return qnan;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival |= v_stack[v_sp - 1].ival;
@@ -6074,6 +6808,27 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           }
         }
        v_stack[v_sp - 1].var = nullptr;
+       break;
+
+       case toMX_ELEM: // M[1,2]
+       if (((v_stack[v_sp - 1].tag == tvERR) || 
+            (v_stack[v_sp - 2].tag == tvERR)))
+        {   
+         error (v_stack[v_sp - 2].pos, "Undefined operand");
+         result_fval = qnan;
+         return qnan;
+        }
+       if (((v_stack[v_sp - 1].tag == tvMX_ELEM) && 
+            (v_stack[v_sp - 2].tag == tvMATRIX)))
+        {
+         v_stack[v_sp - 2].tag   = tvFLOAT;
+         v_stack[v_sp - 2].icols = v_stack[v_sp - 1].icols;
+         v_stack[v_sp - 2].irows = v_stack[v_sp - 1].irows;
+         v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].fval;
+         v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
+         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
+        }
+       v_sp -= 1;
        break;
 
       case toXOR:    // ^
@@ -6106,6 +6861,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
          result_fval = qnan;
          return qnan;
         }
@@ -6163,6 +6927,19 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && 
+                 v_stack[v_sp - 1].mcols + 
+                 v_stack[v_sp - 1].mrows) || 
+                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 2].mval && 
+                 v_stack[v_sp - 2].mcols + 
+                 v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+         result_fval = qnan;
+         return qnan;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival <<= v_stack[v_sp - 1].ival;
@@ -6217,6 +6994,19 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && 
+                 v_stack[v_sp - 1].mcols + 
+                 v_stack[v_sp - 1].mrows) || 
+                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 2].mval && 
+                 v_stack[v_sp - 2].mcols + 
+                 v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+         result_fval = qnan;
+         return qnan;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
         {
          v_stack[v_sp - 2].ival >>= v_stack[v_sp - 1].ival;
@@ -6268,6 +7058,19 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
         {
          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+         result_fval = qnan;
+         return qnan;
+        }
+       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 1].mval && 
+                 v_stack[v_sp - 1].mcols + 
+                 v_stack[v_sp - 1].mrows)||
+                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+                 v_stack[v_sp - 2].mval && 
+                 v_stack[v_sp - 2].mcols + 
+                 v_stack[v_sp - 2].mrows))
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
          result_fval = qnan;
          return qnan;
         }
@@ -6577,6 +7380,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if (v_stack[v_sp - 1].tag == tvFLOAT && // ++A[i,j]
+                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+        {
+         int row = v_stack[v_sp - 1].irows;
+         int col = v_stack[v_sp - 1].icols;
+         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT)
         {
          v_stack[v_sp - 1].ival += 1;
@@ -6624,6 +7434,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if (v_stack[v_sp - 1].tag == tvFLOAT && // --A[i,j]
+                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+        {
+         int row = v_stack[v_sp - 1].irows;
+         int col = v_stack[v_sp - 1].icols;
+         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT)
         {
          v_stack[v_sp - 1].ival -= 1;
@@ -6670,6 +7487,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          error (v_stack[v_sp - 1].pos, "Illegal string operation");
          result_fval = qnan;
          return qnan;
+        }
+       else if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]++
+                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+        {
+         int row = v_stack[v_sp - 1].irows;
+         int col = v_stack[v_sp - 1].icols;
+         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
         }
        else if (v_stack[v_sp - 1].var == nullptr)
         {
@@ -6719,6 +7543,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else
+       if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]--
+           v_stack[v_sp - 1].mval && 
+           v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+        {
+         int row = v_stack[v_sp - 1].irows;
+         int col = v_stack[v_sp - 1].icols;
+         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
+        }
        else if (v_stack[v_sp - 1].var == nullptr)
         {
          error (v_stack[v_sp - 1].pos, "Varaibale expected");
@@ -6731,7 +7564,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        else
         {
-         v_stack[v_sp - 1].var->val.fval -= ((float__t)1);
+         v_stack[v_sp - 1].var->val.fval -= ((float__t)1.0L);
         }
        v_stack[v_sp - 1].var = nullptr;
        break;
@@ -6767,6 +7600,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          result_fval = qnan;
          return qnan;
         }
+       else if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]!
+                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+        {
+         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+         result_fval = qnan;
+         return qnan;
+        }
        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 1].ival >= 0)
         {
          v_stack[v_sp - 1].ival = (int_t)Factorial ((float__t)v_stack[v_sp - 1].ival);
@@ -6776,7 +7616,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          v_stack[v_sp - 1].fval = (float__t)Factorial ((float__t)v_stack[v_sp - 1].fval);
         }
        v_stack[v_sp - 1].var = nullptr;
-
        break;
 
       case toSET: // =, :=
@@ -6797,18 +7636,28 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            result_fval = qnan;
            return qnan;
           }
-         // if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
-         register_mem (v_stack[v_sp - 2].mval);
-         register_mem (v_stack[v_sp - 1].mval);
+         if ((v_stack[v_sp - 2].tag == tvMATRIX) && (v_stack[v_sp - 2].mval))
+           register_mem (v_stack[v_sp - 2].mval);
+         if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
+           register_mem (v_stack[v_sp - 1].mval);
          // if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
          register_mem (v_stack[v_sp - 2].sval);
          register_mem (v_stack[v_sp - 1].sval);
 
          // v_stack[v_sp - 2] := v_stack[v_sp - 1]
+         if (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j] := v
+             v_stack[v_sp - 2].mval &&
+             v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows)
+          {
+           int row = v_stack[v_sp - 2].irows;
+           int col = v_stack[v_sp - 2].icols;
+           v_stack[v_sp - 2].mval[row * v_stack[v_sp - 2].mcols + col] = v_stack[v_sp - 1].get();
+          }
+         else
          if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
           {
            v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
-           v_stack[v_sp - 2].tag                          = tvSTR;
+           v_stack[v_sp - 2].tag = tvSTR;
           }
          else
           v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
@@ -7045,6 +7894,29 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
              }
              break;
+
+            case tsFOR:
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvFOR)
+               {
+                const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                if (For (equation, v_stack[v_sp - 2])) v_sp -= 1;
+                else
+                 {
+                  error (v_stack[v_sp - 1].pos, "Error in 'for'");
+                  result_fval = qnan;
+                  return qnan;
+                 }
+               }
+             }
+             break;
+
             case tsDIFF: // float f(str equation)
              {
               if (n_args != 1)
@@ -7162,6 +8034,37 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= 2;
              }
              break;
+
+            case tsMFUNCI2: // matrix f(int r, int c)
+             {
+              if (n_args != 2)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
+                result_fval = qnan;
+                return qnan;
+               }
+              if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+               {
+                error (v_stack[v_sp - 2].pos, "Undefined operand");
+                result_fval = qnan;
+                return qnan;
+               }
+              bool res = ((bool (*) (void *, value &, int, int))sym->func) (
+                  (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival, v_stack[v_sp - 1].ival);
+              if (!res || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
+                result_fval = qnan;
+                return qnan;
+               }
+
+              v_sp -= 2;
+             }
+             break;
+
             case tsVFUNC1: // float or complex f(x|z)
              if (n_args != 1)
               {

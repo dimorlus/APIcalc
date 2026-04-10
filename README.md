@@ -20,11 +20,11 @@ This calculator project on WinAPI (VS2022) is based on my old project on Cbuilde
 
 The DLL version is only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
 
-|Version|Type (bit) 		|Exponent (bit)	|Mantissa (bit)	|Precision (digits)	|Range (approximately)		|
+|Version|Type (bit)         |Exponent (bit) |Mantissa (bit) |Precision (digits) |Range (approximately)      |
 |-------|-------------------|---------------|---------------|-------------------|---------------------------|
-|std	|Double (64)		|11				|52				|15..17		        |±2.2E-308 ..  ±1.8E+308	|
-|bcb	|Long Double (80)	|15				|64				|18..19				|±3.4E-4932 .. ±1.1E+4932	|
-|dll	|Quad (128)			|15				|112 (+1)		|33..36	 			|±3.4E-4932 .. ±1.2E+4932	|
+|std    |Double (64)        |11             |52             |15..17             |±2.2E-308 ..  ±1.8E+308    |
+|bcb    |Long Double (80)   |15             |64             |18..19             |±3.4E-4932 .. ±1.1E+4932   |
+|dll    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932   |
 
 Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
 or 128-bit versions. However, you can enter 1.234*10^1234.
@@ -131,22 +131,22 @@ the output format based on the input format. For example
    2sin(15`42'38");;/ALL-/ENG+ => 541.6m
    
    ;Output Format Options:
-  /DEG+			;Degrees format
+  /DEG+         ;Degrees format
   /ENG+         ;Engineering (Scientific) numbers format (6k8 => 6800)
-  /STR+			;String format 
-  /HEX+			;Hex format
-  /OCT+			;Octal format
-  /BIN+	  	    ;Binary format
-  /DAT+			;Date time format
-  /CHR+			;Char format
-  /WCH+			;WChar format
-  /CMP+			;Computing format
-  /UTM+			;Unix time format
-  /NRM+			;Normalized output
-  /IGR+   		;Integer output
-  /UNS+   		;Unsigned output
-  /FRC+   		;Fraction output
-  /FRI+   		;Fraction inch output
+  /STR+         ;String format 
+  /HEX+         ;Hex format
+  /OCT+         ;Octal format
+  /BIN+         ;Binary format
+  /DAT+         ;Date time format
+  /CHR+         ;Char format
+  /WCH+         ;WChar format
+  /CMP+         ;Computing format
+  /UTM+         ;Unix time format
+  /NRM+         ;Normalized output
+  /IGR+         ;Integer output
+  /UNS+         ;Unsigned output
+  /FRC+         ;Fraction output
+  /FRI+         ;Fraction inch output
   /FRH+         ;Temperature
   /FLT+         ;Floating point output
   /UTM+         ;Unix time
@@ -289,6 +289,10 @@ x %% y  →  (x / y - 1) * 100
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
   ```
+* **for(expr, from, to, var)**: Execution over integer range, return expr value (any type including matrix and complex). Supports both ascending and descending order:
+  ```
+  A:=zeros(3,3);for(A[n,0]:=2*n;A, 0, 2, n)  →  [(0, 0, 0); (2, 0, 0); (4, 0, 0)]
+  ```
 
 ### **Complex Number Support**
 
@@ -363,6 +367,12 @@ When the result is a matrix, it is displayed in engineering format, one row per 
  (     4,      5,      6);
  (     7,      8,      9)]
 ```
+Matrix elements can be accessed by index [row, col] for both reading and writing. Rows and cols are zero-based.
+```
+A := [(1,2,3);(4,5,6);(7,8,9)]
+A[1,1] → 5
+A[1,1] := 10;A → [(1,2,3);(4,10,6);(7,8,9)]
+```
 Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise.
 
 #### Matrix Operations
@@ -393,17 +403,19 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 
 #### Matrix Functions
 
-| Function      | Returns | Notes                                               |
-| ------------- | ------- | --------------------------------------------------- |
-| `tr(M)`       | scalar  | trace — sum of diagonal elements                    |
-| `det(M)`      | scalar  | determinant, square matrix only                     |
-| `norm(M)`     | scalar  | Frobenius norm √(Σ aᵢⱼ²)                            |
-| `abs(M)`      | matrix  | element-wise absolute value                         |
-| `dot(A, B)`   | scalar  | dot product of two vectors (1×N or N×1), any length |
-| `cross(A, B)` | vector  | cross product of two 3-element vectors (1×3 or 3×1) |
-| `rows(M)`     | scalar  | Return rows of matrix                               |
-| `cols(M)`     | scalar  | Return columns of matrix                            |
-| `size(M)`     | scalar  | Return rows\*columns of matrix                      |
+| Function         | Returns | Notes                                                        |
+| ---------------- | ------- | -------------------------------------------------------------|
+| `tr(M)`          | scalar  | trace — sum of diagonal elements                             |
+| `det(M)`         | scalar  | determinant, square matrix only                              |
+| `norm(M)`        | scalar  | Frobenius norm √(Σ aᵢⱼ²)                                     |
+| `abs(M)`         | matrix  | element-wise absolute value                                  |
+| `dot(A, B)`      | scalar  | dot product of two vectors (1×N or N×1), any length          |
+| `cross(A, B)`    | vector  | cross product of two 3-element vectors (1×3 or 3×1)          |
+| `rows(M)`        | scalar  | Return rows of matrix                                        |
+| `cols(M)`        | scalar  | Return columns of matrix                                     |
+| `size(M)`        | scalar  | Return rows\*columns of matrix                               |
+| zeros(r,c)       | matrix  | Return zero matrix with r rows and c columns                 |
+|diag(r,c),eye(r,c)| matrix  | Return zero matrix with r rows and c columns with 1 diagonal |
 
 #### Matrix Examples
 

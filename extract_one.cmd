@@ -1,1 +1,1 @@
-git archive --format=zip --output=..\old_version.zip 51555c6
+git archive --format=zip --output=..\old_version.zip 0454f54

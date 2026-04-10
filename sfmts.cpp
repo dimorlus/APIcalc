@@ -41,6 +41,7 @@
 #pragma warn -8008 // Condition is always true
 #pragma warn -8066 // Unreachable code
 #pragma warn -8004 // assigned a value that is never used
+#define M_PId   3.1415926535897932384626433832795L
 
 #else
 #ifndef __GNUC__

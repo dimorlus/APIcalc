@@ -2425,20 +2425,14 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
   }
 
  char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
- char *p = sexpr;
- while (*expr && (*expr != ',') && (p - sexpr < STRBUF - 1)) *p++ = *expr++;
- *p = '\0';
- if (*expr != ',')
+
+ if (!Split (expr, sexpr, STRBUF, svar, STRBUF))
   {
-   errorf (pos, "solve: missing initial estimate");
+   errorf (pos, "solve: invalid expression");
    re_res = qnan;
    im_res = qnan;
    return false;
   }
- expr++;
- p = svar;
- while (*expr && (p - svar < STRBUF - 1)) *p++ = *expr++;
- *p = '\0';
 
  calculator *pC = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
  if (!pC)
@@ -2508,7 +2502,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    float__t fi = pC->get_im_res ();
 
    // |f(z)|
-   float__t fabs_f = sqrt (fr * fr + fi * fi);
+   float__t fabs_f = sqrtl (fr * fr + fi * fi);
    if (fabs_f < tol)
     {
      converged = true;
@@ -2563,8 +2557,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 
 #ifdef _DAMPED_
    // damped Newton:
-   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
-   float__t z_abs    = sqrt (xr * xr + xi * xi);
+   float__t step_abs = sqrtl (step_r * step_r + step_i * step_i);
+   float__t z_abs    = sqrtl (xr * xr + xi * xi);
    float__t max_step = ((float__t)1.0 + z_abs) * (float__t)10.0; // step limit
    if (step_abs > max_step)
     {
@@ -2575,12 +2569,12 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    xr = xr - step_r;
    xi = xi - step_i;
 #else
-   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
-   float__t z_abs    = sqrt (xr * xr + xi * xi);
+   float__t step_abs = sqrtl (step_r * step_r + step_i * step_i);
+   float__t z_abs = sqrtl (xr * xr + xi * xi);
    if (step_abs < tol * ((float__t)1.0 + z_abs))
     {
-     xr        = xr_new;
-     xi        = xi_new;
+     xr = xr_new;
+     xi = xi_new;
      converged = true;
      break;
     }
@@ -2605,7 +2599,6 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
  return true;
 }
 
-
 // Gauss-Kronrod G7/K15 adaptive quadrature
 // C++98 compatible (BCB6 / VS2022)
 //
@@ -2613,14 +2606,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 // G7 uses nodes at indices 0, 2, 4, 6  (every other K15 node)
 
 static const float__t GK_NODES[8] = {
- 0.0L,
- 0.20778495500789846760L,
- 0.40584515137739716691L,
- 0.58608723546769113029L,
- 0.74153118559939443986L,
- 0.86486442335976907279L,
- 0.94910791234275852453L,
- 0.99145537112081263921L,
+ 0.0L, 0.20778495500789846760L, 0.40584515137739716691L, 0.58608723546769113029L, 
+ 0.74153118559939443986L, 0.86486442335976907279L, 0.94910791234275852453L, 0.99145537112081263921L,
 };
 
 // K15 weights: index i corresponds to nodes +-GK_NODES[i]
@@ -2632,10 +2619,7 @@ static const float__t K15_WEIGHTS[8] = {
 
 // G7 weights: 4 values for nodes at GK_NODES[0,2,4,6]
 static const float__t G7_WEIGHTS[4] = {
- 0.41795918367346938776L,
- 0.38183005050511894495L,
- 0.27970539148927664160L,
- 0.12948496616886732340L,
+ 0.41795918367346938776L, 0.38183005050511894495L, 0.27970539148927664160L, 0.12948496616886732340L,
 };
 
 // G7 node indices into GK_NODES[]
@@ -2718,7 +2702,7 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  if (++callCount > maxCalls) // hard stop
   {
    GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
-   res.ok       = true;
+   res.ok = true;
    return res;
   }
 
@@ -2906,7 +2890,6 @@ bool calculator::Split (const char *expr,
  return false;
 }
 
-#define TIMELIMIT
 bool calculator::For(const char* expr, value& res)
 {
  if (expr && *expr)
@@ -2961,42 +2944,13 @@ bool calculator::For(const char* expr, value& res)
       {
        do
         {
-#ifdef TIMELIMIT
-         uint64_t current_ms = GetTickCount64 ();
-
-         if (current_ms - init_ms > 1000)
+         if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           if (!EscFn)
-            {
-             errorf (pos, "for took too long");
-             result_fval = qnan;
-             delete pCalculator;
-             return false;
-            }
-           if (EscFn && EscFn ())
-            {
-             errorf (pos, "for cancelled by user");
-             result_fval = qnan;
-             delete pCalculator;
-             return false;
-            }
-           else
-            {
-             if (current_ms - last_gui_check > 100)
-              {
-               last_gui_check = current_ms;
-               Sleep (1); // Sleep briefly to allow GUI to remain responsive
-              }
-             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
-              {
-               errorf (pos, "for took too long");
-               result_fval = qnan;
-               delete pCalculator;
-               return false;
-              }
-            }
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
           }
-#endif // end of TIMELIMIT
+
          pCalculator->addfvar (svar, vfrom);
          fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                  // the syntax check before starting the integration
@@ -3017,45 +2971,16 @@ bool calculator::For(const char* expr, value& res)
       {
        do
         {
-#ifdef TIMELIMIT
-         uint64_t current_ms = GetTickCount64 ();
-
-         if (current_ms - init_ms > 1000)
+         if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           if (!EscFn)
-            {
-             errorf (pos, "for took too long");
-             result_fval = qnan;
-             delete pCalculator;
-             return false;
-            }
-           if (EscFn && EscFn ())
-            {
-             errorf (pos, "for cancelled by user");
-             result_fval = qnan;
-             delete pCalculator;
-             return false;
-            }
-           else
-            {
-             if (current_ms - last_gui_check > 100)
-              {
-               last_gui_check = current_ms;
-               Sleep (1); // Sleep briefly to allow GUI to remain responsive
-              }
-             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
-              {
-               errorf (pos, "for took too long");
-               result_fval = qnan;
-               delete pCalculator;
-               return false;
-              }
-            }
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
           }
-#endif // end of TIMELIMIT  
+
          pCalculator->addfvar (svar, vfrom);
          fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
-                                                 // the syntax check before starting the integration
+                                                // the syntax check before starting the integration
 
          if (isnan (fvx) || pCalculator->err[0])
           {
@@ -3114,7 +3039,43 @@ bool calculator::For(const char* expr, value& res)
  return false; 
 }
 
+t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
+{
+ #ifdef NDEBUG
+ uint64_t current_ms = GetTickCount64 ();
+
+ if (current_ms - init_ms > 1000)
+  {
+   if (!EscFn)
+    {
+     errorf (pos, "Operation took too long");
+     return brTIMEOUT;    
+    }
+   if (EscFn && EscFn ())
+    {
+     errorf (pos, "Operation cancelled by user");
+     return brESC;
+    }
+   else
+    {
+     if (current_ms - last_gui_check > 100)
+      {
+       last_gui_check = current_ms;
+       Sleep (1); // Sleep briefly to allow GUI to remain responsive
+      }
+     if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+      {
+       errorf (pos, "Operation took too long");
+       return brTIMEOUT;
+      }
+    }
+  }
+#endif // NDEBUG   
+ return brNONE;
+}
+
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
+// sum(expr(x), from, to, x) 
 // expr -> sin(x)/x, x
 float__t calculator::Integr (const char *expr, t_symbol tag)
 {
@@ -3207,40 +3168,13 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       {
        do
         {
-         uint64_t current_ms = GetTickCount64 ();
-
-         if (current_ms - init_ms > 1000)
+         if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           if (!EscFn)
-            {
-             errorf (pos, "Summation took too long");
-             result_fval = qnan;
-             delete pCalculator;
-             return qnan;
-            }
-           if (EscFn && EscFn ())
-            {
-             errorf (pos, "Summation cancelled by user");
-             result_fval = qnan;
-             delete pCalculator;
-             return qnan;
-            }
-           else
-            {
-             if (current_ms - last_gui_check > 100)
-              {
-               last_gui_check = current_ms;
-               Sleep (1); // Sleep briefly to allow GUI to remain responsive
-              }
-             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
-              {
-               errorf (pos, "Summation took too long");
-               result_fval = qnan;
-               delete pCalculator;
-               return qnan;
-              }
-            }
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
           }
+
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
@@ -3261,40 +3195,13 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       {
        do
         {
-         uint64_t current_ms = GetTickCount64 ();
-
-         if (current_ms - init_ms > 1000)
+         if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           if (!EscFn)
-            {
-             errorf (pos, "Summation took too long");
-             result_fval = qnan;
-             delete pCalculator;
-             return qnan;
-            }
-           if (EscFn && EscFn ())
-            {
-             errorf (pos, "Summation cancelled by user");
-             result_fval = qnan;
-             delete pCalculator;
-             return qnan;
-            }
-           else
-            {
-             if (current_ms - last_gui_check > 100)
-              {
-               last_gui_check = current_ms;
-               Sleep (1); // Sleep briefly to allow GUI to remain responsive
-              }
-             if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
-              {
-               errorf (pos, "Summation took too long");
-               result_fval = qnan;
-               delete pCalculator;
-               return qnan;
-              }
-            }
+           result_fval = qnan;
+           delete pCalculator;
+           return qnan;
           }
+
          pCalculator->addfvar (svar, vfrom);
          fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
@@ -3339,7 +3246,7 @@ float__t calculator::Diff (const char *expr)
      float__t fvx    = qnan;
      float__t result = 0;
 
-     if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF, nullptr, 1))
+     if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF))
       {
        result_fval = qnan;
        return false;
@@ -3628,7 +3535,6 @@ bool calculator::mx_idx (int &row, int &col)
 // Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
 // Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful,
 // or toERROR if there is a syntax error.
-
 t_operator calculator::sqbraces (void)
 {
  char *ipos = buf + pos;

@@ -71,6 +71,8 @@ typedef unsigned char uint8_t;
 typedef char int8_t;
 typedef __int64 int_t;
 typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+
 typedef unsigned __int64 unsigned_t;
 
 typedef unsigned int uint32_t;
@@ -432,6 +434,12 @@ enum t_mxDim
  mxSize,  
 };
 
+enum t_br_result
+{
+ brNONE,    // Nothing to break, continue normal execution
+ brTIMEOUT, // Indicates that a timeout has occurred during a long calculation
+ brESC,     // Indicates that an ESC key was pressed
+};
 
 #define MASK_ALL 0xffffffff
 #define MASK_NONE 0x00000000
@@ -575,14 +583,6 @@ class value // value represents a value in the calculator, which can be an integ
  inline int_t get_int () { return tag == tvINT ? ival : (int_t)fval; }
  inline char *get_str () { return tag == tvSTR ? sval : nullptr; }
  inline bool is_scalar () { return tag == tvINT || tag == tvFLOAT; }
-
-//inline ~value ()
-// {
-//  if (sval) free (sval);
-//  if (mval) free (mval);
-//  sval = nullptr;
-//  mval = nullptr;
-// }
 };
 
 class symbol // symbol represents a symbol in the calculator, which can be a variable, constant, or
@@ -848,11 +848,12 @@ class calculator // calculator represents the main class for the expression calc
 
  bool Split (const char *expr, // Split "expr, from, to, var" into its components and return true if
              char *sexpr, int ex_l, // successful, with the components being
-             char *sfrom, int fr_l, 
-             char *sto, int to_l,
-             char *svar, int vr_l);
-
- bool For (const char *expr, value &res);
+             char *sfrom = nullptr, int fr_l = 1, 
+             char *sto = nullptr, int to_l = 1,
+             char *svar = nullptr, int vr_l = 1);
+ t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
+                                                                      //during long calculations
+ bool For (const char *expr, value &res); //Operator 'for' (loop).
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the

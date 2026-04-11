@@ -2502,7 +2502,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    float__t fi = pC->get_im_res ();
 
    // |f(z)|
-   float__t fabs_f = sqrtl (fr * fr + fi * fi);
+   float__t fabs_f = sqrt (fr * fr + fi * fi);
    if (fabs_f < tol)
     {
      converged = true;
@@ -2557,8 +2557,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 
 #ifdef _DAMPED_
    // damped Newton:
-   float__t step_abs = sqrtl (step_r * step_r + step_i * step_i);
-   float__t z_abs    = sqrtl (xr * xr + xi * xi);
+   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = sqrt (xr * xr + xi * xi);
    float__t max_step = ((float__t)1.0 + z_abs) * (float__t)10.0; // step limit
    if (step_abs > max_step)
     {
@@ -2569,8 +2569,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    xr = xr - step_r;
    xi = xi - step_i;
 #else
-   float__t step_abs = sqrtl (step_r * step_r + step_i * step_i);
-   float__t z_abs = sqrtl (xr * xr + xi * xi);
+   float__t step_abs = sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = sqrt (xr * xr + xi * xi);
    if (step_abs < tol * ((float__t)1.0 + z_abs))
     {
      xr = xr_new;

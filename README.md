@@ -78,7 +78,7 @@ ccalc "sin(pi/4)"
 
 # With options
 ccalc "0xFF + 0b1010" /HEX+ /BIN+
-ccalc "2k5" /SCI+              # 2500 with scientific notation
+ccalc "2k5" /SCI+               # 2500 with scientific notation
 ccalc "2+3i" /NRM+              # Complex numbers
 ccalc "2+3i" /CPX+              # Complex numbers in polar form
 
@@ -96,26 +96,19 @@ ccalc "help(7)"                 # Options
 #### Batch Processing (File or Stdin)
 
 Process a file of expressions line by line, redirecting output to a file:
-
 ```
 ccalc /ALL-/AUTO+/SRC+/FILE="apicalc_cli_tests.txt" >result.txt
 ```
-
 Or via stdin pipe:
-
 ```
 type apicalc_cli_tests.txt | ccalc /ALL-/AUTO+/SRC+ >result.txt
 ```
-
 With `/SRC+` each output line includes the source expression:
-
 ```
 -1^2 ;; -(1^2), not (-1)^2 => -1
 integr(exp(-(x^2)), -5, 5, x) ;; sqrt(pi) => 1.77245385090552
 ```
-
 Without `/SRC+` only results are printed, one per line:
-
 ```
 -1
 1.77245385090552
@@ -169,13 +162,10 @@ the output format based on the input format. For example
 ### Percentage Operations
 
 The `%` operator in `x op y%` computes `y%` as a percentage **of the left operand** `x`, then applies the operation:
-
 ```
 x op y%  →  x op (x * y / 100)
 ```
-
 This matches the behaviour of most pocket calculators:
-
 ```
 72 - 20%          →  57.6      (72 - 72*0.20 = 72*0.80)
 200 + 10%         →  220       (200 + 200*0.10)
@@ -183,15 +173,11 @@ This matches the behaviour of most pocket calculators:
 500 * 5%          →  12500     (500 * 500*0.05 = 500*25)
 1 / 2%            →  50        (1 / 1*0.02 = 1/0.02)
 ```
-
 Chained percentage operations use the result of the previous operation as the new base:
-
 ```
 72 - 20% + 5%     →  60.48     (57.6 + 57.6*0.05)
 ```
-
 The `%%` operator is the **reverse percentage**: how many percent is `x` relative to `y` as a change from `y`:
-
 ```
 x %% y  →  (x / y - 1) * 100
 
@@ -220,20 +206,16 @@ x %% y  →  (x / y - 1) * 100
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
 
 * **bind(x)**, **binf(x)**: Reinterpret a floating-point value as an integer by its raw bit pattern (the inverse of `floatd`/`floatf`). Useful for inspecting IEEE 754 representation:
-  
   ```
   bind(pi)   →  400921fb54442d18h   ;; double (64-bit) bit pattern of π
   binf(pi)   →  40490fdbh           ;; float (32-bit) bit pattern of π
   ```
-
 * **floatd(x)**, **floatf(x)**: Reinterpret an integer as a floating-point value by its raw bit pattern (the inverse of `bind`/`binf`):
-  
   ```
   floatd(0x400921FB54442D18)  →  3.14159265358979   ;; reconstruct π from bits
   floatf(0x40490FDB)          →  3.141593            ;; 32-bit float precision
   floatd(bind(pi))            →  3.14159265358979   ;; round-trip
   ```
-
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
@@ -247,44 +229,33 @@ x %% y  →  (x / y - 1) * 100
   This function is built-in (previously defined in `consts.txt`).
 
 * **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
-  
   ```
   solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
   solve(x*(2x+2)-2, x:=-1)  →  -1.61803398875005
   solve(z^2+z+1, z:=0+1i)   →  |1|(120`0'0") -0.4999999999999997+0.8660254037844385i
   ```
-  
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
 
 * **calc(expr, var:=val)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
-  
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
   calc(z^2+z+1, z:=0+1i)   →  |1|(90`0'0") 0+1i
   ```
-
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
   
   $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
-```
+  ```
   integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
   integral(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
-```
- 
-  ```
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
   ```
-  
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
 
 * **diff(expr, point, var)**: Numerical differentiation using central difference method:
-  
   ```
   diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
   ```
-
 * **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
-  
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
@@ -309,23 +280,18 @@ x %% y  →  (x / y - 1) * 100
 * The `~` operator on a complex number returns its **complex conjugate** (negates the imaginary part). On integers, `~` performs bitwise NOT.
 
 * When the result is complex, it is displayed in **both rectangular and polar forms** for convenience:
-  
   ```
   ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j
   ```
-  
   Polar form notation: ``|modulus|(degrees`minutes'seconds")``
 
 ### User-Defined Functions
 
 User-defined functions can be specified inline or loaded from `consts.txt`:
-
 ```
 {frq(L, C)  1/(2*pi*sqrt(L*C))}
 ```
-
 Then use them in expressions:
-
 ```
 frq(130u, 2n2)    # Result: 297602.87 Hz
 ```
@@ -340,7 +306,6 @@ frq(130u, 2n2)    # Result: 297602.87 Hz
 ### Comments
 
 Use the `;;` operator for inline comments:
-
 ```
 2+2 ;; This is a comment
 ```
@@ -348,20 +313,15 @@ Use the `;;` operator for inline comments:
 ### Matrix Support
 
 Matrices up to 7×7 are supported. Matrix syntax:
-
 ```
 [(a11, a12, ...); (a21, a22, ...); ...]
 ```
-
 Each row is enclosed in `()`, rows are separated by `;`, the whole matrix is enclosed in `[]`. Elements can be plain numbers (SI suffixes supported) or expressions using previously defined constants and variables, as long as the result is a real number or integer. Complex numbers, strings, or matrices cannot be matrix elements. Variables declared inside the matrix are local to it and not accessible afterwards:
-
 ```
 [(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)]
 [(a:=2*pi, a/3); (b:=e, b/2)]  →  [(6.283, 2.094); (2.718, 1.359)]
 ```
-
 When the result is a matrix, it is displayed in engineering format, one row per line:
-
 ```
 [(     1,      2,      3);
  (     4,      5,      6);
@@ -457,7 +417,6 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)])→[(1); (2)]
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.
-
 ```
 S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 
 ```
@@ -554,7 +513,6 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (1E30), **R** (1E27) and their lowercase counterparts **q** (1E-30), **r** (1E-27) are also supported.
 
 For complex numbers, suffixes apply independently to both the real and imaginary parts in output:
-
 ```
 polar(10k, 30`20'40")  →  8.63k+5.052ki
 ```

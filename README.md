@@ -373,7 +373,11 @@ A := [(1,2,3);(4,5,6);(7,8,9)]
 A[1,1] → 5
 A[1,1] := 10;A → [(1,2,3);(4,10,6);(7,8,9)]
 ```
-Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise.
+Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise. Using index access, you can view the unfiltered value of an element.
+```
+[(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)] → [(-1k, 0, 3M); (0, 0, 0); (0, 8G, 9)] ;;Filtered
+[(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)][1,1] → 5e-06                            ;;Raw
+```
 
 #### Matrix Operations
 

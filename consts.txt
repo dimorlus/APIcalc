@@ -143,6 +143,10 @@ const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
 {v_prop(er) c0 / sqrt(er)};; Velocity of light in dielectric
 {z_line(l, c) sqrt(l / c)};; Characteristic impedance of a line
 
+;;NTC forward and backward convertion
+{ntcr(r25, t) B:=3950; T0:=stdt; T25:=T0+25; r25 * exp(B * (1/(t+T0) - 1/T25))}
+{rntc(r25, r) B:=3950; T0:=stdt; T25:=T0+25; 1/(1/T25 + (1/B) * ln(r/r25)) - T0}
+
 ;; --- Transformers and chokes --
 ;; --- Core & Inductance ---
 {Lcoil(N, Ae, Lm, mu) u0*mu*N^2*Ae/Lm};; Inductance (H)

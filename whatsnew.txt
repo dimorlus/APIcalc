@@ -1,3 +1,12 @@
+13.04.26 (2.175)
++ Added prnf("filename", "format", ...) function. Works the same as prn, but appends the 
+  created string to the end of the file 'filename' (if it doesn't exist, it creates it). 
+  Returns the number of characters written to the file (0 if writing to the file is impossible).
+	ccalc "wr:=0; for(wr+=prnf("ntc.txt","%d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)"
+	Creates an ntc.txt file like: 
+		20`C, 125.4k 
+		21`C, 119.7k
+
 11.04.26 (2.174)
 * Cosmetic changes.
 

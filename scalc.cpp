@@ -359,6 +359,8 @@ void calculator::AddPredefined (void)
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
+ add (tsFPFUNCn, "prnf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf);
+
  
  add (tsSIFUNC1, "datatime", (void *)datatime);
  
@@ -8185,10 +8187,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  (sres, // put result string in sres first
                   v_stack[v_sp - n_args].get_str (), n_args - 1,
                   c_imaginary, & v_stack[v_sp - n_args + 1]);
-             if (sres[0]) 
-              {
-               //fflags |= STR;
-              }
+
              v_stack[v_sp - n_args - 1].sval = dupString(sres);
              v_stack[v_sp - n_args - 1].ival = 0;
              v_stack[v_sp - n_args - 1].tag  = tvSTR;
@@ -8200,6 +8199,35 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
               }
              v_sp -= n_args;
+             break;
+
+            case tsFPFUNCn: // prnf("filename", "fmt", ...) function
+             {
+              if (n_args < 2)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take two or more arguments");
+                result_fval = qnan;
+                return qnan;
+               }
+
+              if ((v_stack[v_sp - n_args].tag != tvSTR)
+                  && (v_stack[v_sp - n_args + 1].tag != tvSTR))
+               {
+                error (v_stack[v_sp - n_args].pos, "String operands required");
+                result_fval = qnan;
+                return qnan;
+               }
+
+              int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
+                  (v_stack[v_sp - n_args].get_str (),                            // filename
+                   v_stack[v_sp - n_args + 1].get_str (), n_args - 1, c_imaginary,
+                   &v_stack[v_sp - n_args + 2]);
+
+              v_stack[v_sp - n_args - 1].ival = res;
+              v_stack[v_sp - n_args - 1].tag  = tvINT;
+
+              v_sp -= n_args;
+             }
              break;
 
             case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,

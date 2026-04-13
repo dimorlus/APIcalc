@@ -1481,6 +1481,23 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
  return dst - dest;
 }
 
+
+
+int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
+{
+ char buf[256];
+ int_t res = 0; 
+ fprn (buf, sfmt, args, ic, v_stack);
+ FILE *f = fopen (fname, "a");
+ if (f)
+  {
+   res = fprintf (f, "%s\n", buf);
+   fclose (f);
+  }
+ return res;
+}
+
+
 #ifdef __BORLANDC__
 int get_timezone(void) //return seconds
 {

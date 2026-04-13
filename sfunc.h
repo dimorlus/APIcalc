@@ -111,7 +111,10 @@ bool IsNaNL(const long double ldVal);
 bool IsInf (const double fVal);
 bool IsInfL (const float__t ldVal);
 #endif //__BORLANDC__
+
 int_t fprn(char *dest, char *sfmt, int args, char ic, value* v_stack);
+int_t fprnf (char *fname, char *sfmt, int args, char ic, value *v_stack);
+
 int_t datatime(char *tstr);
 
 const char* wavelength_info(float__t wavelength_m);

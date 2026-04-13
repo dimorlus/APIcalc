@@ -400,24 +400,25 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFFUNC1,   // 8  float f(float x)
  tsFFUNC2,   // 9  float f(float x, float y)
  tsFFUNC3,   // 10  float f(float x, float y, float z)
- tsPFUNCn,   // 11  int printf(char *format, ...)
- tsSFUNCF2,  // 12  float const(char *name, float value)
- tsSIFUNC1,  // 13  int f(char *s)
- tsFFUNCM,   // 14  float f(matrix M)
- tsFFUNCM2,  // 15  float f(matrix A, matrix B)
- tsMFUNCM,   // 16  matrix f(matrix M)
- tsMFUNCM2,  // 17  matrix f(matrix A, matrix B)
- tsMFUNCI2,  // 18  matrix f(int r, int c)
- tsVFUNC1,   // 19  void vfunc(value* res, value* arg, int idx)
- tsVFUNC2,   // 20  void vfunc(value* res, value* arg1, value* arg2, int idx)
- tsUFUNCT,   // 21  User-defined function
- tsSOLVE,    // 22  Solve operator for solving equations
- tsCALC,     // 23  Calculate operator for evaluating expressions
- tsINTEGR,   // 24  Integration operator for numerical integration
- tsSUM,      // 25  Summation operator for numerical summation
- tsDIFF,     // 26  Differentiation operator for numerical differentiation
- tsFOR,      // 27  For operator 
- tsNUM       // 28  Total number of symbol types, must be the last in the list
+ tsPFUNCn,   // 11  char * printf(char *format, ...)
+ tsFPFUNCn,  // 12  int printf(char *fname, char *format, ...)
+ tsSFUNCF2,  // 13  float const(char *name, float value)
+ tsSIFUNC1,  // 14  int f(char *s)
+ tsFFUNCM,   // 15  float f(matrix M)
+ tsFFUNCM2,  // 16  float f(matrix A, matrix B)
+ tsMFUNCM,   // 17  matrix f(matrix M)
+ tsMFUNCM2,  // 18  matrix f(matrix A, matrix B)
+ tsMFUNCI2,  // 19  matrix f(int r, int c)
+ tsVFUNC1,   // 20  void vfunc(value* res, value* arg, int idx)
+ tsVFUNC2,   // 21  void vfunc(value* res, value* arg1, value* arg2, int idx)
+ tsUFUNCT,   // 22  User-defined function
+ tsSOLVE,    // 23  Solve operator for solving equations
+ tsCALC,     // 24  Calculate operator for evaluating expressions
+ tsINTEGR,   // 25  Integration operator for numerical integration
+ tsSUM,      // 26  Summation operator for numerical summation
+ tsDIFF,     // 27  Differentiation operator for numerical differentiation
+ tsFOR,      // 28  For operator 
+ tsNUM       // 29  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -455,6 +456,7 @@ enum t_br_result
 #define MASK_FFUNC2     (1<< tsFFUNC2)      // float f(float x, float y)
 #define MASK_FFUNC3     (1<< tsFFUNC3)      // float f(float x, float y, float z)
 #define MASK_PFUNCn     (1<< tsPFUNCn)      // int printf(char *format, ...)
+#define MASK_FPFUNCn    (1 << tsFPFUNCn)    // int printf(char *fname, char *format, ...)
 #define MASK_SFUNCF2    (1<< tsSFUNCF2)     // float const(char *name, float value)
 #define MASK_SIFUNC1    (1<< tsSIFUNC1)     // int f(char *name)
 #define MASK_FFUNCM     (1<< tsFFUNCM)      // float f(matrix M)
@@ -471,13 +473,7 @@ enum t_br_result
 #define MASK_INTEGR     (1 << tsINTEGR)     // integration operator for numerical integration
 #define MASK_DIFF       (1 << tsDIFF)       // differentiation operator for numerical differentiation
 #define MASK_FOR        (1 << tsFOR)        // for operator for numerical summation
-#define MASK_DEFAULT (MASK_CONSTANT | MASK_IFUNCF1 | MASK_SFUNCF1 | MASK_IFUNC1  \
-                    | MASK_IFUNC2   | MASK_FFUNC1  | MASK_FFUNC2  | MASK_FFUNC3  \
-                    | MASK_PFUNCn   | MASK_SFUNCF2 | MASK_SIFUNC1 | MASK_VFUNC1  \
-                    | MASK_FFUNCM   | MASK_FFUNCM2 | MASK_MFUNCM  | MASK_MFUNCM2 \
-                    | MASK_MFUNCI2  | MASK_VFUNC2  | MASK_UFUNCT  | MASK_FFUNCI1 \
-                    | MASK_CIFUNC1  | MASK_SOLVE   | MASK_SUM     | MASK_CALC    \
-                    | MASK_INTEGR   | MASK_DIFF    | MASK_FOR )
+#define MASK_DEFAULT   (MASK_ALL  & ~MASK_VARIABLE) // default mask for built-in functions, excludes variables and constants
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

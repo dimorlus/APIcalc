@@ -219,6 +219,7 @@ x %% y  →  (x / y - 1) * 100
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
+* **prnf("filename", "format", ...)**: Works the same as prn, but appends the created string to the end of the file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file (0 if writing to the file is impossible).
 
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
   ```
@@ -541,16 +542,22 @@ sqrt(16) + log(100)
 2^3 * e
 (5 + 3) / (2 - 1)
 
-# Resonant frequency and wave resistance:
+;; Resonant frequency and wave resistance:
 L:=130u; C:=2.2n; f:=1/(2*PI*sqrt(L*C)); Rw:=sqrt(L/C); prn("f:%SHz, Rw:%SOhm", f, Rw);;Resonant circuit
-# Result: f:297.6kHz, Rw:243.1Ohm
+;; Result: f:297.6kHz, Rw:243.1Ohm
+
+ccalc "wr:=0; for(wr+=prnf("ntc.txt","%d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)"
+
+Creates an ntc.txt file like: 
+20`C, 125.4k 
+21`C, 119.7k
 
 # With Implicit Multiplication enabled:
-2sin(pi/2)          # Same as 2 * sin(pi/2) = 2
-3(4+5)              # Same as 3 * (4+5) = 27
-(1+2)(3+4)          # Same as (1+2) * (3+4) = 21
-2PI                 # Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
-3e                  # Same as 3 * e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
+2sin(pi/2)          ;; Same as 2 * sin(pi/2) = 2
+3(4+5)              ;; Same as 3 * (4+5) = 27
+(1+2)(3+4)          ;; Same as (1+2) * (3+4) = 21
+2PI                 ;; Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
+3e                  ;; Same as 3 * e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
 ```
 
 ### Implicit Multiplication

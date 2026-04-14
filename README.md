@@ -5,7 +5,6 @@
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder VCL (BCB6) [fcalc](https://github.com/dimorlus/fcalc), which, in turn, is based on DOS programs and [Ccalc](http://www.garret.ru/ccalc.zip) sources that have been heavily reworked since then.
-
 ```
 //-< CCALC.CPP >-----------------------------------------------------*--------*
 // Ccalc                      Version 1.02       (c) 1998  GARRET    *     ?  *
@@ -194,17 +193,11 @@ x %% y  →  (x / y - 1) * 100
 ### Utility Functions
 
 * **pol**: Convert to polar coordinates
-
 * **const("name", value)**: Define a named constant programmatically
-
 * **var("name", value)**: Define a named variable programmatically
-
 * **wrgb, trgb**: Color-related utility functions
-
 * **winf**: Returns a string describing the portion of the spectrum of a given wavelength
-
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
-
 * **bind(x)**, **binf(x)**: Reinterpret a floating-point value as an integer by its raw bit pattern (the inverse of `floatd`/`floatf`). Useful for inspecting IEEE 754 representation:
   ```
   bind(pi)   →  400921fb54442d18h   ;; double (64-bit) bit pattern of π
@@ -217,10 +210,8 @@ x %% y  →  (x / y - 1) * 100
   floatd(bind(pi))            →  3.14159265358979   ;; round-trip
   ```
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
-
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
 * **prnf("filename", "format", ...)**: Works the same as prn, but appends the created string to the end of the file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file (0 if writing to the file is impossible).
-
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
   ```
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
@@ -228,7 +219,6 @@ x %% y  →  (x / y - 1) * 100
   ```
   m and a also can be complex according formula   $$z = m \cdot e^{ia}$$.
   This function is built-in (previously defined in `consts.txt`).
-
 * **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
   ```
   solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
@@ -236,14 +226,12 @@ x %% y  →  (x / y - 1) * 100
   solve(z^2+z+1, z:=0+1i)   →  |1|(120`0'0") -0.4999999999999997+0.8660254037844385i
   ```
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
-
 * **calc(expr, var:=val)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
   calc(z^2+z+1, z:=0+1i)   →  |1|(90`0'0") 0+1i
   ```
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
-  
   $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
   ```
   integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
@@ -251,7 +239,6 @@ x %% y  →  (x / y - 1) * 100
   integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
   ```
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
-
 * **diff(expr, point, var)**: Numerical differentiation using central difference method:
   ```
   diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
@@ -269,17 +256,12 @@ x %% y  →  (x / y - 1) * 100
 ### **Complex Number Support**
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
-
 * Functions like `sqrt`, `log`, `ln`, `asin`, `acos`, `pow` and operator `^` automatically switch to the complex version when the real result is undefined — for example `sqrt(-1)` returns ```|1|(90`0'0") 0+1i``` instead of NaN.
-
 * Complex numbers can be entered in the form `a+bi` or `a+ib` (e.g., `1+2i`, `1+i2`, `3-4i`).
-
+* Both `(i, j)` symbols are supported for the imaginary part. The last symbol used in the input is used when outputting the result.
 * Functions like `sin`, `cos`, `exp`, `abs`, etc., work with both real and complex arguments.
-
 * The result is displayed in the form `a+bi` if the imaginary part is nonzero.
-
 * The `~` operator on a complex number returns its **complex conjugate** (negates the imaginary part). On integers, `~` performs bitwise NOT.
-
 * When the result is complex, it is displayed in **both rectangular and polar forms** for convenience:
   ```
   ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j

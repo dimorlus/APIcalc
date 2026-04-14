@@ -473,7 +473,7 @@ enum t_br_result
 #define MASK_INTEGR     (1 << tsINTEGR)     // integration operator for numerical integration
 #define MASK_DIFF       (1 << tsDIFF)       // differentiation operator for numerical differentiation
 #define MASK_FOR        (1 << tsFOR)        // for operator for numerical summation
-#define MASK_DEFAULT   (MASK_ALL  & ~MASK_VARIABLE) // default mask for built-in functions, excludes variables and constants
+#define MASK_DEFAULT   (MASK_ALL & ~MASK_VARIABLE) // default mask for built-in functions, excludes variables and constants
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

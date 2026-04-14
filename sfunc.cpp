@@ -1083,6 +1083,7 @@ float__t Cmp (float__t x, float__t y, float__t prec)
 // Calculate the output voltage of a voltage divider
 float__t Vout (float__t Vref, float__t Rh, float__t Rl)
 {
+ if (Rl == (float__t)0.0L) return qnan;
  return Vref * (Rh + Rl) / Rl;
 }
 
@@ -1481,8 +1482,6 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
  return dst - dest;
 }
 
-
-
 int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
 {
  char buf[256];
@@ -1496,7 +1495,6 @@ int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
   }
  return res;
 }
-
 
 #ifdef __BORLANDC__
 int get_timezone(void) //return seconds

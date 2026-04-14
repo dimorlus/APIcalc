@@ -2436,7 +2436,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    return false;
   }
 
- calculator *pC = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+ calculator *pC = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
  if (!pC)
   {
    errorf (pos, "Out of memory");
@@ -2913,7 +2913,7 @@ bool calculator::For(const char* expr, value& res)
      return false;
     }
 
-   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+   calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
    if (!pCalculator)
     {
      errorf (pos, "Out of memory");
@@ -3100,7 +3100,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      return false;
     }
 
-   calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+   calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
    if (!pCalculator)
     {
      errorf (pos, "Out of memory");
@@ -3254,7 +3254,7 @@ float__t calculator::Diff (const char *expr)
        return false;
       }
 
-     calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+     calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
      if (!pCalculator)
       {
        errorf (pos, "Out of memory");
@@ -3452,7 +3452,7 @@ bool calculator::mx_idx (int &row, int &col)
  char *ipos = buf + pos;
  while (isspace (*ipos & 0x7f)) ipos++;
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -3548,7 +3548,7 @@ t_operator calculator::sqbraces (void)
  int curCols = 0;
 
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, MASK_DEFAULT + MASK_VARIABLE, deep);
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -8341,7 +8341,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 		        //4. Push the result onto the stack.
 		        //5. Delete the previously created calculator.
 
-                calculator *pCalculator = new calculator (scfg, hash_table, MASK_DEFAULT, deep);
+                calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT), deep);
                 if (!pCalculator)
                  {
                   errorf (pos, "Out of memory");

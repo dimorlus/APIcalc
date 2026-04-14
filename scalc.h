@@ -264,46 +264,6 @@ constexpr float__t inf = std::numeric_limits<float__t>::infinity ();
 class value;
 class symbol;
 
-#pragma pack(push, 1)
-typedef union 
-{
- int options;
- struct
- {
-  int pas : 1;
-  int sci : 1;
-  int upcase : 1;
-  int utmp : 1;
-  int ffloat : 1;
-  int deg : 1;
-  int cpx : 1;
-  int eng : 1;
-  int str : 1;
-  int hex : 1;
-  int oct : 1;
-  int fbin : 1;
-  int dat : 1;
-  int chr : 1;
-  int wch : 1;
-  int esc : 1;
-  int cmp : 1;
-  int nrm : 1;
-  int igr : 1;
-  int uns : 1;
-  int all : 1;
-  int min : 1;
-  int mnu : 1;
-  int utm : 1;
-  int frc : 1;
-  int fri : 1;
-  int frh : 1;
-  int top : 1;
-  int imul : 1;
-  int opt : 1;
- };
-} toptions;
-#pragma pack(pop)
-
 enum t_value // t_value represents the type of a value in the calculator
 {
  tvERR,
@@ -391,34 +351,32 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
 {
  tsVARIABLE, // 0  tsVARIABLE represents a variable symbol
  tsCONSTANT, // 1  tsCONSTANT represents a constant symbol
- tsFFUNCI1,  // 2  float f(int x)
- tsIFUNCF1,  // 3  int f(float x)
- tsSFUNCF1,  // 4  char* f(float x)
- tsCIFUNC1,  // 5  int f(this, int x)
- tsIFUNC1,   // 6  int f(int x)
- tsIFUNC2,   // 7  int f(int x, int y)
- tsFFUNC1,   // 8  float f(float x)
- tsFFUNC2,   // 9  float f(float x, float y)
- tsFFUNC3,   // 10  float f(float x, float y, float z)
- tsPFUNCn,   // 11  char * printf(char *format, ...)
- tsFPFUNCn,  // 12  int printf(char *fname, char *format, ...)
- tsSFUNCF2,  // 13  float const(char *name, float value)
- tsSIFUNC1,  // 14  int f(char *s)
- tsFFUNCM,   // 15  float f(matrix M)
- tsFFUNCM2,  // 16  float f(matrix A, matrix B)
- tsMFUNCM,   // 17  matrix f(matrix M)
- tsMFUNCM2,  // 18  matrix f(matrix A, matrix B)
- tsMFUNCI2,  // 19  matrix f(int r, int c)
- tsVFUNC1,   // 20  void vfunc(value* res, value* arg, int idx)
- tsVFUNC2,   // 21  void vfunc(value* res, value* arg1, value* arg2, int idx)
- tsUFUNCT,   // 22  User-defined function
- tsSOLVE,    // 23  Solve operator for solving equations
- tsCALC,     // 24  Calculate operator for evaluating expressions
- tsINTEGR,   // 25  Integration operator for numerical integration
- tsSUM,      // 26  Summation operator for numerical summation
- tsDIFF,     // 27  Differentiation operator for numerical differentiation
- tsFOR,      // 28  For operator 
- tsNUM       // 29  Total number of symbol types, must be the last in the list
+ tsFFUNCI1,  // 2  float f(int x) (floatf)
+ tsIFUNCF1,  // 3  int f(float x) (wrgb, trgb)
+ tsSFUNCF1,  // 4  char* f(float x) (winf)
+ tsCIFUNC1,  // 5  int f(this, int x) (prec)
+ tsIFUNC1,   // 6  int f(int x) (now, not)
+ tsIFUNC2,   // 7  int f(int x, int y) (gcd)
+ tsFFUNC1,   // 8  float f(float x) (swg, awg)
+ tsFFUNC2,   // 9  float f(float x, float y) (min, max)
+ tsFFUNC3,   // 10  float f(float x, float y, float z) (vout)
+ tsPFUNCn,   // 11  char * printf(char *format, ...) (prn)
+ tsFPFUNCn,  // 12  int printf(char *fname, char *format, ...) (prnf)
+ tsSFUNCF2,  // 13  float const(char *name, float value) (const, var)
+ tsSIFUNC1,  // 14  int f(char *s) (datatime)
+ tsFFUNCM,   // 15  float f(matrix M) (det, trace)
+ tsMFUNCM2,  // 16  matrix f(matrix A, matrix B) (dot, cross)
+ tsMFUNCI2,  // 17  matrix f(int r, int c) (zeros, eye
+ tsVFUNC1,   // 18  void vfunc(value* res, value* arg, int idx) (abs, sin)
+ tsVFUNC2,   // 19  void vfunc(value* res, value* arg1, value* arg2, int idx) (pow, rootn
+ tsUFUNCT,   // 20  User-defined function
+ tsSOLVE,    // 21  Solve operator for solving equations (solve)
+ tsCALC,     // 22  Calculate operator for evaluating expressions (calc)
+ tsINTEGR,   // 23  Integration operator for numerical integration (integr)
+ tsSUM,      // 24  Summation operator for numerical summation (sum)
+ tsDIFF,     // 25  Differentiation operator for numerical differentiation (diff)
+ tsFOR,      // 26  For operator (for)
+ tsNUM       // 27  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -442,38 +400,36 @@ enum t_br_result
  brESC,     // Indicates that an ESC key was pressed
 };
 
-#define MASK_ALL 0xffffffff
-#define MASK_NONE 0x00000000
-#define MASK_VARIABLE   (1<< tsVARIABLE)    // represents a variable symbol
-#define MASK_CONSTANT   (1<< tsCONSTANT)    // represents a constant symbol
-#define MASK_FFUNCI1    (1<< tsFFUNCI1)     // float f(int x)
-#define MASK_IFUNCF1    (1<< tsIFUNCF1)     // int f(float x)
-#define MASK_SFUNCF1    (1<< tsSFUNCF1)     // char* f(float x)
-#define MASK_IFUNC1     (1<< tsIFUNC1)      // int f(int x)
-#define MASK_CIFUNC1    (1<< tsCIFUNC1)     // int f(this, int x)
-#define MASK_IFUNC2     (1<< tsIFUNC2)      // int f(int x, int y)
-#define MASK_FFUNC1     (1<< tsFFUNC1)      // float f(float x)
-#define MASK_FFUNC2     (1<< tsFFUNC2)      // float f(float x, float y)
-#define MASK_FFUNC3     (1<< tsFFUNC3)      // float f(float x, float y, float z)
-#define MASK_PFUNCn     (1<< tsPFUNCn)      // int printf(char *format, ...)
-#define MASK_FPFUNCn    (1 << tsFPFUNCn)    // int printf(char *fname, char *format, ...)
-#define MASK_SFUNCF2    (1<< tsSFUNCF2)     // float const(char *name, float value)
-#define MASK_SIFUNC1    (1<< tsSIFUNC1)     // int f(char *name)
-#define MASK_FFUNCM     (1<< tsFFUNCM)      // float f(matrix M)
-#define MASK_FFUNCM2    (1<< tsFFUNCM2)     // float f(matrix A, matrix B)
-#define MASK_MFUNCM     (1<< tsMFUNCM)      // matrix f(matrix M)
-#define MASK_MFUNCM2    (1<< tsMFUNCM2)     // matrix f(matrix A, matrix B)
-#define MASK_MFUNCI2    (1<< tsMFUNCI2)     // matrix f(int r, int c)
-#define MASK_VFUNC1     (1<< tsVFUNC1)      // void vfunc(value* res, value* arg, int idx)
-#define MASK_VFUNC2     (1<< tsVFUNC2)      // void vfunc(value* res, value* arg1, value* arg2, int idx)
-#define MASK_UFUNCT     (1<< tsUFUNCT)      // user-defined function
-#define MASK_SOLVE      (1 << tsSOLVE)      // solve operator for solving equations
-#define MASK_SUM        (1 << tsSUM)        // summation operator for numerical summation
-#define MASK_CALC       (1 << tsCALC)       // calculate operator for evaluating expressions
-#define MASK_INTEGR     (1 << tsINTEGR)     // integration operator for numerical integration
-#define MASK_DIFF       (1 << tsDIFF)       // differentiation operator for numerical differentiation
-#define MASK_FOR        (1 << tsFOR)        // for operator for numerical summation
-#define MASK_DEFAULT   (MASK_ALL & ~MASK_VARIABLE) // default mask for built-in functions, excludes variables and constants
+#define MASK_ALL        0xffffffff           // 32bit mask with all symbol types included
+#define MASK_NONE       0x00000000           // represents an empty mask with no symbol types included
+#define MASK_VARIABLE   (1 << tsVARIABLE)    // represents a variable symbol
+#define MASK_CONSTANT   (1 << tsCONSTANT)    // represents a constant symbol
+#define MASK_FFUNCI1    (1 << tsFFUNCI1)     // float f(int x)
+#define MASK_IFUNCF1    (1 << tsIFUNCF1)     // int f(float x)
+#define MASK_SFUNCF1    (1 << tsSFUNCF1)     // char* f(float x)
+#define MASK_IFUNC1     (1 << tsIFUNC1)      // int f(int x)
+#define MASK_CIFUNC1    (1 << tsCIFUNC1)     // int f(this, int x)
+#define MASK_IFUNC2     (1 << tsIFUNC2)      // int f(int x, int y)
+#define MASK_FFUNC1     (1 << tsFFUNC1)      // float f(float x)
+#define MASK_FFUNC2     (1 << tsFFUNC2)      // float f(float x, float y)
+#define MASK_FFUNC3     (1 << tsFFUNC3)      // float f(float x, float y, float z)
+#define MASK_PFUNCn     (1 << tsPFUNCn)      // int printf(char *format, ...)
+#define MASK_FPFUNCn    (1 << tsFPFUNCn)     // int printf(char *fname, char *format, ...)
+#define MASK_SFUNCF2    (1 << tsSFUNCF2)     // float const(char *name, float value)
+#define MASK_SIFUNC1    (1 << tsSIFUNC1)     // int f(char *name)
+#define MASK_FFUNCM     (1 << tsFFUNCM)      // float f(matrix M)
+#define MASK_MFUNCM2    (1 << tsMFUNCM2)     // matrix f(matrix A, matrix B)
+#define MASK_MFUNCI2    (1 << tsMFUNCI2)     // matrix f(int r, int c)
+#define MASK_VFUNC1     (1 << tsVFUNC1)      // void vfunc(value* res, value* arg, int idx)
+#define MASK_VFUNC2     (1 << tsVFUNC2)      // void vfunc(value* res, value* arg1, value* arg2, int idx)
+#define MASK_UFUNCT     (1 << tsUFUNCT)      // user-defined function
+#define MASK_SOLVE      (1 << tsSOLVE)       // solve operator for solving equations
+#define MASK_SUM        (1 << tsSUM)         // summation operator for numerical summation
+#define MASK_CALC       (1 << tsCALC)        // calculate operator for evaluating expressions
+#define MASK_INTEGR     (1 << tsINTEGR)      // integration operator for numerical integration
+#define MASK_DIFF       (1 << tsDIFF)        // differentiation operator for numerical differentiation
+#define MASK_FOR        (1 << tsFOR)         // for operator for numerical summation
+#define MASK_DEFAULT   (MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -500,26 +456,26 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_atanh, // Arctangent hyperbolic tangent function
  vf_acoth, // Arccotangent hyperbolic cotangent function
 
- vf_exp, // Exponential function
- vf_log, // Natural logarithm function
+ vf_exp,   // Exponential function
+ vf_log,   // Natural logarithm function
  vf_log10, // Logarithm base 10 function
- vf_log2, // Logarithm base 2 function
+ vf_log2,  // Logarithm base 2 function
  vf_exp10, // Exponential function with base 10
- vf_sqrt, // Square root function
+ vf_sqrt,  // Square root function
 
- vf_pow, // Power function
- vf_root3,
+ vf_pow,   // Power function
+ vf_root3, // Cube root function
  vf_rootn, // N-th root function
  vf_logn,  // Logarithm with specified base function
 
- vf_re, // Real part of a complex number function
- vf_im, // Imaginary part of a complex number function
+ vf_re,    // Real part of a complex number function
+ vf_im,    // Imaginary part of a complex number function
  vf_conj,  // Complex conjugate function
- vf_cplx, // Complex number construction function
+ vf_cplx,  // Complex number construction function
  vf_polar, // Polar coordinates construction function
  vf_hypot, // Hypotenuse function
  vf_atan2, // Arctangent of two variables function
- vf_fmod,   // Modulo function
+ vf_fmod,  // Modulo function
  vf_rnd,   // Random function
 
  vf_floor, // Floor function
@@ -529,10 +485,10 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_int,   // Integer part function
  vf_float, // Float function
 
- vf_db, // Decibel function (10*log10(x) for power quantities, 20*log10(x) for field quantities)
- vf_np, // Neper function (20*log10(x) for power quantities)
- vf_adb, // Inverse decibel function (10^(x/10) for power quantities, 10^(x/20) for field quantities)
- vf_anp, // Inverse neper function (10^(x/20) for power quantities)
+ vf_db,    // Decibel function (10*log10(x) for power quantities, 20*log10(x) for field quantities)
+ vf_np,    // Neper function (20*log10(x) for power quantities)
+ vf_adb,   // Inverse decibel function (10^(x/10) for power quantities, 10^(x/20) for field quantities)
+ vf_anp,   // Inverse neper function (10^(x/20) for power quantities)
 
  vf_factorial, // Factorial function
 
@@ -606,7 +562,7 @@ class MemList
 {
  void **list;
  int capacity;
- int count; // mem_idx ������
+ int count; // mem_idx 
 
  public:
  MemList (int initial = 256) : capacity (initial), count (0)
@@ -641,7 +597,7 @@ void *register_mem (void *mem)
      list[i] = mem;
      return mem;
     }
-  // no holes � append
+  // no holes - append
   if (count < capacity)
    {
     list[count++] = mem;
@@ -756,7 +712,7 @@ class calculator // calculator represents the main class for the expression calc
 
  void AddPredefined (void);
 
- void copy_symbols (symbol **symtab = nullptr, int mask = MASK_DEFAULT);
+ void copy_symbols (symbol **symtab = nullptr, int mask = (MASK_NONE));
 
  //memory management
  void init_mem_list () { mem_list.init_mem_list (); }
@@ -876,7 +832,7 @@ class calculator // calculator represents the main class for the expression calc
               int *size = nullptr); // and an optional pointer to store the size of the output
 
  public:
- calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int mask=MASK_DEFAULT,
+ calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int mask=(MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration

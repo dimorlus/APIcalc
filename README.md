@@ -206,7 +206,7 @@ x %% y  →  (x / y - 1) * 100
 * **floatd(x)**, **floatf(x)**: Reinterpret an integer as a floating-point value by its raw bit pattern (the inverse of `bind`/`binf`):
   ```
   floatd(0x400921FB54442D18)  →  3.14159265358979   ;; reconstruct π from bits
-  floatf(0x40490FDB)          →  3.141593            ;; 32-bit float precision
+  floatf(0x40490FDB)          →  3.141593           ;; 32-bit float precision
   floatd(bind(pi))            →  3.14159265358979   ;; round-trip
   ```
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
@@ -234,9 +234,9 @@ x %% y  →  (x / y - 1) * 100
 * **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
   $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
   ```
-  integr(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
-  integral(exp(-(x^2)), -5, 5, x)   →  1.772453850902790   ;; sqrt(pi)
-  integr(sin(x)/x, 0.001, pi, x)  →  1.850937052038021
+  integr(exp(-(x^2)), -5, 5, x)  →  1.772453850902790   ;; sqrt(pi)
+  integral(exp(-(x^2)), -5, 5, x)  →  1.772453850902790   ;; sqrt(pi)
+  integr(sin(x)/x, 0.001, pi, x) →  1.850937052038021
   ```
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
 * **diff(expr, point, var)**: Numerical differentiation using central difference method:
@@ -272,11 +272,11 @@ x %% y  →  (x / y - 1) * 100
 
 User-defined functions can be specified inline or loaded from `consts.txt`:
 ```
-{frq(L, C)  1/(2*pi*sqrt(L*C))}
+{frq(L, C)  1/(2*pi*sqrt(L*C))};;Resonant frequency, Hz
 ```
 Then use them in expressions:
 ```
-frq(130u, 2n2)    # Result: 297602.87 Hz
+frq(130u, 2n2) → 297602.87 
 ```
 
 **Key properties:**
@@ -350,19 +350,19 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 
 #### Matrix Functions
 
-| Function         | Returns | Notes                                                        |
-| ---------------- | ------- | -------------------------------------------------------------|
-| `tr(M)`          | scalar  | trace — sum of diagonal elements                             |
-| `det(M)`         | scalar  | determinant, square matrix only                              |
-| `norm(M)`        | scalar  | Frobenius norm √(Σ aᵢⱼ²)                                     |
-| `abs(M)`         | matrix  | element-wise absolute value                                  |
-| `dot(A, B)`      | scalar  | dot product of two vectors (1×N or N×1), any length          |
-| `cross(A, B)`    | vector  | cross product of two 3-element vectors (1×3 or 3×1)          |
-| `rows(M)`        | scalar  | Return rows of matrix                                        |
-| `cols(M)`        | scalar  | Return columns of matrix                                     |
-| `size(M)`        | scalar  | Return rows\*columns of matrix                               |
-| zeros(r,c)       | matrix  | Return zero matrix with r rows and c columns                 |
-|diag(r,c),eye(r,c)| matrix  | Return zero matrix with r rows and c columns with 1 diagonal |
+| Function           | Returns | Notes                                                        |
+|--------------------|---------| -------------------------------------------------------------|
+| `tr(M)`            | scalar  | trace — sum of diagonal elements                             |
+| `det(M)`           | scalar  | determinant, square matrix only                              |
+| `norm(M)`          | scalar  | Frobenius norm √(Σ aᵢⱼ²)                                     |
+| `abs(M)`           | matrix  | element-wise absolute value                                  |
+| `dot(A, B)`        | scalar  | dot product of two vectors (1×N or N×1), any length          |
+| `cross(A, B)`      | vector  | cross product of two 3-element vectors (1×3 or 3×1)          |
+| `rows(M)`          | scalar  | Return rows of matrix                                        |
+| `cols(M)`          | scalar  | Return columns of matrix                                     |
+| `size(M)`          | scalar  | Return rows\*columns of matrix                               |
+| `zeros(r,c)`       | matrix  | Return zero matrix with r rows and c columns                 |
+|`diag(r,c),eye(r,c)`| matrix  | Return zero matrix with r rows and c columns with 1 diagonal |
 
 #### Matrix Examples
 
@@ -395,6 +395,10 @@ V_sns:=[(10); (0)]; ang:=pi/4;V_global:= rot2(ang) V_sns → [(7.071); (7.071)]
 
 $$\begin{cases} 2x - 3y = -4 \\\\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pmatrix} x \\\\ y \end{pmatrix} = \begin{pmatrix} 1 \\\\ 2 \end{pmatrix}$$
 ```
+;;From consts.txt:
+;; Solves a system of linear equations A*X = B (returns vector X)
+{solve_lin(A, B) !A * B}
+
 solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
 ```
 ### Strings

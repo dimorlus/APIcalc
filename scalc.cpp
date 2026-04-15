@@ -2954,16 +2954,16 @@ bool calculator::For(const char* expr, value& res)
    if (isnan (vfrom) || child->err[0])
     {
      errorf (pos, "%s", child->err);
-     result_fval = qnan;
      delete child;
+     result_fval = qnan;
      return false;
     }
    vto = child->evaluate_f (sto);
    if (isnan (vto) || child->err[0])
     {
      errorf (pos, "%s", child->err);
-     result_fval = qnan;
      delete child;
+     result_fval = qnan;
      return false;
     }
     {
@@ -2977,9 +2977,9 @@ bool calculator::For(const char* expr, value& res)
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           result_fval = qnan;
            delete child;
-           return qnan;
+           result_fval = qnan;
+           return false;
           }
 
          child->addfvar (svar, vfrom);
@@ -2989,8 +2989,8 @@ bool calculator::For(const char* expr, value& res)
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
-           result_fval = qnan;
            delete child;
+           result_fval = qnan;
            return false;
           }
          vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
@@ -3004,8 +3004,8 @@ bool calculator::For(const char* expr, value& res)
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           result_fval = qnan;
            delete child;
+           result_fval = qnan;
            return qnan;
           }
 
@@ -3016,8 +3016,8 @@ bool calculator::For(const char* expr, value& res)
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
-           result_fval = qnan;
            delete child;
+           result_fval = qnan;
            return false;
           }
          vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
@@ -3125,33 +3125,29 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
 
    if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
     {
-     result_fval = qnan;
-     return false;
+     return result_fval = qnan;
     }
 
    calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
    if (!child)
     {
      errorf (pos, "Out of memory");
-     result_fval = qnan;
-     return qnan;
+     return result_fval = qnan;
     }
 
    vfrom = child->evaluate_f (sfrom);
    if (isnan (vfrom) || child->err[0])
     {
      errorf (pos, "%s", child->err);
-     result_fval = qnan;
      delete child;
-     return qnan;
+     return result_fval = qnan;
     }
    vto = child->evaluate_f (sto);
    if (isnan (vto) || child->err[0])
     {
      errorf (pos, "%s", child->err);
-     result_fval = qnan;
      delete child;
-     return qnan;
+     return result_fval = qnan;
     }
 
    if (tag == tsINTEGR)
@@ -3164,9 +3160,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       if (isnan (fvx) || child->err[0])
        {
         errorf (pos, "%s", child->err);
-        result_fval = qnan;
         delete child;
-        return qnan;
+        return result_fval = qnan;
        }
      }
 
@@ -3183,9 +3178,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      if (!gkresult.ok)
       {
        errorf (pos, "Integration failed");
-       result_fval = qnan;
        delete child;
-       return qnan;
+       return result_fval = qnan;
       }
      result = gkresult.value;
     }
@@ -3201,9 +3195,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           result_fval = qnan;
            delete child;
-           return qnan;
+           return result_fval = qnan;
           }
 
          child->addfvar (svar, vfrom);
@@ -3213,9 +3206,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
-           result_fval = qnan;
            delete child;
-           return qnan;
+           return result_fval = qnan;
           }
          vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
                        // step sizes
@@ -3228,9 +3220,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
-           result_fval = qnan;
            delete child;
-           return qnan;
+           return result_fval = qnan;
           }
 
          child->addfvar (svar, vfrom);
@@ -3240,9 +3231,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
-           result_fval = qnan;
            delete child;
-           return qnan;
+           return result_fval = qnan;
           }
          vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
                        // step sizes
@@ -3260,7 +3250,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    delete child;
    return result;
   }
- return qnan; // placeholder for actual integration result
+ return result_fval = qnan; // placeholder for actual integration result
 }
 
 // Numerical differentiation using central difference
@@ -3279,25 +3269,22 @@ float__t calculator::Diff (const char *expr)
 
      if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF))
       {
-       result_fval = qnan;
-       return false;
+       return result_fval = qnan;
       }
 
      calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
      if (!child)
       {
        errorf (pos, "Out of memory");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
       }
 
      x = child->evaluate_f (sfrom);
      if (isnan (x) || child->err[0])
       {
        errorf (pos, "%s", child->err);
-       result_fval = qnan;
        delete child;
-       return qnan;
+       return result_fval = qnan;
       }
 
      // Numerical derivative (central difference)
@@ -3314,9 +3301,8 @@ float__t calculator::Diff (const char *expr)
      if (isnan (fxp) || child->err[0])
       {
        errorf (pos, "%s", child->err);
-       result_fval = qnan;
        delete child;
-       return qnan;
+       return result_fval = qnan;
       }
 
      child->addfvar (svar, x - delta);
@@ -3324,9 +3310,8 @@ float__t calculator::Diff (const char *expr)
      if (isnan (fxm) || child->err[0])
       {
        errorf (pos, "%s", child->err);
-       result_fval = qnan;
        delete child;
-       return qnan;
+       return result_fval = qnan;
       }
 
      float__t fp = (fxp - fxm) / ((float__t)2.0 * delta);
@@ -3335,7 +3320,7 @@ float__t calculator::Diff (const char *expr)
      delete child;
      return fp;
     }
-  return qnan; 
+  return result_fval = qnan; 
 }
 
 // solve (x(2x+2)-2,x:=0)
@@ -5760,8 +5745,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
     }
    if (oper == toERROR)
     {
-     result_fval = qnan;
-     return qnan;
+     return result_fval = qnan;
     }
   loper:
    switch (oper)
@@ -5803,15 +5787,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          else
           {
            error (op_pos, "operator expected");
-           result_fval = qnan;  
-           return qnan;
+           return result_fval = qnan;
           }
         }
        else
         {
          error (op_pos, "operator expected");
-         result_fval = qnan;
-         return qnan;
+         return result_fval = qnan;
         }
       }
      if (oper != toPOSTINC && 
@@ -5834,8 +5816,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
      if ((oper != toSET) && (BINARY (oper) || oper == toRPAR))
       {
        error (op_pos, "operand expected");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
       }
     }
    n_args = 1;
@@ -5845,8 +5826,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
      if ((UNARY (cop) && (v_sp < 1)) || (BINARY (cop) && (v_sp < 2)))
       {
        error ("Unexpected end of expression");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
       }
 
      if (BINARY(cop))
@@ -5860,8 +5840,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        if (oper == toRPAR)
         {
          error ("Unmatched ')'");
-         result_fval = qnan;
-         return qnan;
+         return result_fval = qnan;
         }
        if (oper != toEND) error ("Unexpected end of input");
        if (v_sp == 1) // Final result should be on the stack
@@ -5890,8 +5869,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            if (!res_mval)
             {
              error ("Memory allocation failed for matrix result");
-             result_fval = qnan;
-             return qnan;
+             return result_fval = qnan;
             }
            memcpy (res_mval, v_stack[0].mval, res_cols * res_rows * sizeof (float__t)); 
            v_stack[0].mval = nullptr; // Prevent freeing the matrix result in clear_v_stack
@@ -5938,8 +5916,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        else if (v_sp != 0)
        {
         error ("Unexpected end of expression");
-        result_fval = qnan;
-        return qnan;
+        return result_fval = qnan;
        }
        else
        {
@@ -5958,8 +5935,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
         {
          error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
+         return result_fval = qnan;
         }
        register_mem (v_stack[v_sp - 1].sval);
        register_mem (v_stack[v_sp - 1].mval);
@@ -6000,16 +5976,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if (new_len > STRBUF - 1)
            {
             error (v_stack[v_sp - 2].pos, "Resulting string is too long");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           {
            char *new_s = (char *)sf_alloc (new_len);
            if (!new_s)
             {
              error (v_stack[v_sp - 2].pos, "Memory allocation failed");
-             result_fval = qnan;
-             return qnan;
+             return result_fval = qnan;
             }
            strcpy (new_s, v_stack[v_sp - 2].sval);
            strcat (new_s, v_stack[v_sp - 1].sval);
@@ -6019,8 +5993,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
          {
           error (v_stack[v_sp - 2].pos, "Illegal string operation");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
          {
@@ -6053,11 +6026,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         v_sp -= 1;
         if (cop == toSETADD)
          {
-          if (!set_op ())
-           {
-            result_fval = qnan;
-            return qnan;
-           }
+          if (!set_op ()) return result_fval = qnan;
          }
         v_stack[v_sp - 1].var = nullptr;
        }
@@ -6084,8 +6053,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
          {
           error (v_stack[v_sp - 2].pos, "Illegal string operation");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
@@ -6122,11 +6090,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         v_sp -= 1;
         if (cop == toSETSUB)
          {
-          if (!set_op ())
-           {
-            result_fval = qnan;
-            return qnan;
-           }
+          if (!set_op ()) return result_fval = qnan;
          }
         v_stack[v_sp - 1].var = nullptr;
        }
@@ -6224,8 +6188,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if (denom == (float__t)0.0L)
            {
             error (v_stack[v_sp - 2].pos, "Division by zero");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           v_stack[v_sp - 2].fval  = (a * c + b * d) / denom;
           v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
@@ -6234,8 +6197,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
          {
           error (v_stack[v_sp - 2].pos, "Division by zero");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
@@ -6261,11 +6223,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         v_sp -= 1;
         if (cop == toSETDIV)
          {
-          if (!set_op ())
-           {
-            result_fval = qnan;
-            return qnan;
-           }
+          if (!set_op ()) return result_fval = qnan;
          }
         v_stack[v_sp - 1].var = nullptr;
        }
@@ -6280,8 +6238,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         if (mr == mrERROR)
          {
           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         else if (mr == mrDONE)
          {
@@ -6293,8 +6250,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  || (v_stack[v_sp - 2].get () == (float__t)0.0L))
          {
           error (v_stack[v_sp - 2].pos, "Division by zero");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
          {
@@ -6317,8 +6273,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if (a_norm2 == (float__t)0.0L)
            {
             error (v_stack[v_sp - 2].pos, "Division by zero");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           float__t inv_a_r = ar / a_norm2;
           float__t inv_a_i = -ai / a_norm2;
@@ -6328,8 +6283,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if (b_norm2 == (float__t)0.0L)
            {
             error (v_stack[v_sp - 2].pos, "Division by zero");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           float__t inv_b_r = br / b_norm2;
           float__t inv_b_i = -bi / b_norm2;
@@ -6343,8 +6297,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if (sum_norm2 == (float__t)0.0L)
            {
             error (v_stack[v_sp - 2].pos, "Division by zero");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
           v_stack[v_sp - 2].imval = -sum_i / sum_norm2;
@@ -6379,8 +6332,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
          {
           error (v_stack[v_sp - 2].pos, "Division by zero");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
          {
@@ -7187,16 +7139,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            error ("Variabale expected");
           else
            error (v_stack[v_sp - 2].pos, "Variabale expected");
-          result_fval = qnan;
-          return qnan;
+          return result_fval = qnan;
          }
         else
          {
           if (v_stack[v_sp - 2].var->tag == tsCONSTANT)
            {
             error (v_stack[v_sp - 2].pos, "assignment to constant");
-            result_fval = qnan;
-            return qnan;
+            return result_fval = qnan;
            }
           if ((v_stack[v_sp - 2].tag == tvMATRIX) && (v_stack[v_sp - 2].mval))
            register_mem (v_stack[v_sp - 2].mval);
@@ -7334,26 +7284,22 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toSOLVE: // solve function without '('
        error ("'(' expected");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
        break;
 
       case toRPAR: // )
        error ("mismatched ')'");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
 
       case toFUNC: // function without '('
        error ("'(' expected");
-       result_fval = qnan;
-       return qnan;
+       return result_fval = qnan;
 
       case toLPAR: // (
        if (oper != toRPAR)
         {
          error ("')' expected");
-         result_fval = qnan;
-         return qnan;
+         return result_fval = qnan;
         }
 
        if (o_stack[o_sp - 1] == toSOLVE)
@@ -7369,8 +7315,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (n_args != 1)
                {
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               if (v_stack[v_sp - 1].tag == tvSOLVE)
                {
@@ -7383,8 +7328,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               else
                {
                 error (v_stack[v_sp - 1].pos, "Expression expected");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
              }
              break;
@@ -7394,8 +7338,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (n_args != 1)
                {
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               if (v_stack[v_sp - 1].tag == tvINTEGR)
                {
@@ -7410,8 +7353,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               else
                {
                 error (v_stack[v_sp - 1].pos, "Expression expected");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
              }
              break;
@@ -7421,8 +7363,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (n_args != 1)
                {
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               if (v_stack[v_sp - 1].tag == tvFOR)
                {
@@ -7431,8 +7372,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 else
                  {
                   //error (v_stack[v_sp - 1].pos, "Error in 'for'");
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
                }
              }
@@ -7441,11 +7381,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsDIFF: // float f(str equation)
              {
               const uint32_t masks[] = { 0, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (v_stack[v_sp - 1].tag == tvDIFF)
                {
                 const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
@@ -7459,8 +7395,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               else
                {
                 error (v_stack[v_sp - 1].pos, "Expression expected");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
              }
              break;
@@ -7489,17 +7424,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsFFUNCM: // float f(matrix x)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag != tvMATRIX)
                {
                 error (v_stack[v_sp - 1].pos, "Matrix operand required");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               v_stack[v_sp - 2].fval
                   = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
@@ -7510,8 +7440,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
                 else
                  error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               v_stack[v_sp - 2].tag = tvFLOAT;
               v_sp -= 1;
@@ -7522,17 +7451,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag != tvMATRIX || v_stack[v_sp - 2].tag != tvMATRIX)
                {
                 error (v_stack[v_sp - 2].pos, "Matrix operand required");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
 
               bool res = ((bool (*) (void *, value &, value &, value &))sym->func) (
@@ -7543,8 +7467,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
                 else
                  error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               v_sp -= 2;
              }
@@ -7554,11 +7477,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               bool res = ((bool (*) (void *, value &, int, int))sym->func) (
                   (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival, v_stack[v_sp - 1].ival);
@@ -7568,8 +7487,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
                 else
                  error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
 
               v_sp -= 2;
@@ -7578,12 +7496,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsVFUNC1: // float or complex f(x|z)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              uint32_t masks[] = { MSK_ERR | MSK_STR , 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               if (sym->fidx == vf_abs && v_stack[v_sp - 1].tag == tvMATRIX)
                {
@@ -7593,12 +7507,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 break;
                }
 
-              if (v_stack[v_sp - 1].tag == tvMATRIX)
-               {
-                error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-                result_fval = qnan;
-                return qnan;
-               }
+             if (v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+               return result_fval = qnan;
+              }
 
               ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                              sym->fidx);
@@ -7610,11 +7523,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               ((void (*) (value *, value *, value *, int))sym->func) (
                   &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
@@ -7625,11 +7534,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              case tsFFUNCI1: // float f(int x) (float() function)
               {
                const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-               if (!CheckFnArgs (n_args, 1, masks))
-                {
-                 result_fval = qnan;
-                 return qnan;
-                }
+               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
                v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
                v_stack[v_sp - 2].tag  = tvFLOAT;
@@ -7640,11 +7545,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsIFUNCF1: // int f(float x) (wrgb() function)
               {
                const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-               if (!CheckFnArgs (n_args, 1, masks))
-                {
-                 result_fval = qnan;
-                 return qnan;
-                }
+               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                v_stack[v_sp - 2].ival
                    = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
                v_stack[v_sp - 2].tag = tvINT;
@@ -7655,38 +7556,23 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsSFUNCF1: // str f(float x) (winf())
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
-              {
-               const char *resStr
-                   = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
-               strncpy (sres, resStr ? resStr : "", STRBUF - 1);
-               sres[STRBUF - 1] = '\0';
-               if (sres[0])
-                {
-                 fflags |= STR;
-                }
-               v_stack[v_sp - 2].sval = dupString (sres);
-               v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
-               v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
-               v_stack[v_sp - 2].tag  = tvSTR;
-              }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              const char *resStr = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
+              strncpy (sres, resStr ? resStr : "", STRBUF - 1);
+              sres[STRBUF - 1] = '\0';
+              if (sres[0]) fflags |= STR;
+              v_stack[v_sp - 2].sval = dupString (sres);
+              v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
+              v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
+              v_stack[v_sp - 2].tag  = tvSTR;
               v_sp -= 1;
              }
              break;
 
             case tsIFUNC1: // int f(int x) (int() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                   0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               v_stack[v_sp - 2].ival = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
@@ -7697,11 +7583,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
                   v_stack[v_sp - 2].get_int (), v_stack[v_sp - 1].get_int ());
@@ -7713,11 +7595,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsFFUNC1: // float f(float x) (sing(x) function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               v_stack[v_sp - 2].fval
                   = (*(float__t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
@@ -7730,11 +7608,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
                   v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
@@ -7748,11 +7622,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,  
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX };
-              if (!CheckFnArgs (n_args, 3, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag == tvPERCENT) v_stack[v_sp - 1].fval /= ((float__t)100.0);
 
@@ -7767,8 +7637,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              if (n_args < 1)
               {
                error (v_stack[v_sp - n_args - 1].pos, "Function should take one or more arguments");
-               result_fval = qnan;
-               return qnan;
+               return result_fval = qnan;
               }
 
              (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prn(...)
@@ -7794,16 +7663,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (n_args < 2)
                {
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take two or more arguments");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
 
               if ((v_stack[v_sp - n_args].tag != tvSTR)
                   && (v_stack[v_sp - n_args + 1].tag != tvSTR))
                {
                 error (v_stack[v_sp - n_args].pos, "String operands required");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
 
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
@@ -7822,11 +7689,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                             // prec() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               v_stack[v_sp - 2].ival = (*(int_t (*) (void *, int_t))sym->func) (
                   (void *)this, v_stack[v_sp - 1].get_int ());
@@ -7837,28 +7700,19 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCF2: //  f(str, val) (const())
              {
-              const uint32_t masks[] = { MSK_ERR,
-                                         MSK_ERR, 0 };
-              if (!CheckFnArgs (n_args, 2, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0 };
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 2].tag != tvSTR)
                {
                 error (v_stack[v_sp - 2].pos, "String operand required");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
 
               bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
                   ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
-              if (!res)
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!res) return result_fval = qnan;
+
               v_stack[v_sp - 3] = v_stack[v_sp - 1];
               v_sp -= 2;
              }
@@ -7867,17 +7721,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsSIFUNC1: // int f(char *str) (datatime() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks))
-               {
-                result_fval = qnan;
-                return qnan;
-               }
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag != tvSTR)
                {
                 error (v_stack[v_sp - 1].pos, "String operand required");
-                result_fval = qnan;
-                return qnan;
+                return result_fval = qnan;
                }
               v_stack[v_sp - 2].ival
                   = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
@@ -7904,8 +7753,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (!child)
                  {
                   errorf (pos, "Out of memory");
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
 
                 const char *funcdef = (const char *)sym->func;
@@ -7914,8 +7762,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  {
                   errorf (pos, "No '(' in function definition");
                   delete child;
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
                 p++; // after '('
 
@@ -7938,8 +7785,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, "Empty parameter name");
                     delete child;
-                    result_fval = qnan;
-                    return qnan;
+                    return result_fval = qnan;
                    }
                   // Add variable
                   if (arg_idx >= n_args)
@@ -7947,15 +7793,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, 
                         "Too many parameters in function definition");
                     delete child;
-                    result_fval = qnan;
-                    return qnan;
+                    return result_fval = qnan;
                    }
                   if (((v_stack[v_sp - n_args + arg_idx].tag == tvERR)))
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, "Undefined operand");
                     delete child;
-                    result_fval = qnan;
-                    return qnan;
+                    return result_fval = qnan;
                    }
                   child->addvar (vbuf, v_stack[v_sp - n_args + arg_idx]);
                   arg_idx++;
@@ -7976,16 +7820,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, 
                             "Invalid character in parameter list");
                     delete child;
-                    result_fval = qnan;
-                    return qnan;
+                    return result_fval = qnan;
                    }
                  }
                 if (*p != ')')
                  {
                   errorf (v_stack[v_sp - n_args + arg_idx].pos, "No closing ')' in function definition");
                   delete child;
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
                 p++; // after ')'
 
@@ -7993,8 +7835,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  {
                   errorf (v_stack[v_sp - n_args - 1].pos, "Function should take %d argument(s)", arg_idx);
                   delete child;
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
 
                 // Rest of the string — expression
@@ -8008,8 +7849,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  {
                   errorf (v_stack[v_sp - n_args - 1].pos, "%s", child->error());
                   delete child;
-                  result_fval = qnan;
-                  return qnan;
+                  return result_fval = qnan;
                  }
 
                 v_stack[v_sp - n_args - 1].tag = tvFLOAT;
@@ -8042,8 +7882,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                      {
                       errorf (v_stack[v_sp - n_args - 1].pos, "Out of memory");
                       delete child;
-                      result_fval = qnan;
-                      return qnan;
+                      return result_fval = qnan;
                      }
                    }
                  }
@@ -8069,8 +7908,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        else if (n_args != 1)
         {
          error ("Function call expected");
-         result_fval = qnan;
-         return qnan;
+         return result_fval = qnan;
         }
        goto next_token;
       default:
@@ -8080,8 +7918,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
    if (o_sp == max_stack_size)
     {
      error ("operator stack overflow");
-     result_fval = qnan;
-     return qnan;
+     return result_fval = qnan;
     }
    o_stack[o_sp++] = oper;
   }

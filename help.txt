@@ -167,7 +167,6 @@ calc(z^2+z+1, z:=0+1i)  (1)             |1|(90`0'0") 0+1i
 solve(expr, var:=est) expr is the left side of the equation, 
 expr(var)=0, est is the first approximation of the root.
 
-
         Data formats:
 Hex                 0x1000, $1000               4096
 Octal               01000, 0o1000               512
@@ -266,7 +265,6 @@ i, j            0+1i                    √-1
 phi             1.618033988749895       Golden ratio
 
 Imperial and other:
-
 Distance:
 inch            0.0254                  Inch (m)
 mil             2.54e-05                1/1000Inch (m)
@@ -413,7 +411,7 @@ maxu32, maxuint     Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
 max64, maxlong      Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
 maxu64, maxulong    Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
 
-Floating point parameters
+Floating point parameters:
 fp_dig              Significant decimal digits
 fp_mant_dig         Bits in the mantissa
 fp_max_exp          Maximum exponent (base 2)

@@ -93,3 +93,5 @@ obj/
 Release/
 WinApiCalc/
 x64/
+BCB/*.exe
+gcc_release/calclib.dll

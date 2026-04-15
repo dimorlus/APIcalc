@@ -4,8 +4,8 @@
 + The const("name", value) and var("name", value) functions can now accept any value type 
   (including complex, matrix, and string), creating a corresponding object with the specified 
   name.
-* Code duplication when parsing function arguments has been eliminated, and error diagnostics 
-  have been expanded.
+* Code duplication when parsing operators and functions arguments has been eliminated, and 
+  error diagnostics have been expanded.
 
 14.04.26 (2.176)
 * Cosmetic changes.

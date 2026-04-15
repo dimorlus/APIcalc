@@ -772,7 +772,10 @@ class calculator // calculator represents the main class for the expression calc
  inline void error (const char *msg) { error (pos - 1, msg); } // Report an error at the current position with 
                                                                //the specified message
 
- bool CheckFnArgs (int n_args, int expected_args, uint32_t mask[3]);
+ bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3]);
+ bool CheckOpArgs (int n_args, const uint32_t mask[2]);
+ bool isMxIdx1 ();
+ bool isMxIdx2 ();
 
  // Format checking and conversion
  bool isCMP (char *&fpos); // Check if the current position is a computing format

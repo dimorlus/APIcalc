@@ -5584,7 +5584,7 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
  return mrSKIP;
 }
 
-bool calculator::CheckFnArgs (int n_args, int expected_args, uint32_t mask[3])
+bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3])
 {
  if (n_args != expected_args)
   {
@@ -5631,6 +5631,60 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, uint32_t mask[3])
      }
   }
  return true;
+}
+
+bool calculator::CheckOpArgs (int n_args, const uint32_t mask[2])
+{
+ for (int i = 0; i < n_args; i++)
+  {
+   t_value tag = v_stack[v_sp - 1 - i].tag;
+   int pos     = v_stack[v_sp - 1 - i].pos;
+   if ((1<<tag) & mask[i]) // invalid type for this operand
+     {
+      switch (tag)
+       {
+        case tvERR:
+         error (pos, "Undefined operand");
+        break;
+        case tvCOMPLEX:
+         error (pos, "Illegal complex operand");
+        break;
+        case tvSTR:
+         error (pos, "Illegal string operand");
+        break;
+        case tvMATRIX:
+         error (pos, "Illegal matrix operand");
+        break;
+        default:
+         error (pos, "Invalid operand type");
+        break;
+       }
+      return false; 
+     }
+  }
+ return true;
+}
+
+bool calculator::isMxIdx1()
+{
+ if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+      v_stack[v_sp - 1].mval && 
+      v_stack[v_sp - 1].mcols + 
+      v_stack[v_sp - 1].mrows)) return true;
+ else return false;
+}
+
+bool calculator::isMxIdx2 ()
+{
+ if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
+      v_stack[v_sp - 1].mval && 
+      v_stack[v_sp - 1].mcols + 
+      v_stack[v_sp - 1].mrows) || 
+     (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+      v_stack[v_sp - 2].mval && 
+      v_stack[v_sp - 2].mcols + 
+      v_stack[v_sp - 2].mrows)) return true;
+ else return false;
 }
 
 // Evaluate the given expression and return the result as a floating-point value. The expression is
@@ -5920,40 +5974,35 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toADD:    // +
       case toSETADD: // +=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else
-       if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
-        {
-         v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         int_t new_len = strlen (v_stack[v_sp - 2].sval) + strlen (v_stack[v_sp - 1].sval) + 1;
-         if (new_len > STRBUF-1)
-          {
-           error (v_stack[v_sp - 2].pos, "Resulting string is too long");
-           result_fval = qnan;
-           return qnan;
-          }
+       {
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR};
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
+         {
+          v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 2].tag == tvSTR))
+         {
+          int_t new_len = strlen (v_stack[v_sp - 2].sval) + strlen (v_stack[v_sp - 1].sval) + 1;
+          if (new_len > STRBUF - 1)
+           {
+            error (v_stack[v_sp - 2].pos, "Resulting string is too long");
+            result_fval = qnan;
+            return qnan;
+           }
           {
            char *new_s = (char *)sf_alloc (new_len);
            if (!new_s)
@@ -5966,1696 +6015,1321 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            strcat (new_s, v_stack[v_sp - 1].sval);
            v_stack[v_sp - 2].sval = new_s;
           }
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
-         v_stack[v_sp - 2].fval += v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 2].tag = tvCOMPLEX;
-        }
-       else
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left = v_stack[v_sp - 2].get ();
-           float__t right = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = left + (left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag  = tvFLOAT;
-          }
-         else
-          {
-           v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
-           v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () + v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
-           v_stack[v_sp - 2].tag = tvFLOAT;
-          }
-         if (v_stack[v_sp - 2].imval != 0)
+         }
+        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
+         {
+          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+          result_fval = qnan;
+          return qnan;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+         {
+          v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
+          v_stack[v_sp - 2].fval += v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
           v_stack[v_sp - 2].tag = tvCOMPLEX;
-         else
-          v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       v_sp -= 1;
-       if (cop == toSETADD)
-        {
-         if (!set_op ())
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+         }
+        else
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = left + (left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else
+           {
+            v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
+            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () + v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].imval += v_stack[v_sp - 1].imval;
+            v_stack[v_sp - 2].tag = tvFLOAT;
+           }
+          if (v_stack[v_sp - 2].imval != 0)
+           v_stack[v_sp - 2].tag = tvCOMPLEX;
+          else
+           v_stack[v_sp - 2].tag = tvFLOAT;
+         }
+        v_sp -= 1;
+        if (cop == toSETADD)
+         {
+          if (!set_op ())
+           {
+            result_fval = qnan;
+            return qnan;
+           }
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toSUB:    // -
       case toSETSUB: // -=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else
-       if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
-        {
-         v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
-         v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 2].tag = tvCOMPLEX;
-        }
-       else
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left = v_stack[v_sp - 2].get ();
-           float__t right = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = left - (left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag  = tvFLOAT;
-          }
-         else
-          {
-           v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () - v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
-           v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
-           v_stack[v_sp - 2].tag = tvFLOAT;
-          }
-         if (v_stack[v_sp - 2].imval != 0)
+       {
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
+         {
+          error (v_stack[v_sp - 2].pos, "Illegal string operation");
+          result_fval = qnan;
+          return qnan;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
+         {
+          v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+         {
+          v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
+          v_stack[v_sp - 2].fval -= v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
           v_stack[v_sp - 2].tag = tvCOMPLEX;
-         else
-          v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       v_sp -= 1;
-       if (cop == toSETSUB)
-        {
-         if (!set_op ()) 
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+         }
+        else
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = left - (left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else
+           {
+            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () - v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].ival -= v_stack[v_sp - 1].ival;
+            v_stack[v_sp - 2].imval -= v_stack[v_sp - 1].imval;
+            v_stack[v_sp - 2].tag = tvFLOAT;
+           }
+          if (v_stack[v_sp - 2].imval != 0)
+           v_stack[v_sp - 2].tag = tvCOMPLEX;
+          else
+           v_stack[v_sp - 2].tag = tvFLOAT;
+         }
+        v_sp -= 1;
+        if (cop == toSETSUB)
+         {
+          if (!set_op ())
+           {
+            result_fval = qnan;
+            return qnan;
+           }
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
-      case toMUL:    // *
-      case toSETMUL: // *=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+       case toMUL:    // *
+       case toSETMUL: // *=
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
+         const uint32_t masks[] = { MSK_ERR|MSK_STR, MSK_ERR|MSK_STR };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else
-       if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
-        {
-         v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
-         v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () * v_stack[v_sp - 1].get ();
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-                || ((v_stack[v_sp - 1].imval != (float__t)0.0) || (v_stack[v_sp - 2].imval != (float__t)0.0)))
-        {
-         // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
+         {
+          v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
+          v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () * v_stack[v_sp - 1].get ();
+         }
+        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                 || ((v_stack[v_sp - 1].imval != (float__t)0.0)
+                     || (v_stack[v_sp - 2].imval != (float__t)0.0)))
+         {
+          // (a + bi) * (c + di) = (ac - bd) + (ad + bc)i
 
-         float__t a = v_stack[v_sp - 2].get ();
-         float__t b = v_stack[v_sp - 2].imval; //  a + bi
-         float__t c = v_stack[v_sp - 1].get ();
-         float__t d = v_stack[v_sp - 1].imval; //  c + di
+          float__t a = v_stack[v_sp - 2].get ();
+          float__t b = v_stack[v_sp - 2].imval; //  a + bi
+          float__t c = v_stack[v_sp - 1].get ();
+          float__t d = v_stack[v_sp - 1].imval; //  c + di
 
-         v_stack[v_sp - 2].fval  = a * c - b * d;
-         v_stack[v_sp - 2].imval = a * d + b * c;
-         v_stack[v_sp - 2].tag   = tvCOMPLEX;
-        }
-       else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left          = v_stack[v_sp - 2].get ();
-           float__t right         = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = left * (left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag  = tvFLOAT;
-          }
-         else
-          {
-           v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () * v_stack[v_sp - 1].get ();
-          }
-         v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       v_sp -= 1;
-       if (cop == toSETMUL)
-        {
-         if (!set_op ())
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+          v_stack[v_sp - 2].fval  = a * c - b * d;
+          v_stack[v_sp - 2].imval = a * d + b * c;
+          v_stack[v_sp - 2].tag   = tvCOMPLEX;
+         }
+        else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = left * (left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else
+           {
+            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () * v_stack[v_sp - 1].get ();
+           }
+          v_stack[v_sp - 2].tag = tvFLOAT;
+         }
+        v_sp -= 1;
+        if (cop == toSETMUL)
+         {
+          if (!set_op ()) return result_fval = qnan;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toDIV:    // /
       case toSETDIV: // /=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-                || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
-        {
-         // (a + bi) / (c + di) = [(ac + bd) + (bc - ad)i] / (c^2 + d^2)
-         float__t a     = v_stack[v_sp - 2].get ();
-         float__t b     = v_stack[v_sp - 2].imval;
-         float__t c     = v_stack[v_sp - 1].get ();
-         float__t d     = v_stack[v_sp - 1].imval;
-         float__t denom = c * c + d * d;
-         if (denom == (float__t)0.0L)
-          {
-           error (v_stack[v_sp - 2].pos, "Division by zero");
-           result_fval = qnan;
-           return qnan;
-          }
-         v_stack[v_sp - 2].fval  = (a * c + b * d) / denom;
-         v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
-         v_stack[v_sp - 2].tag   = tvCOMPLEX;
-        }
-       else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
-        {
-         error (v_stack[v_sp - 2].pos, "Division by zero");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;
-         v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left = v_stack[v_sp - 2].get ();
-           float__t right = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = left / (left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag = tvFLOAT;
-          }
-         else
-          {
-           v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
-          }
-         v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       v_sp -= 1;
-       if (cop == toSETDIV)
-        {
-         if (!set_op ())
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                 || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
+         {
+          // (a + bi) / (c + di) = [(ac + bd) + (bc - ad)i] / (c^2 + d^2)
+          float__t a     = v_stack[v_sp - 2].get ();
+          float__t b     = v_stack[v_sp - 2].imval;
+          float__t c     = v_stack[v_sp - 1].get ();
+          float__t d     = v_stack[v_sp - 1].imval;
+          float__t denom = c * c + d * d;
+          if (denom == (float__t)0.0L)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero");
+            result_fval = qnan;
+            return qnan;
+           }
+          v_stack[v_sp - 2].fval  = (a * c + b * d) / denom;
+          v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
+          v_stack[v_sp - 2].tag   = tvCOMPLEX;
+         }
+        else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
+         {
+          error (v_stack[v_sp - 2].pos, "Division by zero");
+          result_fval = qnan;
+          return qnan;
+         }
+        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;
+          v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = left / (left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else
+           {
+            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
+           }
+          v_stack[v_sp - 2].tag = tvFLOAT;
+         }
+        v_sp -= 1;
+        if (cop == toSETDIV)
+         {
+          if (!set_op ())
+           {
+            result_fval = qnan;
+            return qnan;
+           }
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPAR: // // parallel resistors
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].get () == (float__t)0.0L) || (v_stack[v_sp - 2].get () == (float__t)0.0L))
-        {
-         error (v_stack[v_sp - 2].pos, "Division by zero");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].tag == tvPERCENT)
-        {
-         float__t left = v_stack[v_sp - 2].get ();
-         float__t right = v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].fval = 1 / (1 / left + 1 / (left * right / ((float__t)100.0)));
-         v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-                || ((v_stack[v_sp - 1].imval != (float__t)0.0) || (v_stack[v_sp - 2].imval != (float__t)0.0)))
-        {
-         float__t ar = v_stack[v_sp - 2].get ();
-         float__t ai = v_stack[v_sp - 2].imval;
-         float__t br = v_stack[v_sp - 1].get ();
-         float__t bi = v_stack[v_sp - 1].imval;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
-         // 1/a
-         float__t a_norm2 = ar * ar + ai * ai;
-         if (a_norm2 == (float__t)0.0L)
-          {
-           error (v_stack[v_sp - 2].pos, "Division by zero");
-           result_fval = qnan;
-           return qnan;
-          }
-         float__t inv_a_r = ar / a_norm2;
-         float__t inv_a_i = -ai / a_norm2;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          result_fval = qnan;
+          return qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].get () == (float__t)0.0L)
+                 || (v_stack[v_sp - 2].get () == (float__t)0.0L))
+         {
+          error (v_stack[v_sp - 2].pos, "Division by zero");
+          result_fval = qnan;
+          return qnan;
+         }
+        if (v_stack[v_sp - 1].tag == tvPERCENT)
+         {
+          float__t left          = v_stack[v_sp - 2].get ();
+          float__t right         = v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].fval = 1 / (1 / left + 1 / (left * right / ((float__t)100.0)));
+          v_stack[v_sp - 2].tag  = tvFLOAT;
+         }
+        else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+                 || ((v_stack[v_sp - 1].imval != (float__t)0.0)
+                     || (v_stack[v_sp - 2].imval != (float__t)0.0)))
+         {
+          float__t ar = v_stack[v_sp - 2].get ();
+          float__t ai = v_stack[v_sp - 2].imval;
+          float__t br = v_stack[v_sp - 1].get ();
+          float__t bi = v_stack[v_sp - 1].imval;
 
-         // 1/b
-         float__t b_norm2 = br * br + bi * bi;
-         if (b_norm2 == (float__t)0.0L)
-          {
-           error (v_stack[v_sp - 2].pos, "Division by zero");
-           result_fval = qnan;
-           return qnan;
-          }
-         float__t inv_b_r = br / b_norm2;
-         float__t inv_b_i = -bi / b_norm2;
+          // 1/a
+          float__t a_norm2 = ar * ar + ai * ai;
+          if (a_norm2 == (float__t)0.0L)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero");
+            result_fval = qnan;
+            return qnan;
+           }
+          float__t inv_a_r = ar / a_norm2;
+          float__t inv_a_i = -ai / a_norm2;
 
-         // sum = 1/a + 1/b
-         float__t sum_r = inv_a_r + inv_b_r;
-         float__t sum_i = inv_a_i + inv_b_i;
+          // 1/b
+          float__t b_norm2 = br * br + bi * bi;
+          if (b_norm2 == (float__t)0.0L)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero");
+            result_fval = qnan;
+            return qnan;
+           }
+          float__t inv_b_r = br / b_norm2;
+          float__t inv_b_i = -bi / b_norm2;
 
-         // 1 / sum
-         float__t sum_norm2 = sum_r * sum_r + sum_i * sum_i;
-         if (sum_norm2 == (float__t)0.0L)
-          {
-           error (v_stack[v_sp - 2].pos, "Division by zero");
-           result_fval = qnan;
-           return qnan;
-          }
-         v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
-         v_stack[v_sp - 2].imval = -sum_i / sum_norm2;
-         v_stack[v_sp - 2].tag   = tvCOMPLEX;
-        }
-       else
-        v_stack[v_sp - 2].fval = 1 / (1 / v_stack[v_sp - 1].get () + 1 / v_stack[v_sp - 2].get ());
-       v_stack[v_sp - 2].tag = tvFLOAT;
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+          // sum = 1/a + 1/b
+          float__t sum_r = inv_a_r + inv_b_r;
+          float__t sum_i = inv_a_i + inv_b_i;
+
+          // 1 / sum
+          float__t sum_norm2 = sum_r * sum_r + sum_i * sum_i;
+          if (sum_norm2 == (float__t)0.0L)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero");
+            result_fval = qnan;
+            return qnan;
+           }
+          v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
+          v_stack[v_sp - 2].imval = -sum_i / sum_norm2;
+          v_stack[v_sp - 2].tag   = tvCOMPLEX;
+         }
+        else
+         v_stack[v_sp - 2].fval = 1 / (1 / v_stack[v_sp - 1].get () + 1 / v_stack[v_sp - 2].get ());
+        v_stack[v_sp - 2].tag = tvFLOAT;
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPERCENT: // %
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
-        {
-         error (v_stack[v_sp - 2].pos, "Division by zero");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].tag == tvPERCENT)
-        {
-         float__t left = v_stack[v_sp - 2].get ();
-         float__t right = v_stack[v_sp - 1].get ();
-         right = left * right / ((float__t)100.0);
-         v_stack[v_sp - 2].fval = ((float__t)100.0) * (left - right) / right;
-         v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       else
-        {
-         float__t left = v_stack[v_sp - 2].get ();
-         float__t right = v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].fval = ((float__t)100.0) * (left - right) / right;
-        }
-       v_stack[v_sp - 2].tag = tvFLOAT;
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
+         {
+          error (v_stack[v_sp - 2].pos, "Division by zero");
+          result_fval = qnan;
+          return qnan;
+         }
+        if (v_stack[v_sp - 1].tag == tvPERCENT)
+         {
+          float__t left          = v_stack[v_sp - 2].get ();
+          float__t right         = v_stack[v_sp - 1].get ();
+          right                  = left * right / ((float__t)100.0);
+          v_stack[v_sp - 2].fval = ((float__t)100.0) * (left - right) / right;
+          v_stack[v_sp - 2].tag  = tvFLOAT;
+         }
+        else
+         {
+          float__t left          = v_stack[v_sp - 2].get ();
+          float__t right         = v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].fval = ((float__t)100.0) * (left - right) / right;
+         }
+        v_stack[v_sp - 2].tag = tvFLOAT;
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toMOD:    // %
       case toSETMOD: // %=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         FmodC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, 
-                v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
-                v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
-         v_stack[v_sp - 2].tag = tvCOMPLEX;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].get () == 0.0)
-        {
-         error (v_stack[v_sp - 2].pos, "Division by zero");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival %= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left = v_stack[v_sp - 2].get ();
-           float__t right = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = Fmod (left, left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag = tvFLOAT;
-          }
-         else
-          v_stack[v_sp - 2].fval = Fmod (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-         v_stack[v_sp - 2].tag = tvFLOAT;
-        }
-       v_sp -= 1;
-       if (cop == toSETMOD)
-        {
-         if (!set_op ()) 
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, 
+                                   MSK_ERR | MSK_STR};
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
+         {
+          FmodC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, v_stack[v_sp - 1].get (),
+                 v_stack[v_sp - 1].imval, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+          v_stack[v_sp - 2].tag = tvCOMPLEX;
+         }
+        else if (v_stack[v_sp - 1].get () == 0.0)
+         {
+          error (v_stack[v_sp - 2].pos, "Division by zero");
+          return result_fval = qnan;
+         }
+        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival %= v_stack[v_sp - 1].ival;
+         }
+        else
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = Fmod (left, left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else
+           v_stack[v_sp - 2].fval = Fmod (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+          v_stack[v_sp - 2].tag = tvFLOAT;
+         }
+        v_sp -= 1;
+        if (cop == toSETMOD)
+         {
+          if (!set_op ()) return result_fval = qnan;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPOW:    // ** ^
       case toSETPOW: // **= ^=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival
-             = (int_t)Pow ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
-        }
-       else
-        {
-         if (v_stack[v_sp - 1].tag == tvPERCENT)
-          {
-           float__t left = v_stack[v_sp - 2].get ();
-           float__t right = v_stack[v_sp - 1].get ();
-           v_stack[v_sp - 2].fval = Pow (left, left * right / ((float__t)100.0));
-           v_stack[v_sp - 2].tag = tvFLOAT;
-          }
-         else if (is_complex2 (&v_stack[v_sp - 2], &v_stack[v_sp - 1], vf_pow))
-          {
-           PowC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, 
-                 v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
-                 v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
-           v_stack[v_sp - 2].tag   = tvCOMPLEX;
-          }
-         else
-          {
-           v_stack[v_sp - 2].fval = Pow (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-           v_stack[v_sp - 2].tag  = tvFLOAT;
-          }
-        }
-       v_sp -= 1;
-       if (cop == toSETPOW)
-        {
-         if (!set_op ())
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival
+              = (int_t)Pow ((float__t)v_stack[v_sp - 2].ival, (float__t)v_stack[v_sp - 1].ival);
+         }
+        else
+         {
+          if (v_stack[v_sp - 1].tag == tvPERCENT)
+           {
+            float__t left          = v_stack[v_sp - 2].get ();
+            float__t right         = v_stack[v_sp - 1].get ();
+            v_stack[v_sp - 2].fval = Pow (left, left * right / ((float__t)100.0));
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+          else if (is_complex2 (&v_stack[v_sp - 2], &v_stack[v_sp - 1], vf_pow))
+           {
+            PowC (v_stack[v_sp - 2].get (), v_stack[v_sp - 2].imval, v_stack[v_sp - 1].get (),
+                  v_stack[v_sp - 1].imval, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+            v_stack[v_sp - 2].tag = tvCOMPLEX;
+           }
+          else
+           {
+            v_stack[v_sp - 2].fval = Pow (v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+            v_stack[v_sp - 2].tag  = tvFLOAT;
+           }
+         }
+        v_sp -= 1;
+        if (cop == toSETPOW)
+         {
+          if (!set_op ()) return result_fval = qnan;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toAND:    // &
       case toSETAND: // &=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival &= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () & v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETAND)
-        {
-         if (!set_op ()) 
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx2())
+         {
+          error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+          return result_fval = qnan;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival &= v_stack[v_sp - 1].ival;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () & v_stack[v_sp - 1].get_int ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        if (cop == toSETAND)
+         {
+          if (!set_op ()) return result_fval = qnan;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toOR:    // |
       case toSETOR: // |=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival |= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () | v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETOR)
-        {
-         if (!set_op ()) 
-          {
-           result_fval = qnan;
-           return qnan;
-          }
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx2())
+         {
+          error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+          return result_fval = qnan;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival |= v_stack[v_sp - 1].ival;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () | v_stack[v_sp - 1].get_int ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        if (cop == toSETOR)
+         {
+          if (!set_op ()) return result_fval = qnan;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
        case toMX_ELEM: // M[1,2]
-       if (((v_stack[v_sp - 1].tag == tvERR) || 
-            (v_stack[v_sp - 2].tag == tvERR)))
-        {   
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (((v_stack[v_sp - 1].tag == tvMX_ELEM) && 
-            (v_stack[v_sp - 2].tag == tvMATRIX)))
-        {
-         v_stack[v_sp - 2].tag   = tvFLOAT;
-         v_stack[v_sp - 2].icols = v_stack[v_sp - 1].icols;
-         v_stack[v_sp - 2].irows = v_stack[v_sp - 1].irows;
-         v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].fval;
-         v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
-        }
-       v_sp -= 1;
+       {
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR};
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+        if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+         {
+          error (v_stack[v_sp - 2].pos, "Undefined operand");
+          return result_fval = qnan;
+         }
+        if (((v_stack[v_sp - 1].tag == tvMX_ELEM) && (v_stack[v_sp - 2].tag == tvMATRIX)))
+         {
+          v_stack[v_sp - 2].tag   = tvFLOAT;
+          v_stack[v_sp - 2].icols = v_stack[v_sp - 1].icols;
+          v_stack[v_sp - 2].irows = v_stack[v_sp - 1].irows;
+          v_stack[v_sp - 2].fval  = v_stack[v_sp - 1].fval;
+          v_stack[v_sp - 2].imval = v_stack[v_sp - 1].imval;
+          v_stack[v_sp - 2].ival  = v_stack[v_sp - 1].ival;
+         }
+        v_sp -= 1;
+       }
        break;
 
       case toXOR:    // ^
-      case toSETXOR: // ^=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+       case toSETXOR: // ^=
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-                || (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                    v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival ^= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () ^ v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETXOR)
-        {
-         if (!set_op ())
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+         if (mr == mrERROR)
           {
-           result_fval = qnan;
-           return qnan;
+           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+           return result_fval = qnan;
           }
-         }
-       v_stack[v_sp - 1].var = nullptr;
+         else if (mr == mrDONE)
+          {
+           v_sp -= 1;
+           v_stack[v_sp - 1].var = nullptr;
+           break;
+          }
+         else if (isMxIdx2())
+          {
+           error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+           return result_fval = qnan;
+          }
+         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+          {
+           v_stack[v_sp - 2].ival ^= v_stack[v_sp - 1].ival;
+          }
+         else
+          {
+           v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () ^ v_stack[v_sp - 1].get_int ();
+           v_stack[v_sp - 2].tag  = tvINT;
+          }
+         v_sp -= 1;
+         if (cop == toSETXOR)
+          {
+           if (!set_op ()) return result_fval = qnan;
+          }
+         v_stack[v_sp - 1].var = nullptr;
+        }
        break;
 
       case toASL:    // <<
-      case toSETASL: // <<=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+       case toSETASL: // <<=
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && 
-                 v_stack[v_sp - 1].mcols + 
-                 v_stack[v_sp - 1].mrows) || 
-                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 2].mval && 
-                 v_stack[v_sp - 2].mcols + 
-                 v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival <<= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () << v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETASL)
-        {
-         if (!set_op ()) 
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+         if (mr == mrERROR)
           {
-           result_fval = qnan;
-           return qnan;
+           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+           return result_fval = qnan;
           }
+         else if (mr == mrDONE)
+          {
+           v_sp -= 1;
+           v_stack[v_sp - 1].var = nullptr;
+           break;
+          }
+         else if (isMxIdx2 ())
+          {
+           error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+           return result_fval = qnan;
+          }
+         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+          {
+           v_stack[v_sp - 2].ival <<= v_stack[v_sp - 1].ival;
+          }
+         else
+          {
+           v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () << v_stack[v_sp - 1].get_int ();
+           v_stack[v_sp - 2].tag  = tvINT;
+          }
+         v_sp -= 1;
+         if (cop == toSETASL)
+          {
+           if (!set_op ()) return result_fval = qnan;
+          }
+         v_stack[v_sp - 1].var = nullptr;
         }
-       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toASR:    // >>
-      case toSETASR: // >>=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+       case toSETASR: // >>=
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && 
-                 v_stack[v_sp - 1].mcols + 
-                 v_stack[v_sp - 1].mrows) || 
-                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 2].mval && 
-                 v_stack[v_sp - 2].mcols + 
-                 v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival >>= v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETASR)
-        {
-         if (!set_op ()) 
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+         if (mr == mrERROR)
           {
-           result_fval = qnan;
-           return qnan;
+           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+           return result_fval = qnan;
           }
+         else if (mr == mrDONE)
+          {
+           v_sp -= 1;
+           v_stack[v_sp - 1].var = nullptr;
+           break;
+          }
+         else if (isMxIdx2 ())
+          {
+           error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+           return result_fval = qnan;
+          }
+         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+          {
+           v_stack[v_sp - 2].ival >>= v_stack[v_sp - 1].ival;
+          }
+         else
+          {
+           v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
+           v_stack[v_sp - 2].tag  = tvINT;
+          }
+         v_sp -= 1;
+         if (cop == toSETASR)
+          {
+           if (!set_op ()) return result_fval = qnan;
+          }
+         v_stack[v_sp - 1].var = nullptr;
         }
-       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toLSR:    // >>> (logical shift right)
-      case toSETLSR: // >>>=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
+       case toSETLSR: // >>>=
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 1].mval && 
-                 v_stack[v_sp - 1].mcols + 
-                 v_stack[v_sp - 1].mrows)||
-                (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
-                 v_stack[v_sp - 2].mval && 
-                 v_stack[v_sp - 2].mcols + 
-                 v_stack[v_sp - 2].mrows))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = (unsigned_t)v_stack[v_sp - 2].ival >> v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = (unsigned_t)v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
-         v_stack[v_sp - 2].tag = tvINT;
-        }
-       v_sp -= 1;
-       if (cop == toSETLSR)
-        {
-         if (!set_op ()) 
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+
+         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+         if (mr == mrERROR)
           {
-           result_fval = qnan;
-           return qnan;
+           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+           return result_fval = qnan;
           }
+         else if (mr == mrDONE)
+          {
+           v_sp -= 1;
+           v_stack[v_sp - 1].var = nullptr;
+           break;
+          }
+         else if (isMxIdx2 ())
+          {
+           error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+           return result_fval = qnan;
+          }
+         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+          {
+           v_stack[v_sp - 2].ival = (unsigned_t)v_stack[v_sp - 2].ival >> v_stack[v_sp - 1].ival;
+          }
+         else
+          {
+           v_stack[v_sp - 2].ival = (unsigned_t)v_stack[v_sp - 2].get_int () >> v_stack[v_sp - 1].get_int ();
+           v_stack[v_sp - 2].tag = tvINT;
+          }
+         v_sp -= 1;
+         if (cop == toSETLSR)
+          {
+           if (!set_op ()) return result_fval = qnan;
+          }
+         v_stack[v_sp - 1].var = nullptr;
         }
-       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toEQ: // ==
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
         {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
+         const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+         if (mr == mrERROR)
+          {
+           errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+           return result_fval = qnan;
+          }
+         else if (mr == mrDONE)
+          {
+           v_sp -= 1;
+           v_stack[v_sp - 1].var = nullptr;
+           break;
+          }
+         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+          {
+           v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival == v_stack[v_sp - 1].ival;
+          }
+         else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+          {
+           v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) == 0);
+           v_stack[v_sp - 2].tag  = tvINT;
+          }
+         else
+          {
+           v_stack[v_sp - 2].ival = (v_stack[v_sp - 2].get () == v_stack[v_sp - 1].get ())
+                                    && (v_stack[v_sp - 2].imval == v_stack[v_sp - 1].imval);
+           v_stack[v_sp - 2].tag = tvINT;
+          }
          v_sp -= 1;
          v_stack[v_sp - 1].var = nullptr;
-         break;
         }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival == v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) == 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = (v_stack[v_sp - 2].get () == v_stack[v_sp - 1].get ())
-                                  && (v_stack[v_sp - 2].imval == v_stack[v_sp - 1].imval);
-         v_stack[v_sp - 2].tag = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
        break;
 
       case toNE: // !=, <>
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival != v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) != 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = (v_stack[v_sp - 2].get () != v_stack[v_sp - 1].get ())
-                                  || (v_stack[v_sp - 2].imval != v_stack[v_sp - 1].imval);
-         v_stack[v_sp - 2].tag = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival != v_stack[v_sp - 1].ival;
+         }
+        else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+         {
+          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) != 0);
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = (v_stack[v_sp - 2].get () != v_stack[v_sp - 1].get ())
+                                   || (v_stack[v_sp - 2].imval != v_stack[v_sp - 1].imval);
+          v_stack[v_sp - 2].tag = tvINT;
+         }
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toGT: // >
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival > v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) > 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () > v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival > v_stack[v_sp - 1].ival;
+         }
+        else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+         {
+          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) > 0);
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () > v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toGE: // >=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival >= v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) >= 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () >= v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival >= v_stack[v_sp - 1].ival;
+         }
+        else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+         {
+          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) >= 0);
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () >= v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toLT: // <
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival < v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) < 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () < v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival < v_stack[v_sp - 1].ival;
+         }
+        else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+         {
+          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) < 0);
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () < v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toLE: // <=
-       if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 2].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_sp -= 1;
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
-        {
-         error (v_stack[v_sp - 2].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival <= v_stack[v_sp - 1].ival;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
-        {
-         v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) <= 0);
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       else
-        {
-         v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () <= v_stack[v_sp - 1].get ();
-         v_stack[v_sp - 2].tag  = tvINT;
-        }
-       v_sp -= 1;
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        if (!CheckOpArgs (2, masks)) return result_fval = qnan;
+        mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 2].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_sp -= 1;
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].ival <= v_stack[v_sp - 1].ival;
+         }
+        else if (v_stack[v_sp - 1].tag == tvSTR && v_stack[v_sp - 2].tag == tvSTR)
+         {
+          v_stack[v_sp - 2].ival = (strcmp (v_stack[v_sp - 2].sval, v_stack[v_sp - 1].sval) <= 0);
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        else
+         {
+          v_stack[v_sp - 2].ival = v_stack[v_sp - 2].get () <= v_stack[v_sp - 1].get ();
+          v_stack[v_sp - 2].tag  = tvINT;
+         }
+        v_sp -= 1;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPREINC: //++v
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvFLOAT && // ++A[i,j]
-                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-        {
-         int row = v_stack[v_sp - 1].irows;
-         int col = v_stack[v_sp - 1].icols;
-         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT)
-        {
-         v_stack[v_sp - 1].ival += 1;
-        }
-       else
-        {
-         v_stack[v_sp - 1].fval += 1;
-        }
-       if (!set_op ())
-        {
-         result_fval = qnan;
-         return qnan;
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Operation is %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx1())
+         {
+          int row = v_stack[v_sp - 1].irows;
+          int col = v_stack[v_sp - 1].icols;
+          v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT)
+         {
+          v_stack[v_sp - 1].ival += 1;
+         }
+        else
+         {
+          v_stack[v_sp - 1].fval += 1;
+         }
+        if (!set_op ()) return result_fval = qnan;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPREDEC: // --v
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvFLOAT && // --A[i,j]
-                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-        {
-         int row = v_stack[v_sp - 1].irows;
-         int col = v_stack[v_sp - 1].icols;
-         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT)
-        {
-         v_stack[v_sp - 1].ival -= 1;
-        }
-       else
-        {
-         v_stack[v_sp - 1].fval -= ((float__t)1);
-        }
-       if (!set_op ()) 
-        {
-         result_fval = qnan;
-         return qnan;
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Operation is %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx1())
+         {
+          int row = v_stack[v_sp - 1].irows;
+          int col = v_stack[v_sp - 1].icols;
+          v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT)
+         {
+          v_stack[v_sp - 1].ival -= 1;
+         }
+        else
+         {
+          v_stack[v_sp - 1].fval -= ((float__t)1);
+         }
+        if (!set_op ()) return result_fval = qnan;
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPOSTINC: // v++
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]++
-                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-        {
-         int row = v_stack[v_sp - 1].irows;
-         int col = v_stack[v_sp - 1].icols;
-         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
-        }
-       else if (v_stack[v_sp - 1].var == nullptr)
-        {
-         error (v_stack[v_sp - 1].pos, "Varaibale expected");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].var->val.tag == tvINT)
-        {
-         v_stack[v_sp - 1].var->val.ival += 1;
-        }
-       else
-        {
-         v_stack[v_sp - 1].var->val.fval += ((float__t)1);
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Operation is %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx1())
+         {
+          int row = v_stack[v_sp - 1].irows;
+          int col = v_stack[v_sp - 1].icols;
+          v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] += (float__t)1.0L;
+         }
+        else if (v_stack[v_sp - 1].var == nullptr)
+         {
+          error (v_stack[v_sp - 1].pos, "Varaibale expected");
+          return result_fval = qnan;
+         }
+        if (v_stack[v_sp - 1].var->val.tag == tvINT)
+         {
+          v_stack[v_sp - 1].var->val.ival += 1;
+         }
+        else
+         {
+          v_stack[v_sp - 1].var->val.fval += ((float__t)1);
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toPOSTDEC: // v--
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else
-       if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]--
-           v_stack[v_sp - 1].mval && 
-           v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-        {
-         int row = v_stack[v_sp - 1].irows;
-         int col = v_stack[v_sp - 1].icols;
-         v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
-        }
-       else if (v_stack[v_sp - 1].var == nullptr)
-        {
-         error (v_stack[v_sp - 1].pos, "Varaibale expected");
-         result_fval = qnan;
-         return qnan;
-        }
-       if (v_stack[v_sp - 1].var->val.tag == tvINT)
-        {
-         v_stack[v_sp - 1].var->val.ival -= 1;
-        }
-       else
-        {
-         v_stack[v_sp - 1].var->val.fval -= ((float__t)1.0L);
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Operation is %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (isMxIdx1())
+         {
+          int row = v_stack[v_sp - 1].irows;
+          int col = v_stack[v_sp - 1].icols;
+          v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col] -= (float__t)1.0L;
+         }
+        else if (v_stack[v_sp - 1].var == nullptr)
+         {
+          error (v_stack[v_sp - 1].pos, "Varaibale expected");
+          return result_fval = qnan;
+         }
+        if (v_stack[v_sp - 1].var->val.tag == tvINT)
+         {
+          v_stack[v_sp - 1].var->val.ival -= 1;
+         }
+        else
+         {
+          v_stack[v_sp - 1].var->val.fval -= ((float__t)1.0L);
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toFACT: // n!
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         FactorialC (v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, 
-                     v_stack[v_sp - 1].fval,   v_stack[v_sp - 1].imval);
-         v_stack[v_sp - 1].tag   = tvCOMPLEX;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]!
-                v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 1].ival >= 0)
-        {
-         v_stack[v_sp - 1].ival = (int_t)Factorial ((float__t)v_stack[v_sp - 1].ival);
-        }
-       else
-        {
-         v_stack[v_sp - 1].fval = (float__t)Factorial ((float__t)v_stack[v_sp - 1].fval);
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Operation is %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
+         {
+          FactorialC (v_stack[v_sp - 1].get (), v_stack[v_sp - 1].imval, v_stack[v_sp - 1].fval,
+                      v_stack[v_sp - 1].imval);
+          v_stack[v_sp - 1].tag = tvCOMPLEX;
+         }
+        else if (isMxIdx1())
+         {
+          error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+          return result_fval = qnan;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 1].ival >= 0)
+         {
+          v_stack[v_sp - 1].ival = (int_t)Factorial ((float__t)v_stack[v_sp - 1].ival);
+         }
+        else
+         {
+          v_stack[v_sp - 1].fval = (float__t)Factorial ((float__t)v_stack[v_sp - 1].fval);
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toSET: // =, :=
-       if ((v_sp < 2) || (v_stack[v_sp - 2].var == nullptr))
-        {
-         if (v_sp < 2)
-          error ("Variabale expected");
-         else
-          error (v_stack[v_sp - 2].pos, "Variabale expected");
-         result_fval = qnan;
-         return qnan;
-        }
-       else
-        {
-         if (v_stack[v_sp - 2].var->tag == tsCONSTANT)
-          {
-           error (v_stack[v_sp - 2].pos, "assignment to constant");
-           result_fval = qnan;
-           return qnan;
-          }
-         if ((v_stack[v_sp - 2].tag == tvMATRIX) && (v_stack[v_sp - 2].mval))
+       {
+        if ((v_sp < 2) || (v_stack[v_sp - 2].var == nullptr))
+         {
+          if (v_sp < 2)
+           error ("Variabale expected");
+          else
+           error (v_stack[v_sp - 2].pos, "Variabale expected");
+          result_fval = qnan;
+          return qnan;
+         }
+        else
+         {
+          if (v_stack[v_sp - 2].var->tag == tsCONSTANT)
+           {
+            error (v_stack[v_sp - 2].pos, "assignment to constant");
+            result_fval = qnan;
+            return qnan;
+           }
+          if ((v_stack[v_sp - 2].tag == tvMATRIX) && (v_stack[v_sp - 2].mval))
            register_mem (v_stack[v_sp - 2].mval);
-         if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
+          if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
            register_mem (v_stack[v_sp - 1].mval);
-         // if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
-         register_mem (v_stack[v_sp - 2].sval);
-         register_mem (v_stack[v_sp - 1].sval);
+          // if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
+          register_mem (v_stack[v_sp - 2].sval);
+          register_mem (v_stack[v_sp - 1].sval);
 
-         // v_stack[v_sp - 2] := v_stack[v_sp - 1]
-         if (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j] := v
-             v_stack[v_sp - 2].mval &&
-             v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows)
-          {
-           int row = v_stack[v_sp - 2].irows;
-           int col = v_stack[v_sp - 2].icols;
-           v_stack[v_sp - 2].mval[row * v_stack[v_sp - 2].mcols + col] = v_stack[v_sp - 1].get();
-          }
-         else
-         if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
-          {
+          // v_stack[v_sp - 2] := v_stack[v_sp - 1]
+          if (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j] := v
+              v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows)
+           {
+            int row = v_stack[v_sp - 2].irows;
+            int col = v_stack[v_sp - 2].icols;
+            v_stack[v_sp - 2].mval[row * v_stack[v_sp - 2].mcols + col] = v_stack[v_sp - 1].get ();
+           }
+          else if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
+           {
+            v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
+            v_stack[v_sp - 2].tag = tvSTR;
+           }
+          else
            v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
-           v_stack[v_sp - 2].tag = tvSTR;
-          }
-         else
-          v_stack[v_sp - 2] = v_stack[v_sp - 2].var->val = v_stack[v_sp - 1];
-        }
-       v_sp -= 1;
+         }
+        v_sp -= 1;
+       }
        break;
 
       case toNOT: // !
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvCOMPLEX)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal complex operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT)
-        {
-         v_stack[v_sp - 1].ival = (v_stack[v_sp - 1].ival == 0) ? 1 : 0;
-        }
-       else
-        {
-         v_stack[v_sp - 1].ival = (v_stack[v_sp - 1].fval == ((float__t)0.0)) ? 1 : 0;
-         v_stack[v_sp - 1].tag  = tvINT;
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT)
+         {
+          v_stack[v_sp - 1].ival = (v_stack[v_sp - 1].ival == 0) ? 1 : 0;
+         }
+        else
+         {
+          v_stack[v_sp - 1].ival = (v_stack[v_sp - 1].fval == ((float__t)0.0)) ? 1 : 0;
+          v_stack[v_sp - 1].tag  = tvINT;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toMINUS: // -v
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else
        {
-        v_stack[v_sp - 1].ival = -v_stack[v_sp - 1].ival;
-        v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
-        v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else
+         {
+          v_stack[v_sp - 1].ival  = -v_stack[v_sp - 1].ival;
+          v_stack[v_sp - 1].fval  = -v_stack[v_sp - 1].fval;
+          v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
+         }
+        v_stack[v_sp - 1].var = nullptr;
        }
+       break;
 
       case toPLUS: //+v
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else
          v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvSTR))
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else
-        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toCOM: // ~
-       if (((v_stack[v_sp - 1].tag == tvERR)))
-        {
-         error (v_stack[v_sp - 1].pos, "Undefined operand");
-         result_fval = qnan;
-         return qnan;
-        }
-       mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
-       if (mr == mrERROR)
-        {
-         errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-         result_fval = qnan;
-         return qnan;
-        }
-       else if (mr == mrDONE)
-        {
-         v_stack[v_sp - 1].var = nullptr;
-         break;
-        }
-       else if (v_stack[v_sp - 1].tag == tvSTR)
-        {
-         error (v_stack[v_sp - 1].pos, "Illegal string operation");
-         result_fval = qnan;
-         return qnan;
-        }
-       else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 1].imval != 0.0))
-        {
-         v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
-         v_stack[v_sp - 1].tag   = tvCOMPLEX;
-        }
-       else if (v_stack[v_sp - 1].tag == tvINT)
-        {
-         v_stack[v_sp - 1].ival = ~v_stack[v_sp - 1].ival;
-        }
-       else
-        {
-         v_stack[v_sp - 1].ival = ~(uint64_t)v_stack[v_sp - 1].fval;
-         v_stack[v_sp - 1].tag  = tvINT;
-        }
-       v_stack[v_sp - 1].var = nullptr;
+       {
+        const uint32_t masks[] = { MSK_ERR | MSK_STR, 0 };
+        if (!CheckOpArgs (1, masks)) return result_fval = qnan;
+        mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
+        if (mr == mrERROR)
+         {
+          errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+          return result_fval = qnan;
+         }
+        else if (mr == mrDONE)
+         {
+          v_stack[v_sp - 1].var = nullptr;
+          break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 1].imval != 0.0))
+         {
+          v_stack[v_sp - 1].imval = -v_stack[v_sp - 1].imval;
+          v_stack[v_sp - 1].tag   = tvCOMPLEX;
+         }
+        else if (v_stack[v_sp - 1].tag == tvINT)
+         {
+          v_stack[v_sp - 1].ival = ~v_stack[v_sp - 1].ival;
+         }
+        else
+         {
+          v_stack[v_sp - 1].ival = ~(uint64_t)v_stack[v_sp - 1].fval;
+          v_stack[v_sp - 1].tag  = tvINT;
+         }
+        v_stack[v_sp - 1].var = nullptr;
+       }
        break;
 
       case toSOLVE: // solve function without '('
@@ -7766,7 +7440,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsDIFF: // float f(str equation)
              {
-              uint32_t masks[] = { 0, 0, 0 };
+              const uint32_t masks[] = { 0, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;
@@ -7814,7 +7488,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             {
             case tsFFUNCM: // float f(matrix x)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;
@@ -7846,8 +7520,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsMFUNCM2: // matrix f(matrix x, matrix y)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
-                                   MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
+                                        MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -7878,8 +7552,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsMFUNCI2: // matrix f(int r, int c)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
-                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -7934,8 +7608,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsVFUNC2: // float or complex f(x|z,y|z)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
-                                   MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -7950,7 +7624,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
              case tsFFUNCI1: // float f(int x) (float() function)
               {
-               uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks))
                 {
                  result_fval = qnan;
@@ -7965,7 +7639,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIFUNCF1: // int f(float x) (wrgb() function)
               {
-               uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks))
                 {
                  result_fval = qnan;
@@ -7980,7 +7654,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCF1: // str f(float x) (winf())
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;
@@ -8006,7 +7680,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIFUNC1: // int f(int x) (int() function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
                                    0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
@@ -8021,8 +7695,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIFUNC2: // int f(int x, int y) (invmod() function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -8038,7 +7712,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC1: // float f(float x) (sing(x) function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;
@@ -8054,8 +7728,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC2: // float f(float x, float y) (min(), max(), ee() functions)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -8071,9 +7745,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC3: // float f(float x, float y, float z) (vout() function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,  
-                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,  
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX };
               if (!CheckFnArgs (n_args, 3, masks))
                {
                 result_fval = qnan;
@@ -8147,7 +7821,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
                             // prec() function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;
@@ -8163,8 +7837,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCF2: //  f(str, val) (const())
              {
-              uint32_t masks[] = { MSK_ERR,
-                                   MSK_ERR, 0 };
+              const uint32_t masks[] = { MSK_ERR,
+                                         MSK_ERR, 0 };
               if (!CheckFnArgs (n_args, 2, masks))
                {
                 result_fval = qnan;
@@ -8192,7 +7866,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSIFUNC1: // int f(char *str) (datatime() function)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks))
                {
                 result_fval = qnan;

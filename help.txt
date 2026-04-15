@@ -116,8 +116,8 @@ wrgb(x)                         Returns the RGB color of the given wavelength in
 trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
 color(n)                        Shows a color (colored square on top of the application in 0xRRGGBB format)
 
-const("name",x)                 Add constant 
-var("name",x)                   Add variable
+const("name",x|z|M)     (1,3)   Add constant 
+var("name",x|z|M)       (1,3)   Add variable
 
 integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation

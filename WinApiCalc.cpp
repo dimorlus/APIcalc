@@ -738,9 +738,13 @@ if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
          {
           // Error
           char msg[128];
+          char *err = m_pCalculator->error ();
+          int len   = (int)strlen (line);
+          if (len > 0 && line[len - 1] == '\n')
+           line[len - 1] = '\0'; // Remove newline for cleaner message
           snprintf (msg, sizeof (msg), "Error in %s line: %d", Fname, lineNum);
-          snprintf (errMsg, sizeof (errMsg), "%-67.67s\r\n%-67.67s\r\n%-67.67s", msg, line,
-                    m_pCalculator->error ());
+          snprintf (errMsg, 512, "%-67.67s\r\n%-67.67s\r\n%67.67s", msg, line, err);
+          
           break;
          }
        }

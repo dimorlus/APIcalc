@@ -122,7 +122,7 @@ void DebugLog (const char *format, ...)
 #endif // _ENABLE_DEBUG_LOG_
 
 
-calculator::calculator (int cfg, symbol **symtab, int copyMask, int deep)
+calculator::calculator (int cfg, symbol **symtab, uint32_t copyMask, int deep)
 {
  this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
  v_sp         = 0;    // Clear the value stack pointer
@@ -170,14 +170,14 @@ calculator::~calculator (void)
 //---------------------------------------------------------------------------
 
 
-float__t Const (void *clc, char *name, float__t x)
+bool Const (void *clc, char *name, value &x)
 {
- return ((calculator *)clc)->AddConst (name, x);
+ return ((calculator *)clc)->addconst (name, x);
 }
 
-float__t Var (void *clc, char *name, float__t x)
+bool Var (void *clc, char *name, value &x)
 {
- return ((calculator *)clc)->AddVar (name, x);
+ return ((calculator *)clc)->addvar (name, x);
 }
 
 float__t Det (void *clc, value &M)
@@ -592,7 +592,7 @@ void calculator::AddPredefined (void)
 // recreated; the rest can be copied.
 
 
-void calculator::copy_symbols (symbol **symtab, int mask)
+void calculator::copy_symbols (symbol **symtab, uint32_t mask)
 {
  symbol *sp;
  symbol *nsp;
@@ -1737,13 +1737,41 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
  return sp;
 }
 
+
+bool calculator::addconst (const char *name, value &val)
+{
+ if (find (name))
+  {
+   error ("constant redefinition");
+   return false;
+  } 
+ symbol *sp    = add (tsCONSTANT, name);
+ sp->val.tag   = val.tag;
+ sp->val.fval  = val.fval;
+ sp->val.ival  = val.ival;
+ sp->val.imval = val.imval;
+ // For string and matrix types, we need to copy the values
+ if (val.sval)
+  sp->val.sval = strdup (val.sval);
+ else
+  sp->val.sval = nullptr;
+ register_mem (sp->val.sval);
+ if ((sp->tag == tsCONSTANT) && (sp->val.tag == tvMATRIX))
+  {
+   sp->val.mval = dupMatrix (val);
+  }
+ sp->val.mcols = val.mcols;
+ sp->val.mrows = val.mrows;
+ return true;
+}
+
 // Add a constant to the hash table, or return an error if it already exists
 float__t calculator::AddConst (const char *name, float__t val)
 {
  if (find (name))
   {
    error ("constant redefinition");
-   return qnan; // std::numeric_limits<float__t>::quiet_NaN (); // 0.0/0.0;;
+   return qnan; 
   } 
  addfconst (name, val);
  return val;
@@ -1847,7 +1875,7 @@ void calculator::addfvar (const char *name, float__t fval, float__t imval)
 
 // Add  variable to the hash table
 // todo:add matrix variable
-void calculator::addvar (const char *name, value &val)
+bool calculator::addvar (const char *name, value &val)
 {
  symbol *sp   = add (tsVARIABLE, name);
  sp->val.tag  = val.tag;
@@ -1864,6 +1892,7 @@ void calculator::addvar (const char *name, value &val)
   }   
  sp->val.mcols = val.mcols;
  sp->val.mrows = val.mrows;
+ return true;
 }
 
 // Add an imaginary constant to the hash table (if enabled)
@@ -2436,8 +2465,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    return false;
   }
 
- calculator *pC = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
- if (!pC)
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
   {
    errorf (pos, "Out of memory");
    re_res = qnan;
@@ -2445,35 +2474,35 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    return false;
   }
 
- pC->evaluate_f (svar);
- if (pC->err[0])
+ child->evaluate_f (svar);
+ if (child->err[0])
   {
-   errorf (pos, "%s", pC->err);
-   delete pC;
+   errorf (pos, "%s", child->err);
+   delete child;
    re_res = qnan;
    im_res = qnan;
    return false;
   }
- strcpy (nvar, (char *)pC->get_last_var ());
- float__t xr = pC->get_re_res ();
- float__t xi = pC->get_im_res (); // 0 if real initial approximation
+ strcpy (nvar, (char *)child->get_last_var ());
+ float__t xr = child->get_re_res ();
+ float__t xi = child->get_im_res (); // 0 if real initial approximation
 
  if (tag == tsCALC)
   {
-   pC->addfvar (nvar, xr, xi);
-   pC->evaluate_f (sexpr);
-   if (pC->err[0])
+   child->addfvar (nvar, xr, xi);
+   child->evaluate_f (sexpr);
+   if (child->err[0])
     {
-     errorf (pos, "%s", pC->err);
-     delete pC;
+     errorf (pos, "%s", child->err);
+     delete child;
      re_res = qnan;
      im_res = qnan;
      return false;
     }
-   re_res  = pC->get_re_res ();
-   im_res = pC->get_im_res ();
-   fflags |= pC->isfflags ();
-   delete pC;
+   re_res  = child->get_re_res ();
+   im_res = child->get_im_res ();
+   fflags |= child->isfflags ();
+   delete child;
    return true;
   }
 
@@ -2490,18 +2519,18 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
  for (int i = 0; i < maxIter; i++)
   {
    // f(z)
-   pC->addfvar (nvar, xr, xi);
-   pC->evaluate_f (sexpr);
-   if (pC->err[0])
+   child->addfvar (nvar, xr, xi);
+   child->evaluate_f (sexpr);
+   if (child->err[0])
     {
-     errorf (pos, "%s", pC->err);
-     delete pC;
+     errorf (pos, "%s", child->err);
+     delete child;
      re_res = qnan;
      im_res = qnan;
      return false;
     }
-   float__t fr = pC->get_re_res ();
-   float__t fi = pC->get_im_res ();
+   float__t fr = child->get_re_res ();
+   float__t fi = child->get_im_res ();
 
    // |f(z)|
    float__t fabs_f = Sqrt (fr * fr + fi * fi);
@@ -2523,13 +2552,13 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 #endif
 #endif
    // f(z+d) and f(z-d)  on the real axis
-   pC->addfvar (nvar, xr + d, xi);
-   pC->evaluate_f (sexpr);
-   float__t fpr_r = pC->get_re_res (), fpr_i = pC->get_im_res ();
+   child->addfvar (nvar, xr + d, xi);
+   child->evaluate_f (sexpr);
+   float__t fpr_r = child->get_re_res (), fpr_i = child->get_im_res ();
 
-   pC->addfvar (nvar, xr - d, xi);
-   pC->evaluate_f (sexpr);
-   float__t fmr_r = pC->get_re_res (), fmr_i = pC->get_im_res ();
+   child->addfvar (nvar, xr - d, xi);
+   child->evaluate_f (sexpr);
+   float__t fmr_r = child->get_re_res (), fmr_i = child->get_im_res ();
 
    // f'(z) ≈ (f(z+d) - f(z-d)) / (2d)
    float__t fp_r = (fpr_r - fmr_r) / ((float__t)2.0 * d);
@@ -2551,7 +2580,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    if (isnan (xr_new) || isnan (xi_new))
     {
      errorf (pos, "Solution diverged");
-     delete pC;
+     delete child;
      re_res = qnan;
      im_res = qnan;
      return false;
@@ -2585,8 +2614,8 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 #endif
   }
 
- fflags |= pC->isfflags ();
- delete pC;
+ fflags |= child->isfflags ();
+ delete child;
 
  if (!converged)
   {
@@ -2913,28 +2942,28 @@ bool calculator::For(const char* expr, value& res)
      return false;
     }
 
-   calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
-   if (!pCalculator)
+   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   if (!child)
     {
      errorf (pos, "Out of memory");
      result_fval = qnan;
      return false;
     }
 
-   vfrom = pCalculator->evaluate_f (sfrom);
-   if (isnan (vfrom) || pCalculator->err[0])
+   vfrom = child->evaluate_f (sfrom);
+   if (isnan (vfrom) || child->err[0])
     {
-     errorf (pos, "%s", pCalculator->err);
+     errorf (pos, "%s", child->err);
      result_fval = qnan;
-     delete pCalculator;
+     delete child;
      return false;
     }
-   vto = pCalculator->evaluate_f (sto);
-   if (isnan (vto) || pCalculator->err[0])
+   vto = child->evaluate_f (sto);
+   if (isnan (vto) || child->err[0])
     {
-     errorf (pos, "%s", pCalculator->err);
+     errorf (pos, "%s", child->err);
      result_fval = qnan;
-     delete pCalculator;
+     delete child;
      return false;
     }
     {
@@ -2949,19 +2978,19 @@ bool calculator::For(const char* expr, value& res)
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
 
-         pCalculator->addfvar (svar, vfrom);
-         fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
+         child->addfvar (svar, vfrom);
+         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                                  // the syntax check before starting the integration
 
-         if (isnan (fvx) || pCalculator->err[0])
+         if (isnan (fvx) || child->err[0])
           {
-           errorf (pos, "%s", pCalculator->err);
+           errorf (pos, "%s", child->err);
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return false;
           }
          vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
@@ -2976,19 +3005,19 @@ bool calculator::For(const char* expr, value& res)
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
 
-         pCalculator->addfvar (svar, vfrom);
-         fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
+         child->addfvar (svar, vfrom);
+         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                                 // the syntax check before starting the integration
 
-         if (isnan (fvx) || pCalculator->err[0])
+         if (isnan (fvx) || child->err[0])
           {
-           errorf (pos, "%s", pCalculator->err);
+           errorf (pos, "%s", child->err);
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return false;
           }
          vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
@@ -2998,14 +3027,14 @@ bool calculator::For(const char* expr, value& res)
       }
     }
 
-   res.tag = pCalculator->get_res_tag ();
+   res.tag = child->get_res_tag ();
    if (res.tag == tvMATRIX)
     {
-     res.fval  = pCalculator->get_re_res ();
-     res.ival  = pCalculator->get_int_res ();
-     res.imval = pCalculator->get_im_res ();
+     res.fval  = child->get_re_res ();
+     res.ival  = child->get_int_res ();
+     res.imval = child->get_im_res ();
      res.sval  = dupString (get_str_res ());
-     mxresult_t mxr = pCalculator->get_mx_res ();
+     mxresult_t mxr = child->get_mx_res ();
      res.mcols = mxr.cols;
      res.mrows = mxr.rows;
      int msize = mxr.rows * mxr.cols * sizeof (float__t);
@@ -3020,7 +3049,7 @@ bool calculator::For(const char* expr, value& res)
        else
         {
          errorf (res.pos, "Out of memory");
-         delete pCalculator;
+         delete child;
          result_fval = qnan;
          return false;
         }
@@ -3028,14 +3057,14 @@ bool calculator::For(const char* expr, value& res)
     }
    else 
     {
-     res.fval = pCalculator->get_re_res ();
-     res.ival = pCalculator->get_int_res ();
-     res.imval = pCalculator->get_im_res ();
+     res.fval = child->get_re_res ();
+     res.ival = child->get_int_res ();
+     res.imval = child->get_im_res ();
      res.sval  = dupString (get_str_res ());
     }
 
-   fflags |= pCalculator->isfflags ();
-   delete pCalculator;
+   fflags |= child->isfflags ();
+   delete child;
    return true;
   }
  return false; 
@@ -3100,48 +3129,48 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      return false;
     }
 
-   calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
-   if (!pCalculator)
+   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   if (!child)
     {
      errorf (pos, "Out of memory");
      result_fval = qnan;
      return qnan;
     }
 
-   vfrom = pCalculator->evaluate_f (sfrom);
-   if (isnan (vfrom) || pCalculator->err[0])
+   vfrom = child->evaluate_f (sfrom);
+   if (isnan (vfrom) || child->err[0])
     {
-     errorf (pos, "%s", pCalculator->err);
+     errorf (pos, "%s", child->err);
      result_fval = qnan;
-     delete pCalculator;
+     delete child;
      return qnan;
     }
-   vto = pCalculator->evaluate_f (sto);
-   if (isnan (vto) || pCalculator->err[0])
+   vto = child->evaluate_f (sto);
+   if (isnan (vto) || child->err[0])
     {
-     errorf (pos, "%s", pCalculator->err);
+     errorf (pos, "%s", child->err);
      result_fval = qnan;
-     delete pCalculator;
+     delete child;
      return qnan;
     }
 
    if (tag == tsINTEGR)
     {
      {
-      pCalculator->addfvar (svar, vfrom);
-      float__t fvx = pCalculator->evaluate_f (sexpr); // evaluate the function for
+      child->addfvar (svar, vfrom);
+      float__t fvx = child->evaluate_f (sexpr); // evaluate the function for
                                            // the syntax check before starting the integration
 
-      if (isnan (fvx) || pCalculator->err[0])
+      if (isnan (fvx) || child->err[0])
        {
-        errorf (pos, "%s", pCalculator->err);
+        errorf (pos, "%s", child->err);
         result_fval = qnan;
-        delete pCalculator;
+        delete child;
         return qnan;
        }
      }
 
-     GKResult gkresult = gkAdaptive (pCalculator,
+     GKResult gkresult = gkAdaptive (child,
                                      sexpr,     // expression
                                      svar,      // variable name ("x")
                                      vfrom,     // lower limit
@@ -3155,7 +3184,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       {
        errorf (pos, "Integration failed");
        result_fval = qnan;
-       delete pCalculator;
+       delete child;
        return qnan;
       }
      result = gkresult.value;
@@ -3173,19 +3202,19 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
 
-         pCalculator->addfvar (svar, vfrom);
-         fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
+         child->addfvar (svar, vfrom);
+         fvx += child->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
 
-         if (isnan (fvx) || pCalculator->err[0])
+         if (isnan (fvx) || child->err[0])
           {
-           errorf (pos, "%s", pCalculator->err);
+           errorf (pos, "%s", child->err);
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
          vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
@@ -3200,19 +3229,19 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
          if (check_break (init_ms, last_gui_check) != brNONE)
           {
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
 
-         pCalculator->addfvar (svar, vfrom);
-         fvx += pCalculator->evaluate_f (sexpr); // evaluate the function for
+         child->addfvar (svar, vfrom);
+         fvx += child->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
 
-         if (isnan (fvx) || pCalculator->err[0])
+         if (isnan (fvx) || child->err[0])
           {
-           errorf (pos, "%s", pCalculator->err);
+           errorf (pos, "%s", child->err);
            result_fval = qnan;
-           delete pCalculator;
+           delete child;
            return qnan;
           }
          vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
@@ -3227,8 +3256,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      errorf (pos, "Unknown tag");
      result = qnan;
     }
-   fflags |= pCalculator->isfflags ();
-   delete pCalculator;
+   fflags |= child->isfflags ();
+   delete child;
    return result;
   }
  return qnan; // placeholder for actual integration result
@@ -3254,20 +3283,20 @@ float__t calculator::Diff (const char *expr)
        return false;
       }
 
-     calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
-     if (!pCalculator)
+     calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+     if (!child)
       {
        errorf (pos, "Out of memory");
        result_fval = qnan;
        return qnan;
       }
 
-     x = pCalculator->evaluate_f (sfrom);
-     if (isnan (x) || pCalculator->err[0])
+     x = child->evaluate_f (sfrom);
+     if (isnan (x) || child->err[0])
       {
-       errorf (pos, "%s", pCalculator->err);
+       errorf (pos, "%s", child->err);
        result_fval = qnan;
-       delete pCalculator;
+       delete child;
        return qnan;
       }
 
@@ -3280,30 +3309,30 @@ float__t calculator::Diff (const char *expr)
 #else
      float__t delta = fmaxl (fabsl (x), 1.0L) * 1.5e-10L;
 #endif
-     pCalculator->addfvar (svar, x + delta);
-     float__t fxp = pCalculator->evaluate_f (sexpr);
-     if (isnan (fxp) || pCalculator->err[0])
+     child->addfvar (svar, x + delta);
+     float__t fxp = child->evaluate_f (sexpr);
+     if (isnan (fxp) || child->err[0])
       {
-       errorf (pos, "%s", pCalculator->err);
+       errorf (pos, "%s", child->err);
        result_fval = qnan;
-       delete pCalculator;
+       delete child;
        return qnan;
       }
 
-     pCalculator->addfvar (svar, x - delta);
-     float__t fxm = pCalculator->evaluate_f (sexpr);
-     if (isnan (fxm) || pCalculator->err[0])
+     child->addfvar (svar, x - delta);
+     float__t fxm = child->evaluate_f (sexpr);
+     if (isnan (fxm) || child->err[0])
       {
-       errorf (pos, "%s", pCalculator->err);
+       errorf (pos, "%s", child->err);
        result_fval = qnan;
-       delete pCalculator;
+       delete child;
        return qnan;
       }
 
      float__t fp = (fxp - fxm) / ((float__t)2.0 * delta);
 
-     fflags |= pCalculator->isfflags ();
-     delete pCalculator;
+     fflags |= child->isfflags ();
+     delete child;
      return fp;
     }
   return qnan; 
@@ -3452,7 +3481,7 @@ bool calculator::mx_idx (int &row, int &col)
  char *ipos = buf + pos;
  while (isspace (*ipos & 0x7f)) ipos++;
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -3467,12 +3496,11 @@ bool calculator::mx_idx (int &row, int &col)
    int depth = 0;
    while (*ipos && *ipos != ']')
     {
-     if (*ipos == '(')
-      depth++;
-     else if (*ipos == ')' && depth > 0)
-      depth--;
-     else if ((*ipos == ',' || *ipos == ']') && depth == 0)
-      break;
+     if (*ipos == '(') depth++;
+     else 
+     if (*ipos == ')' && depth > 0) depth--;
+     else 
+     if ((*ipos == ',' || *ipos == ']') && depth == 0)  break;
      if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
     }
    ebuf[eidx] = '\0';
@@ -3548,7 +3576,7 @@ t_operator calculator::sqbraces (void)
  int curCols = 0;
 
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT + MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -5556,6 +5584,54 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
  return mrSKIP;
 }
 
+bool calculator::CheckFnArgs (int n_args, int expected_args, uint32_t mask[3])
+{
+ if (n_args != expected_args)
+  {
+   switch (expected_args)
+    {
+       case 1:
+         error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+        break;
+       case 2:
+         error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
+        break;
+       case 3:
+         error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
+        break;
+    } 
+   return false;
+  }
+
+ for (int i = 0; i < expected_args; i++)
+  {
+   t_value tag = v_stack[v_sp - 1 - i].tag;
+   int pos     = v_stack[v_sp - 1 - i].pos;
+   if ((1<<tag) & mask[i]) // invalid type for this argument
+     {
+      switch (tag)
+       {
+        case tvERR:
+         error (pos, "Undefined operand");
+        break;
+        case tvCOMPLEX:
+         error (pos, "Illegal complex operand");
+        break;
+        case tvSTR:
+         error (pos, "Illegal string operand");
+        break;
+        case tvMATRIX:
+         error (pos, "Illegal matrix operand");
+        break;
+        default:
+         error (pos, "Invalid argument type");
+        break;
+       }
+      return false; 
+     }
+  }
+ return true;
+}
 
 // Evaluate the given expression and return the result as a floating-point value. The expression is
 // parsed and evaluated according to the rules defined in the calculator class,
@@ -7690,9 +7766,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsDIFF: // float f(str equation)
              {
-              if (n_args != 1)
+              uint32_t masks[] = { 0, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
                {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
                 result_fval = qnan;
                 return qnan;
                }
@@ -7737,49 +7813,43 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            switch (sym->tag)
             {
             case tsFFUNCM: // float f(matrix x)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag != tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Matrix operand required");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].fval
-                 = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             if (isnan (v_stack[v_sp - 2].fval) || mxerr[0])
-              {
-               if (mxerr[0]) errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
-               else error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].tag = tvFLOAT;
-             v_sp -= 1;
+              if (v_stack[v_sp - 1].tag != tvMATRIX)
+               {
+                error (v_stack[v_sp - 1].pos, "Matrix operand required");
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 2].fval
+                  = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
+
+              if (isnan (v_stack[v_sp - 2].fval) || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Matrix result is not a number");
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 2].tag = tvFLOAT;
+              v_sp -= 1;
+             }
              break;
 
             case tsMFUNCM2: // matrix f(matrix x, matrix y)
              {
-              if (n_args != 2)
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
                {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
-                result_fval = qnan;
-                return qnan;
-               }
-              if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-               {
-                error (v_stack[v_sp - 2].pos, "Undefined operand");
                 result_fval = qnan;
                 return qnan;
                }
@@ -7808,18 +7878,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsMFUNCI2: // matrix f(int r, int c)
              {
-              if (n_args != 2)
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
+                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
                {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
                 result_fval = qnan;
                 return qnan;
                }
-              if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-               {
-                error (v_stack[v_sp - 2].pos, "Undefined operand");
-                result_fval = qnan;
-                return qnan;
-               }
+
               bool res = ((bool (*) (void *, value &, int, int))sym->func) (
                   (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival, v_stack[v_sp - 1].ival);
               if (!res || mxerr[0])
@@ -7837,342 +7903,190 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              break;
 
             case tsVFUNC1: // float or complex f(x|z)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             if (sym->fidx == vf_abs && v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               mxAbs (v_stack[v_sp - 2], v_stack[v_sp - 1]);
-               v_stack[v_sp - 2].tag = tvMATRIX;
-               v_sp -= 1;
-               break;
-              }
-
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
-                                                            sym->fidx);
-             v_sp -= 1;
-             break;
-
-            case tsVFUNC2: // float or complex f(x|z,y|z)
-             if (n_args != 2)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take two argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 2].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             ((void (*) (value *, value *, value *, int))sym->func) (
-                 &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
-             v_sp -= 2;
-             break;
-
-             case tsFFUNCI1: // float f(int x) (float() function)
-             if (n_args != 1)
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
                {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
                 result_fval = qnan;
                 return qnan;
                }
-              if (((v_stack[v_sp - 1].tag == tvERR)))
+
+              if (sym->fidx == vf_abs && v_stack[v_sp - 1].tag == tvMATRIX)
                {
-                error (v_stack[v_sp - 1].pos, "Undefined operand");
-                result_fval = qnan;
-                return qnan;
+                mxAbs (v_stack[v_sp - 2], v_stack[v_sp - 1]);
+                v_stack[v_sp - 2].tag = tvMATRIX;
+                v_sp -= 1;
+                break;
                }
-              if (v_stack[v_sp - 1].tag == tvSTR)
-               {
-                error (v_stack[v_sp - 1].pos, "Illegal string operation");
-                result_fval = qnan;
-                return qnan;
-               }
+
               if (v_stack[v_sp - 1].tag == tvMATRIX)
                {
                 error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
                 result_fval = qnan;
                 return qnan;
                }
-              v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
-              v_stack[v_sp - 2].tag  = tvFLOAT;
+
+              ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
+                                                             sym->fidx);
               v_sp -= 1;
+             }
+             break;
+
+            case tsVFUNC2: // float or complex f(x|z,y|z)
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
+                                   MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
+
+              ((void (*) (value *, value *, value *, int))sym->func) (
+                  &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
+              v_sp -= 2;
+             }
+             break;
+
+             case tsFFUNCI1: // float f(int x) (float() function)
+              {
+               uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               if (!CheckFnArgs (n_args, 1, masks))
+                {
+                 result_fval = qnan;
+                 return qnan;
+                }
+
+               v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
+               v_stack[v_sp - 2].tag  = tvFLOAT;
+               v_sp -= 1;
+              }
               break;
 
             case tsIFUNCF1: // int f(float x) (wrgb() function)
-             if (n_args != 1)
               {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
+               uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               if (!CheckFnArgs (n_args, 1, masks))
+                {
+                 result_fval = qnan;
+                 return qnan;
+                }
+               v_stack[v_sp - 2].ival
+                   = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
+               v_stack[v_sp - 2].tag = tvINT;
+               v_sp -= 1;
               }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].ival = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
-             v_stack[v_sp - 2].tag  = tvINT;
-             v_sp -= 1;
              break;
 
             case tsSFUNCF1: // str f(float x) (winf())
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - 2].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
              {
-              const char *resStr
-                  = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
-              strncpy (sres, resStr ? resStr : "", STRBUF - 1);
-              sres[STRBUF - 1] = '\0';
-              if (sres[0])
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
                {
-                fflags |= STR;
+                result_fval = qnan;
+                return qnan;
                }
-              v_stack[v_sp - 2].sval = dupString(sres);
-              v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
-              v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
-              v_stack[v_sp - 2].tag  = tvSTR;
+              {
+               const char *resStr
+                   = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
+               strncpy (sres, resStr ? resStr : "", STRBUF - 1);
+               sres[STRBUF - 1] = '\0';
+               if (sres[0])
+                {
+                 fflags |= STR;
+                }
+               v_stack[v_sp - 2].sval = dupString (sres);
+               v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
+               v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
+               v_stack[v_sp - 2].tag  = tvSTR;
+              }
+              v_sp -= 1;
              }
-             v_sp -= 1;
              break;
 
             case tsIFUNC1: // int f(int x) (int() function)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].ival
-                 = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
-             v_stack[v_sp - 2].tag = tvINT;
-             v_sp -= 1;
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                   0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 2].ival = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
+              v_stack[v_sp - 2].tag = tvINT;
+              v_sp -= 1;
+             }
              break;
 
             case tsIFUNC2: // int f(int x, int y) (invmod() function)
-             if (n_args != 2)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 2].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-
-             v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
-                 v_stack[v_sp - 2].get_int (), v_stack[v_sp - 1].get_int ());
-             v_stack[v_sp - 3].tag = tvINT;
-             v_sp -= 2;
+              v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
+                  v_stack[v_sp - 2].get_int (), v_stack[v_sp - 1].get_int ());
+              v_stack[v_sp - 3].tag = tvINT;
+              v_sp -= 2;
+             }
              break;
 
             case tsFFUNC1: // float f(float x) (sing(x) function)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             v_stack[v_sp - 2].fval
-                 = (*(float__t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
-             v_stack[v_sp - 2].tag = tvFLOAT;
-             v_sp -= 1;
+              v_stack[v_sp - 2].fval
+                  = (*(float__t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 2].tag = tvFLOAT;
+              v_sp -= 1;
+             }
              break;
 
             case tsFFUNC2: // float f(float x, float y) (min(), max(), ee() functions)
-             if (n_args != 2)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 2].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX))
-              {
-               error (v_stack[v_sp - 2].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
-                 v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-             v_stack[v_sp - 3].tag = tvFLOAT;
-             v_sp -= 2;
+              v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
+                  v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 3].tag = tvFLOAT;
+              v_sp -= 2;
+             }
              break;
 
             case tsFFUNC3: // float f(float x, float y, float z) (vout() function)
-             if (n_args != 3)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)
-                  || (v_stack[v_sp - 3].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 3].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR)
-                 || (v_stack[v_sp - 3].tag == tvSTR))
-              {
-               error (v_stack[v_sp - 3].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if ((v_stack[v_sp - 1].tag == tvMATRIX) || (v_stack[v_sp - 2].tag == tvMATRIX)
-                 || (v_stack[v_sp - 3].tag == tvMATRIX))
-              {
-               error (v_stack[v_sp - 3].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
+                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,  
+                                   MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX };
+              if (!CheckFnArgs (n_args, 3, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             if (v_stack[v_sp - 1].tag == tvPERCENT) v_stack[v_sp - 1].fval /= ((float__t)100.0);
+              if (v_stack[v_sp - 1].tag == tvPERCENT) v_stack[v_sp - 1].fval /= ((float__t)100.0);
 
-             v_stack[v_sp - 4].fval = (*(float__t (*) (float__t, float__t, float__t))sym->func) (
-                 v_stack[v_sp - 3].get (), v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
-             v_stack[v_sp - 4].tag = tvFLOAT;
-             v_sp -= 3;
+              v_stack[v_sp - 4].fval = (*(float__t (*) (float__t, float__t, float__t))sym->func) (
+                  v_stack[v_sp - 3].get (), v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 4].tag = tvFLOAT;
+              v_sp -= 3;
+             }
              break;
 
             case tsPFUNCn: // f(str, ...) ( prn(...) function)
@@ -8232,99 +8146,70 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
                             // prec() function)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].ival
-                 = (*(int_t (*) (void *, int_t))sym->func) ((void *)this, v_stack[v_sp - 1].get_int ());
-             v_stack[v_sp - 2].tag = tvINT;
-             v_sp -= 1;
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
+
+              v_stack[v_sp - 2].ival = (*(int_t (*) (void *, int_t))sym->func) (
+                  (void *)this, v_stack[v_sp - 1].get_int ());
+              v_stack[v_sp - 2].tag = tvINT;
+              v_sp -= 1;
+             }
              break;
 
-            case tsSFUNCF2: // float f(str, x) (const())
-             if (n_args != 2)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 2].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 2].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal string operation");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (((v_stack[v_sp - 1].tag == tvERR)))
-              {
-               error (v_stack[v_sp - 1].pos, "Undefined operand");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               result_fval = qnan;
-               return qnan;
-              }
+            case tsSFUNCF2: //  f(str, val) (const())
+             {
+              uint32_t masks[] = { MSK_ERR,
+                                   MSK_ERR, 0 };
+              if (!CheckFnArgs (n_args, 2, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
 
-             if (v_stack[v_sp - 2].tag != tvSTR)
-              {
-               error (v_stack[v_sp - 2].pos, "String operand required");
-               result_fval = qnan;
-               return qnan;
-              }
+              if (v_stack[v_sp - 2].tag != tvSTR)
+               {
+                error (v_stack[v_sp - 2].pos, "String operand required");
+                result_fval = qnan;
+                return qnan;
+               }
 
-             v_stack[v_sp - 3].fval = (*(float__t (*) (void*, char *, float__t))sym->func) // call const("name", value)
-                ((void *) this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1].get ());
-
-             v_stack[v_sp - 3].tag = tvFLOAT;
-             v_sp -= 2;
+              bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
+                  ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
+              if (!res)
+               {
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 3] = v_stack[v_sp - 1];
+              v_sp -= 2;
+             }
              break;
 
             case tsSIFUNC1: // int f(char *str) (datatime() function)
-             if (n_args != 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-               result_fval = qnan;
-               return qnan;
-              }
-             if (v_stack[v_sp - 1].tag != tvSTR)
-              {
-               error (v_stack[v_sp - 1].pos, "String operand required");
-               result_fval = qnan;
-               return qnan;
-              }
-             v_stack[v_sp - 2].ival
-                 = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
-             v_stack[v_sp - 2].tag = tvINT;
-             v_sp -= 1;
+             {
+              uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks))
+               {
+                result_fval = qnan;
+                return qnan;
+               }
+
+              if (v_stack[v_sp - 1].tag != tvSTR)
+               {
+                error (v_stack[v_sp - 1].pos, "String operand required");
+                result_fval = qnan;
+                return qnan;
+               }
+              v_stack[v_sp - 2].ival
+                  = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
+              v_stack[v_sp - 2].tag = tvINT;
+              v_sp -= 1;
+             }
              break;
 
             case tsUFUNCT: // user defined function
@@ -8341,8 +8226,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 		        //4. Push the result onto the stack.
 		        //5. Delete the previously created calculator.
 
-                calculator *pCalculator = new calculator (scfg, hash_table, (MASK_DEFAULT), deep);
-                if (!pCalculator)
+                calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT), deep);
+                if (!child)
                  {
                   errorf (pos, "Out of memory");
                   result_fval = qnan;
@@ -8354,7 +8239,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (!p)
                  {
                   errorf (pos, "No '(' in function definition");
-                  delete pCalculator;
+                  delete child;
                   result_fval = qnan;
                   return qnan;
                  }
@@ -8378,7 +8263,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   if (vi == 0)
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, "Empty parameter name");
-                    delete pCalculator;
+                    delete child;
                     result_fval = qnan;
                     return qnan;
                    }
@@ -8387,18 +8272,18 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, 
                         "Too many parameters in function definition");
-                    delete pCalculator;
+                    delete child;
                     result_fval = qnan;
                     return qnan;
                    }
                   if (((v_stack[v_sp - n_args + arg_idx].tag == tvERR)))
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, "Undefined operand");
-                    delete pCalculator;
+                    delete child;
                     result_fval = qnan;
                     return qnan;
                    }
-                  pCalculator->addvar (vbuf, v_stack[v_sp - n_args + arg_idx]);
+                  child->addvar (vbuf, v_stack[v_sp - n_args + arg_idx]);
                   arg_idx++;
 
                   // Skip spaces
@@ -8416,7 +8301,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                    {
                     errorf (v_stack[v_sp - n_args + arg_idx].pos, 
                             "Invalid character in parameter list");
-                    delete pCalculator;
+                    delete child;
                     result_fval = qnan;
                     return qnan;
                    }
@@ -8424,7 +8309,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (*p != ')')
                  {
                   errorf (v_stack[v_sp - n_args + arg_idx].pos, "No closing ')' in function definition");
-                  delete pCalculator;
+                  delete child;
                   result_fval = qnan;
                   return qnan;
                  }
@@ -8432,9 +8317,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
                 if (arg_idx != n_args)
                  {
-                  errorf (v_stack[v_sp - n_args - 1].pos, "Function should take %d argument(s)",
-                          arg_idx);
-                  delete pCalculator;
+                  errorf (v_stack[v_sp - n_args - 1].pos, "Function should take %d argument(s)", arg_idx);
+                  delete child;
                   result_fval = qnan;
                   return qnan;
                  }
@@ -8442,33 +8326,32 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 // Rest of the string — expression
                 while (*p && isspace (*p)) p++;
 
-                pCalculator->setEscFn (EscFn);
+                child->setEscFn (EscFn);
 
-                float__t res = pCalculator->evaluate_f ((char *)p);
+                float__t res = child->evaluate_f ((char *)p);
 
-               if (isnan (res) || pCalculator->error ()[0])
+               if (isnan (res) || child->error ()[0])
                  {
-                  errorf (v_stack[v_sp - n_args - 1].pos, "%s", pCalculator->error());
-                  delete pCalculator;
+                  errorf (v_stack[v_sp - n_args - 1].pos, "%s", child->error());
+                  delete child;
                   result_fval = qnan;
                   return qnan;
                  }
 
                 v_stack[v_sp - n_args - 1].tag = tvFLOAT;
-                v_stack[v_sp - n_args - 1].fval  = pCalculator->get_re_res ();
-                v_stack[v_sp - n_args - 1].imval = pCalculator->get_im_res ();
-                v_stack[v_sp - n_args - 1].ival  = pCalculator->get_int_res ();
-                v_stack[v_sp - n_args - 1].sval  = dupString (pCalculator->get_str_res ());
+                v_stack[v_sp - n_args - 1].fval  = child->get_re_res ();
+                v_stack[v_sp - n_args - 1].imval = child->get_im_res ();
+                v_stack[v_sp - n_args - 1].ival  = child->get_int_res ();
+                v_stack[v_sp - n_args - 1].sval  = dupString (child->get_str_res ());
 
                 if (v_stack[v_sp - n_args - 1].imval != 0.0)
                  v_stack[v_sp - n_args - 1].tag = tvCOMPLEX;
                 else 
-                if ((float__t)v_stack[v_sp - n_args - 1].ival
-                           == v_stack[v_sp - n_args - 1].fval)
-                       v_stack[v_sp - n_args - 1].tag = tvINT;
-               if (pCalculator->get_res_tag () == tvMATRIX)
+                if ((float__t)v_stack[v_sp - n_args - 1].ival == v_stack[v_sp - n_args - 1].fval)
+                 v_stack[v_sp - n_args - 1].tag = tvINT;
+               if (child->get_res_tag () == tvMATRIX)
                  {
-                  mxresult_t mxr = pCalculator->get_mx_res ();
+                  mxresult_t mxr = child->get_mx_res ();
                   v_stack[v_sp - n_args - 1].tag = tvMATRIX;
                   v_stack[v_sp - n_args - 1].mcols = mxr.cols;
                   v_stack[v_sp - n_args - 1].mrows = mxr.rows;
@@ -8484,22 +8367,21 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                     else
                      {
                       errorf (v_stack[v_sp - n_args - 1].pos, "Out of memory");
-                      delete pCalculator;
+                      delete child;
                       result_fval = qnan;
                       return qnan;
                      }
                    }
                  }
                else
-                if (pCalculator->get_res_tag() == tvSTR)
+                if (child->get_res_tag() == tvSTR)
                  {
-                  //v_stack[v_sp - n_args - 1].sval = dupString (pCalculator->get_str_res());
                   v_stack[v_sp - n_args - 1].tag  = tvSTR;
                   fflags |= STR;
                  }
 
-               fflags |= pCalculator->isfflags ();
-               delete pCalculator;
+               fflags |= child->isfflags ();
+               delete child;
                v_sp -= n_args; // pop arguments
              }
              break;

@@ -281,6 +281,19 @@ enum t_value // t_value represents the type of a value in the calculator
  tvFOR,
 };
 
+#define MSK_ERR     (1 << tvERR)     // Mask for error values
+#define MSK_INT     (1 << tvINT)     // Mask for integer values
+#define MSK_FLOAT   (1 << tvFLOAT)   // Mask for float values   
+#define MSK_PERCENT (1 << tvPERCENT) // Mask for percentage values
+#define MSK_COMPLEX (1 << tvCOMPLEX) // Mask for complex values
+#define MSK_STR     (1 << tvSTR)     // Mask for string values
+#define MSK_MATRIX  (1 << tvMATRIX)  // Mask for matrix values
+#define MSK_MX_ELEM (1 << tvMX_ELEM) // Mask for matrix element values
+#define MSK_UFUNCT  (1 << tvUFUNCT)  // Mask for user-defined function values
+#define MSK_SOLVE   (1 << tvSOLVE)   // Mask for solve operator values
+#define MSK_INTEGR  (1 << tvINTEGR)  // Mask for integration operator values
+#define MSK_DIFF    (1 << tvDIFF)    // Mask for differentiation operator values
+#define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
 
 #define MAX_R 7
 #define MAX_C 7
@@ -400,7 +413,7 @@ enum t_br_result
  brESC,     // Indicates that an ESC key was pressed
 };
 
-#define MASK_ALL        0xffffffff           // 32bit mask with all symbol types included
+#define MASK_ALL        (uint32_t)~0L        // 32bit mask with all symbol types included
 #define MASK_NONE       0x00000000           // represents an empty mask with no symbol types included
 #define MASK_VARIABLE   (1 << tsVARIABLE)    // represents a variable symbol
 #define MASK_CONSTANT   (1 << tsCONSTANT)    // represents a constant symbol
@@ -429,7 +442,7 @@ enum t_br_result
 #define MASK_INTEGR     (1 << tsINTEGR)      // integration operator for numerical integration
 #define MASK_DIFF       (1 << tsDIFF)        // differentiation operator for numerical differentiation
 #define MASK_FOR        (1 << tsFOR)         // for operator for numerical summation
-#define MASK_DEFAULT   (MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
+#define MASK_DEFAULT  (uint32_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -712,7 +725,7 @@ class calculator // calculator represents the main class for the expression calc
 
  void AddPredefined (void);
 
- void copy_symbols (symbol **symtab = nullptr, int mask = (MASK_NONE));
+ void copy_symbols (symbol **symtab = nullptr, uint32_t mask = (MASK_NONE));
 
  //memory management
  void init_mem_list () { mem_list.init_mem_list (); }
@@ -758,6 +771,9 @@ class calculator // calculator represents the main class for the expression calc
  void errorf (int pos, const char *fmt, ...); // Report an error at the given position with a formatted message
  inline void error (const char *msg) { error (pos - 1, msg); } // Report an error at the current position with 
                                                                //the specified message
+
+ bool CheckFnArgs (int n_args, int expected_args, uint32_t mask[3]);
+
  // Format checking and conversion
  bool isCMP (char *&fpos); // Check if the current position is a computing format
  int hscanf (char *str, int_t &ival,  int &nn); // Scan a hexadecimal number from the string and store it in ival,
@@ -832,7 +848,7 @@ class calculator // calculator represents the main class for the expression calc
               int *size = nullptr); // and an optional pointer to store the size of the output
 
  public:
- calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int mask=(MASK_NONE),
+ calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint32_t mask=(MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
@@ -860,7 +876,8 @@ class calculator // calculator represents the main class for the expression calc
  bool mxZeros (value &res, int rows, int cols);
  bool mxDiag (value &res, int rows, int cols);
 
- void addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
+ bool addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
+ bool addconst (const char *name, value &val); // Add a constant with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
  // Add or assign if existing a floating-point or complex variable to the calculator
  void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);                

@@ -316,6 +316,11 @@ A := [(1,2,3);(4,5,6);(7,8,9)]
 A[1,1] → 5
 A[1,1] := 10;A → [(1,2,3);(4,10,6);(7,8,9)]
 ```
+Access to a matrix element by index is possible both by row and column, and by a single through index.
+```
+[(1, 2, 3); (4, 5, 6); (7, 8, 9)][1,1] → 5
+[(1, 2, 3); (4, 5, 6); (7, 8, 9)][4] → 5
+```
 Elements that are negligibly small compared to the matrix norm (Frobenius) are displayed as zero to suppress numerical noise. Using index access, you can view the unfiltered value of an element.
 ```
 [(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)] → [(-1k, 0, 3M); (0, 0, 0); (0, 8G, 9)] ;;Filtered

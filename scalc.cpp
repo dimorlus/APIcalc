@@ -1737,7 +1737,7 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
  return sp;
 }
 
-
+// Add constant value
 bool calculator::addconst (const char *name, value &val)
 {
  if (find (name))
@@ -1765,7 +1765,7 @@ bool calculator::addconst (const char *name, value &val)
  return true;
 }
 
-// Add a constant to the hash table, or return an error if it already exists
+// Add a constant to the hash table, or return an error if it already exists (not in use)
 float__t calculator::AddConst (const char *name, float__t val)
 {
  if (find (name))
@@ -1777,7 +1777,7 @@ float__t calculator::AddConst (const char *name, float__t val)
  return val;
 }
 
-// Add a variable to the hash table, or return an error if it already exists
+// Add a variable to the hash table (not in use)
 float__t calculator::AddVar (const char *name, float__t val)
 {
  addfvar (name, val);
@@ -1844,7 +1844,7 @@ symbol *calculator::addUF (const char *name, const char *expr)
  return sp;
 }
 
-// Add a float constant to the hash table
+// Add a float constant to the hash table 
 void calculator::addfconst (const char *name, float__t val)
 {
  symbol *sp   = add (tsCONSTANT, name);
@@ -1910,7 +1910,7 @@ void calculator::addim ()
 #endif // _ENABLE_PREIMAGINARY_
 }
 
-// Add an integer constant to the hash table
+// Add an integer constant to the hash table (not in use)
 void calculator::addivar (const char *name, int_t val)
 {
  symbol *sp   = add (tsCONSTANT, name);
@@ -3457,7 +3457,7 @@ t_operator calculator::sscan (symbol *sym)
 }
 
 // M[row, col] matrix element access
-bool calculator::mx_idx (int &row, int &col)
+int calculator::mx_idx (int &row, int &col)
 {
  int rows   = 0;
  int cols   = 0;
@@ -3471,7 +3471,7 @@ bool calculator::mx_idx (int &row, int &col)
   {
    errorf (pos, "Out of memory");
    result_fval = qnan;
-   return false;
+   return 0;
   }
  while (*ipos && *ipos != ']')
   {
@@ -3495,20 +3495,20 @@ bool calculator::mx_idx (int &row, int &col)
     {
      error (child->error ());
      delete child;
-     return false;
+     return 0;
     }
    if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
     {
      error ("Matrix index must be scalar");
      delete child;
-     return false;
+     return 0;
     }
 
    if (child->result_imval != 0.0L)
     {
      error ("Complex matrix indices not supported");
      delete child;
-     return false;
+     return 0;
     }
    if (ii < 2)
     {
@@ -3517,14 +3517,14 @@ bool calculator::mx_idx (int &row, int &col)
       {
        error ("Matrix indices must be positive integers");
        delete child;
-       return false;
+       return 0;
       }
     }
    else
     {
      error ("Too many indices for matrix access");
      delete child;
-     return false;
+     return 0;
     }
    while (isspace (*ipos & 0x7f)) ipos++;
    if (*ipos == ',') ipos++;
@@ -3536,12 +3536,12 @@ bool calculator::mx_idx (int &row, int &col)
  if (*ipos != ']')
   {
    error ("Expected ']'");
-   return false;
+   return 0;
   }
  row = idx[0];
  col = idx[1];
  pos = ipos - buf + 1;
- return true;
+ return ii;
 }
 
 //[(a11,a12,...);(a21,a22,...);...]
@@ -4356,9 +4356,23 @@ t_operator calculator::scan (bool operand, bool percent)
     {
      if (v_sp && v_stack[v_sp - 1].tag == tvMATRIX && v_stack[v_sp - 1].mval)
       {
-       int row = 0, col = 0;
-       
-       if (mx_idx (row, col)  && 
+       int row = 0, col = 0, ii = 0;
+       ii = mx_idx (row, col);
+
+       if (ii == 0)
+        {
+         error ("syntax error");
+         return toERROR;
+        }
+       else if (ii == 1)
+        {
+         int idx = row; // single index provided, treat as linear index into matrix     
+         row = idx / v_stack[v_sp - 1].mcols;
+         col = idx % v_stack[v_sp - 1].mcols;
+         ii  = 2; // treat as element access if index is valid
+        }
+
+       if (ii == 2  && 
            (v_stack[v_sp - 1].mrows > row) && 
            (v_stack[v_sp - 1].mcols > col))
         {
@@ -7475,12 +7489,24 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsMFUNCI2: // matrix f(int r, int c)
              {
+              bool res = false;
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              if (n_args == 1 && v_stack[v_sp - 1].tag == tvMATRIX)
+              {
+                res = ((bool (*) (void *, value &, int, int))sym->func) (
+                    (void *)this, v_stack[v_sp - 2], v_stack[v_sp - 1].mrows,
+                    v_stack[v_sp - 1].mcols);
+              }
+              else
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              else
+               {
+                res = ((bool (*) (void *, value &, int, int))sym->func) (
+                    (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival,
+                    v_stack[v_sp - 1].ival);
+               }
 
-              bool res = ((bool (*) (void *, value &, int, int))sym->func) (
-                  (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival, v_stack[v_sp - 1].ival);
               if (!res || mxerr[0])
                {
                 if (mxerr[0])
@@ -7490,7 +7516,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
 
-              v_sp -= 2;
+              v_sp -= n_args;
              }
              break;
 

@@ -763,7 +763,7 @@ class calculator // calculator represents the main class for the expression calc
                                                 //operator type, used for main scan
  t_operator scan (bool operand, bool percent); // Scan the next token in the expression and return 
                                                // its operator type
- bool mx_idx (int &row, int &col); // Scan the matrix index in the expression and return true if it is valid,
+ int mx_idx (int &row, int &col); // Scan the matrix index in the expression and return true if it is valid,
                                    // with row and col being the parsed row and column indices
 
  // Error handling
@@ -772,7 +772,8 @@ class calculator // calculator represents the main class for the expression calc
  inline void error (const char *msg) { error (pos - 1, msg); } // Report an error at the current position with 
                                                                //the specified message
 
- bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3]);
+ //Functions and operators arguments check helpers.
+ bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3]); 
  bool CheckOpArgs (int n_args, const uint32_t mask[2]);
  bool isMxIdx1 ();
  bool isMxIdx2 ();

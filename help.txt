@@ -132,9 +132,9 @@ cross(A, B)               (3)   Cross product of two 3-element vectors (1×3 or 
 rows(A)                   (3)   Return matrix rows
 cols(A)                   (3)   Return matrix columns
 size(A)                   (3)   Return matrix rows*columns
-zeros(r,c)                (3)   Return zero matrix with r rows and c columns
-diag(r,c), eye(r,c)       (3)   Return zero matrix with r rows and c columns with 1 diagonal
-A[r, c]                   (3)   Matrix element access (both read and write) to the matrix element 
+zeros(r,c|M)              (3)   Return zero matrix with r rows and c columns
+diag(r,c|M), eye(r,c|M)   (3)   Return zero matrix with r rows and c columns with 1 diagonal
+A[r, c] , A[i]            (3)   Matrix element access (both read and write) to the matrix element 
 
 bind(x)                         Reinterpret a floating-point value as an integer 64
 floatd(i)                       Reinterpret an integer as a floating-point 64

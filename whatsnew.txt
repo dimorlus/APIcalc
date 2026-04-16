@@ -1,3 +1,8 @@
+16.04.26 (2.178)
++ The zeros, diag, and eye functions can now accept either two numbers (rows and cols) or 
+  a single matrix. In this case, a zero or diagonal matrix of the same size as the original 
+  is created.
+  
 15.04.26 (2.177)
 - A bug related to incorrect error display in the consts.txt and user.txt files has been 
   fixed.

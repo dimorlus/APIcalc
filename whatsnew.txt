@@ -2,6 +2,13 @@
 + The zeros, diag, and eye functions can now accept either two numbers (rows and cols) or 
   a single matrix. In this case, a zero or diagonal matrix of the same size as the original 
   is created.
+	zeros([(1, 2, 3); (4, 5, 6); (7, 8, 9)]) -> [(0, 0, 0); (0, 0, 0); (0, 0, 0)]
+	zeros(3,3) -> [(0, 0, 0); (0, 0, 0); (0, 0, 0)]
+	eye([(0, 0, 0); (0, 0, 0); (0, 0, 0)]) -> [(1, 0, 0); (0, 1, 0); (0, 0, 1)]
++ Now access to a matrix element by index is possible both by row and column, and by a single 
+  through index. 
+	[(1, 2, 3); (4, 5, 6); (7, 8, 9)][1,1] -> 5
+	[(1, 2, 3); (4, 5, 6); (7, 8, 9)][4] -> 5
   
 15.04.26 (2.177)
 - A bug related to incorrect error display in the consts.txt and user.txt files has been 

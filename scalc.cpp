@@ -5011,7 +5011,8 @@ float__t calculator::mxDim (value & M, t_mxDim dim)
     break;
   }
 }
-    // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 // MATRIX -> MATRIX FUNCTIONS
 // ---------------------------------------------------------------------------
 
@@ -5583,6 +5584,9 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
  return mrSKIP;
 }
 
+// Check that the number of arguments on the stack matches the expected count for a function, and
+// that their types are valid according to the provided mask. Returns true if checks pass, false if
+// there's an error (with error message set).
 bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3])
 {
  if (n_args != expected_args)
@@ -5632,6 +5636,9 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask
  return true;
 }
 
+// Check that the number of arguments on the stack matches the expected count for an operator, and
+// that their types are valid according to the provided mask. Returns true if checks pass, false if
+// there's an error (with error message set).
 bool calculator::CheckOpArgs (int n_args, const uint32_t mask[2])
 {
  for (int i = 0; i < n_args; i++)
@@ -5664,6 +5671,8 @@ bool calculator::CheckOpArgs (int n_args, const uint32_t mask[2])
  return true;
 }
 
+// Check if the top of the value stack is a matrix with valid dimensions (used for indexing like
+// A[i,j])
 bool calculator::isMxIdx1()
 {
  if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
@@ -5673,13 +5682,15 @@ bool calculator::isMxIdx1()
  else return false;
 }
 
+// Check if the top two entries on the value stack are matrices with valid dimensions (used for
+// indexing like A[i,j])
 bool calculator::isMxIdx2 ()
 {
  if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
       v_stack[v_sp - 1].mval && 
       v_stack[v_sp - 1].mcols + 
       v_stack[v_sp - 1].mrows) || 
-     (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j]
+     (v_stack[v_sp - 2].tag == tvFLOAT && // B[i,j]
       v_stack[v_sp - 2].mval && 
       v_stack[v_sp - 2].mcols + 
       v_stack[v_sp - 2].mrows)) return true;

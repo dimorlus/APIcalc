@@ -389,7 +389,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSUM,      // 24  Summation operator for numerical summation (sum)
  tsDIFF,     // 25  Differentiation operator for numerical differentiation (diff)
  tsFOR,      // 26  For operator (for)
- tsNUM       // 27  Total number of symbol types, must be the last in the list
+ tsIF,       // 27  if operator for conditional expressions (if)
+ tsNUM       // 28  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -442,7 +443,9 @@ enum t_br_result
 #define MASK_INTEGR     (1 << tsINTEGR)      // integration operator for numerical integration
 #define MASK_DIFF       (1 << tsDIFF)        // differentiation operator for numerical differentiation
 #define MASK_FOR        (1 << tsFOR)         // for operator for numerical summation
-#define MASK_DEFAULT  (uint32_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
+#define MASK_IF         (1 << tsIF)          // if operator for conditional expressions
+
+#define MASK_DEFAULT (uint32_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

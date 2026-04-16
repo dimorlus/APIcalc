@@ -1,3 +1,9 @@
+16.04.26 (2.179)
++ Added operator if(cond, true, false) If the first operand of expr is not 0, the second 
+  operand returns true; otherwise, the third operand returns false. The returned operands 
+  can be of any type, including different types.  
+	{sign(x) if(x>0,1,-1)}
+
 16.04.26 (2.178)
 + The zeros, diag, and eye functions can now accept either two numbers (rows and cols) or 
   a single matrix. In this case, a zero or diagonal matrix of the same size as the original 

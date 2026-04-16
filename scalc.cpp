@@ -250,6 +250,8 @@ void calculator::AddPredefined (void)
  add (tsINTEGR, "integral", nullptr);
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
+ add (tsIF, "if", nullptr);
+
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -7765,10 +7767,22 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 error (v_stack[v_sp - 1].pos, "String operand required");
                 return result_fval = qnan;
                }
-              v_stack[v_sp - 2].ival
-                  = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
+              v_stack[v_sp - 2].ival = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
+             }
+             break;
+
+            case tsIF: //  if(x, y, z) 
+             {
+              const uint32_t masks[] = { MSK_ERR, MSK_ERR, MSK_ERR};
+              if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
+
+              if (v_stack[v_sp - 3].ival)
+                v_stack[v_sp - 4] = v_stack[v_sp - 2];
+              else
+                v_stack[v_sp - 4] = v_stack[v_sp - 1];
+              v_sp -= 3;
              }
              break;
 

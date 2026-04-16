@@ -252,7 +252,7 @@ x %% y  →  (x / y - 1) * 100
   ```
   r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) → [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
   ```
-* **if(cond, true, false)**: If the first operand *cond* is not 0, the second operand returns *true*; otherwise, the third operand returns *false*. The returned operands can be any type, including different types.  
+* **if(cond, true, false)**: If the first operand (*cond*) is not 0, the second operand (*true*) returns; otherwise, the third operand (*false*) returns. The returned operands can be any type, including different types.  
   ```
   if(x>0,1,-1)
   {sign(x)if(x>0,1,-1)}

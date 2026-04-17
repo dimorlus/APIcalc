@@ -124,8 +124,8 @@ wrgb(x)                         Returns the RGB color of the given wavelength in
 trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
 color(n)                        Shows a color (colored square on top of the application in 0xRRGGBB format)
 
-const("name",x|z|M)     (1,3)   Add constant 
-var("name",x|z|M)       (1,3)   Add variable
+const("name",x|z|M)     (1,3)   Add (declare) constant 
+var("name",x|z|M)       (1,3)   Add (declare) variable
 
 integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation
@@ -155,7 +155,7 @@ prnf(filename, fmt, ...)        Works the same as prn, but print to the filename
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
 ```
-*Legend*: _x_, _y_ - real number, _z_ - complex number, _n_, _m_, _i_ - integer number, _A_, _B_, _M_ - matrix, _c_, _r_ - column, row of matrix<br>
+*Legend*: _x_, _y_ - real number; _z_ - complex number; _n_, _m_, _i_ - integer number; _A_, _B_, _M_ - matrix; _c_, _r_ - column, row of matrix<br>
 (1) *Also for complex operands.*<br>
 (3) *Also for matrix operands.*<br>
 ### Special:

@@ -1,5 +1,5 @@
-##                            Operators:
-###                            Common
+## Operators:
+### Common
 ```							
 +    (1,3)  Plus (also for string)              -    (1,3)  Minus
 ++          Increment pre and post (++V, V++)   --          Decrement pre and post (--V, V--)
@@ -19,19 +19,18 @@
 #=          XOR and assign                      &=          AND and assign
 ^=          XOR and assign                      >>>=        Shift and assign
 ```
-###                            'Pascal' - style
+### 'Pascal' - style
 ```							
 :=   (1,3)  Assign                              =    (1,3)  Compare
 ^    (1,3)  Power                               //   (1,3)  Parallel resistors
 ```
-###                            'C' - style
+### 'C' - style
 ```
 =    (1)    Assign                              ==   (1,3)  Compare
 ^           XOR                                 //   (1,3)  Parallel resistors
 ```
-(1) *Also for complex operands.*                  (2) *Complex conjugate: ~(1+2i)=1-2i*
-
-(3) *Also for matrix operands.*                   (4) *Matrix inversion.*
+ (1) *Also for complex operands.*                  (2) *Complex conjugate: ~(1+2i)=1-2i*
+ (3) *Also for matrix operands.*                   (4) *Matrix inversion.*
 
 *First using of '==' switches engine to 'C'-style syntax.*
 

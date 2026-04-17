@@ -154,7 +154,9 @@ printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
 prnf(filename, fmt, ...)        Works the same as prn, but print to the filename.
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
-            Special:
+```
+### Special:
+```
 help(0)                         Call help
 opacity(100)                    Set opacity level in percent
 binwide(32)                     Set binary width
@@ -162,12 +164,16 @@ menu(0)                         Hide (0) or show (1) menu.
 vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
-(1) Also for complex operands.
-(3) Also for matrix operands.
+```
+(1) *Also for complex operands.*<br>
+(3) *Also for matrix operands.*<br>
 
-        User defined functions:
+###        User defined functions:
+```
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
-        Newton-Raphson solution of the equation:
+```
+###        Newton-Raphson solution of the equation:
+```
 solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
 solve(z^2+z+1, z:=0+1i) (1)             |1|(120`0'0") -500m+866mi
 solve(x(2x+2)-2, x:=-1) (1)             -1.61803398875005
@@ -175,8 +181,9 @@ calc(x(2x+2)-2, x:=-1)  (1)             -2
 calc(z^2+z+1, z:=0+1i)  (1)             |1|(90`0'0") 0+1i
 solve(expr, var:=est) expr is the left side of the equation, 
 expr(var)=0, est is the first approximation of the root.
-
-        Data formats:
+```
+##        Data formats:
+```
 Hex                 0x1000, $1000               4096
 Octal               01000, 0o1000               512
 Binary              0b1000                      8
@@ -196,8 +203,9 @@ Inch                2"5                         0.0635=2+1/2 "
 Complex             3+4i, 3+j4, j4+3            3+4i
 Temperature         frh(75), 75F                297.039 K|23.8889 `C|75 `F
 Matrix              A := [(1,2,3);(4,5,6);(7,8,9)];C := [(1,2);(3,4);(5,6)]
-
-                    Examples:
+```
+##                    Examples:
+```
 L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant             297.6k
 72-20%                                                      57.6
 72-20%+5%                                                   60.48
@@ -213,16 +221,18 @@ sum(1/x!,20,0,x)                                            2.718281828459045
 A := [(1,2,3);(4,5,6);(7,8,9)];tr(A)                        15
 A := [(1,2,3);(4,5,6);(7,8,9)];norm(A)                      16.881943016134134
 A := [(1,2,3);(4,5,6);(7,8,9)];cols(A)                      3
-
-    Implicit Multiplication:
+```
+##    Implicit Multiplication:
+```
 3PI             3*PI                9.424777960
 3pi             0+3pi               0+3e-12i
 2 pi            2*pi                6.283185307
 2sin(2PI/3)     2*sin(2*PI/3)       1.732050807
 3(1+2)          3*(1+2)             9
 (1+2)(1+2)(1+2) (1+2)*(1+2)*(1+2)   27
-
-            Constants:
+```
+##            Constants:
+```
 version                     2.02 or above
 pi                          3.141592653589
 e                           2.718281828459
@@ -230,9 +240,10 @@ phi                         1.618033988749 (Golden ratio)
 timezone                    System timezone offset (hours)
 daylight                    Daylight saving time flag
 tz                          Offset from UTC in hours
-
-                Range postfix:
-                Binary (power of 2)
+```
+#                Range postfix:
+##                Binary (power of 2)
+```
 1QB quetta  1267650600228229401496703205376 2^100
 1RB ronna   1237940039285380274899124224    2^90
 1YB yotta   1208925819614629174706176       2^80
@@ -243,7 +254,9 @@ tz                          Offset from UTC in hours
 1GB giga    1073741824                      2^30
 1MB mega    1048576                         2^20
 1KB kilo    1024                            2^10
-                Decimal (power of 10)
+```
+##                Decimal (power of 10)
+```
                         EU              US
 1Q  quetta  10^30       Quintillion     Nonillion       1q  quecto  10^-30
 1R  ronna   10^27       Quadrilliard    Octillion       1r  ronto   10^-27
@@ -260,8 +273,9 @@ tz                          Offset from UTC in hours
 1D  deka    10^1        Ten             Ten             1d  deci    10^-1 
 1da deka    10^1        Ten             Ten
 1           10^0        One             One             1           10^0
-
-            Predefined constants:
+```
+#            Predefined constants:
+```
 Name            Value                   Description
 Mathematical:
 pi              3.141592653589793       π
@@ -272,9 +286,10 @@ deg             0.0174532925199433      π/180
 e               2.718281828459045       Euler's number
 i, j            0+1i                    √-1
 phi             1.618033988749895       Golden ratio
-
-Imperial and other:
-Distance:
+```
+##Imperial and other:
+###Distance:
+```
 inch            0.0254                  Inch (m)
 mil             2.54e-05                1/1000Inch (m)
 ft              0.3048                  Foot (m)
@@ -285,15 +300,17 @@ mi              1609.344                Mile (m)
 mile            1609.344                Mile (m)
 nmi             1852                    Nautical mile (m)
 ptt             0.0003527777777777778   Printing point DTP 0.3528mm
-
-Mass:
+```
+###Mass:
+```
 kg              1                       Kilogram (kg)
 lb              0.45359237              Pound (kg)
 oz              0.028349523125          Ounce (kg)
 st              6.35029318              Stone (kg)
 gr              0.001                   Gram (kg)
-
-Volume:
+```
+###Volume:
+```
 gal             0.003785411784          US Gallon (m³)
 qt              0.000946352946          US Quart (m³)
 pt              0.000473176473          US Pint (m³)
@@ -304,8 +321,9 @@ tsp             4.92892159375e-06       US Teaspoon (m³)
 lt              0.001                   liters (m³)
 ml              1e-06                   milliliters (m³)
 cc              1e-06                   milliliters (m³)
-
-Energy:
+```
+###Energy:
+```
 cal             4.184                   Calorie (J)
 kcal            4184                    Kilocalorie (J)
 btu             1055.05585262           British thermal unit (J)
@@ -320,35 +338,41 @@ ev              1.602176634e-19         Electronvolt (J)
 kev             1.602176634e-16         Kiloelectronvolt (J)
 mev             1.602176634e-13         Megaelectronvolt (J)
 gev             1.602176634e-10         Gigaelectronvolt (J)
-
-Power:
+```
+###Power:
+```
 hps             745.6998715822702       Horsepower (W)
 bhp             745.6998715822702       Brake horsepower (W) 
-
-Pressure:
+```
+###Pressure:
+```
 atm             101325                  Standard atmosphere (Pa)
 bar             100000                  Bar (Pa)
 psi             6894.757293168361       Pound-force per square inch (Pa)
-
-Velocity:
+```
+###Velocity:
+```
 kmh             0.277777778             Kilometers per hour to meters per second
 mph             0.44704                 Miles per hour to meters per second
 knot            0.514444444             Nautical miles per hour to meters per second
-
-Time:
+```
+###Time:
+```
 hour            3600                    Hour in seconds
 hr              3600                    Hour in seconds
 mnt             60                      Minute in seconds
-
-Magnetic:
+```
+###Magnetic:
+```
 tl              1                       Magnetic flux density (or magnetic induction) Tesla - Base SI 
 wb              1                       Magnetic flux Weber - Base SI
 gs              0.0001                  Magnetic flux density (or magnetic induction) Gauss to Tesla
 mw              1e-08                   Magnetic flux Maxwell to Weber
 oe              79.57747154594767       Magnetic field strength (H) Oersted to A/m
 gb              0.7957747154594768      Magnetomotive force (MMF) Gilbert to Ampere-turn
-
-Radiation:
+```
+###Radiation:
+```
 gy              1                       Gray (J/kg) - Base SI
 rad             0.01                    Rad (absorbed dose)
 sv              1                       Sievert (Equivalent dose) - Base SI
@@ -357,9 +381,10 @@ rn              0.00877                 Roentgen (approx in air)
 mrn             0.00000877              Milli-roentgen
 urn             8.77e-09                Micro-roentgen
 ngnt            0.031572                Not great, not terrible (3.6 R)
-
-Physical Constants (CODATA 2018):
-Fundamental:
+```
+##Physical Constants (CODATA 2018):
+###Fundamental:
+```
 c0              299792458               Speed of light (m/s) The speed of electromagnetic radiation in vacuum
 hp              6.62607015e-34          Planck constant (J·s) Relating energy to frequency
 hb              1.054571817e-34         Reduced Planck constant ℏ (J·s) Planck constant divided by 2π
@@ -372,31 +397,36 @@ rs              8.314462618             Ideal gas constant kb*Na (J/(mol·K))
 nae             2.1798723611035e-18     Rydberg energy (J)
 mu              1.6605390666e-27        Atomic mass constant (kg)
 stdt            273.15                  Standard temperature 0°C (K)
-
-Electromagnetic:
+```
+###Electromagnetic:
+```
 e0              8.8541878128e-12        Electric constant (vacuum permittivity) (F/m) Permittivity of free space
 u0              1.25663706212e-06       Magnetic constant (vacuum permeability) (H/m) Permittivity of free space
 z0              376.730313668           Impedance of vacuum (Ω) Wave impedance of electromagnetic waves in vacuum
-
-Particle:
+```
+###Particle:
+```
 qe              1.602176634e-19         Elementary charge (C) Electric charge of a proton (magnitude)
 me              9.1093837015e-31        Electron mass (kg) Rest mass of an electron
 mp              1.67262192369e-27       Proton mass (kg) Rest mass of a proton
 mn              1.67492749804e-27       Neutron mass (kg) Rest mass of a neutron
 rel             2.8179403262e-15        Classical electron radius (m) Characteristic length scale for electron scattering
 a0              5.29177210903e-11       Bohr radius (m) Most probable distance between nucleus and electron in hydrogen ground state
-
-Astronomical:
+```
+###Astronomical:
+```
 au              149597870700            Astronomical unit (m) Mean distance from Earth to Sun
 ly              9460730472580800        Light year (m) Distance light travels in one Julian year
 pc              3.0856775814914e+16     Parsec (m) Parallax of one arcsecond, astronomical distance unit
 g0              9.80665                 Standard gravity (m/s²)
-
-Additional:
+```
+###Additional:
+```
 ry              10973731.56816          Rydberg constant (m⁻¹) Spectroscopic constant for atomic spectra
 sb              5.670374419e-08         Stefan-Boltzmann constant (W/(m²·K^4)) Constant relating black body radiation to temperature
-
-Rainbow Colors:
+```
+###Rainbow Colors:
+```
 Wavelengths (in nanometers, nm)
 fir             316e-6                  Far infrared (FIR, 100-1000 um)
 lwir            11.5e-6                 Long-wave IR (LWIR, 8-15 um, thermal)
@@ -413,25 +443,28 @@ violet          400e-9                  (~380–450 nm)
 uva             348e-9                  UVA ultraviolet (315-380 nm, tanning)
 uvb             298e-9                  UVB ultraviolet (280-315 nm)
 uvc             190e-9                  UVC ultraviolet (100-280 nm, germicidal)
-
-Integer Limits:
+```
+###Integer Limits:
+```
 max32, maxint       Maximum signed 32-bit (2147483647, 0x7FFFFFFF)
 maxu32, maxuint     Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
 max64, maxlong      Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
 maxu64, maxulong    Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
-
-Floating point parameters:
+```
+###Floating point parameters:
+```
 fp_dig              Significant decimal digits
 fp_mant_dig         Bits in the mantissa
 fp_max_exp          Maximum exponent (base 2)
 fp_max_10_exp       Maximum exponent (base 10)
 fp_sz               Size of floating point number in bits
 int_sz              Size of integer number in bits
- 
-System:
+``` 
+###System:
+```
 version             Calculator version
 timezone            System timezone offset in hours
 daylight            Daylight saving time flag (0 or 1)
 tz                  Current timezone with DST applied
-Note: All constants are case-insensitive without Case sensitive option.
 ```
+***Note***: *All constants are case-insensitive without Case sensitive option.*

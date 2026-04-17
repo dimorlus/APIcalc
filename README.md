@@ -624,76 +624,8 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 * View variables: Open variables dialog
 * Exit: Close application
 
-## Build Requirements
+[quick reference guide](help.md)
 
-* Visual Studio 2019 or later
-* Windows SDK 10.0 or later
-* C++17 standard
-* BCB6 (Borland C++ Builder 6) compilation option is also available for the calculator engine
-
-### Building GUI Version (WinApiCalc)
-
-1. Open `WinApiCalc.sln` in Visual Studio
-2. Select configuration (Debug/Release) and platform (x86/x64)
-3. Build solution (F7)
-4. Executable will be in `x64/Release/fcalc.exe` or similar
-
-### Building CLI Version (ccalc)
-
-1. Open `ccalc.vcxproj` in Visual Studio
-2. Select configuration and platform
-3. Build project
-4. Executable will be in configured output directory
-
-Both projects share the same calculation engine (`scalc.cpp`, `sfmts.cpp`, `sfunc.cpp`).
-
-## Dependencies
-
-* comctl32.lib (Windows Common Controls)
-* htmlhelp.lib (CHM help support)
-
-## Architecture
-
-The application uses a clean separation of concerns:
-
-* **Common calculation engine** (shared by both GUI and CLI):
-  
-  * **scalc.cpp/h**: Mathematical expression parser and evaluator
-  * **sfmts.cpp/h**: Number format conversion and output
-  * **sfunc.cpp/h**: Mathematical functions implementation
-
-* **GUI version** (WinApiCalc):
-  
-  * **WinApiCalc.cpp/h**: Main application window and UI management
-  * **Resources**: Menus, dialogs, and accelerators
-
-* **CLI version** (ccalc):
-  
-  * **ccalc.cpp/h**: Command-line interface and argument parsing
-  * **help.cpp**: Built-in help system
-
-## Project Structure
-
-```
-APICalc/
-├── scalc.cpp/h          # Calculation engine (shared)
-├── sfmts.cpp/h          # Format handling (shared)
-├── sfunc.cpp/h          # Math functions (shared)
-├── WinApiCalc.cpp/h     # GUI application
-├── WinApiCalc.rc        # GUI resources
-├── consts.txt           # Built-in user constants and functions (overwritten on update)
-├── user.txt             # Personal user constants and functions (never overwritten)
-├── ccalc/               # CLI version
-│   ├── ccalc.cpp/h      # CLI main
-│   ├── help.cpp         # Help system
-│   └── ccalc.cfg        # Configuration file
-├── fcalc.chm            # Help file
-└── README.md            # This file
-```
-
-## Help File Integration
-
-Place your CHM help file as `fcalc.chm` in the same directory as the executable to enable F1 help functionality.
 
 ## License
 

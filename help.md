@@ -155,7 +155,7 @@ prnf(filename, fmt, ...)        Works the same as prn, but print to the filename
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
 ```
-*Legend*: x, y - real number, z - complex number, n, m, i - integer number, A, B, M - matrix, c, r - column, row of matrix<br>
+*Legend*: _x_, _y_ - real number, _z_ - complex number, _n_, _m_, _i_ - integer number, _A_, _B_, _M_ - matrix, _c_, _r_ - column, row of matrix<br>
 (1) *Also for complex operands.*<br>
 (3) *Also for matrix operands.*<br>
 ### Special:

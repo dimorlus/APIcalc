@@ -277,7 +277,9 @@ tz                          Offset from UTC in hours
 #            Predefined constants:
 ```
 Name            Value                   Description
-Mathematical:
+```
+###Mathematical:
+```
 pi              3.141592653589793       π
 tau             6.283185307179586       2π
 turn            6.283185307179586       2π
@@ -288,6 +290,7 @@ i, j            0+1i                    √-1
 phi             1.618033988749895       Golden ratio
 ```
 ##Imperial and other:
+
 ###Distance:
 ```
 inch            0.0254                  Inch (m)

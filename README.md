@@ -624,7 +624,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 * View variables: Open variables dialog
 * Exit: Close application
 
-[quick reference guide](help.md)
+[Quick reference guide](help.md)
 
 
 ## License

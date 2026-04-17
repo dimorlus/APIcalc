@@ -59,10 +59,10 @@ sinh(x|z), sh(x|z)        (1)   Hyperbolic sine
 cosh(x|z), ch(x|z)        (1)   Hyperbolic cosine
 tanh(x|z), th(x|z)        (1)   Hyperbolic tangent
 ctanh(x|z), cth(x|z)      (1)   Hyperbolic cotangent
-asinh(x|z), arsh(x|z)     (1)   Hyperbolic arcsine
-acosh(x|z), arch(x|z)     (1)   Hyperbolic arccosine
-atanh(x|z), arth(x|z)     (1)   Hyperbolic arctangent
-acoth(x|z), arcth(x|z)    (1)   Hyperbolic arccotangent
+asinh(x|z), arsh(x|z)     (1)   Hyperbolic arc sine
+acosh(x|z), arch(x|z)     (1)   Hyperbolic arc cosine
+atanh(x|z), arth(x|z)     (1)   Hyperbolic arc tangent
+acoth(x|z), arcth(x|z)    (1)   Hyperbolic arc cotangent
 
 exp(x|z)                  (1)   Exponent, e^x
 exp10(x|z)                (1)   10^x 
@@ -87,7 +87,7 @@ not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
 mod, fmod(x|z,y|z)        (1)   Reminder
-rnd(x|x)                  (1)   Random value 0..x
+rnd(x|z)                  (1)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function
@@ -104,7 +104,7 @@ cs(x)                           Cross section of diameter
 acs(x)                          Diameter of cross section
 awg(n)                          American wire gauge to mm
 sawg(n)                         American wire gauge to mm2
-aawg(x)                         mm to american wire gauge
+aawg(x)                         mm to American wire gauge
 swg(n)                          British standard wire gauge to mm
 sswg(n)                         British standard wire gauge to mm2
 aswg(x)                         mm to British standard wire gauge
@@ -155,6 +155,9 @@ prnf(filename, fmt, ...)        Works the same as prn, but print to the filename
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
 ```
+*Legend*: x, y - real number, z - complex number, n, m, i - integer number, A, B, M - matrix, c, r - column, row of matrix<br>
+(1) *Also for complex operands.*<br>
+(3) *Also for matrix operands.*<br>
 ### Special:
 ```
 help(0)                         Call help
@@ -165,9 +168,6 @@ vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
 ```
-(1) *Also for complex operands.*<br>
-(3) *Also for matrix operands.*<br>
-
 ###        User defined functions:
 ```
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)

@@ -29,8 +29,8 @@
 =    (1)    Assign                              ==   (1,3)  Compare
 ^           XOR                                 //   (1,3)  Parallel resistors
 ```
- (1) *Also for complex operands.*                  (2) *Complex conjugate: ~(1+2i)=1-2i*
- (3) *Also for matrix operands.*                   (4) *Matrix inversion.*
+|(1) *Also for complex operands.* |(2) *Complex conjugate: ~(1+2i)=1-2i*|
+|(3) *Also for matrix operands.*  |(4) *Matrix inversion.*              |
 
 *First using of '==' switches engine to 'C'-style syntax.*
 

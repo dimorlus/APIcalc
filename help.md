@@ -23,7 +23,9 @@
 ```							
 :=   (1,3)  Assign                              =    (1,3)  Compare
 ^    (1,3)  Power                               //   (1,3)  Parallel resistors
+```
 ###                            'C' - style
+```
 =    (1)    Assign                              ==   (1,3)  Compare
 ^           XOR                                 //   (1,3)  Parallel resistors
 ```

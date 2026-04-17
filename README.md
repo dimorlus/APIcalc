@@ -248,11 +248,11 @@ x %% y  →  (x / y - 1) * 100
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
   ```
-* **for(expr, from, to, var)**: Execution over integer range, return expr value (any type including matrix and complex). Supports both ascending and descending order:
+* **for(expr, from, to, var)**: Execution over integer range, return `expr` value (any type including matrix and complex). Supports both ascending and descending order:
   ```
   r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) → [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
   ```
-* **if(cond, true, false)**: If the first operand (*cond*) is not 0, the second operand (*true*) returns; otherwise, the third operand (*false*) returns. The returned operands can be any type, including different types.  
+* **if(cond, true, false)**: If the first operand `cond` is not 0, the second operand `true` returns; otherwise, the third operand `false` returns. The returned operands can be any type, including different types.  
   ```
   if(x>0,1,-1)
   {sign(x)if(x>0,1,-1)}

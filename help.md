@@ -278,7 +278,7 @@ tz                          Offset from UTC in hours
 ```
 Name            Value                   Description
 ```
-###Mathematical:
+### Mathematical:
 ```
 pi              3.141592653589793       π
 tau             6.283185307179586       2π
@@ -289,9 +289,8 @@ e               2.718281828459045       Euler's number
 i, j            0+1i                    √-1
 phi             1.618033988749895       Golden ratio
 ```
-##Imperial and other:
-
-###Distance:
+## Imperial and other:
+### Distance:
 ```
 inch            0.0254                  Inch (m)
 mil             2.54e-05                1/1000Inch (m)
@@ -304,7 +303,7 @@ mile            1609.344                Mile (m)
 nmi             1852                    Nautical mile (m)
 ptt             0.0003527777777777778   Printing point DTP 0.3528mm
 ```
-###Mass:
+### Mass:
 ```
 kg              1                       Kilogram (kg)
 lb              0.45359237              Pound (kg)
@@ -312,7 +311,7 @@ oz              0.028349523125          Ounce (kg)
 st              6.35029318              Stone (kg)
 gr              0.001                   Gram (kg)
 ```
-###Volume:
+### Volume:
 ```
 gal             0.003785411784          US Gallon (m³)
 qt              0.000946352946          US Quart (m³)
@@ -325,7 +324,7 @@ lt              0.001                   liters (m³)
 ml              1e-06                   milliliters (m³)
 cc              1e-06                   milliliters (m³)
 ```
-###Energy:
+### Energy:
 ```
 cal             4.184                   Calorie (J)
 kcal            4184                    Kilocalorie (J)
@@ -342,30 +341,30 @@ kev             1.602176634e-16         Kiloelectronvolt (J)
 mev             1.602176634e-13         Megaelectronvolt (J)
 gev             1.602176634e-10         Gigaelectronvolt (J)
 ```
-###Power:
+### Power:
 ```
 hps             745.6998715822702       Horsepower (W)
 bhp             745.6998715822702       Brake horsepower (W) 
 ```
-###Pressure:
+### Pressure:
 ```
 atm             101325                  Standard atmosphere (Pa)
 bar             100000                  Bar (Pa)
 psi             6894.757293168361       Pound-force per square inch (Pa)
 ```
-###Velocity:
+### Velocity:
 ```
 kmh             0.277777778             Kilometers per hour to meters per second
 mph             0.44704                 Miles per hour to meters per second
 knot            0.514444444             Nautical miles per hour to meters per second
 ```
-###Time:
+### Time:
 ```
 hour            3600                    Hour in seconds
 hr              3600                    Hour in seconds
 mnt             60                      Minute in seconds
 ```
-###Magnetic:
+### Magnetic:
 ```
 tl              1                       Magnetic flux density (or magnetic induction) Tesla - Base SI 
 wb              1                       Magnetic flux Weber - Base SI
@@ -374,7 +373,7 @@ mw              1e-08                   Magnetic flux Maxwell to Weber
 oe              79.57747154594767       Magnetic field strength (H) Oersted to A/m
 gb              0.7957747154594768      Magnetomotive force (MMF) Gilbert to Ampere-turn
 ```
-###Radiation:
+### Radiation:
 ```
 gy              1                       Gray (J/kg) - Base SI
 rad             0.01                    Rad (absorbed dose)
@@ -385,8 +384,8 @@ mrn             0.00000877              Milli-roentgen
 urn             8.77e-09                Micro-roentgen
 ngnt            0.031572                Not great, not terrible (3.6 R)
 ```
-##Physical Constants (CODATA 2018):
-###Fundamental:
+## Physical Constants (CODATA 2018):
+### Fundamental:
 ```
 c0              299792458               Speed of light (m/s) The speed of electromagnetic radiation in vacuum
 hp              6.62607015e-34          Planck constant (J·s) Relating energy to frequency
@@ -401,13 +400,13 @@ nae             2.1798723611035e-18     Rydberg energy (J)
 mu              1.6605390666e-27        Atomic mass constant (kg)
 stdt            273.15                  Standard temperature 0°C (K)
 ```
-###Electromagnetic:
+### Electromagnetic:
 ```
 e0              8.8541878128e-12        Electric constant (vacuum permittivity) (F/m) Permittivity of free space
 u0              1.25663706212e-06       Magnetic constant (vacuum permeability) (H/m) Permittivity of free space
 z0              376.730313668           Impedance of vacuum (Ω) Wave impedance of electromagnetic waves in vacuum
 ```
-###Particle:
+### Particle:
 ```
 qe              1.602176634e-19         Elementary charge (C) Electric charge of a proton (magnitude)
 me              9.1093837015e-31        Electron mass (kg) Rest mass of an electron
@@ -416,19 +415,19 @@ mn              1.67492749804e-27       Neutron mass (kg) Rest mass of a neutron
 rel             2.8179403262e-15        Classical electron radius (m) Characteristic length scale for electron scattering
 a0              5.29177210903e-11       Bohr radius (m) Most probable distance between nucleus and electron in hydrogen ground state
 ```
-###Astronomical:
+### Astronomical:
 ```
 au              149597870700            Astronomical unit (m) Mean distance from Earth to Sun
 ly              9460730472580800        Light year (m) Distance light travels in one Julian year
 pc              3.0856775814914e+16     Parsec (m) Parallax of one arcsecond, astronomical distance unit
 g0              9.80665                 Standard gravity (m/s²)
 ```
-###Additional:
+### Additional:
 ```
 ry              10973731.56816          Rydberg constant (m⁻¹) Spectroscopic constant for atomic spectra
 sb              5.670374419e-08         Stefan-Boltzmann constant (W/(m²·K^4)) Constant relating black body radiation to temperature
 ```
-###Rainbow Colors:
+### Rainbow Colors:
 ```
 Wavelengths (in nanometers, nm)
 fir             316e-6                  Far infrared (FIR, 100-1000 um)
@@ -447,14 +446,14 @@ uva             348e-9                  UVA ultraviolet (315-380 nm, tanning)
 uvb             298e-9                  UVB ultraviolet (280-315 nm)
 uvc             190e-9                  UVC ultraviolet (100-280 nm, germicidal)
 ```
-###Integer Limits:
+### Integer Limits:
 ```
 max32, maxint       Maximum signed 32-bit (2147483647, 0x7FFFFFFF)
 maxu32, maxuint     Maximum unsigned 32-bit (4294967295, 0xFFFFFFFF)
 max64, maxlong      Maximum signed 64-bit (9223372036854775807, 0x7FFFFFFFFFFFFFFF)
 maxu64, maxulong    Maximum unsigned 64-bit (18446744073709551615, 0xFFFFFFFFFFFFFFFF)
 ```
-###Floating point parameters:
+### Floating point parameters:
 ```
 fp_dig              Significant decimal digits
 fp_mant_dig         Bits in the mantissa
@@ -463,7 +462,7 @@ fp_max_10_exp       Maximum exponent (base 10)
 fp_sz               Size of floating point number in bits
 int_sz              Size of integer number in bits
 ``` 
-###System:
+### System:
 ```
 version             Calculator version
 timezone            System timezone offset in hours

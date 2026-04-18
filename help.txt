@@ -79,7 +79,7 @@ not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
 mod, fmod(x|z,y|z)        (1)   Reminder
-rnd(x|x)                  (1)   Random value 0..x
+rnd(x|z)                  (1)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function

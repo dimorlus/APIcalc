@@ -1,3 +1,6 @@
+Input for this [calculator](README.md) are normal C-like expressions containing operators, float or integer constants, 
+variables. Precedence and semantic of operators is the same as in C language. Variables and functions names 
+are case insensitive. Following functions and operators are supported:
 ## Operators:
 ### Common
 ```							

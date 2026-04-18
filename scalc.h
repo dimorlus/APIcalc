@@ -492,7 +492,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_hypot, // Hypotenuse function
  vf_atan2, // Arctangent of two variables function
  vf_fmod,  // Modulo function
- vf_rnd,   // Random function
+ vf_rand,  // Random function
 
  vf_floor, // Floor function
  vf_ceil,  // Ceiling function
@@ -841,8 +841,13 @@ class calculator // calculator represents the main class for the expression calc
  bool mxMatMul (value &res, value &left, value &right);
  bool mxGaussJordan (float__t *aug, int n, float__t &det);
  float__t *mxMakeAug (value &M);
+
+ bool mxElem (v_func fidx, value &res, value &M);
+
  bool mxInv (value &res, value &M);
  bool mxAbs (value &res, value &M);
+ bool mxRand (value &res, value &M);
+ bool mxRound (value &res, value &M);
  bool mxNeg (value &res, value &M);
  bool mxTranspose (value &res, value &M);
 

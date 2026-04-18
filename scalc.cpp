@@ -322,7 +322,8 @@ void calculator::AddPredefined (void)
  add (tsVFUNC1, vf_sqrt, "root2", (void *)vfunc);
  add (tsVFUNC1, vf_root3, "root3", (void *)vfunc);
  add (tsVFUNC1, vf_root3, "cbrt", (void *)vfunc);
- add (tsVFUNC1, vf_rnd, "rnd", (void *)vfunc);
+ add (tsVFUNC1, vf_rand, "rnd", (void *)vfunc);
+ add (tsVFUNC1, vf_rand, "rand", (void *)vfunc);
  add (tsVFUNC1, vf_round, "round", (void *)vfunc);
  add (tsVFUNC1, vf_ceil, "ceil", (void *)vfunc);
  add (tsVFUNC1, vf_floor, "floor", (void *)vfunc);
@@ -4988,11 +4989,7 @@ float__t calculator::mxNorm (value &M)
  float__t sum = (float__t)0.0L;
  int n        = M.mrows * M.mcols;
  for (int i = 0; i < n; i++) sum += M.mval[i] * M.mval[i];
-#ifdef _float128_
- return sqrtq (sum);
-#else
- return sqrtl (sum);
-#endif 
+ return Sqrt (sum);
 }
 
 float__t calculator::mxDim (value & M, t_mxDim dim)
@@ -5070,6 +5067,68 @@ bool calculator::mxInv (value &res, value &M)
  return true;
 }
 
+// mxElem: element-wise matrix function
+bool calculator::mxElem (v_func fidx, value &res, value &M)
+{
+ bool result       = true;
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval)
+  {
+   mxerror ("memory allocation failed");
+   return false;
+  }
+ int n = rows * cols;
+ if (fidx == vf_rand)
+  {
+   float__t rmax = 0;
+   for (int i = 0; i < n; i++) rmax += M.mval[i] * M.mval[i];
+   rmax = Sqrt (rmax)/Sqrt(n);
+   for (int i = 0; i < n; i++) mval[i] = Random(rmax);
+  }
+ else
+ for (int i = 0; i < n; i++)
+  {
+   switch (fidx)
+    {
+    case vf_abs:
+     mval[i] = Abs (M.mval[i]);
+     break;
+    case vf_floor:
+     mval[i] = Floor (M.mval[i]);
+     break;
+    case vf_ceil:
+     mval[i] = Ceil (M.mval[i]);
+     break;
+    case vf_round:
+     mval[i] = Round (M.mval[i]);
+     break;
+    case vf_frac:
+     mval[i] = Frac (M.mval[i]);
+     break;
+    case vf_int:
+     mval[i] = Int (M.mval[i]);
+     break;
+    case vf_float:
+     mval[i] = Float (M.mval[i]);
+     break;
+    default:
+     {
+      mxerror ("Illegal operation");
+      result = false;
+     }
+     break;
+    }
+  }
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return result;
+}
+
+
 // mxAbs: element-wise absolute value
 bool calculator::mxAbs (value &res, value &M)
 {
@@ -5078,7 +5137,42 @@ bool calculator::mxAbs (value &res, value &M)
  float__t *mval = mxAlloc (rows, cols);
  if (!mval) return false;
  int n = rows * cols;
- for (int i = 0; i < n; i++) mval[i] = fabsl (M.mval[i]);
+ for (int i = 0; i < n; i++) mval[i] = Abs (M.mval[i]);
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// mxRnd: element-wise random value
+bool calculator::mxRand (value &res, value &M)
+{
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ float__t rmax = 0;
+ for (int i = 0; i < n; i++) rmax += M.mval[i] * M.mval[i];
+ rmax = Sqrt (rmax)/Sqrt(n);
+ for (int i = 0; i < n; i++) mval[i] = Random(rmax);
+ res.tag   = tvMATRIX;
+ res.mrows = rows;
+ res.mcols = cols;
+ res.mval  = mval;
+ return true;
+}
+
+// mxRound: element-wise rounding
+bool calculator::mxRound (value &res, value &M)
+{
+ int rows       = M.mrows;
+ int cols       = M.mcols;
+ float__t *mval = mxAlloc (rows, cols);
+ if (!mval) return false;
+ int n = rows * cols;
+ for (int i = 0; i < n; i++) mval[i] = Round (M.mval[i]);
  res.tag   = tvMATRIX;
  res.mrows = rows;
  res.mcols = cols;
@@ -7538,19 +7632,21 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               uint32_t masks[] = { MSK_ERR | MSK_STR , 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
-              if (sym->fidx == vf_abs && v_stack[v_sp - 1].tag == tvMATRIX)
+              if (v_stack[v_sp - 1].tag == tvMATRIX)
                {
-                mxAbs (v_stack[v_sp - 2], v_stack[v_sp - 1]);
+                bool res = mxElem (sym->fidx, v_stack[v_sp - 2], v_stack[v_sp - 1]);
+                if (!res || mxerr[0])
+                 {
+                  if (mxerr[0])
+                   errorf (v_stack[v_sp - 1].pos, "Matrix %s", mxerr);
+                  else
+                   error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
+                  return result_fval = qnan;
+                 }
                 v_stack[v_sp - 2].tag = tvMATRIX;
                 v_sp -= 1;
                 break;
                }
-
-             if (v_stack[v_sp - 1].tag == tvMATRIX)
-              {
-               error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
-               return result_fval = qnan;
-              }
 
               ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                              sym->fidx);

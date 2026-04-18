@@ -1,3 +1,12 @@
+18.04.26 (2.180)
++ Now the int, float, round, floor, ceil, and frac functions can accept and return matrices, 
+  processing them element-by-element. The rnd (rand) function returns a matrix of the same 
+  size as the original, filled with random numbers with a base chosen as the RMS of the 
+  original matrix.
+	;;Do not try to repeat with the same result, the data is random.
+	rand(zeros(3,3)+10) -> [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
+	round(rand(zeros(3,3)+10)) -> [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
+
 17.04.26 (2.179)
 + Added operator if(cond, true, false) If the first operand of expr is not 0, the second 
   operand returns true; otherwise, the third operand returns false. The returned operands 

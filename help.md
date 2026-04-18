@@ -80,17 +80,17 @@ sqrt(x|z) root2(x|z)      (1)   Square root
 root3(x|z), cbrt(x|z)     (1)   Cube root, x^(1/3)
 rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
 hypot(x|z,y|z)            (1)   Hypotenuse
-round(x|z)                (1)   Round value
-int(x|z)                  (1)   Convert to int
-float(x|z)                (1)   Convert to float (do nothing)
-ceil(x|z)                 (1)   Rounds the number x up
-floor(x|z)                (1)   Rounds the number x down
-frac(x|z)                 (1)   Returns the fractional part
+round(x|z|M)            (1,3)   Round value
+int(x|z|M)              (1,3)   Convert to int
+float(x|z|M)            (1,3)   Convert to float (do nothing)
+ceil(x|z|M)             (1,3)   Rounds the number x up
+floor(x|z|M)            (1,3)   Rounds the number x down
+frac(x|z|M)             (1,3)   Returns the fractional part
 not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
 mod, fmod(x|z,y|z)        (1)   Reminder
-rnd(x|z)                  (1)   Random value 0..x
+rnd(x|z|M),rand(x|z|M)  (1,3)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function

@@ -2932,7 +2932,7 @@ void vfunc (value *res, value *arg, int idx)
       Root3C (re, im, out_re, out_im);
      }
      break;
-    case vf_rnd:
+    case vf_rand:
      {
       res->fval  = Random (re);
       res->imval = Random (im);
@@ -3181,7 +3181,7 @@ void vfunc (value *res, value *arg, int idx)
       res->fval = arg->fval;
      }
      break;
-    case vf_rnd:
+    case vf_rand:
      {
       res->fval = Random (arg->fval);
      }

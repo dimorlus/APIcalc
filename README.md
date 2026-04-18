@@ -374,6 +374,9 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 | `zeros(r,c)`       | matrix  | Return zero matrix with r rows and c columns                 |
 |`diag(r,c),eye(r,c)`| matrix  | Return zero matrix with r rows and c columns with 1 diagonal |
 
+The **int**, **float**, **round**, **floor**, **ceil**, and **frac** functions can accept and return matrices, processing them element-by-element. 
+The **rnd** (**rand**) function returns a matrix of the same size as the original, filled with random numbers with a base chosen as the RMS of the original matrix.
+
 #### Matrix Examples
 
 ```
@@ -414,6 +417,10 @@ $$\begin{cases} 2x - 3y = -4 \\\\ 3x - 2y = -1 \end{cases} \Rightarrow \begin{pm
 {solve_lin(A, B) !A * B}
 
 solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
+
+;;Do not try to repeat with the same result, the data is random.
+rand(zeros(3,3)+10) → [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
+round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 ```
 ### Strings
 

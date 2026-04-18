@@ -845,9 +845,6 @@ class calculator // calculator represents the main class for the expression calc
  bool mxElem (v_func fidx, value &res, value &M);
 
  bool mxInv (value &res, value &M);
- bool mxAbs (value &res, value &M);
- bool mxRand (value &res, value &M);
- bool mxRound (value &res, value &M);
  bool mxNeg (value &res, value &M);
  bool mxTranspose (value &res, value &M);
 

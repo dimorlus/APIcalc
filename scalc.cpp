@@ -5128,58 +5128,6 @@ bool calculator::mxElem (v_func fidx, value &res, value &M)
  return result;
 }
 
-
-// mxAbs: element-wise absolute value
-bool calculator::mxAbs (value &res, value &M)
-{
- int rows       = M.mrows;
- int cols       = M.mcols;
- float__t *mval = mxAlloc (rows, cols);
- if (!mval) return false;
- int n = rows * cols;
- for (int i = 0; i < n; i++) mval[i] = Abs (M.mval[i]);
- res.tag   = tvMATRIX;
- res.mrows = rows;
- res.mcols = cols;
- res.mval  = mval;
- return true;
-}
-
-// mxRnd: element-wise random value
-bool calculator::mxRand (value &res, value &M)
-{
- int rows       = M.mrows;
- int cols       = M.mcols;
- float__t *mval = mxAlloc (rows, cols);
- if (!mval) return false;
- int n = rows * cols;
- float__t rmax = 0;
- for (int i = 0; i < n; i++) rmax += M.mval[i] * M.mval[i];
- rmax = Sqrt (rmax)/Sqrt(n);
- for (int i = 0; i < n; i++) mval[i] = Random(rmax);
- res.tag   = tvMATRIX;
- res.mrows = rows;
- res.mcols = cols;
- res.mval  = mval;
- return true;
-}
-
-// mxRound: element-wise rounding
-bool calculator::mxRound (value &res, value &M)
-{
- int rows       = M.mrows;
- int cols       = M.mcols;
- float__t *mval = mxAlloc (rows, cols);
- if (!mval) return false;
- int n = rows * cols;
- for (int i = 0; i < n; i++) mval[i] = Round (M.mval[i]);
- res.tag   = tvMATRIX;
- res.mrows = rows;
- res.mcols = cols;
- res.mval  = mval;
- return true;
-}
-
 // mxNeg: element-wise negation (unary minus) — also in matrixuno, here for completeness
 bool calculator::mxNeg (value &res, value &M)
 {

@@ -132,7 +132,7 @@ int_t Prime (int_t n)
 }
 
 
-void factorize (char * str, int_t n)
+void factorize (char *str, int_t n)
 {
  char *cp = str;
  if (n <= 1)
@@ -160,10 +160,65 @@ void factorize (char * str, int_t n)
  // If n > 2, the remainder is a prime number   
  if (n > 2)
   {
-   if (cp - str < 60) cp += snprintf (cp, 77, "%lld*", n);
+   if (cp - str < 60) cp += sprintf (cp, "%lld*", n);
   }
  if (cp - str > 0 && *(cp - 1) == '*') *(cp - 1) = '\0'; // Remove trailing '*'
 }
+
+
+void factorize_p (char *str, int_t n)
+{
+ char *cp = str;
+ if (n <= 1)
+  {
+   if (cp - str < 60) cp += sprintf (cp, "%lld", n);
+   return;
+  }
+ // Divide by 2 while the number is even
+ int m = 0;
+ while (n % 2 == 0)
+  {
+   m++;
+   n = n / 2;
+  }
+ if (m == 1)
+  {
+   if (cp - str < 60) cp += sprintf (cp, "2*");
+  }
+ else
+ if (m > 1)
+  {
+   if (cp - str < 60) cp += sprintf (cp, "2^%d*", m);
+  }
+
+ // Now n should be odd. Iterate through odd numbers
+ for (int_t i = 3; i * i <= n; i = i + 2)
+  {
+   m = 0;
+   while (n % i == 0)
+    {
+     m++;
+     n = n / i;
+    }
+   if (m == 1)
+    {
+     if (cp - str < 60) cp += sprintf (cp, "%lld*", i);
+    }
+   else
+   if (m > 1)
+    {
+     if (cp - str < 60) cp += sprintf (cp, "%lld^%d*", i, m);
+    }
+  }
+
+ // If n > 2, the remainder is a prime number
+ if (n > 2)
+  {
+   if (cp - str < 60) cp += sprintf (cp, "%lld*", n);
+  }
+ if (cp - str > 0 && *(cp - 1) == '*') *(cp - 1) = '\0'; // Remove trailing '*'
+}
+
 
 // int -> float (reinterpret bits)
 float__t floatf (uint64_t i) // float: take the lower 32 bits

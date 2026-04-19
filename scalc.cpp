@@ -359,7 +359,7 @@ void calculator::AddPredefined (void)
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
  add (tsIFUNC1, "prime", (void *)Prime);
- add (tsSFUNCI1, "factorize", (void *)factorize);
+ add (tsSFUNCI1, "factorize", (void *)factorize_p);
 
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
@@ -7840,8 +7840,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               sres[STRBUF - 1] = '\0';
               if (sres[0]) fflags |= STR;
               v_stack[v_sp - 2].sval = dupString (sres);
-              v_stack[v_sp - 2].fval = v_stack[v_sp - 1].get ();
-              v_stack[v_sp - 2].ival = v_stack[v_sp - 1].ival;
+              v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 1].get_int ();
+              v_stack[v_sp - 2].ival = v_stack[v_sp - 1].get_int ();
               v_stack[v_sp - 2].tag  = tvSTR;
               v_sp -= 1;
              }

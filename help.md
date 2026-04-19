@@ -219,7 +219,7 @@ L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant             297.6k
 57.6%%72                                                    -20
 abs(3+4j);;Comment                                          5
 z:=3+4i                                                     3+4i
-factorize(1014)                                             '2*3*13*13'
+factorize(1014)                                             '2*3*13^2'
 integr(1/sqrt(x), 0.001, 1, x)                              1.93675444679663
 time:=2*pi;sqrt((1/time)integral((10sin(x))^2, 0, time, x)) 7.071067811865472
 diff(tg(x), 0, x)                                           1

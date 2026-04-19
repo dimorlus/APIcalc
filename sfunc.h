@@ -18,6 +18,7 @@
 int_t To_int(int_t val);
 float__t To_float(float__t val);
 int_t Prime(int_t n);
+void factorize (char *str, int_t n);
 
 float__t floatf (uint64_t i);
 float__t floatd (uint64_t i);

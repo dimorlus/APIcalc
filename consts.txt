@@ -334,3 +334,7 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 
 ;; Returns a 2D rotation matrix for a given angle alpha
 {rot2(a) [(cos(a), -sin(a)); (sin(a), cos(a))]}
+
+;;Combinatorics
+{comb(n,k) n!/(k!*(n-k)!)};;Combinations
+{perm(n,k) n!/(n-k)!};;Permutations

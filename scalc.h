@@ -390,7 +390,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsDIFF,     // 25  Differentiation operator for numerical differentiation (diff)
  tsFOR,      // 26  For operator (for)
  tsIF,       // 27  if operator for conditional expressions (if)
- tsNUM       // 28  Total number of symbol types, must be the last in the list
+ tsSFUNCI1,  // 28  char* f(int n) (factorize)
+ tsNUM       // 29  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -784,7 +785,7 @@ class calculator // calculator represents the main class for the expression calc
  // Format checking and conversion
  bool isCMP (char *&fpos); // Check if the current position is a computing format
  int hscanf (char *str, int_t &ival,  int &nn); // Scan a hexadecimal number from the string and store it in ival,
-                                               // with nn being the number of characters processed
+                                                // with nn being the number of characters processed
  int bscanf (char *str, int_t &ival, int &nn); // Scan a binary number from the string and store it in ival, 
                                                //with nn being the number of characters processed
  int oscanf (char *str, int_t &ival, int &nn); // Scan an octal number from the string and store it in ival, 
@@ -842,7 +843,7 @@ class calculator // calculator represents the main class for the expression calc
  bool mxGaussJordan (float__t *aug, int n, float__t &det);
  float__t *mxMakeAug (value &M);
 
- bool mxElem (v_func fidx, value &res, value &M);
+ bool mxElem (v_func fidx, value &res, value &M); //element-wise matrix function
 
  bool mxInv (value &res, value &M);
  bool mxNeg (value &res, value &M);
@@ -895,8 +896,8 @@ class calculator // calculator represents the main class for the expression calc
  void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
 
- void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
- int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
+ inline void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
+ inline int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
  int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
             int *size = nullptr); // options and binary width,
  
@@ -914,16 +915,16 @@ class calculator // calculator represents the main class for the expression calc
  float__t evaluate_f (char *expr, // Evaluate an expression   
            __int64 *piVal = nullptr, float__t *pimval = nullptr); 
 
-  double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
+ double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
 
  inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 
                                                        //expression  
- int64_t get_int_res () { return result_ival; };
- float__t get_re_res () { return result_fval; };
- float__t get_im_res () { return result_imval; };
- t_value get_res_tag () { return result_tag; };
- uint32_t get_res_info () { return result_info; };
- char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
+ inline int64_t get_int_res () { return result_ival; };
+ inline float__t get_re_res () { return result_fval; };
+ inline float__t get_im_res () { return result_imval; };
+ inline t_value get_res_tag () { return result_tag; };
+ inline uint32_t get_res_info () { return result_info; };
+ inline char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
  inline mxresult_t get_mx_res ()
  {
   mxresult_t res;

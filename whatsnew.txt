@@ -1,3 +1,18 @@
+19.04.26 (2.181)
++ Added factorize(n) function -  prime factorization in to the string
+	factorize(1014) -> '2*3*13*13'
+* Now percent for the `*` and `/` operations evaluated as in most pocket calculators 
+  x*y% -> x*(y/100) and x/y% -> x/(y/100)
+	150*20% -> 30
+	150/20% -> 750
++ To the consts.txt file added follow functions 	
+	;;Combinatorics
+	{comb(n,k) n!/(k!*(n-k)!)};;Combinations
+	{perm(n,k) n!/(n-k)!};;Permutations
+	
+	comb(10,4) -> 210
+	perm(10,4) -> 5040
+	
 18.04.26 (2.180)
 + Now the int, float, round, floor, ceil, and frac functions can accept and return matrices, 
   processing them element-by-element. The rnd (added synonym rand) function returns a matrix 

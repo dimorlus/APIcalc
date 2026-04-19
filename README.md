@@ -164,13 +164,18 @@ The `%` operator in `x op y%` computes `y%` as a percentage **of the left operan
 ```
 x op y%  →  x op (x * y / 100)
 ```
+Except for the `*` and `/` operations, which are evaluated as
+```
+x * y%  →  x * (y / 100)
+x / y%  →  x / (y / 100)
+```
 This matches the behaviour of most pocket calculators:
 ```
 72 - 20%          →  57.6      (72 - 72*0.20 = 72*0.80)
 200 + 10%         →  220       (200 + 200*0.10)
-100 * 10%         →  1000      (100 * 100*0.10 = 100*10)
-500 * 5%          →  12500     (500 * 500*0.05 = 500*25)
-1 / 2%            →  50        (1 / 1*0.02 = 1/0.02)
+150 * 20%         →  30        (150 * 20/100 = 30)
+150 / 20%         →  750       (150 / (20/100) = 750)
+1 / 2%            →  50        (1 / (2/100 = 50)
 ```
 Chained percentage operations use the result of the previous operation as the new base:
 ```

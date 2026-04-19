@@ -131,6 +131,40 @@ int_t Prime (int_t n)
   }
 }
 
+
+void factorize (char * str, int_t n)
+{
+ char *cp = str;
+ if (n <= 1)
+  {
+   if (cp-str < 60) cp+=sprintf (cp, "%lld", n);
+   return;
+  }
+ // Divide by 2 while the number is even
+ while (n % 2 == 0)
+  {
+   if (cp-str < 60) cp+=sprintf (cp, "%d*", 2);
+   n = n / 2;
+  }
+
+ // Now n should be odd. Iterate through odd numbers
+ for (int_t i = 3; i * i <= n; i = i + 2)
+  {
+   while (n % i == 0)
+    {
+     if (cp - str < 60) cp += sprintf (cp, "%lld*", i);
+     n = n / i;
+    }
+  }
+
+ // If n > 2, the remainder is a prime number   
+ if (n > 2)
+  {
+   if (cp - str < 60) cp += snprintf (cp, 77, "%lld*", n);
+  }
+ if (cp - str > 0 && *(cp - 1) == '*') *(cp - 1) = '\0'; // Remove trailing '*'
+}
+
 // int -> float (reinterpret bits)
 float__t floatf (uint64_t i) // float: take the lower 32 bits
 {

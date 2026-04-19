@@ -1,3 +1,13 @@
 Comparing files tests_result3.txt and TESTS_RESULT2.TXT
-FC: no differences encountered
+***** tests_result3.txt
+200+10%  ;; 220 => 220
+100*10%  ;; 1000 => 10
+500*5%  ;; 12500 => 25
+1/2%  ;; 50 => 50
+***** TESTS_RESULT2.TXT
+200+10%  ;; 220 => 220
+100*10%  ;; 1000 => 1000
+500*5%  ;; 12500 => 12500
+1/2%  ;; 50 => 50
+*****
 

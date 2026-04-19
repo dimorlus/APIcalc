@@ -76,7 +76,7 @@ lg(x|z), log10(x|z)       (1)   Logarithm base 10, Log10(x)
 log2(x|z)                 (1)   Logarithm base 2, Log2(x)
 logn(x|z,y|z)             (1)   Log x(y)
 
-sqrt(x|z) root2(x|z)      (1)   Square root
+sqrt(x|z), root2(x|z)     (1)   Square root
 root3(x|z), cbrt(x|z)     (1)   Cube root, x^(1/3)
 rootn(x|z,n|z)            (1)   nth root, x^(1/n) 
 hypot(x|z,y|z)            (1)   Hypotenuse
@@ -122,6 +122,8 @@ min(x,y)                        Minimum of x, y
 max(x,y)                        Maximum of x, y
 fact(n|x|z), n|x|z!       (1)   Factorial (n!)
 prime(n)                        Smallest prime number
+factorize(n)                    Prime factorization in to string
+
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
 trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
@@ -212,11 +214,12 @@ Matrix              A := [(1,2,3);(4,5,6);(7,8,9)];C := [(1,2);(3,4);(5,6)]
 L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c));;Resonant             297.6k
 72-20%                                                      57.6
 72-20%+5%                                                   60.48
-500*5%                                                      12500
+500*5%                                                      25
 1/2%                                                        50
 57.6%%72                                                    -20
 abs(3+4j);;Comment                                          5
 z:=3+4i                                                     3+4i
+factorize(1014)                                             '2*3*13*13'
 integr(1/sqrt(x), 0.001, 1, x)                              1.93675444679663
 time:=2*pi;sqrt((1/time)integral((10sin(x))^2, 0, time, x)) 7.071067811865472
 diff(tg(x), 0, x)                                           1

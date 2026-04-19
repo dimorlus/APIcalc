@@ -166,7 +166,7 @@ void factorize (char *str, int_t n)
 }
 
 
-void factorize_p (char *str, int_t n)
+void factorize_p (char *str, bool pas, int_t n)
 {
  char *cp = str;
  if (n <= 1)
@@ -188,7 +188,11 @@ void factorize_p (char *str, int_t n)
  else
  if (m > 1)
   {
-   if (cp - str < 60) cp += sprintf (cp, "2^%d*", m);
+   if (cp - str < 60)
+    {
+     if (pas) cp += sprintf (cp, "2^%d*", m);
+     else cp += sprintf (cp, "2**%d*", m);
+    }
   }
 
  // Now n should be odd. Iterate through odd numbers
@@ -207,7 +211,11 @@ void factorize_p (char *str, int_t n)
    else
    if (m > 1)
     {
-     if (cp - str < 60) cp += sprintf (cp, "%lld^%d*", i, m);
+     if (cp - str < 60)
+      {
+       if (pas) cp += sprintf (cp, "%lld^%d*", i, m);
+       else cp += sprintf (cp, "%lld**%d*", i, m);
+      }
     }
   }
 

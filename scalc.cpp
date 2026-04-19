@@ -7836,7 +7836,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-              (*(void (*) (char *, int_t))sym->func) (sres, v_stack[v_sp - 1].get_int ());
+              (*(void (*) (char *, bool, int_t))sym->func) (sres, (scfg & PAS), v_stack[v_sp - 1].get_int ());
               sres[STRBUF - 1] = '\0';
               if (sres[0]) fflags |= STR;
               v_stack[v_sp - 2].sval = dupString (sres);

@@ -2,6 +2,7 @@
 #include "WinApiCalc.h"
 #include <windowsx.h>
 #include <shellapi.h>
+#include <commdlg.h>
 #include <htmlhelp.h>
 #include <fstream>
 #include <ctime>
@@ -111,6 +112,33 @@ int EscFn ()
  return 0; // Esc was not pressed
 }
 
+bool FileDlg (char *fName, int size)
+{
+ if (!fName || size <= 0) return false;
+
+ OPENFILENAMEA ofn;
+ char szFile[MAX_PATH];
+ // Initialize with the template if provided in fName
+ strncpy_s (szFile, sizeof (szFile), fName, _TRUNCATE);
+
+ ZeroMemory (&ofn, sizeof (ofn));
+ ofn.lStructSize = sizeof (ofn);
+ ofn.hwndOwner   = g_pCalcInstance ? g_pCalcInstance->GetMainWindow () : NULL;
+ ofn.lpstrFile   = szFile;
+ ofn.nMaxFile    = sizeof (szFile);
+ // Generic filters, if specific ones are needed they could be built from fName
+ ofn.lpstrFilter  = "All Files (*.*)\0*.*\0Text Files (*.txt)\0*.txt\0Data Files (*.dat)\0*.dat\0";
+ ofn.nFilterIndex = 1;
+ //ofn.Flags        = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+ ofn.Flags        = OFN_PATHMUSTEXIST;
+
+ if (GetOpenFileNameA (&ofn))
+  {
+   strncpy_s (fName, size, szFile, _TRUNCATE);
+   return true;
+  }
+ return false;
+}
 
 
 WinApiCalc::WinApiCalc ()
@@ -775,6 +803,7 @@ void WinApiCalc::OnCreate ()
  m_pCalculator->addfn ("home", (void *)(int (*) (int))HomeFunction);
 
  m_pCalculator->setEscFn (EscFn);
+ m_pCalculator->setFileDlgFn (FileDlg);
 
  // Initialize Common Controls
  INITCOMMONCONTROLSEX icex;

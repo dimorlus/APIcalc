@@ -67,6 +67,7 @@ CALCAPI void	__cdecl calc_set_syntax(HCALC h, int syntax);
 CALCAPI int		__cdecl calc_get_syntax (HCALC h);
 CALCAPI int		__cdecl calc_varlist (HCALC h, char *buf, int bsize, int *maxlen);
 CALCAPI void    __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void));
+CALCAPI void __cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int));
 
 #ifdef __cplusplus
 }

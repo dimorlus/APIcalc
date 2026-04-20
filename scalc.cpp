@@ -129,6 +129,7 @@ calculator::calculator (int cfg, symbol **symtab, uint32_t copyMask, int deep)
  o_sp         = 0;    // Clear the operator stack pointer
 
  EscFn         = nullptr; // Clear the escape function pointer
+ FileDlgFn     = nullptr; // Clear the file dialog function pointer
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count
  res_mval      = nullptr; // Clear the matrix result pointer
@@ -8305,8 +8306,20 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
 
+              char filename[1024];
+              strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
+              filename[1023] = '\0';
+              if (filename[0] == '\0' && FileDlgFn)
+               {
+                strcpy (filename, "*.txt"); // default filename 
+                if (!FileDlgFn (filename, MAX_PATH))
+                 {
+                  error (v_stack[v_sp - n_args].pos, "No file selected");
+                  return result_fval = qnan;
+                 }
+               }
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
-                  (v_stack[v_sp - n_args].get_str (),                            // filename
+                  (filename,  // filename
                    v_stack[v_sp - n_args + 1].get_str (), n_args - 1, c_imaginary,
                    &v_stack[v_sp - n_args + 2]);
 
@@ -8503,6 +8516,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 while (*p && isspace (*p)) p++;
 
                 child->setEscFn (EscFn);
+                child->setFileDlgFn (FileDlgFn);
 
                 float__t res = child->evaluate_f ((char *)p);
 

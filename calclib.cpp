@@ -78,4 +78,10 @@ void __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void))
  calculator *c = (calculator *)h;
  c->setEscFn (fn);
 }
+
+void __cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int))
+{
+ calculator *c = (calculator *)h;
+ c->setFileDlgFn (fn);
+}
 } // extern "C"

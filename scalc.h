@@ -719,6 +719,7 @@ class calculator // calculator represents the main class for the expression calc
  char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
 
  int (*EscFn) (void);
+ bool (*FileDlgFn) (char*, int);
 
  uint8_t res_cols; // Number of columns in the matrix result
  uint8_t res_rows;   // Number of rows in the matrix result
@@ -870,6 +871,7 @@ class calculator // calculator represents the main class for the expression calc
  inline int issyntax (void) { return scfg; } // Get current syntax configuration
 
  void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
+ void setFileDlgFn (bool (*fn) (char*, int)) {FileDlgFn = fn;} // Set the file dialog callback
 
  inline int isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration

@@ -12,3 +12,4 @@ EXPORTS
     calc_varlist
     calc_error
     calc_setEscFn
+	calc_setFileDlgFn

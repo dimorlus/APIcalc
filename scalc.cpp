@@ -782,11 +782,11 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
          double elem = (double)res_mval[i * res_cols + j];
          if (fabs (elem) < threshold) elem = 0.0L; // suppress numerical noise
          d2scistr (elemstr, elem);
-         if (j < res_cols - 1) cp += sprintf (cp, "%6.6s, ", elemstr);
+         if (j < res_cols - 1) cp += sprintf (cp, "%7.7s, ", elemstr);
          else
           {
-           if (i == res_rows - 1) cp += sprintf (cp, "%6.6s)]", elemstr);
-           else cp += sprintf (cp, "%6.6s); ", elemstr);
+           if (i == res_rows - 1) cp += sprintf (cp, "%7.7s)]", elemstr);
+           else cp += sprintf (cp, "%7.7s); ", elemstr);
           }
         }
        if (i == res_rows - 1) cp += sprintf (cp, " ");
@@ -5187,6 +5187,8 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
 
  // Normalize coefficients (divide by leading coefficient)
  float__t *c = (float__t *)alloca (n * sizeof (float__t));
+ //float__t c[8]; // max degree 4 => max 5 coefficients
+
  for (int i = 0; i < n; i++) c[i] = coeffs.mval[i] / coeffs.mval[0];
 
  // Allocate result matrix: degree rows × 2 columns (real, imag)
@@ -5300,7 +5302,7 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
    }
    break;
 
-  case 4: // Quartic: x^4 + ax^3 + bx^2 + cx + d = 0 (Ferrari's method)
+   case 4: // Quartic: x^4 + ax^3 + bx^2 + cx + d = 0 (Ferrari's method)
    {
     float__t a  = c[1];
     float__t b  = c[2];
@@ -5315,17 +5317,19 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
     float__t q      = a2 * a / 8.0L - a * b / 2.0L + cc;
     float__t r      = -3.0L * a2 * a2 / 256.0L + a2 * b / 16.0L - a * cc / 4.0L + d;
 
-    if (q == 0.0L)
+    if (fabsl (q) < 1e-10L)
      {
       // Biquadratic: y^4 + py^2 + r = 0
       // Substitute z = y^2: z^2 + pz + r = 0
       float__t D = p * p - 4.0L * r;
+
+      float__t sqrtD = (D >= 0) ? Sqrt (D) : Sqrt (-D);
+      float__t z1    = (-p + (D >= 0 ? sqrtD : 0.0L)) / 2.0L;
+      float__t z2    = (-p - (D >= 0 ? sqrtD : 0.0L)) / 2.0L;
+
       if (D >= 0)
        {
-        float__t sqrtD = Sqrt (D);
-        float__t z1    = (-p + sqrtD) / 2.0L;
-        float__t z2    = (-p - sqrtD) / 2.0L;
-
+        // Two real values for z
         // y = ±sqrt(z)
         if (z1 >= 0)
          {
@@ -5361,57 +5365,112 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
           roots[7]        = -sqrtz2;
          }
        }
+      else
+       {
+        // D < 0: z is complex, so z = (-p ± i*sqrt(-D))/2
+        // Both z values are complex conjugates
+        float__t z_re = -p / 2.0L;
+        float__t z_im = sqrtD / 2.0L;
+
+        // For z1 = z_re + i*z_im, we need y = ±sqrt(z)
+        // sqrt(a + bi) = sqrt(r)*[cos(θ/2) + i*sin(θ/2)]
+        // where r = |z| = sqrt(a^2 + b^2), θ = atan2(b, a)
+
+        float__t z1_abs = Sqrt (z_re * z_re + z_im * z_im);
+        float__t z1_arg = Atan2l (z_im, z_re);
+        float__t sqrt_r = Sqrt (z1_abs);
+
+        // y1 = sqrt(z1) = sqrt_r * [cos(θ/2) + i*sin(θ/2)]
+        float__t y1_re = sqrt_r * Cos (z1_arg / 2.0L);
+        float__t y1_im = sqrt_r * Sin (z1_arg / 2.0L);
+
+        roots[0] = y1_re + offset;
+        roots[1] = y1_im;
+        roots[2] = -y1_re + offset;
+        roots[3] = -y1_im;
+
+        // For z2 = z_re - i*z_im (complex conjugate)
+        float__t z2_arg = Atan2l (-z_im, z_re);
+
+        // y3 = sqrt(z2)
+        float__t y3_re = sqrt_r * Cos (z2_arg / 2.0L);
+        float__t y3_im = sqrt_r * Sin (z2_arg / 2.0L);
+
+        roots[4] = y3_re + offset;
+        roots[5] = y3_im;
+        roots[6] = -y3_re + offset;
+        roots[7] = -y3_im;
+       }
      }
     else
      {
       // General case: solve resolvent cubic
       // m^3 - 2pm^2 + (p^2 - 4r)m + q^2 = 0
-      float__t cubic_coeffs[4];
-      cubic_coeffs[0] = 1.0L;
-      cubic_coeffs[1] = -2.0L * p;
-      cubic_coeffs[2] = p * p - 4.0L * r;
-      cubic_coeffs[3] = q * q;
+      // We need to find the largest positive real root m
+      float__t ac  = -2.0L * p;
+      float__t bc  = p * p - 4.0L * r;
+      float__t ccc = q * q;
 
-      // Find one real root of the resolvent cubic (we only need one)
+      // Depressed cubic for m: t^3 + pt + q = 0
+      float__t pc = bc - ac * ac / 3.0L;
+      float__t qc = 2.0L * ac * ac * ac / 27.0L - ac * bc / 3.0L + ccc;
+
+      float__t delta = qc * qc / 4.0L + pc * pc * pc / 27.0L;
       float__t m;
-      {
-       float__t ac  = cubic_coeffs[1];
-       float__t bc  = cubic_coeffs[2];
-       float__t ccc = cubic_coeffs[3];
 
-       float__t pc = bc - ac * ac / 3.0L;
-       float__t qc = 2.0L * ac * ac * ac / 27.0L - ac * bc / 3.0L + ccc;
+      if (delta >= 0)
+       {
+        // One real root and two complex conjugate roots
+        float__t sqrtDelta = Sqrt (delta);
+        float__t A         = -qc / 2.0L + sqrtDelta;
+        float__t B         = -qc / 2.0L - sqrtDelta;
 
-       float__t delta = qc * qc / 4.0L + pc * pc * pc / 27.0L;
-       float__t u, v;
+        float__t u = (A >= 0) ? Pow (A, 1.0L / 3.0L) : -Pow (-A, 1.0L / 3.0L);
+        float__t v = (B >= 0) ? Pow (B, 1.0L / 3.0L) : -Pow (-B, 1.0L / 3.0L);
 
-       if (delta >= 0)
-        {
-         float__t sqrtDelta = Sqrt (delta);
-         float__t A         = -qc / 2.0L + sqrtDelta;
-         float__t B         = -qc / 2.0L - sqrtDelta;
+        m = u + v - ac / 3.0L;
+       }
+      else
+       {
+        // Three real roots - choose the largest positive one
+        float__t rr     = Sqrt (-pc * pc * pc / 27.0L);
+        float__t theta  = Acos (-qc / (2.0L * rr));
+        float__t cbrt_r = Pow (rr, 1.0L / 3.0L);
 
-         u = (A >= 0) ? Pow (A, 1.0L / 3.0L) : -Pow (-A, 1.0L / 3.0L);
-         v = (B >= 0) ? Pow (B, 1.0L / 3.0L) : -Pow (-B, 1.0L / 3.0L);
-        }
-       else
-        {
-         float__t rr    = Sqrt (-pc * pc * pc / 27.0L);
-         float__t theta = Acos (-qc / (2.0L * rr));
-         u              = 2.0L * Pow (rr, 1.0L / 3.0L) * Cos (theta / 3.0L);
-         v              = 0.0L;
-        }
+        float__t m1 = 2.0L * cbrt_r * Cos (theta / 3.0L) - ac / 3.0L;
+        float__t m2 = 2.0L * cbrt_r * Cos ((theta - 2.0L * M_PI) / 3.0L) - ac / 3.0L;
+        float__t m3 = 2.0L * cbrt_r * Cos ((theta - 4.0L * M_PI) / 3.0L) - ac / 3.0L;
 
-       m = u + v - ac / 3.0L;
-      }
+        // Choose the largest positive root
+        m = m1;
+        if (m2 > m && m2 > 0) m = m2;
+        if (m3 > m && m3 > 0) m = m3;
+       }
 
-      // Now solve two quadratics
+      // Ensure m is positive (or at least non-negative)
+      if (m < 0.0L) m = 0.0L;
+
+      // Now solve two quadratics using the resolvent root m
+      // y^4 + py^2 + qy + r = (y^2 + s1*y + t1)(y^2 + s2*y + t2)
+      // where s1 = sqrt(m), s2 = -sqrt(m)
+      // and t1, t2 are determined from p, q, r
+
       float__t sqrtm = Sqrt (m);
-      float__t A     = Sqrt (p + m);
-      float__t B     = q / (2.0L * sqrtm);
 
-      // First quadratic: y^2 + sqrtm*y + (m/2 + A - B) = 0
-      float__t D1 = sqrtm * sqrtm - 4.0L * (m / 2.0L + A - B);
+      // From Ferrari's method:
+      // s1 + s2 = 0 => s1 = sqrt(m), s2 = -sqrt(m)
+      // t1 + t2 = p + m
+      // s1*t2 + s2*t1 = q => sqrt(m)*(t2 - t1) = q
+      // t1*t2 = r
+
+      float__t t_sum  = p + m;
+      float__t t_diff = (sqrtm != 0.0L) ? q / sqrtm : 0.0L;
+
+      float__t t1 = (t_sum - t_diff) / 2.0L;
+      float__t t2 = (t_sum + t_diff) / 2.0L;
+
+      // First quadratic: y^2 + sqrt(m)*y + t1 = 0
+      float__t D1 = sqrtm * sqrtm - 4.0L * t1;
       if (D1 >= 0)
        {
         float__t sqrtD1 = Sqrt (D1);
@@ -5429,8 +5488,8 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
         roots[3]        = -sqrtD1 / 2.0L;
        }
 
-      // Second quadratic: y^2 - sqrtm*y + (m/2 - A - B) = 0
-      float__t D2 = sqrtm * sqrtm - 4.0L * (m / 2.0L - A - B);
+      // Second quadratic: y^2 - sqrt(m)*y + t2 = 0
+      float__t D2 = sqrtm * sqrtm - 4.0L * t2;
       if (D2 >= 0)
        {
         float__t sqrtD2 = Sqrt (D2);
@@ -5450,11 +5509,166 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
      }
    }
    break;
+   default: // Polynomial degree > 4: use Durand-Kerner method (numerical)
+    {
+     // Durand-Kerner (Weierstrass) method for finding all roots simultaneously
+     const int max_iterations = 100;
+     const float__t tolerance = 1e-12L;
 
-  default:
-   mxerror ("polynomial degree > 4 not supported");
-   return false;
-  }
+     // Allocate temporary arrays for current and next approximations
+     float__t *roots_re = (float__t *)alloca (degree * sizeof (float__t));
+     float__t *roots_im = (float__t *)alloca (degree * sizeof (float__t));
+     float__t *next_re  = (float__t *)alloca (degree * sizeof (float__t));
+     float__t *next_im  = (float__t *)alloca (degree * sizeof (float__t));
+
+     // Initialize with spiral pattern: r_k = r^k * e^(2πik/n)
+     // where r = max(1, |a_(n-1)/a_n|^(1/n)) to get good initial radius
+     float__t init_radius = 1.0L;
+     if (degree > 1 && fabsl (c[1]) > 0.0L) init_radius = Pow (fabsl (c[1]), 1.0L / degree);
+     if (init_radius < 1.0L) init_radius = 1.0L;
+
+     for (int k = 0; k < degree; k++)
+      {
+       float__t angle = 2.0L * M_PI * k / degree;
+       float__t r     = init_radius * Pow (0.9L + 0.1L * k / degree, (float__t)k);
+       roots_re[k]    = r * Cos (angle);
+       roots_im[k]    = r * Sin (angle);
+      }
+
+     // Durand-Kerner iterations
+     bool converged = false;
+     for (int iter = 0; iter < max_iterations && !converged; iter++)
+      {
+       converged = true;
+
+       // For each root approximation
+       for (int i = 0; i < degree; i++)
+        {
+         // Evaluate P(z_i) where P is the polynomial
+         float__t p_re = c[0];
+         float__t p_im = 0.0L;
+
+         for (int j = 1; j <= degree; j++)
+          {
+           // Multiply by z_i: (p_re + i*p_im) * (roots_re[i] + i*roots_im[i])
+           float__t temp_re = p_re * roots_re[i] - p_im * roots_im[i];
+           float__t temp_im = p_re * roots_im[i] + p_im * roots_re[i];
+
+           // Add coefficient c[j]
+           p_re = temp_re + c[j];
+           p_im = temp_im;
+          }
+
+         // Compute product of (z_i - z_j) for all j ≠ i
+         float__t prod_re = 1.0L;
+         float__t prod_im = 0.0L;
+
+         for (int j = 0; j < degree; j++)
+          {
+           if (j != i)
+            {
+             // (z_i - z_j)
+             float__t diff_re = roots_re[i] - roots_re[j];
+             float__t diff_im = roots_im[i] - roots_im[j];
+
+             // Multiply: prod *= diff
+             float__t temp_re = prod_re * diff_re - prod_im * diff_im;
+             float__t temp_im = prod_re * diff_im + prod_im * diff_re;
+
+             prod_re = temp_re;
+             prod_im = temp_im;
+            }
+          }
+
+         // Divide P(z_i) by product: correction = P(z_i) / prod
+         float__t denom = prod_re * prod_re + prod_im * prod_im;
+
+         if (denom > 1e-30L)
+          {
+           float__t corr_re = (p_re * prod_re + p_im * prod_im) / denom;
+           float__t corr_im = (p_im * prod_re - p_re * prod_im) / denom;
+
+           // Update: z_i = z_i - correction
+           next_re[i] = roots_re[i] - corr_re;
+           next_im[i] = roots_im[i] - corr_im;
+
+           // Check convergence
+           float__t change = Sqrt (corr_re * corr_re + corr_im * corr_im);
+           if (change > tolerance) converged = false;
+          }
+         else
+          {
+           // Product too small (roots too close), keep current value
+           next_re[i] = roots_re[i];
+           next_im[i] = roots_im[i];
+          }
+        }
+
+       // Copy next to current
+       for (int i = 0; i < degree; i++)
+        {
+         roots_re[i] = next_re[i];
+         roots_im[i] = next_im[i];
+        }
+      }
+
+     // Clean up near-zero imaginary parts (numerical noise)
+     for (int i = 0; i < degree; i++)
+      {
+       if (fabsl (roots_im[i]) < tolerance * fabsl (roots_re[i])) roots_im[i] = 0.0L;
+      }
+
+     // Sort roots: real roots first (sorted by real part), then complex pairs
+     // Use simple bubble sort (degree is small)
+     for (int i = 0; i < degree - 1; i++)
+      {
+       for (int j = i + 1; j < degree; j++)
+        {
+         bool swap = false;
+
+         // Real roots come before complex
+         bool i_is_real = (fabsl (roots_im[i]) < tolerance);
+         bool j_is_real = (fabsl (roots_im[j]) < tolerance);
+
+         if (j_is_real && !i_is_real)
+          swap = true;
+         else if (i_is_real && j_is_real)
+          {
+           // Both real: sort by real part
+           if (roots_re[j] < roots_re[i]) swap = true;
+          }
+         else if (!i_is_real && !j_is_real)
+          {
+           // Both complex: sort by real part, then by imaginary part
+           if (roots_re[j] < roots_re[i])
+            swap = true;
+           else if (fabsl (roots_re[j] - roots_re[i]) < tolerance && roots_im[j] < roots_im[i])
+            swap = true;
+          }
+
+         if (swap)
+          {
+           // Swap roots[i] and roots[j]
+           float__t temp = roots_re[i];
+           roots_re[i]   = roots_re[j];
+           roots_re[j]   = temp;
+
+           temp        = roots_im[i];
+           roots_im[i] = roots_im[j];
+           roots_im[j] = temp;
+          }
+        }
+      }
+
+     // Copy results to output matrix
+     for (int i = 0; i < degree; i++)
+      {
+       roots[i * 2]     = roots_re[i];
+       roots[i * 2 + 1] = roots_im[i];
+      }
+    }
+    break;
+   }
 
  res.tag   = tvMATRIX;
  res.mrows = degree;

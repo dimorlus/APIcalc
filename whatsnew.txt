@@ -1,3 +1,15 @@
+20.04.26 (2.183)
++ Added polynomial degree > 4: using Durand-Kerner method (numerical).
+	polynom([(1,-2,-3,4,5,6,7)]) ->
+	  [(-1.187, -259.2m); 
+	   (-1.187, 259.2m); 
+	   (-36.18m, -941.9m); 
+	   (-36.18m, 941.9m); 
+	   (2.223, -630.3m); 
+	   (2.223, 630.3m)]
+- Inaccuracies in the analytical solution of 4th order polynomials have been corrected.
+- An inaccuracy in the display of matrices has been fixed (values could sometimes be cut off).
+
 20.04.26 (2.182)
 + Added Factorize output format (/FCT switch for the CLI version).
 * The output format for Factorize (and the factorize(n) function) has been changed. 

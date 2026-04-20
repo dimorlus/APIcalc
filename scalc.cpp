@@ -5158,7 +5158,7 @@ bool calculator::mxElemFn (v_func fidx, value &res, value &M)
 // Find roots of polynomial given coefficients in a row-matrix
 // Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
 // For polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0
-// Returns a row-matrix of complex roots (2 rows: real parts in row 0, imaginary in row 1)
+// Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part])
 // Supports polynomials up to degree 4
 bool calculator::mxPolyRoots (value &res, value &coeffs)
 {
@@ -5186,17 +5186,15 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
   }
 
  // Normalize coefficients (divide by leading coefficient)
- //float__t *c = (float__t *)alloca (n * sizeof (float__t));
- float__t *c = (float__t *)malloc (n * sizeof (float__t));
-
+ float__t *c = (float__t *)alloca (n * sizeof (float__t));
  for (int i = 0; i < n; i++) c[i] = coeffs.mval[i] / coeffs.mval[0];
 
- // Allocate result matrix: 2 rows (real, imag), degree columns
- float__t *roots = mxAlloc (2, degree);
+ // Allocate result matrix: degree rows × 2 columns (real, imag)
+ float__t *roots = mxAlloc (degree, 2);
  if (!roots) return false;
 
  // Initialize all roots to zero
- for (int i = 0; i < 2 * degree; i++) roots[i] = 0.0L;
+ for (int i = 0; i < degree * 2; i++) roots[i] = 0.0L;
 
  switch (degree)
   {
@@ -5459,8 +5457,8 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
   }
 
  res.tag   = tvMATRIX;
- res.mrows = 2;
- res.mcols = degree;
+ res.mrows = degree;
+ res.mcols = 2;
  res.mval  = roots;
  return true;
 }

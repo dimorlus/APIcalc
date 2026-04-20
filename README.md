@@ -122,7 +122,7 @@ the output format based on the input format. For example
    5`42'38";;/ALL-/DEG+ => 0.099668 rad|5`42'38" (5.71056`)|6.345 gon|0.01586 turn
    2sin(15`42'38");;/ALL-/ENG+ => 541.6m
    
-   ;Output Format Options:
+  ;Output Format Options:
   /DEG+         ;Degrees format
   /ENG+         ;Engineering (Scientific) numbers format (6k8 => 6800)
   /STR+         ;String format 
@@ -137,7 +137,8 @@ the output format based on the input format. For example
   /NRM+         ;Normalized output
   /IGR+         ;Integer output
   /UNS+         ;Unsigned output
-  /FRC+         ;Fraction output
+  /FRC+         ;Fraction output format
+  /FCT+         ;Factorize output format
   /FRI+         ;Fraction inch output
   /FRH+         ;Temperature
   /FLT+         ;Floating point output
@@ -262,6 +263,11 @@ x %% y  →  (x / y - 1) * 100
   if(x>0,1,-1)
   {sign(x)if(x>0,1,-1)}
   ```   
+* **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]   for polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0. Returns a row-matrix of  complex roots (2 rows: real parts in row 0, imaginary in row 1). Supports polynomials up to  degree 4
+   The quadratic equation: $$x^2 + 2x + 3 = 0$$. Roots: $$-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$$.
+```
+  polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
+```  
 
 ### **Complex Number Support**
 

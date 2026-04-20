@@ -56,6 +56,7 @@
 #define FLT  (1 << 27) // (UI) Floating point output (CLI only)
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define AUTO (1 << 29) // (UI) Auto output format
+#define FCTR (1 << 30) // (UI) Factorization output
 
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  64  // maximum length of operator or function name
@@ -507,6 +508,8 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_adb,   // Inverse decibel function (10^(x/10) for power quantities, 10^(x/20) for field quantities)
  vf_anp,   // Inverse neper function (10^(x/20) for power quantities)
 
+ vf_pol_rt, //Polynom root
+
  vf_factorial, // Factorial function
 
  vf_num
@@ -843,11 +846,14 @@ class calculator // calculator represents the main class for the expression calc
  bool mxGaussJordan (float__t *aug, int n, float__t &det);
  float__t *mxMakeAug (value &M);
 
- bool mxElem (v_func fidx, value &res, value &M); //element-wise matrix function
+ bool mxElemFn (v_func fidx, value &res, value &M); //element-wise matrix function
 
  bool mxInv (value &res, value &M);
  bool mxNeg (value &res, value &M);
  bool mxTranspose (value &res, value &M);
+
+ bool mxPolyRoots (value &res, value &coeffs);
+
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);

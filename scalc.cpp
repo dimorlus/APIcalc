@@ -269,6 +269,8 @@ void calculator::AddPredefined (void)
  add (tsMFUNCI2, "diag", (void *)Diag);
  add (tsMFUNCI2, "eye", (void *)Diag);
 
+ add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
+
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
 
@@ -831,11 +833,11 @@ int32_t scan_opt (char *str, int &opts)
  // All supported options definitions
  static const option_def all_options[] = {
   { "DEG", DEG },  { "ENG", ENG }, { "STR", STR }, { "HEX", HEX }, { "OCT", OCT },
-  { "BIN", FBIN }, { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
+  { "BIN", FBIN},  { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
   { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI }, 
-  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM },
+  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM }, { "FCT", FCTR},
   { "ALL", DEG + ENG + STR + HEX + OCT + FBIN + DAT + CHR + WCH + CMP + NRM + IGR 
-         + UNS + FRC + FRI + FRH + UTM + FLT },
+         + UNS + FRC + FRI + FRH + UTM + FLT + FCTR},
   { ""   , 0 } // Sentinel
  };
  unsigned int i, j, k, l;
@@ -951,9 +953,10 @@ int calculator::printres(char* str, int options, int binwide)
   { "DEG", DEG },  { "ENG", ENG }, { "STR", STR }, { "HEX", HEX }, { "OCT", OCT },
   { "BIN", FBIN }, { "DAT", DAT }, { "CHR", CHR }, { "WCH", WCH }, { "CMP", CMP },
   { "NRM", NRM },  { "IGR", IGR }, { "UNS", UNS }, { "FRC", FRC }, { "FRI", FRI },
-  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM }, { ""   , 0 } // Sentinel
+  { "FRH", FRH },  { "FLT", FLT }, { "UTM", UTM }, { "FCT", FCTR}, { ""   , 0 } // Sentinel
 */
        if (fflags & DEG) return printres (str, DEG, binwide);
+       if (fflags & FCTR) return printres (str, FCTR, binwide);
        if (fflags & FLT) return printres (str, FFLOAT, binwide);
        if (fflags & ENG) return printres (str, SCI, binwide);
        if (fflags & NRM) return printres (str, NRM, binwide);
@@ -1142,6 +1145,13 @@ int calculator::printres(char* str, int options, int binwide)
      sprintf (binfstr, "%%%ib", binwide);
      b2str (binstr, binfstr, result_ival);
      return sprintf (str, "%s", binstr);
+    }
+
+   if ((options & FCTR) && (result_imval == 0) && is_integer (result_fval))
+    {
+     char fctrstr[80];
+     factorize_p (fctrstr, (scfg & PAS), result_ival);
+     return sprintf (str, "%s", fctrstr);
     }
 
    if ((options & CHR) && is_integer (result_fval))
@@ -1382,6 +1392,15 @@ int calculator::print (char *str, int Options, int binwide, int *size)
    if ((Options & IGR) && (result_imval == 0) && is_integer (result_fval))
     {
        bsize += sprintf (str + bsize, "%65lld i\r\n", result_ival);
+       n++;
+    }
+
+   // (UI) Factorization output
+   if ((Options & FCTR) && (result_imval == 0) && is_integer (result_fval))
+    {
+       char fctrstr[80];
+       factorize_p (fctrstr, (scfg & PAS), result_ival);
+       bsize += sprintf (str + bsize, "%65.64s  \r\n", fctrstr);
        n++;
     }
 
@@ -5070,11 +5089,17 @@ bool calculator::mxInv (value &res, value &M)
 }
 
 // mxElem: element-wise matrix function
-bool calculator::mxElem (v_func fidx, value &res, value &M)
+bool calculator::mxElemFn (v_func fidx, value &res, value &M)
 {
+
+ if (fidx == vf_pol_rt)
+  {
+   return mxPolyRoots (res, M);
+  }
+
  bool result = true;
- int rows = M.mrows;
- int cols = M.mcols;
+ int rows    = M.mrows;
+ int cols    = M.mcols;
  float__t *mval = mxAlloc (rows, cols);
  if (!mval)
   {
@@ -5128,6 +5153,316 @@ bool calculator::mxElem (v_func fidx, value &res, value &M)
  res.mcols = cols;
  res.mval  = mval;
  return result;
+}
+
+// Find roots of polynomial given coefficients in a row-matrix
+// Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
+// For polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0
+// Returns a row-matrix of complex roots (2 rows: real parts in row 0, imaginary in row 1)
+// Supports polynomials up to degree 4
+bool calculator::mxPolyRoots (value &res, value &coeffs)
+{
+ // Validate input: must be a row vector (1 row, N columns)
+ if (coeffs.tag != tvMATRIX || coeffs.mrows != 1)
+  {
+   mxerror ("polynomial coefficients must be a row vector");
+   return false;
+  }
+
+ int n = coeffs.mcols; // number of coefficients
+ if (n < 2)
+  {
+   mxerror ("polynomial must have at least 2 coefficients");
+   return false;
+  }
+
+ int degree = n - 1; // polynomial degree
+
+ // Check if leading coefficient is non-zero
+ if (coeffs.mval[0] == 0.0L)
+  {
+   mxerror ("leading coefficient must be non-zero");
+   return false;
+  }
+
+ // Normalize coefficients (divide by leading coefficient)
+ //float__t *c = (float__t *)alloca (n * sizeof (float__t));
+ float__t *c = (float__t *)malloc (n * sizeof (float__t));
+
+ for (int i = 0; i < n; i++) c[i] = coeffs.mval[i] / coeffs.mval[0];
+
+ // Allocate result matrix: 2 rows (real, imag), degree columns
+ float__t *roots = mxAlloc (2, degree);
+ if (!roots) return false;
+
+ // Initialize all roots to zero
+ for (int i = 0; i < 2 * degree; i++) roots[i] = 0.0L;
+
+ switch (degree)
+  {
+  case 1: // Linear: ax + b = 0 => x = -b/a
+   {
+    roots[0] = -c[1]; // real part
+    roots[1] = 0.0L;  // imaginary part
+   }
+   break;
+
+  case 2: // Quadratic: ax^2 + bx + c = 0
+   {
+    float__t b  = c[1];
+    float__t cc = c[2];
+    float__t D  = b * b - 4.0L * cc; // discriminant
+
+    if (D >= 0.0L)
+     {
+      // Two real roots
+      float__t sqrtD = Sqrt (D);
+      roots[0]       = (-b + sqrtD) / 2.0L; // x1 real
+      roots[1]       = 0.0L;                // x1 imag
+      roots[2]       = (-b - sqrtD) / 2.0L; // x2 real
+      roots[3]       = 0.0L;                // x2 imag
+     }
+    else
+     {
+      // Two complex conjugate roots
+      float__t sqrtD = Sqrt (-D);
+      roots[0]       = -b / 2.0L;     // x1 real
+      roots[1]       = sqrtD / 2.0L;  // x1 imag
+      roots[2]       = -b / 2.0L;     // x2 real
+      roots[3]       = -sqrtD / 2.0L; // x2 imag
+     }
+   }
+   break;
+
+  case 3: // Cubic: x^3 + ax^2 + bx + c = 0 (Cardano's formula)
+   {
+    float__t a  = c[1];
+    float__t b  = c[2];
+    float__t cc = c[3];
+
+    // Convert to depressed cubic: t^3 + pt + q = 0
+    // where x = t - a/3
+    float__t p = b - a * a / 3.0L;
+    float__t q = 2.0L * a * a * a / 27.0L - a * b / 3.0L + cc;
+
+    // Discriminant for cubic
+    float__t D = -(4.0L * p * p * p + 27.0L * q * q);
+
+    float__t offset = -a / 3.0L;
+
+    if (D > 0)
+     {
+      // Three distinct real roots (casus irreducibilis)
+      float__t m   = 2.0L * Sqrt (-p / 3.0L);
+      float__t phi = Acos (3.0L * q / (p * m)) / 3.0L;
+
+      roots[0] = m * Cos (phi) + offset;
+      roots[1] = 0.0L;
+      roots[2] = m * Cos (phi - 2.0L * M_PI / 3.0L) + offset;
+      roots[3] = 0.0L;
+      roots[4] = m * Cos (phi - 4.0L * M_PI / 3.0L) + offset;
+      roots[5] = 0.0L;
+     }
+    else
+     {
+      // One real root and two complex conjugate roots
+      float__t delta = q * q / 4.0L + p * p * p / 27.0L;
+      float__t u, v;
+
+      if (delta >= 0)
+       {
+        float__t sqrtDelta = Sqrt (delta);
+        float__t A         = -q / 2.0L + sqrtDelta;
+        float__t B         = -q / 2.0L - sqrtDelta;
+
+        u = (A >= 0) ? Pow (A, 1.0L / 3.0L) : -Pow (-A, 1.0L / 3.0L);
+        v = (B >= 0) ? Pow (B, 1.0L / 3.0L) : -Pow (-B, 1.0L / 3.0L);
+       }
+      else
+       {
+        float__t r     = Sqrt (-p * p * p / 27.0L);
+        float__t theta = Acos (-q / (2.0L * r));
+        u              = 2.0L * Pow (r, 1.0L / 3.0L) * Cos (theta / 3.0L);
+        v              = 0.0L;
+       }
+
+      // Real root
+      roots[0] = u + v + offset;
+      roots[1] = 0.0L;
+
+      // Complex conjugate pair
+      float__t re_part = -(u + v) / 2.0L + offset;
+      float__t im_part = (u - v) * Sqrt (3.0L) / 2.0L;
+
+      roots[2] = re_part;
+      roots[3] = im_part;
+      roots[4] = re_part;
+      roots[5] = -im_part;
+     }
+   }
+   break;
+
+  case 4: // Quartic: x^4 + ax^3 + bx^2 + cx + d = 0 (Ferrari's method)
+   {
+    float__t a  = c[1];
+    float__t b  = c[2];
+    float__t cc = c[3];
+    float__t d  = c[4];
+
+    // Depressed quartic: y^4 + py^2 + qy + r = 0
+    // where x = y - a/4
+    float__t offset = -a / 4.0L;
+    float__t a2     = a * a;
+    float__t p      = b - 3.0L * a2 / 8.0L;
+    float__t q      = a2 * a / 8.0L - a * b / 2.0L + cc;
+    float__t r      = -3.0L * a2 * a2 / 256.0L + a2 * b / 16.0L - a * cc / 4.0L + d;
+
+    if (q == 0.0L)
+     {
+      // Biquadratic: y^4 + py^2 + r = 0
+      // Substitute z = y^2: z^2 + pz + r = 0
+      float__t D = p * p - 4.0L * r;
+      if (D >= 0)
+       {
+        float__t sqrtD = Sqrt (D);
+        float__t z1    = (-p + sqrtD) / 2.0L;
+        float__t z2    = (-p - sqrtD) / 2.0L;
+
+        // y = ±sqrt(z)
+        if (z1 >= 0)
+         {
+          float__t sqrtz1 = Sqrt (z1);
+          roots[0]        = sqrtz1 + offset;
+          roots[1]        = 0.0L;
+          roots[2]        = -sqrtz1 + offset;
+          roots[3]        = 0.0L;
+         }
+        else
+         {
+          float__t sqrtz1 = Sqrt (-z1);
+          roots[0]        = offset;
+          roots[1]        = sqrtz1;
+          roots[2]        = offset;
+          roots[3]        = -sqrtz1;
+         }
+
+        if (z2 >= 0)
+         {
+          float__t sqrtz2 = Sqrt (z2);
+          roots[4]        = sqrtz2 + offset;
+          roots[5]        = 0.0L;
+          roots[6]        = -sqrtz2 + offset;
+          roots[7]        = 0.0L;
+         }
+        else
+         {
+          float__t sqrtz2 = Sqrt (-z2);
+          roots[4]        = offset;
+          roots[5]        = sqrtz2;
+          roots[6]        = offset;
+          roots[7]        = -sqrtz2;
+         }
+       }
+     }
+    else
+     {
+      // General case: solve resolvent cubic
+      // m^3 - 2pm^2 + (p^2 - 4r)m + q^2 = 0
+      float__t cubic_coeffs[4];
+      cubic_coeffs[0] = 1.0L;
+      cubic_coeffs[1] = -2.0L * p;
+      cubic_coeffs[2] = p * p - 4.0L * r;
+      cubic_coeffs[3] = q * q;
+
+      // Find one real root of the resolvent cubic (we only need one)
+      float__t m;
+      {
+       float__t ac  = cubic_coeffs[1];
+       float__t bc  = cubic_coeffs[2];
+       float__t ccc = cubic_coeffs[3];
+
+       float__t pc = bc - ac * ac / 3.0L;
+       float__t qc = 2.0L * ac * ac * ac / 27.0L - ac * bc / 3.0L + ccc;
+
+       float__t delta = qc * qc / 4.0L + pc * pc * pc / 27.0L;
+       float__t u, v;
+
+       if (delta >= 0)
+        {
+         float__t sqrtDelta = Sqrt (delta);
+         float__t A         = -qc / 2.0L + sqrtDelta;
+         float__t B         = -qc / 2.0L - sqrtDelta;
+
+         u = (A >= 0) ? Pow (A, 1.0L / 3.0L) : -Pow (-A, 1.0L / 3.0L);
+         v = (B >= 0) ? Pow (B, 1.0L / 3.0L) : -Pow (-B, 1.0L / 3.0L);
+        }
+       else
+        {
+         float__t rr    = Sqrt (-pc * pc * pc / 27.0L);
+         float__t theta = Acos (-qc / (2.0L * rr));
+         u              = 2.0L * Pow (rr, 1.0L / 3.0L) * Cos (theta / 3.0L);
+         v              = 0.0L;
+        }
+
+       m = u + v - ac / 3.0L;
+      }
+
+      // Now solve two quadratics
+      float__t sqrtm = Sqrt (m);
+      float__t A     = Sqrt (p + m);
+      float__t B     = q / (2.0L * sqrtm);
+
+      // First quadratic: y^2 + sqrtm*y + (m/2 + A - B) = 0
+      float__t D1 = sqrtm * sqrtm - 4.0L * (m / 2.0L + A - B);
+      if (D1 >= 0)
+       {
+        float__t sqrtD1 = Sqrt (D1);
+        roots[0]        = (-sqrtm + sqrtD1) / 2.0L + offset;
+        roots[1]        = 0.0L;
+        roots[2]        = (-sqrtm - sqrtD1) / 2.0L + offset;
+        roots[3]        = 0.0L;
+       }
+      else
+       {
+        float__t sqrtD1 = Sqrt (-D1);
+        roots[0]        = -sqrtm / 2.0L + offset;
+        roots[1]        = sqrtD1 / 2.0L;
+        roots[2]        = -sqrtm / 2.0L + offset;
+        roots[3]        = -sqrtD1 / 2.0L;
+       }
+
+      // Second quadratic: y^2 - sqrtm*y + (m/2 - A - B) = 0
+      float__t D2 = sqrtm * sqrtm - 4.0L * (m / 2.0L - A - B);
+      if (D2 >= 0)
+       {
+        float__t sqrtD2 = Sqrt (D2);
+        roots[4]        = (sqrtm + sqrtD2) / 2.0L + offset;
+        roots[5]        = 0.0L;
+        roots[6]        = (sqrtm - sqrtD2) / 2.0L + offset;
+        roots[7]        = 0.0L;
+       }
+      else
+       {
+        float__t sqrtD2 = Sqrt (-D2);
+        roots[4]        = sqrtm / 2.0L + offset;
+        roots[5]        = sqrtD2 / 2.0L;
+        roots[6]        = sqrtm / 2.0L + offset;
+        roots[7]        = -sqrtD2 / 2.0L;
+       }
+     }
+   }
+   break;
+
+  default:
+   mxerror ("polynomial degree > 4 not supported");
+   return false;
+  }
+
+ res.tag   = tvMATRIX;
+ res.mrows = 2;
+ res.mcols = degree;
+ res.mval  = roots;
+ return true;
 }
 
 // mxNeg: element-wise negation (unary minus) — also in matrixuno, here for completeness
@@ -7586,7 +7921,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
               if (v_stack[v_sp - 1].tag == tvMATRIX)
                {
-                bool res = mxElem (sym->fidx, v_stack[v_sp - 2], v_stack[v_sp - 1]);
+                bool res = mxElemFn (sym->fidx, v_stack[v_sp - 2], v_stack[v_sp - 1]);
                 if (!res || mxerr[0])
                  {
                   if (mxerr[0])
@@ -7838,6 +8173,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               (*(void (*) (char *, bool, int_t))sym->func) (sres, (scfg & PAS), v_stack[v_sp - 1].get_int ());
               sres[STRBUF - 1] = '\0';
+              fflags |= FCTR;
               if (sres[0]) fflags |= STR;
               v_stack[v_sp - 2].sval = dupString (sres);
               v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 1].get_int ();

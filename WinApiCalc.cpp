@@ -472,6 +472,7 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc (HWND hWnd, UINT message, WP
    AppendMenuA (hFmtSub, fmtFlag (SCI),  ID_FORMAT_SCIENTIFIC, "Scientific");
    AppendMenuA (hFmtSub, fmtFlag (NRM),  ID_FORMAT_NORMALIZED, "Normalized");
    AppendMenuA (hFmtSub, fmtFlag (FRC),  ID_FORMAT_FRACTION,   "Fraction");
+   AppendMenuA (hFmtSub, fmtFlag (FCTR), ID_FORMAT_FCTR,       "Factorization");
    AppendMenuA (hFmtSub, fmtFlag (CMP),  ID_FORMAT_COMPUTING,  "Computing");
    AppendMenuA (hFmtSub, fmtFlag (IGR),  ID_FORMAT_INTEGER,    "Integer");
    AppendMenuA (hFmtSub, fmtFlag (UNS),  ID_FORMAT_UNSIGNED,   "Unsigned");
@@ -958,6 +959,9 @@ void WinApiCalc::OnCommand (WPARAM wParam)
    break;
   case ID_FORMAT_FRACTION:
    ToggleOption (FRC);
+   break;
+  case ID_FORMAT_FCTR:
+   ToggleOption (FCTR);
    break;
   case ID_FORMAT_COMPUTING:
    ToggleOption (CMP);
@@ -1460,6 +1464,7 @@ void WinApiCalc::UpdateMenuChecks ()
  CheckMenuItem (m_hMenu, ID_FORMAT_SCIENTIFIC, (m_options & SCI) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_NORMALIZED, (m_options & NRM) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_FRACTION, (m_options & FRC) ? MF_CHECKED : MF_UNCHECKED);
+ CheckMenuItem (m_hMenu, ID_FORMAT_FCTR, (m_options & FCTR) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_COMPUTING, (m_options & CMP) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_INTEGER, (m_options & IGR) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_FORMAT_UNSIGNED, (m_options & UNS) ? MF_CHECKED : MF_UNCHECKED);

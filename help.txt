@@ -112,6 +112,7 @@ max(x,y)                        Maximum of x, y
 fact(n|x|z), n|x|z!       (1)   Factorial (n!)
 prime(n)                        Smallest prime number
 factorize(n)                    Prime factorization in to string
+polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
@@ -188,6 +189,7 @@ Scientific          1.8M                        1800000
 Engineering         1k33                        1330
 Computing           1KB, 1KiB                   1024
 Fractional          3+9/64                      Pi (best rational approximation)
+Factorize           203040                      2^5*3^3*5*47
 Gauge               #28, awg(28)                0.3211265489669004
 Inch                2"5                         0.0635=2+1/2 "
 Complex             3+4i, 3+j4, j4+3            3+4i
@@ -211,6 +213,7 @@ sum(1/x!,20,0,x)                                            2.718281828459045
 A := [(1,2,3);(4,5,6);(7,8,9)];tr(A)                        15
 A := [(1,2,3);(4,5,6);(7,8,9)];norm(A)                      16.881943016134134
 A := [(1,2,3);(4,5,6);(7,8,9)];cols(A)                      3
+polynom([(1,2,3)])                                          [(-1, 1.414); (-1, -1.414)]
 
     Implicit Multiplication:
 3PI             3*PI                9.424777960

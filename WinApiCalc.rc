@@ -53,6 +53,7 @@ BEGIN
             MENUITEM "Scientific",              ID_FORMAT_SCIENTIFIC
             MENUITEM "Normalized",              ID_FORMAT_NORMALIZED
             MENUITEM "Fraction",                ID_FORMAT_FRACTION
+            MENUITEM "Factorization",           ID_FORMAT_FCTR
             MENUITEM "Computing",               ID_FORMAT_COMPUTING
             MENUITEM "Integer",                 ID_FORMAT_INTEGER
             MENUITEM "Unsigned",                ID_FORMAT_UNSIGNED
@@ -68,7 +69,6 @@ BEGIN
             MENUITEM "String",                  ID_FORMAT_STRING
             MENUITEM "Inch",                    ID_FORMAT_INCH
             MENUITEM "All",                     ID_FORMAT_ALL
-//            MENUITEM "Auto",                    ID_FORMAT_AUTO
         END
         POPUP "&Binary width"
         BEGIN

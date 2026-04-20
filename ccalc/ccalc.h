@@ -43,6 +43,7 @@ static const option_def all_options[] =
     { "FRH",    FRH    },
     { "FLT",    FLT    },
     { "UTM",    UTM    },
+    { "FCT",    FCTR   },
 	{ "OPT",    OPT    },
     { "SRC",    SRC    },
     { "AUTO",   AUTO   },

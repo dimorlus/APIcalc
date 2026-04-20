@@ -22,6 +22,7 @@
 #pragma warn -8066
 #pragma warn -8017
 #pragma warn -8008
+#pragma warn -8004
 
 #define GetTickCount64 GetTickCount
 
@@ -169,6 +170,11 @@ void factorize (char *str, int_t n)
 void factorize_p (char *str, bool pas, int_t n)
 {
  char *cp = str;
+ if (n < 0)
+  {
+   *cp++ = '-';
+   n = -n;
+  }
  if (n <= 1)
   {
    if (cp - str < 60) cp += sprintf (cp, "%lld", n);

@@ -43,8 +43,9 @@ extern "C" {
 #define FLT  (1 << 27) // (UI) Floating point output (CLI only)
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define AUTO (1 << 29) // (UI) Auto output format
+#define FCTR (1 << 30) // (UI) Factorization output
 
-typedef void* HCALC;  // opaque handle, no one outside knows what's inside
+ typedef void* HCALC;  // opaque handle, no one outside knows what's inside
 
 #ifdef CALCLIB_EXPORTS
  #define CALCAPI __declspec(dllexport)

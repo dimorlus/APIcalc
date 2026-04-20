@@ -16,7 +16,7 @@
   Now, instead of 2*2*2, it outputs 2^3 (or 2**3 for C-style), and so on for all factors. 
   Additionally, for negative n, the same result is output as for positive n, but with a '-' sign.
 + Added polynom([(a, b, c)]) function that find roots of polynomial given coefficients in a 
-  row-matrix. Coefficients ordered from highest degree to constant: $$[a_n, a_(n-1), ..., a_1, a_0]$$
+  row-matrix. Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
   for polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0. Returns a row-matrix of 
   complex roots Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). 
   Supports polynomials up to degree 4

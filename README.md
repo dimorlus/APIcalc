@@ -263,7 +263,7 @@ x %% y  →  (x / y - 1) * 100
   if(x>0,1,-1)
   {sign(x)if(x>0,1,-1)}
   ```   
-* **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree to constant: $$[a_n, a_{n-1}, ..., a_1, a_0]$$   for polynomial: $$a_nx^{n} + a_{n-1}x^{n-1} + ... + a_1*x + a_0 = 0$$. 
+* **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree to constant: $$[a_n, a_{n-1}, ..., a_1, a_0]$$   for polynomial: $$a_nx^{n} + a_{n-1}x^{n-1} + ... + a_1x + a_0 = 0$$. 
   Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). Supports polynomials up to degree 4 having an analytical solution. Polynomial degree > 4: use Durand-Kerner method (numerical).
    The quadratic equation: $$x^2 + 2x + 3 = 0$$. Roots: $$-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$$.
 ```

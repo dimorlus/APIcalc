@@ -457,7 +457,8 @@ stability even with high-degree polynomials.
 Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial: $$y = a_n x^n + \dots + a_1 x + a_0$$<br>
 Example: ```fitpoly("ntc.txt", 2)``` returns coefficients for a quadratic curve.
 * **fitexp("filename")**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
-Returns: $$[b, a]$$.Note: Automatically performs linearization via $$\ln(y)$$.
+Returns: $$[b, a]$$.<br>
+*Note*: Automatically performs linearization via $$\ln(y)$$.
 * **fitlg("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
 Returns: $$[b, a]$$.
 * **fitpwr("filename")**: Fits a power-law model: $$y = a \cdot x^b$$.<br>

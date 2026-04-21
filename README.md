@@ -437,6 +437,55 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
 rand(zeros(3,3)+10) → [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
 round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 ```
+### Data Format & File Handling
+
+#### File Requirements
+* **Plain Text Only**: Data must be in a standard text format (e.g., .txt, .csv, .log, .dat). Binary formats like 
+.xlsx, .pdf, or .docx are not supported.<br>
+* **Encoding**: Standard ASCII or UTF-8 is recommended.
+
+#### File Paths & Syntax
+* **Flexible Separators**: The engine supports both Windows-style backslashes (\) and Unix-style forward slashes (/). 
+You can even mix them — the parser will correctly locate the file.
+* **Flexible Quotes**: Use either double quotes ("path") or single quotes ('path') to define filenames. 
+The only requirement is that they must be paired.
+* **Universal Paths**: Any combination of forward slashes (/) and backslashes (\) is valid. The engine transparently 
+handles path normalization.
+
+* *Valid*: 'C:/Data/log.txt'
+* *Valid*: "logs\sensor_data.csv"
+* *Valid*: 'c:\projects/test/data.dat'
+
+#### File Paths:
+* *Relative paths* (e.g., "logs/data.txt") are relative to the calculator executable. 
+* *Full paths* (e.g., "C:\Projects\Test\sensor.log") are supported.  
+
+#### The "All-Terrain" Parser
+The engine uses a robust, fault-tolerant scanner designed to extract numeric data from real-world engineering logs.
+* **Header & Comment Stripping**: The parser automatically skips non-numeric text at the beginning of lines, making 
+it easy to process files with headers or metadata.Engineering Notation: Full support for standard suffixes: k (kilo, $$10^3$$), 
+M (mega, $$10^6$$), etc.
+* **Delimiter Agnostic**: While comma-separated values (CSV) are standard, the parser handles spaces, tabs, and semicolons 
+gracefully.
+
+#### Data Structures for Different Modes
+* **Statistical Functions** (mean, median, rms, etc.):<br>
+*Expected format*: A single column of numbers. If multiple columns exist, the parser takes the first number found on each line.
+* **Regression Functions** (fitpoly, fitexp, etc.):<br>
+*Expected format*: Two columns representing $$X$$ and $$Y$$ coordinates. If only one column is present, the line number (index) 
+is used as the $$X$$ value. Example of a "Dirty" Log File (Supported)
+```
+# Experiment: NTC Thermistor Test
+# Date: 2026-04-21
+# Channel A: Temperature (C), Channel B: Resistance (Ohm)
+
+Temp: 25.0    Res: 10.0k
+Temp: 30.5    Res: 8.2k  (Stable)
+Temp: 40.0    Res: 5.5k  -- sensor jitter here --
+# End of log
+```
+The parser will cleanly extract pairs: `(25.0, 10000)`, `(30.5, 8200)`, and `(40.0, 5500)`.
+
 ### Regression & Data Fitting
 
 #### Overview
@@ -495,6 +544,20 @@ Use this when the file contains the entire set of data you are interested in.
 Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is $$n-1$$).
 * **min("filename") / max("filename")**: Find the absolute minimum and maximum values.<br>
 Returns: The peak values, useful for determining the dynamic range or signal clipping.
+
+#### Robust Statistics Example
+Raw data from a faulty ADC or a sensor working in a high-noise environment (like near a power inverter) often contains "spikes":
+```
+# Sensor_Output.log
+10.2
+10.5
+10.3
+999.9  <-- EMC Interference / Spike
+10.4
+10.2
+```
+* `mean("Sensor_Output.log")` $$\approx$$ 175.25 (The result is ruined by a single spike).
+* `median("Sensor_Output.log")` $$=$$ 10.35 (The spike is ignored; you get the true physical value).
 
 ### Strings
 

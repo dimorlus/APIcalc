@@ -452,7 +452,7 @@ stability even with high-degree polynomials.
 
 ### Function Reference
 * **fitpoly("filename", degree)**: Fits a polynomial of the specified degree to the data pairs $$(x, y)$$. Degree: $$1$$ to $$6$$.<br>
-Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial:$$y = a_n x^n + \dots + a_1 x + a_0$$<br>
+Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial: $$y = a_n x^n + \dots + a_1 x + a_0$$<br>
 Example: ```fitpoly("ntc.txt", 2)``` returns coefficients for a quadratic curve.
 * **fitexp("filename")**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
 Returns: $$[b, a]$$.Note: Automatically performs linearization via $$\ln(y)$$.

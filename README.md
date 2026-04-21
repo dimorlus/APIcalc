@@ -1,5 +1,6 @@
 # WinAPI Calculator
 <img src="calc.png" alt="calc" width="596" height="120"><br>
+![calc](calc.png)<br>
 [Русская версия / Russian version](Readme_ru.md)
 
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.

@@ -264,8 +264,10 @@ x %% y  →  (x / y - 1) * 100
   if(x>0,1,-1)
   {sign(x)if(x>0,1,-1)}
   ```   
-* **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree to constant: <br>$$[a_n, a_{n-1}, ..., a_1, a_0]$$ for polynomial: $$a_nx^{n} + a_{n-1}x^{n-1} + ... + a_1x + a_0 = 0$$.<br> 
-  Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). Supports polynomials up to degree 4 having an analytical solution. Polynomial degree > 4: use Durand-Kerner method (numerical).
+* **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree 
+to constant: <br>$$[a_n, a_{n-1}, \dots, a_1, a_0]$$ for polynomial: $$a_nx^{n} + a_{n-1}x^{n-1} + \dots + a_1x + a_0 = 0$$.<br> 
+Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). Supports polynomials up to degree 4 having an analytical 
+solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
    The quadratic equation: $$x^2 + 2x + 3 = 0$$. Roots: $$-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$$.
 ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
@@ -459,7 +461,8 @@ Returns: $$[b, a]$$.Note: Automatically performs linearization via $$\ln(y)$$.
 * **fitlg("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
 Returns: $$[b, a]$$.
 * **fitpwr("filename")**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
-Returns: $$[b, a]$$.Note: Excellent for modeling physical laws and sensor characteristics.
+Returns: $$[b, a]$$.<br>
+*Note*: Excellent for modeling physical laws and sensor characteristics.
 * **fitinv("filename")**: Fits an inverse model: $$y = a + b/x$$.<br>
 Returns: $$[b, a]$$.
 

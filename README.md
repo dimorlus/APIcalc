@@ -492,7 +492,7 @@ It is calculated using a high-precision iterative binary search on the value ran
 * **stddevp("filename")**: Calculates the Population Standard Deviation ($$\sigma$$). 
 Use this when the file contains the entire set of data you are interested in.
 * **stddevs("filename")**: Calculates the Sample Standard Deviation ($$s$$).
-Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is$$n-1$$).
+Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is $$n-1$$).
 * **min("filename") / max("filename")**: Find the absolute minimum and maximum values.<br>
 Returns: The peak values, useful for determining the dynamic range or signal clipping.
 

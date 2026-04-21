@@ -459,7 +459,7 @@ Example: ```fitpoly("ntc.txt", 2)``` returns coefficients for a quadratic curve.
 * **fitexp("filename")**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
 Returns: $$[b, a]$$.<br>
 *Note*: Automatically performs linearization via $$\ln(y)$$.
-* **fitlg("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
+* **fitlog("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
 Returns: $$[b, a]$$.
 * **fitpwr("filename")**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
 Returns: $$[b, a]$$.<br>

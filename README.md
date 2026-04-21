@@ -445,7 +445,7 @@ round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 * **Encoding**: Standard ASCII or UTF-8 is recommended.
 
 #### File Paths & Syntax
-* **Flexible Separators**: The engine supports both Windows-style backslashes (\) and Unix-style forward slashes (/). 
+* **Flexible Separators**: The engine supports both Windows-style backslashes (`\`) and Unix-style forward slashes (`/`). 
 You can even mix them — the parser will correctly locate the file.
 * **Flexible Quotes**: Use either double quotes ("path") or single quotes ('path') to define filenames. 
 The only requirement is that they must be paired.

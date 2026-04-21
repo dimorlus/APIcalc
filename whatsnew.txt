@@ -1,3 +1,21 @@
+21.04.26 (2.184)
++ Added follow Regression & Data Fitting and Statistical Analysis functions:
+	fitpoly("fname", n) Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
+	fitexp("fname")     Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
+	fitlog("fname")     Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
+	fitpow("fname")     Power regression. Fits y = a*x^b model to file data. Return [b, a]
+	fitinv("fname")     Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
+
+	num("fname")        Returns the count of valid numeric entries in the file.
+	mean("fname")       Calculates the arithmetic mean (average) of the dataset.
+	median("fname")     Robust center value estimate (iterative binary search).
+	rms("fname")        Root Mean Square. Calculates the effective value of the data.
+	sumx("fname")       Returns the sum of all numeric values in the file.
+	stddevp("fname")    Population standard deviation (entire dataset, divisor n).
+	stddevs("fname")    Sample standard deviation (random sample, divisor n-1).
+	min("fname")        Finds the minimum value in the dataset.
+	max("fname")        Finds the maximum value in the dataset.
+
 20.04.26 (2.183)
 + Added polynomial degree > 4: using Durand-Kerner method (numerical).
 	polynom([(1,-2,-3,4,5,6,7)]) ->

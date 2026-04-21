@@ -270,6 +270,12 @@ void calculator::AddPredefined (void)
  add (tsMFUNCI2, "diag", (void *)Diag);
  add (tsMFUNCI2, "eye", (void *)Diag);
 
+ add (tsFITFN, (v_func)rtLin, "fitpoly", nullptr);
+ add (tsFITFN, (v_func)rtExp, "fitexp", nullptr);
+ add (tsFITFN, (v_func)rtLg, "fitlog", nullptr);
+ add (tsFITFN, (v_func)rtPow, "fitpow", nullptr);
+ add (tsFITFN, (v_func)rtInv, "fitinv", nullptr);
+
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
  add (tsSFUNCF2, "const", (void *)Const);
@@ -3952,6 +3958,43 @@ void calculator::isNRM(char* start, char* end)
    }
 }
 
+int calculator::strscan(const char* str, int n, double* v,...)
+{
+ const char *cp = str;
+ int num_count = 0;
+ double **vals  = &v;
+
+ while (*cp && (num_count < n))
+  {
+   switch (*cp)
+    {
+        case '-':
+        case '+':
+        case '.':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+         {
+          char *fpos;
+          double val = strtod (cp, &fpos);
+          scientific (fpos, val);
+          cp = fpos;
+          if (vals[num_count]) *vals[num_count++] = val;
+         }
+        break;
+    }
+   cp++;
+  }
+ return num_count;
+}
+
 // Scan a number in various formats: decimal, hex (0x or $), octal (0o), binary (0b), or with
 // backslash for base prefix
 t_operator calculator::dscan (bool operand, bool percent)
@@ -5675,6 +5718,144 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
  res.mrows = degree;
  res.mcols = 2;
  res.mval  = roots;
+ return true;
+}
+
+bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
+{
+ FILE *f = nullptr;
+ 
+ if (n<=0)
+  {
+   mxerror ("degree must be positive");
+   return false;
+  }
+ // Linearized types always have degree 1 (line y=a+bx)
+ int degree = (rt == rtLin) ? n : 1;
+
+ if (degree > 6)
+  {
+   mxerror ("degree too big (max 6)");
+   return false;
+  }
+
+ // Initialize accumulators on the temporary stack
+ int s_size   = 2 * degree + 1;
+ int sy_size  = degree + 1;
+ float__t *S  = (float__t *)alloca (s_size * sizeof (float__t));
+ float__t *SY = (float__t *)alloca (sy_size * sizeof (float__t));
+
+ for (int i = 0; i < s_size; i++) S[i] = 0;
+ for (int i = 0; i < sy_size; i++) SY[i] = 0;
+
+ // 1. Stream reading of the file and accumulation of sums
+ if (fopen_s (&f, fname, "r") == 0 && f)
+  {
+   char line[1024];
+   while (fgets (line, sizeof (line), f))
+    {
+     double x = qnan, y = qnan;
+     // strscan ignores garbage and understands suffixes (100k, 5m)
+     if (strscan (line, 2, &x, &y) == 2)
+      {
+
+       // Linearization of data before least squares
+       switch (rt)
+        {
+        case rtExp:
+         if (y <= 0) continue;
+         y = Log (y);
+         break;
+        case rtLg:
+         if (x <= 0) continue;
+         x = Log (x);
+         break;
+        case rtPow:
+         if (x <= 0 || y <= 0) continue;
+         x = Log (x);
+         y = Log (y);
+         break;
+        case rtInv:
+         if (x == 0) continue;
+         x = 1.0 / x;
+         break;
+        default:
+         break;
+        }
+
+       // Accumulate sums of powers
+       float__t px = 1.0;
+       for (int i = 0; i < s_size; i++)
+        {
+         S[i] += px;
+         if (i < sy_size) SY[i] += y * px;
+         px *= x;
+        }
+      }
+    }
+   fclose (f);
+  }
+ else
+  {
+   mxerror ("cannot open data file");
+   return false;
+  }
+
+ // 2. Forming matrices to solve the system M * A = B
+ value valM, valB, valInvM, valCoeff;
+ int dim = degree + 1;
+
+ valM.tag   = tvMATRIX;
+ valM.mrows = dim;
+ valM.mcols = dim;
+ valM.mval  = mxAlloc (dim, dim);
+
+ valB.tag   = tvMATRIX;
+ valB.mrows = dim;
+ valB.mcols = 1;
+ valB.mval  = mxAlloc (dim, 1);
+
+ for (int r = 0; r < dim; r++)
+  {
+   for (int c = 0; c < dim; c++)
+    {
+     valM.mval[r * dim + c] = S[r + c];
+    }
+   valB.mval[r] = SY[r];
+  }
+
+ // 3. Solving the system using internal functions
+ // A = inv(M) * B
+ if (!mxInv (valInvM, valM))
+  {
+   mxerror ("Matrix is singular (not enough distinct points?)");
+   return false;
+  }
+
+ if (!mxMatMul (valCoeff, valInvM, valB)) return false;
+
+ // 4. Post-processing and preparing the result
+ // mval for the result (matrix-row 1 x n+1)
+ float__t *res_mval = mxAlloc (1, dim);
+
+ // Transfer coefficients in order from highest degree to lowest (as in polynomial)
+ for (int i = 0; i < dim; i++)
+  {
+   res_mval[i] = valCoeff.mval[degree - i];
+  }
+
+ // Inverse transformation for exponential and power types: ln(a) -> a
+ if (rt == rtExp || rt == rtPow)
+  {
+   // Coefficient 'a' is at the end of the res_mval array (corresponds to a0)
+   res_mval[dim - 1] = expl (res_mval[dim - 1]);
+  }
+
+ res.tag   = tvMATRIX;
+ res.mrows = 1;
+ res.mcols = dim;
+ res.mval  = res_mval;
+
  return true;
 }
 
@@ -8306,20 +8487,20 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
 
-              char filename[1024];
-              strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
-              filename[1023] = '\0';
-              if (filename[0] == '\0' && FileDlgFn)
-               {
-                strcpy (filename, "*.txt"); // default filename 
-                if (!FileDlgFn (filename, MAX_PATH))
-                 {
-                  error (v_stack[v_sp - n_args].pos, "No file selected");
-                  return result_fval = qnan;
-                 }
-               }
+              //char filename[1024];
+              //strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
+              //filename[1023] = '\0';
+              //if (filename[0] == '\0' && FileDlgFn)
+              // {
+              //  strcpy (filename, "*.txt"); // default filename 
+              //  if (!FileDlgFn (filename, MAX_PATH))
+              //   {
+              //    error (v_stack[v_sp - n_args].pos, "No file selected");
+              //    return result_fval = qnan;
+              //   }
+              // }
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
-                  (filename,  // filename
+                  (v_stack[v_sp - n_args].get_str (),                            // filename
                    v_stack[v_sp - n_args + 1].get_str (), n_args - 1, c_imaginary,
                    &v_stack[v_sp - n_args + 2]);
 
@@ -8407,6 +8588,52 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= 1;
              }
              break;
+
+            case tsFITFN: //matrix fitlin("data", int n)
+            {
+              bool res = false;
+              if (sym->fidx == rtLin && n_args < 2)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
+                return result_fval = qnan;
+               }
+              else
+              if (n_args < 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                return result_fval = qnan;
+               }
+              
+              if (sym->fidx == rtLin && n_args == 2)
+               {
+                char *fname = v_stack[v_sp - n_args].get_str (); // sp-2 is filename     
+                int n = v_stack[v_sp - n_args + 1].get_int ();   // sp-1 is number of points to read
+                res = mxRegrFn (fname, n, (rtype)sym->fidx,  
+                                   v_stack[v_sp - n_args - 1]);  // result is returned in sp-3
+               }
+              else if (sym->fidx > rtLin && n_args == 1)
+               {
+                char *fname = v_stack[v_sp - n_args].get_str (); // sp-1 is filename
+                int n = 1;
+                res = mxRegrFn (fname, n, (rtype)sym->fidx,
+                                    v_stack[v_sp - n_args - 1]); // result is returned in sp-2
+               }
+              else
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Invalid arguments for fit function");
+                return result_fval = qnan;
+               }
+              if (!res || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - n_args].pos, "Matrix %s", mxerr);
+                else
+                 error (v_stack[v_sp - n_args].pos, "Error in fit function");
+                return result_fval = qnan;
+               }
+              v_sp -= n_args;
+            }
+            break;
 
 
             case tsUFUNCT: // user defined function
@@ -8516,7 +8743,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 while (*p && isspace (*p)) p++;
 
                 child->setEscFn (EscFn);
-                child->setFileDlgFn (FileDlgFn);
+                //child->setFileDlgFn (FileDlgFn);
 
                 float__t res = child->evaluate_f ((char *)p);
 

@@ -392,7 +392,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFOR,      // 26  For operator (for)
  tsIF,       // 27  if operator for conditional expressions (if)
  tsSFUNCI1,  // 28  char* f(int n) (factorize)
- tsNUM       // 29  Total number of symbol types, must be the last in the list
+ tsFITFN,    // 29  matrix fitlin("data", int n) Fit function for curve fitting 
+ tsNUM       // 30  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -513,6 +514,16 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_factorial, // Factorial function
 
  vf_num
+};
+
+
+enum rtype
+{
+ rtLin,
+ rtExp,
+ rtLg,
+ rtPow,
+ rtInv
 };
 
 class value // value represents a value in the calculator, which can be an integer, float, complex
@@ -806,6 +817,10 @@ class calculator // calculator represents the main class for the expression calc
  void clear_v_stack (); // Clear the value stack
  void addim (void); // Add imaginary unit
  
+ //
+
+ int strscan (const char *str, int n, double *v = nullptr, ...); 
+
  // Math for solving, integrating and differentiating
  
  // Solve an equation given by the expression and return the solution as a complex value
@@ -854,7 +869,7 @@ class calculator // calculator represents the main class for the expression calc
  bool mxTranspose (value &res, value &M);
 
  bool mxPolyRoots (value &res, value &coeffs);
-
+ bool mxRegrFn (const char *fname, int n, rtype rt, value &res);
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);

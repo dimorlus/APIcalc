@@ -14,6 +14,7 @@ This calculator project on WinAPI (VS2022) is based on my old project on Cbuilde
 //                          Last update: 20-Oct-98    K.A. Knizhnik  * GARRET *
 //-------------------------------------------------------------------*--------* 
 ```
+The ***Casio Fx-991EX*** calculator served as a source of inspiration and ideas.
 
 ## Important note. 
 
@@ -196,7 +197,7 @@ x %% y  →  (x / y - 1) * 100
 * **Logarithmic**: ln, log (natural log), lg (base 10)
 * **Other**: sqrt, exp, abs, floor, ceil, round
 
-### Utility Functions
+### Utility Functions and solvers
 
 * **pol**: Convert to polar coordinates
 * **const("name", value)**: Define a named constant programmatically
@@ -434,6 +435,34 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
 rand(zeros(3,3)+10) → [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
 round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 ```
+### Regression & Data Fitting
+
+#### Overview
+
+The fit family of functions provides high-precision curve fitting using the Ordinary Least Squares (OLS) method. 
+Designed for engineers and hardware developers, these functions can process data directly from text files 
+(logs, CSVs, sensor dumps) and return a vector of coefficients for the best-fit model. 
+
+### Key Features
+* Stream Processing: Files are read line-by-line, allowing for the analysis of large datasets without high memory overhead.
+* Robust Parsing: Uses an "all-terrain" scanner that ignores non-numeric headers and supports engineering notation 
+(e.g., 100k, 5m, 2.5u).
+* High Precision: All internal calculations are performed using 128-bit floating-point (__float128) math to ensure 
+stability even with high-degree polynomials.
+
+### Function Reference
+* **fitpoly("filename", degree)**: Fits a polynomial of the specified degree to the data pairs $$(x, y)$$. Degree: $$1$$ to $$6$$.<br>
+Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial:$$y = a_n x^n + \dots + a_1 x + a_0$$<br>
+Example: ```fitpoly("ntc.txt", 2)``` returns coefficients for a quadratic curve.
+* **fitexp("filename")**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
+Returns: $$[b, a]$$.Note: Automatically performs linearization via $$\ln(y)$$.
+* **fitlg("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
+Returns: $$[b, a]$$.
+* **fitpwr("filename")**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
+Returns: $$[b, a]$$.Note: Excellent for modeling physical laws and sensor characteristics.
+* **fitinv("filename")**: Fits an inverse model: $$y = a + b/x$$.<br>
+Returns: $$[b, a]$$.
+
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.

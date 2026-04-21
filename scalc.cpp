@@ -276,6 +276,16 @@ void calculator::AddPredefined (void)
  add (tsFITFN, (v_func)rtPow, "fitpow", nullptr);
  add (tsFITFN, (v_func)rtInv, "fitinv", nullptr);
 
+ add (tsSTFUN, (v_func)sfNum, "num", nullptr);
+ add (tsSTFUN, (v_func)sfMean, "mean", nullptr);
+ add (tsSTFUN, (v_func)sfMedian, "median", nullptr);
+ add (tsSTFUN, (v_func)sfRMS, "rms", nullptr);
+ add (tsSTFUN, (v_func)sfSumX, "sumx", nullptr);
+ add (tsSTFUN, (v_func)sfStdDevP, "stddevp", nullptr);
+ add (tsSTFUN, (v_func)sfStdDevS, "stddevs", nullptr);
+ add (tsSTFUN, (v_func)sfMin, "min", nullptr);
+ add (tsSTFUN, (v_func)sfMax, "max", nullptr);
+
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
  add (tsSFUNCF2, "const", (void *)Const);
@@ -374,8 +384,7 @@ void calculator::AddPredefined (void)
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsFPFUNCn, "prnf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf);
-
- 
+  
  add (tsSIFUNC1, "datatime", (void *)datatime);
  
  add (tsFFUNC1, "sing", (void *)(float__t (*) (float__t))Sing);
@@ -5721,6 +5730,117 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
  return true;
 }
 
+double calculator::Median (const char *fname, double totalN, double minV, double maxV)
+{
+ double low         = minV;
+ double high        = maxV;
+ double targetCount = totalN / 2.0;
+ double mid         = low;
+
+ // 45-50 iterations are sufficient to exhaust the precision of double
+ for (int i = 0; i < 50; i++)
+  {
+   mid                 = (low + high) / 2.0;
+   double currentCount = 0;
+
+   FILE *f = nullptr;
+   if (fopen_s (&f, fname, "r") == 0 && f)
+    {
+     char line[1024];
+     double v = 0;
+     while (fgets (line, sizeof (line), f))
+      {
+       // Use "all-purpose" scanner
+       if (strscan (line, 1, &v) == 1)
+        {
+         if (v <= mid) currentCount++;
+        }
+      }
+     fclose (f);
+    }
+   else
+    {
+     mxerror ("cannot open data file");
+     return qnan;
+    }
+
+   if (currentCount <= targetCount)
+    low = mid;
+   else
+    high = mid;
+
+   // If the interval becomes negligibly small, exit
+   if (fabs (high - low) < 1e-15) break;
+  }
+ return mid;
+}
+
+// StatFn: compute statistical function on a column of numbers read from a file
+float__t calculator::StatFn (const char *fname, sfntype sfn)
+{
+ FILE *f    = nullptr;
+ double n = 0, sumX = 0, sumX2 = 0, mean = 0, M2 = 0;
+ double minVal = qnan, maxVal = qnan;
+
+ if (fopen_s (&f, fname, "r") == 0 && f)
+  {
+   char line[1024];
+   while (fgets (line, sizeof (line), f))
+    {
+     double x = qnan;
+     if (strscan (line, 1, &x) == 1)
+      { // Read only the first number in the line
+       if (n == 0)
+        {
+         minVal = maxVal = x;
+        }
+       else
+        {
+         if (x < minVal) minVal = x;
+         if (x > maxVal) maxVal = x;
+        }
+       // Accumulation (Welford's method or simple sums)
+       n++;
+       double delta = x - mean;
+       mean += delta / n;
+       M2 += delta * (x - mean);
+       sumX += x;
+       sumX2 += x * x;
+      }
+    }
+   fclose (f);
+  }
+ else
+  {
+   mxerror ("cannot open data file");
+   return qnan;
+  }
+
+ switch (sfn)
+  {
+  case sfNum: // Number of values
+   return (float__t)n;
+  case sfMean: // Arithmetic mean
+   return (float__t)mean;
+  case sfMedian: // Median (not implemented, requires storing all values)
+   return (float__t)Median(fname, n, minVal, maxVal);
+  case sfRMS:                             // Root mean square
+   return (float__t)((n > 0) ? sqrtl (sumX2 / n) : 0.0L); // Root mean square 
+  case sfSumX:                            // Sum of values
+   return (float__t)sumX;
+  case sfStdDevP:         // Population standard deviation
+   return (float__t)sqrtl (M2 / n); // Population standard deviation (sigma)
+  case sfStdDevS:         // Sample standard deviation
+   return (float__t)((n > 1) ? sqrtl (M2 / (n - 1)) : 0.0L); // Sample standard deviation (s)
+  case sfMin:             // Minimum value
+   return (float__t)minVal;
+  case sfMax:             // Maximum value
+   return (float__t)maxVal;
+  default:
+   return (float__t)0.0L;
+  }
+}
+
 bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
 {
  FILE *f = nullptr;
@@ -5754,11 +5874,12 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
    char line[1024];
    while (fgets (line, sizeof (line), f))
     {
-     double x = qnan, y = qnan;
+     double xd = qnan, yd = qnan;
      // strscan ignores garbage and understands suffixes (100k, 5m)
-     if (strscan (line, 2, &x, &y) == 2)
+     if (strscan (line, 2, &xd, &yd) == 2)
       {
-
+       float__t x = (float__t)xd;
+       float__t y = (float__t)yd;
        // Linearization of data before least squares
        switch (rt)
         {
@@ -5777,14 +5898,14 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
          break;
         case rtInv:
          if (x == 0) continue;
-         x = 1.0 / x;
+         x = (float__t)(1.0L / x);
          break;
         default:
          break;
         }
 
        // Accumulate sums of powers
-       float__t px = 1.0;
+       float__t px = (float__t)1.0L;
        for (int i = 0; i < s_size; i++)
         {
          S[i] += px;
@@ -8635,6 +8756,30 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
+            case tsSTFUN: // float mean("data") (stat functions)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+
+              if (v_stack[v_sp - 1].tag != tvSTR)
+               {
+                error (v_stack[v_sp - 1].pos, "String operand required");
+                return result_fval = qnan;
+               }
+              float__t res  = StatFn (v_stack[v_sp - 1].get_str (), (sfntype)sym->fidx); 
+              if (isnan (res) || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Error in statistical function");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - 2].fval = res;
+              v_stack[v_sp - 2].tag = tvFLOAT;
+              v_sp -= 1;
+            }
+            break;
 
             case tsUFUNCT: // user defined function
               { 

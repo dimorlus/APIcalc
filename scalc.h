@@ -393,7 +393,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsIF,       // 27  if operator for conditional expressions (if)
  tsSFUNCI1,  // 28  char* f(int n) (factorize)
  tsFITFN,    // 29  matrix fitlin("data", int n) Fit function for curve fitting 
- tsNUM       // 30  Total number of symbol types, must be the last in the list
+ tsSTFUN,    // 30  float mean("data") statistics function for calculating mean, median, etc
+ tsNUM       // 31  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -447,6 +448,8 @@ enum t_br_result
 #define MASK_DIFF       (1 << tsDIFF)        // differentiation operator for numerical differentiation
 #define MASK_FOR        (1 << tsFOR)         // for operator for numerical summation
 #define MASK_IF         (1 << tsIF)          // if operator for conditional expressions
+#define MASK_FITFN      (1 << tsFITFN)       // Fit function for curve fitting
+#define MASK_STFUN      (1 << tsSTFUN)       // Statistics function for calculating mean, median, etc
 
 #define MASK_DEFAULT (uint32_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
 
@@ -516,15 +519,29 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_num
 };
 
-
-enum rtype
+enum rtype // rtype represents the type of regression (fit) function in the calculator
 {
- rtLin,
- rtExp,
- rtLg,
- rtPow,
- rtInv
+ rtLin, // Linear regression (polynomial fit of degree up to 6)
+ rtExp, // Exponential regression (y = a * exp(b * x))
+ rtLg,  // Logarithmic regression (y = a + b * ln(x))
+ rtPow, // Power regression (y = a * x^b)
+ rtInv  // Inverse regression (y = a + b / x)
 };
+
+enum sfntype // sfntype represents the type of statistical function in the calculator
+{
+ sfNum,     // Number of elements in the dataset
+ sfMean,    // Mean (average) of the dataset
+ sfMedian,  // Median of the dataset
+ sfRMS,     // Root mean square of the dataset
+ sfSumX,    // Sum of the elements in the dataset
+ sfStdDevP, // Population standard deviation of the dataset
+ sfStdDevS, // Sample standard deviation of the dataset
+ sfMin,     // Minimum value in the dataset
+ sfMax      // Maximum value in the dataset
+};
+
+
 
 class value // value represents a value in the calculator, which can be an integer, float, complex
             // number, string, or user-defined function
@@ -878,6 +895,9 @@ class calculator // calculator represents the main class for the expression calc
  int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
               bool nl, // Print matrix in a formatted way, with an option for a new line
               int *size = nullptr); // and an optional pointer to store the size of the output
+ 
+ float__t StatFn (const char *fname, sfntype sfn);
+ double Median (const char *fname, double totalN, double minV, double maxV);
 
  public:
  calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint32_t mask=(MASK_NONE),

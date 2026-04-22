@@ -388,6 +388,8 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_fmod, "mod", (void *)vfunc2);
 
  add (tsFFUNC1, "erf", (void *)(float__t (*) (float__t))Erf);
+ add (tsFFUNC1, "aerf", (void *)(float__t (*) (float__t))Erfinv);
+ add (tsFFUNC1, "erfc", (void *)(float__t (*) (float__t))Erfc);
  
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
@@ -5908,6 +5910,7 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
     // 1. Find the Z-score using erfinv
     // Use Erfinv_refine for higher accuracy if needed
     float__t z = Sqrt (2.0) * Erfinv (2.0 * P - 1.0);
+    //float__t z = Sqrt (2.0) * Erfinv_refine (2.0 * P - 1.0, 50);
 
     // 2. Denormalize: x = mu + z * sigma
     return m + z * s;

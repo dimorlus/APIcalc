@@ -497,6 +497,10 @@ float__t Erfinv_refine (float__t x, int nr_iter)
  return y;
 } 
 
+float__t Aerf(float__t x)
+{
+ return Erfinv_refine (x, 50); // 5 iterations of Newton-Raphson for refinement
+}
 
 // Generate a random float in the range [0, x)
 static uint32_t randomi = 0;

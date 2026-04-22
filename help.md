@@ -86,6 +86,7 @@ float(x|z|M)            (1,3)   Convert to float (do nothing)
 ceil(x|z|M)             (1,3)   Rounds the number x up
 floor(x|z|M)            (1,3)   Rounds the number x down
 frac(x|z|M)             (1,3)   Returns the fractional part
+
 not(n)                          Inversion all bits, ~n
 gcd(n,m)                        Greatest common divisor of n and m
 invmod(n,m)                     Inverse of n modulo m
@@ -94,6 +95,7 @@ rnd(x|z|M),rand(x|z|M)  (1,3)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function
+aerf(x)                         Invert error function 
 
 db(x|z)                   (1)   Decibel, 10*lg(x), 10*lg(abs(z)) 
 np(x|z)                   (1)   Neper, 20*lg(x), 20*lg(abs(z))

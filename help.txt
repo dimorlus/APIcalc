@@ -83,6 +83,7 @@ rnd(x|z|M), rand(x|z|M) (1,3)   Random value 0..x
 
 erf(x)                          Error function
 erfc(x)                         Complementary error function
+aerf(x)                         Invert error function 
 
 db(x|z)                   (1)   Decibel, 10*lg(x), 10*lg(abs(z)) 
 np(x|z)                   (1)   Neper, 20*lg(x), 20*lg(abs(z))
@@ -135,9 +136,11 @@ stddevp("fname")                Population standard deviation (entire dataset, d
 stddevs("fname")                Sample standard deviation (random sample, divisor n-1).
 min("fname")                    Finds the minimum value in the dataset.
 max("fname")                    Finds the maximum value in the dataset.
-pdist("fname", x)               Probability that a value from the dataset is <= x.
-qdist("fname", x)               Probability of falling within |x - mean| range.
-rdist("fname", x)               Probability that a value is > x (upper tail).
+normp("fname", x)               Probability that a value from the dataset is <= x.
+normq("fname", x)               Probability of falling within |x - mean| range.
+normr("fname", x)               Probability that a value is > x (upper tail).
+normpd("fname", x)              Probability Density Function at point x.
+invnorm("fname", p)             Inverse Normal: find x such that P(X <= x) = p.
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.

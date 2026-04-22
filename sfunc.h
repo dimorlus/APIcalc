@@ -50,6 +50,8 @@ float__t Erfinv (float__t x);
 // when the value of x is away from 1.0 and -1.0
 float__t Erfinv_refine (float__t x, int nr_iter);
 
+float__t Aerf (float__t x);
+
 // Basic arithmetic functions
 float__t Abs (float__t x);
 float__t Fmod (float__t x, float__t y);

@@ -293,6 +293,10 @@ void calculator::AddPredefined (void)
  add (tsSTFUN, (v_func)sfMin, "min", nullptr);
  add (tsSTFUN, (v_func)sfMax, "max", nullptr);
 
+ add (tsSTFUN, (v_func)sfNormP, "pdist", nullptr);
+ add (tsSTFUN, (v_func)sfNormQ, "qdist", nullptr);
+ add (tsSTFUN, (v_func)sfNormR, "rdist", nullptr);
+
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
  add (tsSFUNCF2, "const", (void *)Const);
@@ -5784,7 +5788,7 @@ double calculator::Median (const char *fname, double totalN, double minV, double
 }
 
 // StatFn: compute statistical function on a column of numbers read from a file
-float__t calculator::StatFn (const char *fname, sfntype sfn)
+float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
 {
  FILE *f    = nullptr;
  double n = 0, sumX = 0, sumX2 = 0, mean = 0, M2 = 0;
@@ -5845,9 +5849,50 @@ float__t calculator::StatFn (const char *fname, sfntype sfn)
    return (float__t)minVal;
   case sfMax:             // Maximum value
    return (float__t)maxVal;
+
+  case sfNormP: // Probability P(t): P(X <= x)
+  case sfNormQ: // Probability Q(t): P(0 <= X <= t) or P(mean <= X <= x)
+  case sfNormR: // Probability R(t): P(X > x)
+   {
+    float__t m = (float__t)mean;
+    float__t s = (float__t)((n > 1) ? sqrt (M2 / (n - 1)) : 0.0L);
+
+    if (s == 0)
+     {
+      if (sfn == sfNormP) return (x >= m) ? 1.0 : 0.0;
+      if (sfn == sfNormQ) return 0.0;
+      if (sfn == sfNormR) return (x > m) ? 0.0 : 1.0;
+     }
+
+    // 1. Evaluate Z-score (normalized deviation)
+    // t = (x - mean) / sigma
+    float__t t_score = (x - m) / s;
+
+    // 2. Compute P(t) - basic integral function
+    // Using Erf(t / sqrt(2))
+    float__t p_val = 0.5 * (1.0 + Erf (t_score / sqrt (2.0)));
+
+    if (sfn == sfNormP) return p_val;
+
+    if (sfn == sfNormQ)
+     {
+      // Q(t) in Casio — this is the probability that the value lies between
+      // the mean and x. Mathematically, this is |P(t) - 0.5|
+      return fabsl (p_val - 0.5);
+     }
+
+    if (sfn == sfNormR)
+     {
+      // R(t) — this is the "right tail", the probability that the value > x
+      // Mathematically, this is 1.0 - P(t)
+      return 1.0 - p_val;
+     }
+   }
+   break;
   default:
    return (float__t)0.0L;
   }
+ return qnan; // Should never reach here
 }
 
 
@@ -6590,6 +6635,10 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
 // Check that the number of arguments on the stack matches the expected count for a function, and
 // that their types are valid according to the provided mask. Returns true if checks pass, false if
 // there's an error (with error message set).
+// mask is an array of bitmasks for each argument position, where each bit corresponds to a t_value
+// tag type that is invalid for that argument. For example, if mask[0] has bit 1<<tvSTR set, then a
+// string is not allowed for the first argument.
+// First mask is for the last argument (top of stack), second mask for the previous argument down, etc.
 bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3])
 {
  if (n_args != expected_args)
@@ -8865,8 +8914,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsCLCFN: // float fn(matrix, float)
             {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_MATRIX, 
-                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_MATRIX, // float
+                                        MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (v_stack[v_sp - 2].tag != tvMATRIX)
                {
@@ -8891,26 +8940,54 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSTFUN: // float mean("data") (stat functions)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if ((sfntype)sym->fidx < sfNormP)
+               {
+                const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
-              if (v_stack[v_sp - 1].tag != tvSTR)
-               {
-                error (v_stack[v_sp - 1].pos, "String operand required");
-                return result_fval = qnan;
+                if (v_stack[v_sp - 1].tag != tvSTR)
+                 {
+                  error (v_stack[v_sp - 1].pos, "String operand required");
+                  return result_fval = qnan;
+                 }
+                float__t res = StatFn (v_stack[v_sp - 1].get_str (), (sfntype)sym->fidx);
+                if (isnan (res) || mxerr[0])
+                 {
+                  if (mxerr[0])
+                   errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                  else
+                   error (v_stack[v_sp - 1].pos, "Error in statistical function");
+                  return result_fval = qnan;
+                 }
+                v_stack[v_sp - 2].fval = res;
+                v_stack[v_sp - 2].tag  = tvFLOAT;
+                v_sp -= 1;
                }
-              float__t res  = StatFn (v_stack[v_sp - 1].get_str (), (sfntype)sym->fidx); 
-              if (isnan (res) || mxerr[0])
+              else
                {
-                if (mxerr[0])
-                 errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
-                else
-                 error (v_stack[v_sp - 1].pos, "Error in statistical function");
-                return result_fval = qnan;
+                const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 
+                                           MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
+                if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                if (v_stack[v_sp - 2].tag != tvSTR || v_stack[v_sp - 1].tag != tvSTR)
+                 {
+                  error (v_stack[v_sp - 2].pos, "String operands required");
+                  return result_fval = qnan;
+                 }
+                float__t res = StatFn (v_stack[v_sp - 2].get_str (), // dataset file name 
+                                       (sfntype)sym->fidx,           // stat function type
+                                       v_stack[v_sp - 1].get ());    // x value for which to calculate stat function
+                if (isnan (res) || mxerr[0])
+                 {
+                  if (mxerr[0])
+                   errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                  else
+                   error (v_stack[v_sp - 1].pos, "Error in statistical function");
+                  return result_fval = qnan;
+                 }
+                v_stack[v_sp - 3].fval = res;
+                v_stack[v_sp - 3].tag  = tvFLOAT;
+                v_sp -= 2;
                }
-              v_stack[v_sp - 2].fval = res;
-              v_stack[v_sp - 2].tag = tvFLOAT;
-              v_sp -= 1;
             }
             break;
 

@@ -540,7 +540,10 @@ enum sfntype // sfntype represents the type of statistical function in the calcu
  sfStdDevP, // Population standard deviation of the dataset
  sfStdDevS, // Sample standard deviation of the dataset
  sfMin,     // Minimum value in the dataset
- sfMax      // Maximum value in the dataset
+ sfMax,     // Maximum value in the dataset
+ sfNormP,   // Probability that a value from the dataset is <= x.
+ sfNormQ,   // Probability of falling within |x - mean| range.
+ sfNormR,   // Probability that a value is > x (upper tail).
 };
 
 
@@ -899,7 +902,7 @@ class calculator // calculator represents the main class for the expression calc
               bool nl, // Print matrix in a formatted way, with an option for a new line
               int *size = nullptr); // and an optional pointer to store the size of the output
  
- float__t StatFn (const char *fname, sfntype sfn);
+ float__t StatFn (const char *fname, sfntype sfn, float__t x=qnan);
  double Median (const char *fname, double totalN, double minV, double maxV);
 
  public:

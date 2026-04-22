@@ -596,6 +596,11 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 * `mean("Sensor_Output.log")` $$\approx$$ 175.25 (The result is ruined by a single spike).
 * `median("Sensor_Output.log")` $$=$$ 10.35 (The spike is ignored; you get the true physical value).
 
+### Probability Functions (Normal Distribution)
+* **pdist("filename", x)**: Probability that a value from the dataset is <= x.
+* **qdist("filename", x)**: Probability of falling within |x - mean| range.
+* **rdist("filename", x)**: Probability that a value is > x (upper tail).
+
 ### Strings
 
 You can enter a string, assign a string value to a variable, and perform string concatenation.

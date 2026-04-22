@@ -155,8 +155,8 @@ the output format based on the input format. For example
 * Addition `+`, Subtraction `-`, Multiplication `*`, Division `/`
 * Modulo `%`, Power `^`
 * Percentage `%` and `%%`
-* Parentheses for grouping
-* ; to separate expressions
+* Parentheses `()` for grouping
+* `;` to separate expressions
 
 > **Note**: Unary minus has lower priority than power: `-1^2 = -(1^2) = -1`, not `(-1)^2 = 1`. Use parentheses when needed: `(-1)^2 = 1`.
 
@@ -596,11 +596,14 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 * `mean("Sensor_Output.log")` $$\approx$$ 175.25 (The result is ruined by a single spike).
 * `median("Sensor_Output.log")` $$=$$ 10.35 (The spike is ignored; you get the true physical value).
 
-### Probability Functions (Normal Distribution)
+### Probability & Distributions (Normal)
+These functions use mean and stddev calculated from the data file:
 ![Normal Distribution](dist.png)
-* **pdist("filename", x)**: Probability that a value from the dataset is <= x.
-* **qdist("filename", x)**: Probability of falling within |x - mean| range.
-* **rdist("filename", x)**: Probability that a value is > x (upper tail).
+* **normpd("file", x)** Probability Density Function at point x.
+* **normp("file", x)** Cumulative Distribution P(X <= x).
+* **normq("file", x)** Probability of falling within |x - mean| range.
+* **normr("file", x)** Upper tail probability P(X > x).
+* **invnorm("file", p)** Inverse Normal: find x such that P(X <= x) = p.
 
 ### Strings
 

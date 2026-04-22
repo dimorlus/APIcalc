@@ -338,3 +338,7 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 ;;Combinatorics
 {comb(n,k) n!/(k!*(n-k)!)};;Combinations
 {perm(n,k) n!/(n-k)!};;Permutations
+
+;;Statistics
+{bin_pd(k, n, p) comb(n,k)*p^k*(1-p)^(n-k)} ;; Binomial Probability Distribution
+{poisson_pd(k, L) (L^k*exp(-L))/k!} ;;Poisson Probability Distribution

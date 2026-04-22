@@ -293,9 +293,12 @@ void calculator::AddPredefined (void)
  add (tsSTFUN, (v_func)sfMin, "min", nullptr);
  add (tsSTFUN, (v_func)sfMax, "max", nullptr);
 
- add (tsSTFUN, (v_func)sfNormP, "pdist", nullptr);
- add (tsSTFUN, (v_func)sfNormQ, "qdist", nullptr);
- add (tsSTFUN, (v_func)sfNormR, "rdist", nullptr);
+ add (tsSTFUN, (v_func)sfNormP, "normp", nullptr);
+ add (tsSTFUN, (v_func)sfNormQ, "normq", nullptr);
+ add (tsSTFUN, (v_func)sfNormR, "normr", nullptr);
+
+ add (tsSTFUN, (v_func)sfInvNorm, "invnorm", nullptr);
+ add (tsSTFUN, (v_func)sfNormPD, "normpd", nullptr);
 
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
@@ -5800,25 +5803,25 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
    char line[1024];
    while (fgets (line, sizeof (line), f))
     {
-     double x = qnan;
-     if (strscan (line, 1, &x) == 1)
+     double xx = qnan;
+     if (strscan (line, 1, &xx) == 1)
       { // Read only the first number in the line
        if (n == 0)
         {
-         minVal = maxVal = x;
+         minVal = maxVal = xx;
         }
        else
         {
-         if (x < minVal) minVal = x;
-         if (x > maxVal) maxVal = x;
+         if (xx < minVal) minVal = xx;
+         if (xx > maxVal) maxVal = xx;
         }
        // Accumulation (Welford's method or simple sums)
        n++;
-       double delta = x - mean;
+       double delta = xx - mean;
        mean += delta / n;
-       M2 += delta * (x - mean);
-       sumX += x;
-       sumX2 += x * x;
+       M2 += delta * (xx - mean);
+       sumX += xx;
+       sumX2 += xx * xx;
       }
     }
    fclose (f);
@@ -5889,6 +5892,36 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
      }
    }
    break;
+  case sfInvNorm: // Inverse Normal Distribution
+   {
+    // x here — this is the probability P (from 0 to 1) provided by the user
+    float__t P = x;
+    if (P <= 0.0L || P >= 1.0L)
+     {
+      mxerror ("probability must be between 0 and 1");
+      return qnan;
+     }
+
+    float__t m = (float__t)mean;
+    float__t s = (float__t)((n > 1) ? Sqrt (M2 / (n - 1)) : 0.0L);
+
+    // 1. Find the Z-score using erfinv
+    // Use Erfinv_refine for higher accuracy if needed
+    float__t z = Sqrt (2.0) * Erfinv (2.0 * P - 1.0);
+
+    // 2. Denormalize: x = mu + z * sigma
+    return m + z * s;
+   }
+  case sfNormPD:
+   {
+    float__t m = (float__t)mean;
+    float__t s = (float__t)((n > 1) ? Sqrt (M2 / (n - 1)) : 0.0L);
+    if (s == 0) return (x == m) ? inf : 0.0;
+
+    float__t diff = x - m;
+    // Classical Gaussian formula
+    return (1.0 / (s * Sqrt (M_2PI))) * Exp (-(diff * diff) / (2.0 * s * s));
+   }
   default:
    return (float__t)0.0L;
   }

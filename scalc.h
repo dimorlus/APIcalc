@@ -544,6 +544,10 @@ enum sfntype // sfntype represents the type of statistical function in the calcu
  sfNormP,   // Probability that a value from the dataset is <= x.
  sfNormQ,   // Probability of falling within |x - mean| range.
  sfNormR,   // Probability that a value is > x (upper tail).
+ sfInvNorm, // Inverse of the normal distribution function (returns the z-score for a given
+            // cumulative probability)
+ sfNormPD,  // Probability density function of the normal distribution (returns the height 
+            //of the normal distribution curve at a given x value)
 };
 
 

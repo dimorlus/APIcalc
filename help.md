@@ -146,9 +146,11 @@ stddevp("fname")                Population standard deviation (entire dataset, d
 stddevs("fname")                Sample standard deviation (random sample, divisor n-1).
 min("fname")                    Finds the minimum value in the dataset.
 max("fname")                    Finds the maximum value in the dataset.
-pdist("file", x)                Probability that a value from the dataset is <= x.
-qdist("file", x)                Probability of falling within |x - mean| range.
-rdist("file", x)                Probability that a value is > x (upper tail).
+normp("fname", x)               Probability that a value from the dataset is <= x.
+normq("fname", x)               Probability of falling within |x - mean| range.
+normr("fname", x)               Probability that a value is > x (upper tail).
+normpd("fname", x)              Probability Density Function at point x.
+invnorm("fname", p)             Inverse Normal: find x such that P(X <= x) = p.
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.

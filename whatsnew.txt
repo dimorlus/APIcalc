@@ -1,3 +1,21 @@
+22.04.26 (2.185)
++ Added follow Regression & Data Fitting and Statistical Analysis functions:
+	clcpoly(vector, x)  Evaluates a polynomial of any degree (up to 6).
+	clcexp(vector, x)   Evaluates y=a*exp(b*x). Expects vector [b, a].
+	clclog(vector, x)   Evaluates y = a + b*ln(x). Expects vector [b, a].
+	clcpow(vector, x)   Evaluates y = a*x^b. Expects vector [b, a].
+	clcinv(vector, x)   Evaluates y = a + b/x. Expects vector [b, a].
+
+	normp("fname", x)   Probability that a value from the dataset is <= x.
+	normq("fname", x)   Probability of falling within |x - mean| range.
+	normr("fname", x)   Probability that a value is > x (upper tail).
+	normpd("fname", x)  Probability Density Function at point x.
+	invnorm("fname", p) Inverse Normal: find x such that P(X <= x) = p.
++ To the consts.txt file added follow functions 	
+	;;Statistics
+	{bin_pd(k, n, p) comb(n,k)*p^k*(1-p)^(n-k)} ;;Binomial Probability Distribution
+	{poisson_pd(k, L) (L^k*exp(-L))/k!} ;;Poisson Probability Distribution
+
 21.04.26 (2.184)
 + Added follow Regression & Data Fitting and Statistical Analysis functions:
 	fitpoly("fname", n) Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.

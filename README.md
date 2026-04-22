@@ -597,6 +597,7 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 * `median("Sensor_Output.log")` $$=$$ 10.35 (The spike is ignored; you get the true physical value).
 
 ### Probability Functions (Normal Distribution)
+![Normal Distribution](dist.png)
 * **pdist("filename", x)**: Probability that a value from the dataset is <= x.
 * **qdist("filename", x)**: Probability of falling within |x - mean| range.
 * **rdist("filename", x)**: Probability that a value is > x (upper tail).

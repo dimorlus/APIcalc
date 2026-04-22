@@ -17,10 +17,10 @@
 
 int_t To_int(int_t val);
 float__t To_float(float__t val);
+
 int_t Prime(int_t n);
 void factorize (char *str, int_t n);
 void factorize_p (char *str,bool pas, int_t n);
-
 
 float__t floatf (uint64_t i);
 float__t floatd (uint64_t i);
@@ -33,39 +33,58 @@ int_t Invmod(int_t x, int_t y);
 int_t Not(int_t n);
 int_t Now(int_t n);
 
+// Error function approximation using Abramowitz and Stegun formula 7.1.26
 float__t Erf(float__t x);
+// Complementary error function: erfc(x) = 1 - erf(x)
 float__t Erfc(float__t x);
 
-float__t Abs (float__t x);
+// Returns a floating point number y such that std::erf(y)
+// is close to x. The current implementation is quite accurate
+// when x is away from +1.0 and -1.0. As x approaches closer
+// to those values, the error in the result increases.
+float__t Erfinv (float__t x);
 
+
+// Refine the result of erfinv by performing Newton-Raphson
+// iteration nr_iter number of times. This method works well
+// when the value of x is away from 1.0 and -1.0
+float__t Erfinv_refine (float__t x, int nr_iter);
+
+// Basic arithmetic functions
+float__t Abs (float__t x);
 float__t Fmod (float__t x, float__t y);
 
-float__t Atan (float__t x);
-float__t Acot(float__t x);
-float__t Atan2l(float__t x, float__t y);
+// Trigonometric and hyperbolic functions
 float__t Cos(float__t x);
 float__t Cosh(float__t x);
 float__t Sin(float__t x);
 float__t Sinh(float__t x);
 float__t Tan(float__t x);
 float__t Tanh(float__t x);
+float__t Ctanh (float__t x); // cth
 
+// Inverse trigonometric functions
 float__t Acos(float__t x);
 float__t Asin(float__t x);
-
-float__t Ctanh(float__t x);  //cth
+float__t Atan (float__t x);
+float__t Acot (float__t x);
+float__t Atan2l (float__t x, float__t y);
 float__t Arsh(float__t x);
 float__t Arch(float__t x);
 float__t Arth(float__t x);
 float__t Arcth(float__t x);
+
+// Trigonometric functions with angle in degrees
 float__t Sing(float__t x);
 float__t Cosg(float__t x);
 float__t Tgg(float__t x);
 float__t Ctgg(float__t x);
 float__t Ctg(float__t x);
 
+// Random number generation functions
 void Randomize (void);
 float__t Random (float__t x);
+// Rounding functions
 float__t Round (float__t x);
 float__t Ceil(float__t x);
 float__t Floor(float__t x);
@@ -73,9 +92,11 @@ float__t Frac(float__t x);
 float__t Int(float__t x);
 float__t Float(float__t x);
 
+// Min and Max functions
 float__t Min(float__t x, float__t y);
 float__t Max (float__t x, float__t y);
 
+// Logarithmic and exponential functions
 float__t Log (float__t x);
 float__t Lg (float__t x);
 float__t NP (float__t x);
@@ -115,15 +136,19 @@ bool IsInf (const double fVal);
 bool IsInfL (const float__t ldVal);
 #endif //__BORLANDC__
 
+// String formatting functions
 int_t fprn(char *dest, char *sfmt, int args, char ic, value* v_stack);
 int_t fprnf (char *fname, char *sfmt, int args, char ic, value *v_stack);
 
 int_t datatime(char *tstr);
 
+// Color functions
 const char* wavelength_info(float__t wavelength_m);
 uint32_t wavelength_to_rgb(float__t wavelength_m);
 uint32_t temperature_to_rgb(float__t temp_kelvin);
 
+
+// Complex number functions
 float__t AbsC(float__t x, float__t y);
 
 void RoundC (float__t x, float__t y, float__t &re, float__t &im);

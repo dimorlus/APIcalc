@@ -392,9 +392,10 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFOR,      // 26  For operator (for)
  tsIF,       // 27  if operator for conditional expressions (if)
  tsSFUNCI1,  // 28  char* f(int n) (factorize)
- tsFITFN,    // 29  matrix fitlin("data", int n) Fit function for curve fitting 
+ tsFITFN,    // 29  matrix fitpoly("data", int n) Fit function for curve fitting 
  tsSTFUN,    // 30  float mean("data") statistics function for calculating mean, median, etc
- tsNUM       // 31  Total number of symbol types, must be the last in the list
+ tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
+ tsNUM       // 32  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -418,40 +419,41 @@ enum t_br_result
  brESC,     // Indicates that an ESC key was pressed
 };
 
-#define MASK_ALL        (uint32_t)~0L        // 32bit mask with all symbol types included
-#define MASK_NONE       0x00000000           // represents an empty mask with no symbol types included
-#define MASK_VARIABLE   (1 << tsVARIABLE)    // represents a variable symbol
-#define MASK_CONSTANT   (1 << tsCONSTANT)    // represents a constant symbol
-#define MASK_FFUNCI1    (1 << tsFFUNCI1)     // float f(int x)
-#define MASK_IFUNCF1    (1 << tsIFUNCF1)     // int f(float x)
-#define MASK_SFUNCF1    (1 << tsSFUNCF1)     // char* f(float x)
-#define MASK_IFUNC1     (1 << tsIFUNC1)      // int f(int x)
-#define MASK_CIFUNC1    (1 << tsCIFUNC1)     // int f(this, int x)
-#define MASK_IFUNC2     (1 << tsIFUNC2)      // int f(int x, int y)
-#define MASK_FFUNC1     (1 << tsFFUNC1)      // float f(float x)
-#define MASK_FFUNC2     (1 << tsFFUNC2)      // float f(float x, float y)
-#define MASK_FFUNC3     (1 << tsFFUNC3)      // float f(float x, float y, float z)
-#define MASK_PFUNCn     (1 << tsPFUNCn)      // int printf(char *format, ...)
-#define MASK_FPFUNCn    (1 << tsFPFUNCn)     // int printf(char *fname, char *format, ...)
-#define MASK_SFUNCF2    (1 << tsSFUNCF2)     // float const(char *name, float value)
-#define MASK_SIFUNC1    (1 << tsSIFUNC1)     // int f(char *name)
-#define MASK_FFUNCM     (1 << tsFFUNCM)      // float f(matrix M)
-#define MASK_MFUNCM2    (1 << tsMFUNCM2)     // matrix f(matrix A, matrix B)
-#define MASK_MFUNCI2    (1 << tsMFUNCI2)     // matrix f(int r, int c)
-#define MASK_VFUNC1     (1 << tsVFUNC1)      // void vfunc(value* res, value* arg, int idx)
-#define MASK_VFUNC2     (1 << tsVFUNC2)      // void vfunc(value* res, value* arg1, value* arg2, int idx)
-#define MASK_UFUNCT     (1 << tsUFUNCT)      // user-defined function
-#define MASK_SOLVE      (1 << tsSOLVE)       // solve operator for solving equations
-#define MASK_SUM        (1 << tsSUM)         // summation operator for numerical summation
-#define MASK_CALC       (1 << tsCALC)        // calculate operator for evaluating expressions
-#define MASK_INTEGR     (1 << tsINTEGR)      // integration operator for numerical integration
-#define MASK_DIFF       (1 << tsDIFF)        // differentiation operator for numerical differentiation
-#define MASK_FOR        (1 << tsFOR)         // for operator for numerical summation
-#define MASK_IF         (1 << tsIF)          // if operator for conditional expressions
-#define MASK_FITFN      (1 << tsFITFN)       // Fit function for curve fitting
-#define MASK_STFUN      (1 << tsSTFUN)       // Statistics function for calculating mean, median, etc
+#define MASK_ALL        (uint64_t)~0ULL        // 64bit mask with all symbol types included
+#define MASK_NONE       0ULL                   // represents an empty mask with no symbol types included
+#define MASK_VARIABLE   (1ULL << tsVARIABLE)    // represents a variable symbol
+#define MASK_CONSTANT   (1ULL << tsCONSTANT)    // represents a constant symbol
+#define MASK_FFUNCI1    (1ULL << tsFFUNCI1)     // float f(int x)
+#define MASK_IFUNCF1    (1ULL << tsIFUNCF1)     // int f(float x)
+#define MASK_SFUNCF1    (1ULL << tsSFUNCF1)     // char* f(float x)
+#define MASK_IFUNC1     (1ULL << tsIFUNC1)      // int f(int x)
+#define MASK_CIFUNC1    (1ULL << tsCIFUNC1)     // int f(this, int x)
+#define MASK_IFUNC2     (1ULL << tsIFUNC2)      // int f(int x, int y)
+#define MASK_FFUNC1     (1ULL << tsFFUNC1)      // float f(float x)
+#define MASK_FFUNC2     (1ULL << tsFFUNC2)      // float f(float x, float y)
+#define MASK_FFUNC3     (1ULL << tsFFUNC3)      // float f(float x, float y, float z)
+#define MASK_PFUNCn     (1ULL << tsPFUNCn)      // int printf(char *format, ...)
+#define MASK_FPFUNCn    (1ULL << tsFPFUNCn)     // int printf(char *fname, char *format, ...)
+#define MASK_SFUNCF2    (1ULL << tsSFUNCF2)     // float const(char *name, float value)
+#define MASK_SIFUNC1    (1ULL << tsSIFUNC1)     // int f(char *name)
+#define MASK_FFUNCM     (1ULL << tsFFUNCM)      // float f(matrix M)
+#define MASK_MFUNCM2    (1ULL << tsMFUNCM2)     // matrix f(matrix A, matrix B)
+#define MASK_MFUNCI2    (1ULL << tsMFUNCI2)     // matrix f(int r, int c)
+#define MASK_VFUNC1     (1ULL << tsVFUNC1)      // void vfunc(value* res, value* arg, int idx)
+#define MASK_VFUNC2     (1ULL << tsVFUNC2)      // void vfunc(value* res, value* arg1, value* arg2, int idx)
+#define MASK_UFUNCT     (1ULL << tsUFUNCT)      // user-defined function
+#define MASK_SOLVE      (1ULL << tsSOLVE)       // solve operator for solving equations
+#define MASK_SUM        (1ULL << tsSUM)         // summation operator for numerical summation
+#define MASK_CALC       (1ULL << tsCALC)        // calculate operator for evaluating expressions
+#define MASK_INTEGR     (1ULL << tsINTEGR)      // integration operator for numerical integration
+#define MASK_DIFF       (1ULL << tsDIFF)        // differentiation operator for numerical differentiation
+#define MASK_FOR        (1ULL << tsFOR)         // for operator for numerical summation
+#define MASK_IF         (1ULL << tsIF)          // if operator for conditional expressions
+#define MASK_FITFN      (1ULL << tsFITFN)       // Fit function for curve fitting
+#define MASK_STFUN      (1ULL << tsSTFUN)       // Statistics function for calculating mean, median, etc
+#define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 
-#define MASK_DEFAULT (uint32_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
+#define MASK_DEFAULT (uint64_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -761,7 +763,7 @@ class calculator // calculator represents the main class for the expression calc
 
  void AddPredefined (void);
 
- void copy_symbols (symbol **symtab = nullptr, uint32_t mask = (MASK_NONE));
+ void copy_symbols (symbol **symtab = nullptr, uint64_t mask = (MASK_NONE));
 
  //memory management
  void init_mem_list () { mem_list.init_mem_list (); }
@@ -887,6 +889,7 @@ class calculator // calculator represents the main class for the expression calc
 
  bool mxPolyRoots (value &res, value &coeffs);
  bool mxRegrFn (const char *fname, int n, rtype rt, value &res);
+ float__t mxCalcFn (value M, rtype rt, float__t x);
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);
@@ -900,7 +903,7 @@ class calculator // calculator represents the main class for the expression calc
  double Median (const char *fname, double totalN, double minV, double maxV);
 
  public:
- calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint32_t mask=(MASK_NONE),
+ calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint64_t mask=(MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration
  inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
  inline int issyntax (void) { return scfg; } // Get current syntax configuration

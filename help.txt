@@ -120,6 +120,12 @@ fitlog("fname")                 Logarithmic regression. Fits y = a + b*ln(x) mod
 fitpow("fname")                 Power regression. Fits y = a*x^b model to file data. Return [b, a]
 fitinv("fname")                 Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
 
+clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
+clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].
+clclog(vector, x)               Evaluates y = a + b*ln(x). Expects vector [b, a].
+clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
+clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
+
 num("fname")                    Returns the count of valid numeric entries in the file.
 mean("fname")                   Calculates the arithmetic mean (average) of the dataset.
 median("fname")                 Robust center value estimate (iterative binary search).

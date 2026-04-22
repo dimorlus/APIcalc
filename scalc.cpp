@@ -3,6 +3,7 @@
 #include "pch.h"
 #ifdef __BORLANDC__
 #include <stdint.h>
+#include <malloc.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
@@ -122,7 +123,7 @@ void DebugLog (const char *format, ...)
 #endif // _ENABLE_DEBUG_LOG_
 
 
-calculator::calculator (int cfg, symbol **symtab, uint32_t copyMask, int deep)
+calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
 {
  this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
  v_sp         = 0;    // Clear the value stack pointer
@@ -275,6 +276,12 @@ void calculator::AddPredefined (void)
  add (tsFITFN, (v_func)rtLg, "fitlog", nullptr);
  add (tsFITFN, (v_func)rtPow, "fitpow", nullptr);
  add (tsFITFN, (v_func)rtInv, "fitinv", nullptr);
+
+ add (tsCLCFN, (v_func)rtLin, "clcpoly", nullptr);
+ add (tsCLCFN, (v_func)rtExp, "clcexp", nullptr);
+ add (tsCLCFN, (v_func)rtLg, "clclog", nullptr);
+ add (tsCLCFN, (v_func)rtPow, "clcpow", nullptr);
+ add (tsCLCFN, (v_func)rtInv, "clcinv", nullptr);
 
  add (tsSTFUN, (v_func)sfNum, "num", nullptr);
  add (tsSTFUN, (v_func)sfMean, "mean", nullptr);
@@ -615,7 +622,7 @@ void calculator::AddPredefined (void)
 // recreated; the rest can be copied.
 
 
-void calculator::copy_symbols (symbol **symtab, uint32_t mask)
+void calculator::copy_symbols (symbol **symtab, uint64_t mask)
 {
  symbol *sp;
  symbol *nsp;
@@ -629,7 +636,7 @@ void calculator::copy_symbols (symbol **symtab, uint32_t mask)
       nsp = sp->next;
       if (sp->name[0])
        {
-        if ((mask & (1 << sp->tag))) // Check if the symbol's tag matches the copy mask
+        if ((mask & (1ULL << sp->tag))) // Check if the symbol's tag matches the copy mask
          {
           symbol *new_symbol = add (sp->tag, sp->name); //, sp->func);
           if (new_symbol)
@@ -5744,7 +5751,8 @@ double calculator::Median (const char *fname, double totalN, double minV, double
    double currentCount = 0;
 
    FILE *f = nullptr;
-   if (fopen_s (&f, fname, "r") == 0 && f)
+   f=fopen (fname, "r");
+   if (f)
     {
      char line[1024];
      double v = 0;
@@ -5770,7 +5778,7 @@ double calculator::Median (const char *fname, double totalN, double minV, double
     high = mid;
 
    // If the interval becomes negligibly small, exit
-   if (fabs (high - low) < 1e-15) break;
+   if (fabs (high - low) < 1e-9) break;
   }
  return mid;
 }
@@ -5782,7 +5790,8 @@ float__t calculator::StatFn (const char *fname, sfntype sfn)
  double n = 0, sumX = 0, sumX2 = 0, mean = 0, M2 = 0;
  double minVal = qnan, maxVal = qnan;
 
- if (fopen_s (&f, fname, "r") == 0 && f)
+ f = fopen(fname, "r");
+ if (f)
   {
    char line[1024];
    while (fgets (line, sizeof (line), f))
@@ -5825,13 +5834,13 @@ float__t calculator::StatFn (const char *fname, sfntype sfn)
   case sfMedian: // Median (not implemented, requires storing all values)
    return (float__t)Median(fname, n, minVal, maxVal);
   case sfRMS:                             // Root mean square
-   return (float__t)((n > 0) ? sqrtl (sumX2 / n) : 0.0L); // Root mean square 
+   return (float__t)((n > 0) ? sqrt (sumX2 / n) : 0.0L); // Root mean square 
   case sfSumX:                            // Sum of values
    return (float__t)sumX;
   case sfStdDevP:         // Population standard deviation
-   return (float__t)sqrtl (M2 / n); // Population standard deviation (sigma)
+   return (float__t)((n > 0) ? sqrt (M2 / n) : 0.0L); // Population standard deviation (sigma)
   case sfStdDevS:         // Sample standard deviation
-   return (float__t)((n > 1) ? sqrtl (M2 / (n - 1)) : 0.0L); // Sample standard deviation (s)
+   return (float__t)((n > 1) ? sqrt (M2 / (n - 1)) : 0.0L); // Sample standard deviation (s)
   case sfMin:             // Minimum value
    return (float__t)minVal;
   case sfMax:             // Maximum value
@@ -5840,6 +5849,7 @@ float__t calculator::StatFn (const char *fname, sfntype sfn)
    return (float__t)0.0L;
   }
 }
+
 
 bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
 {
@@ -5869,7 +5879,8 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
  for (int i = 0; i < sy_size; i++) SY[i] = 0;
 
  // 1. Stream reading of the file and accumulation of sums
- if (fopen_s (&f, fname, "r") == 0 && f)
+ f = fopen (fname, "r");
+ if (f)
   {
    char line[1024];
    while (fgets (line, sizeof (line), f))
@@ -5978,6 +5989,102 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
  res.mval  = res_mval;
 
  return true;
+}
+
+// mxCalcFn: calculate the value of the regression function at a given x using the coefficients in M
+float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
+{
+  if (M.tag != tvMATRIX)
+   {
+    mxerror ("matrix required");
+    return qnan;
+   }
+ 
+  switch (rt)
+   {
+    case rtLin:
+    {
+     if (M.mrows == 1 && M.mcols <= MAX_C)
+      {
+       // Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
+       // For polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0
+       // Horner's method for evaluating polynomial at x 
+       float__t result = 0.0L;
+       for (int i = 0; i < M.mcols; i++)
+        {
+         result = result * x + M.mval[i];
+        }
+       return result;
+      }
+     else
+     {
+       mxerror ("polynomial coefficients must be a row vector");
+       return qnan;
+     }
+    }
+    break;
+    case rtExp: //y=a*exp(b*x), [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1]; // constant term (a0)
+        float__t b = M.mval[0]; // linear term (a1)
+        return a * Exp (b * x);
+       }
+      else
+       {
+        mxerror ("exponential regression requires exactly 2 coefficients");
+        return qnan;
+       }
+     }
+     break;
+     case rtPow: //y=a*x^b, [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1]; // constant term (a0)
+        float__t b = M.mval[0]; // linear term (a1)
+        return a * Pow (x, b);
+       }
+      else
+       {
+        mxerror ("power regression requires exactly 2 coefficients");
+        return qnan;
+       }
+     }
+     break;
+     case rtLg: // y=a+b*ln(x), [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1]; // constant term (a0)
+        float__t b = M.mval[0]; // linear term (a1)
+        return a + b * Log (x);
+       }
+      else
+       {
+        mxerror ("logarithmic regression requires exactly 2 coefficients");
+        return qnan;
+       }
+     }
+    break;
+    case rtInv: // y=a+b/x, [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1]; // constant term (a0)
+        float__t b = M.mval[0]; // linear term (a1)
+        return a + b / x;
+       }
+      else
+       {
+        mxerror ("inverse regression requires exactly 2 coefficients");
+        return qnan;
+       }
+     }
+     break;
+   }
+  return qnan; // Should not reach here
 }
 
 // mxNeg: element-wise negation (unary minus) — also in matrixuno, here for completeness
@@ -8713,7 +8820,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsFITFN: //matrix fitlin("data", int n)
             {
               bool res = false;
-              if (sym->fidx == rtLin && n_args < 2)
+              if (sym->fidx == (int)rtLin && n_args < 2)
                {
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
                 return result_fval = qnan;
@@ -8725,14 +8832,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
               
-              if (sym->fidx == rtLin && n_args == 2)
+              if (sym->fidx == (int)rtLin && n_args == 2)
                {
                 char *fname = v_stack[v_sp - n_args].get_str (); // sp-2 is filename     
                 int n = v_stack[v_sp - n_args + 1].get_int ();   // sp-1 is number of points to read
                 res = mxRegrFn (fname, n, (rtype)sym->fidx,  
                                    v_stack[v_sp - n_args - 1]);  // result is returned in sp-3
                }
-              else if (sym->fidx > rtLin && n_args == 1)
+              else if (sym->fidx > (int)rtLin && n_args == 1)
                {
                 char *fname = v_stack[v_sp - n_args].get_str (); // sp-1 is filename
                 int n = 1;
@@ -8754,6 +8861,32 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
               v_sp -= n_args;
             }
+            break;
+
+            case tsCLCFN: // float fn(matrix, float)
+            {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_MATRIX, 
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (v_stack[v_sp - 2].tag != tvMATRIX)
+               {
+                error (v_stack[v_sp - 2].pos, "Matrix operand required");
+                return result_fval = qnan;
+               }
+              
+              float__t res = mxCalcFn (v_stack[v_sp - 2], (rtype)sym->fidx, v_stack[v_sp - 1].get());
+              if (isnan (res) || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Error in clc* function");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - 3].fval = res;
+              v_stack[v_sp - 3].tag = tvFLOAT;
+              v_sp -= 2;
+             }
             break;
 
             case tsSTFUN: // float mean("data") (stat functions)

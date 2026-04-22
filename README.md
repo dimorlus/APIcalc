@@ -523,34 +523,22 @@ Use these functions to evaluate a model previously obtained via fit*("filename")
 * **clcpow(vector, x)**: Evaluates $$y = a \cdot x^b$$. Expects vector $$[b, a]$$.
 * **clcinv(vector, x)**: Evaluates $$y = a + b/x$$. Expects vector $$[b, a]$$.
 ```
-C:\Projects>ccalc "for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)"
+C:\Projects>ccalc for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp) /ALL-
 for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)
                                                                14 f
                                                                14 S
-                                                000000000000000eh
-                                                       SO '\016'  c
-                                                            14:s
-                                        Thu, Jan 01 00:00:14 1970
-                                                               '' S
 
-
-C:\Projects>ccalc "clcpoly(fitpoly("ntc.txt",6), 25)"
+C:\Projects>ccalc clcpoly(fitpoly("ntc.txt",6), 25) /ALL-
 clcpoly(fitpoly("ntc.txt",6), 25)
                                                 100056.0293486226 f
-                                                           100.1k S
-                                                00000000000186d8h
-                                                             '╪'  c
-                                               1:d 3:h 47:m 36:s
-                                        Fri, Jan 02 03:47:36 1970
-  100056 rad|--`--'--" (5.73279e+06`)|6.37e+06 gon|1.592e+04 turn
-                                                               '' S
+                                                           100.1k S ←
 C:\Projects>type ntc.txt
  20`C, 125.4k
  21`C, 119.7k
  22`C, 114.4k
  23`C, 109.4k
  24`C, 104.6k
- 25`C, 100k
+ 25`C, 100k    ←
  26`C, 95.67k
  27`C, 91.55k
  28`C, 87.64k

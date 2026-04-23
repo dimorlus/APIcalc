@@ -468,6 +468,29 @@ M (mega, $$10^6$$), etc.
 * **Delimiter Agnostic**: While comma-separated values (CSV) are standard, the parser handles spaces, tabs, and semicolons 
 gracefully.
 
+#### Column Selection (Advanced Masks)
+For files with multiple columns, all `fit*` and statistical functions support an optional **Column Mask** argument. 
+This allows you to select specific columns from the data string and define their order (e.g., swapping X and Y).
+
+**Mask Syntax:**
+* **Numbers (0-9)**: The index of the argument to be captured, starting from 0.
+* **Wildcards (`*`, `-`, `#`, etc.)**: Any non-numeric, non-space character acts as a skip marker for a numeric value.
+* **Spaces**: Optional visual separators used to improve readability.
+
+**Examples:**
+Assuming a data line contains 5 numeric values: `[Val0, Val1, Val2, Val3, Val4]`.
+
+* **Default (No Mask)**: `fitpoly("data.log", 2)` — Uses `Val0` as X and `Val1` as Y.
+* **Column Swapping**: `fitpoly("data.log", "1 0", 2)` — Uses `Val1` as X and `Val0` as Y.
+* **Specific Selection**: `fitpoly("data.log", "* 1 * 0", 2)` — Skips `Val0`, uses `Val1` as X, skips `Val2`, and uses `Val3` as Y.
+* **Single Column Selection**: `mean("data.log", "**0")` — Calculates the mean only for the 3rd numeric column (`Val2`).
+
+> **Tip**: Since engineering logs often contain dates (e.g., `2026-04-22`), the parser treats each part of the date as a separate number. 
+Use a mask like `*** 0 1` to skip the date and jump straight to your data columns.
+
+> **Data Safety**: If a mask is invalid (e.g., `"1 1"` for two variables) or the data line is incomplete, the engine ensures integrity by 
+initializing results with `qnan`. These lines are automatically ignored during analysis, preventing corrupted calculations.
+
 #### Data Structures for Different Modes
 * **Statistical Functions** (mean, median, rms, etc.):<br>
 *Expected format*: A single column of numbers. If multiple columns exist, the parser takes the first number found on each line.

@@ -486,6 +486,7 @@ float__t Erfinv (float__t x)
 // Refine the result of erfinv by performing Newton-Raphson
 // iteration nr_iter number of times. This method works well
 // when the value of x is away from 1.0 and -1.0
+//https://github.com/lakshayg/erfinv
 float__t Erfinv_refine (float__t x, int nr_iter)
 {
  const float__t k = 0.8862269254527580136490837416706L; // 0.5 * sqrt(pi)

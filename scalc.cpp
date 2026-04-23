@@ -271,13 +271,13 @@ void calculator::AddPredefined (void)
  add (tsMFUNCI2, "diag", (void *)Diag);
  add (tsMFUNCI2, "eye", (void *)Diag);
 
- add (tsFITFN, (v_func)rtLin, "fitpoly", nullptr);
+ add (tsFITFN, (v_func)rtPoly, "fitpoly", nullptr);
  add (tsFITFN, (v_func)rtExp, "fitexp", nullptr);
  add (tsFITFN, (v_func)rtLg, "fitlog", nullptr);
  add (tsFITFN, (v_func)rtPow, "fitpow", nullptr);
  add (tsFITFN, (v_func)rtInv, "fitinv", nullptr);
 
- add (tsCLCFN, (v_func)rtLin, "clcpoly", nullptr);
+ add (tsCLCFN, (v_func)rtPoly, "clcpoly", nullptr);
  add (tsCLCFN, (v_func)rtExp, "clcexp", nullptr);
  add (tsCLCFN, (v_func)rtLg, "clclog", nullptr);
  add (tsCLCFN, (v_func)rtPow, "clcpow", nullptr);
@@ -3983,9 +3983,10 @@ void calculator::isNRM(char* start, char* end)
    }
 }
 
-int calculator::strscan(const char* str, int n, double* v,...)
+int calculator::strscan (const char *str, const char *msk, int n, double *v, ...)
 {
  const char *cp = str;
+ const char *mp = msk;
  int num_count = 0;
  double **vals  = &v;
 
@@ -4011,7 +4012,22 @@ int calculator::strscan(const char* str, int n, double* v,...)
           double val = strtod (cp, &fpos);
           scientific (fpos, val);
           cp = fpos;
-          if (vals[num_count]) *vals[num_count++] = val;
+          if (mp && *mp) // if mask is provided, check if current character matches the mask
+           {
+            int idx = -1;
+            while (*mp && isspace(*mp)) mp++;                // skip spaces in mask
+            if (*mp >= '0' && *mp <= '9') idx = *mp - '0'; // get index from mask
+            if (*mp) mp++;
+            if (idx >= 0 && idx < n && vals[idx])
+             {
+              *vals[idx] = val; // store value in the correct variable based on mask
+              num_count++;
+             } 
+           }
+          else // if no mask, capture all numbers
+           {
+            if (vals[num_count]) *vals[num_count++] = val;
+           }
          }
         break;
     }
@@ -5746,7 +5762,7 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
  return true;
 }
 
-double calculator::Median (const char *fname, double totalN, double minV, double maxV)
+double calculator::Median (const char *fname, const char *msk,double totalN, double minV, double maxV)
 {
  double low         = minV;
  double high        = maxV;
@@ -5764,11 +5780,11 @@ double calculator::Median (const char *fname, double totalN, double minV, double
    if (f)
     {
      char line[1024];
-     double v = 0;
+     double v = qnan;
      while (fgets (line, sizeof (line), f))
       {
        // Use "all-purpose" scanner
-       if (strscan (line, 1, &v) == 1)
+       if (strscan (line,msk, 1, &v) == 1)
         {
          if (v <= mid) currentCount++;
         }
@@ -5793,7 +5809,7 @@ double calculator::Median (const char *fname, double totalN, double minV, double
 }
 
 // StatFn: compute statistical function on a column of numbers read from a file
-float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
+float__t calculator::StatFn (const char *fname, const char *msk, sfntype sfn, float__t x)
 {
  FILE *f    = nullptr;
  double n = 0, sumX = 0, sumX2 = 0, mean = 0, M2 = 0;
@@ -5806,7 +5822,7 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
    while (fgets (line, sizeof (line), f))
     {
      double xx = qnan;
-     if (strscan (line, 1, &xx) == 1)
+     if (strscan (line, msk, 1, &xx) == 1)
       { // Read only the first number in the line
        if (n == 0)
         {
@@ -5841,7 +5857,7 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
   case sfMean: // Arithmetic mean
    return (float__t)mean;
   case sfMedian: // Median (not implemented, requires storing all values)
-   return (float__t)Median(fname, n, minVal, maxVal);
+   return (float__t)Median(fname, msk, n, minVal, maxVal);
   case sfRMS:                             // Root mean square
    return (float__t)((n > 0) ? sqrt (sumX2 / n) : 0.0L); // Root mean square 
   case sfSumX:                            // Sum of values
@@ -5932,7 +5948,7 @@ float__t calculator::StatFn (const char *fname, sfntype sfn, float__t x)
 }
 
 
-bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
+bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res)
 {
  FILE *f = nullptr;
  
@@ -5942,7 +5958,7 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
    return false;
   }
  // Linearized types always have degree 1 (line y=a+bx)
- int degree = (rt == rtLin) ? n : 1;
+ int degree = (rt == rtPoly) ? n : 1;
 
  if (degree > 6)
   {
@@ -5968,7 +5984,7 @@ bool calculator::mxRegrFn (const char *fname, int n, rtype rt, value &res)
     {
      double xd = qnan, yd = qnan;
      // strscan ignores garbage and understands suffixes (100k, 5m)
-     if (strscan (line, 2, &xd, &yd) == 2)
+     if (strscan (line, msk, 2, &xd, &yd) == 2)
       {
        float__t x = (float__t)xd;
        float__t y = (float__t)yd;
@@ -6083,7 +6099,7 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
  
   switch (rt)
    {
-    case rtLin:
+    case rtPoly:
     {
      if (M.mrows == 1 && M.mcols <= MAX_C)
       {
@@ -6668,6 +6684,36 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
  return mrSKIP;
 }
 
+
+bool calculator::CheckOperand (int sp, uint32_t mask)
+{
+ t_value tag = v_stack[v_sp - sp].tag;
+ int pos     = v_stack[v_sp - sp].pos;
+ if (!((1<<tag) & mask)) // valid type for this operand
+  {
+   switch (tag)
+    {
+     case tvERR:
+      error (pos, "Undefined operand");
+     break;
+     case tvCOMPLEX:
+      error (pos, "Complex operand required");
+     break;
+     case tvSTR:
+      error (pos, "String operand required");
+     break;
+     case tvMATRIX:
+      error (pos, "Matrix operand required");
+     break;
+     default:
+      error (pos, "Invalid operand type");
+     break;
+    }
+   return false; 
+  }
+ return true;
+}
+
 // Check that the number of arguments on the stack matches the expected count for a function, and
 // that their types are valid according to the provided mask. Returns true if checks pass, false if
 // there's an error (with error message set).
@@ -6814,6 +6860,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
    errorf (pos, "Too deep (%d) recursion.", deep);
    return qnan;
   }
+
+ //double v1=0, v2=0, v3=0;
+ //int n = strscan ("2026-04-22 10:00:05 102.5 0.985", "* * * * * * 1 0", 2, &v1,&v2,&v3);
+ //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
+
 
  //init_mem_list ();
  clear_v_stack (); // Clear the value stack before evaluation
@@ -8567,12 +8618,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_MATRIX)) return result_fval = qnan;
 
-              if (v_stack[v_sp - 1].tag != tvMATRIX || v_stack[v_sp - 2].tag != tvMATRIX)
-               {
-                error (v_stack[v_sp - 2].pos, "Matrix operand required");
-                return result_fval = qnan;
-               }
+              //if (v_stack[v_sp - 1].tag != tvMATRIX || v_stack[v_sp - 2].tag != tvMATRIX)
+              // {
+              //  error (v_stack[v_sp - 2].pos, "Matrix operand required");
+              //  return result_fval = qnan;
+              // }
 
               bool res = ((bool (*) (void *, value &, value &, value &))sym->func) (
                   (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2], v_stack[v_sp - 1]);
@@ -8793,12 +8846,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
 
-              if ((v_stack[v_sp - n_args].tag != tvSTR)
-                  && (v_stack[v_sp - n_args + 1].tag != tvSTR))
-               {
-                error (v_stack[v_sp - n_args].pos, "String operands required");
-                return result_fval = qnan;
-               }
+              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
+              if (!CheckOperand (n_args+1, MSK_STR)) return result_fval = qnan;
+
+              //if ((v_stack[v_sp - n_args].tag != tvSTR)
+              //    && (v_stack[v_sp - n_args + 1].tag != tvSTR))
+              // {
+              //  error (v_stack[v_sp - n_args].pos, "String operands required");
+              //  return result_fval = qnan;
+              // }
 
               //char filename[1024];
               //strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
@@ -8841,12 +8897,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-
-              if (v_stack[v_sp - 2].tag != tvSTR)
-               {
-                error (v_stack[v_sp - 2].pos, "String operand required");
-                return result_fval = qnan;
-               }
+              if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+              //if (v_stack[v_sp - 2].tag != tvSTR)
+              // {
+              //  error (v_stack[v_sp - 2].pos, "String operand required");
+              //  return result_fval = qnan;
+              // }
 
               bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
                   ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
@@ -8861,12 +8917,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-
-              if (v_stack[v_sp - 1].tag != tvSTR)
-               {
-                error (v_stack[v_sp - 1].pos, "String operand required");
-                return result_fval = qnan;
-               }
+              if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+              //if (v_stack[v_sp - 1].tag != tvSTR)
+              // {
+              //  error (v_stack[v_sp - 1].pos, "String operand required");
+              //  return result_fval = qnan;
+              // }
               v_stack[v_sp - 2].ival = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
@@ -8902,40 +8958,74 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break;
 
-            case tsFITFN: //matrix fitlin("data", int n)
+            case tsFITFN: // matrix fitpoly("data",["msk"], int n)|fit*("data", ["msk"]) etc.
             {
+              //bool mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res)
+              char *filename = nullptr;
+              char *msk = nullptr;
+              int n = 0;
               bool res = false;
-              if (sym->fidx == (int)rtLin && n_args < 2)
-               {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
-                return result_fval = qnan;
+              rtype rfn = (rtype)sym->fidx;
+              if (rfn == rtPoly) // fitlin can take either 1, 2 or 3 arguments, other fit functions take
+               {               // only 1 or 2 argument
+                if (n_args == 3) // fitlin("data", "msk", n)
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, //n
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX,           // msk
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };      // filename 
+                  if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
+                  if (!CheckOperand (3, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 3].get_str ();
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  msk = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
+                  n = (int)v_stack[v_sp - 1].get_int ();
+                 }
+                else
+                if (n_args == 2) // fitlin("data", n) 
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // n
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };   // filename
+                  if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
+                  n = (int)v_stack[v_sp - 1].get_int ();
+                 }
+                else
+                 {
+                  error (v_stack[v_sp - n_args - 1].pos, "Wrong arguments number");
+                  return result_fval = qnan;
+                 }
                }
-              else
-              if (n_args < 1)
+              else // fit*("data", ["msk"])
                {
-                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-                return result_fval = qnan;
+                if (n_args == 2) // fitlin("data", "msk") 
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, // msk
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 }; // filename
+                  if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+                  msk = v_stack[v_sp - 1].get_str ();  
+                 }
+                else if (n_args == 1) // fitlin("data") 
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0, 0 }; // filename
+                  if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+                  if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 1].get_str ();
+                 }
+                else
+                 {
+                  error (v_stack[v_sp - n_args - 1].pos, "Wrong arguments number");
+                  return result_fval = qnan;
+                 }
                }
-              
-              if (sym->fidx == (int)rtLin && n_args == 2)
-               {
-                char *fname = v_stack[v_sp - n_args].get_str (); // sp-2 is filename     
-                int n = v_stack[v_sp - n_args + 1].get_int ();   // sp-1 is number of points to read
-                res = mxRegrFn (fname, n, (rtype)sym->fidx,  
-                                   v_stack[v_sp - n_args - 1]);  // result is returned in sp-3
-               }
-              else if (sym->fidx > (int)rtLin && n_args == 1)
-               {
-                char *fname = v_stack[v_sp - n_args].get_str (); // sp-1 is filename
-                int n = 1;
-                res = mxRegrFn (fname, n, (rtype)sym->fidx,
-                                    v_stack[v_sp - n_args - 1]); // result is returned in sp-2
-               }
-              else
-               {
-                error (v_stack[v_sp - n_args - 1].pos, "Invalid arguments for fit function");
-                return result_fval = qnan;
-               }
+
+              res = mxRegrFn (filename, msk, n, rfn, v_stack[v_sp - n_args - 1]); 
+
               if (!res || mxerr[0])
                {
                 if (mxerr[0])
@@ -8948,16 +9038,17 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
-            case tsCLCFN: // float fn(matrix, float)
+            case tsCLCFN: // float clc*(matrix, float)
             {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_MATRIX, // float
-                                        MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-              if (v_stack[v_sp - 2].tag != tvMATRIX)
-               {
-                error (v_stack[v_sp - 2].pos, "Matrix operand required");
-                return result_fval = qnan;
-               }
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              //if (v_stack[v_sp - 2].tag != tvMATRIX)
+              // {
+              //  error (v_stack[v_sp - 2].pos, "Matrix operand required");
+              //  return result_fval = qnan;
+              // }
               
               float__t res = mxCalcFn (v_stack[v_sp - 2], (rtype)sym->fidx, v_stack[v_sp - 1].get());
               if (isnan (res) || mxerr[0])
@@ -8976,54 +9067,80 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSTFUN: // float mean("data") (stat functions)
              {
-              if ((sfntype)sym->fidx < sfNormP)
+              char *filename = nullptr;
+              char *msk      = nullptr;
+              sfntype sfn    = (sfntype)sym->fidx;
+              float__t x     = qnan;
+              if (sfn < sfNormP) // sfNum..sfMax
                {
-                const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
-                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-
-                if (v_stack[v_sp - 1].tag != tvSTR)
+                if (n_args == 2) // mean("data", "msk")
                  {
-                  error (v_stack[v_sp - 1].pos, "String operand required");
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+                  if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+                  msk = v_stack[v_sp - 1].get_str ();
+                 }
+                else 
+                if (n_args == 1) // mean("data")
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+                  if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+                  if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 1].get_str ();
+                 }
+                else
+                 {
+                  error (v_stack[v_sp - 1].pos, "Wrong arguments number");
                   return result_fval = qnan;
                  }
-                float__t res = StatFn (v_stack[v_sp - 1].get_str (), (sfntype)sym->fidx);
-                if (isnan (res) || mxerr[0])
-                 {
-                  if (mxerr[0])
-                   errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
-                  else
-                   error (v_stack[v_sp - 1].pos, "Error in statistical function");
-                  return result_fval = qnan;
-                 }
-                v_stack[v_sp - 2].fval = res;
-                v_stack[v_sp - 2].tag  = tvFLOAT;
-                v_sp -= 1;
                }
-              else
+              else // sfNormP..sfNormPD
                {
-                const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 
-                                           MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
-                if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-                if (v_stack[v_sp - 2].tag != tvSTR || v_stack[v_sp - 1].tag != tvSTR)
+                if (n_args == 3) // normp("fname", "msk", x)
                  {
-                  error (v_stack[v_sp - 2].pos, "String operands required");
+                  const uint32_t masks[]
+                      = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
+                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
+                  if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
+                  if (!CheckOperand (3, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 3].get_str ();
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  msk = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
+                  x = v_stack[v_sp - 1].get ();
+                 }
+                else 
+                if (n_args == 2) // normp("fname", x)
+                 {
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
+                  if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                  if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                  filename = v_stack[v_sp - 2].get_str ();
+                  if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
+                  x = v_stack[v_sp - 1].get ();
+                 }
+                else
+                 {
+                  error (v_stack[v_sp - 1].pos, "Wrong arguments number");
                   return result_fval = qnan;
                  }
-                float__t res = StatFn (v_stack[v_sp - 2].get_str (), // dataset file name 
-                                       (sfntype)sym->fidx,           // stat function type
-                                       v_stack[v_sp - 1].get ());    // x value for which to calculate stat function
-                if (isnan (res) || mxerr[0])
-                 {
-                  if (mxerr[0])
-                   errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
-                  else
-                   error (v_stack[v_sp - 1].pos, "Error in statistical function");
-                  return result_fval = qnan;
-                 }
-                v_stack[v_sp - 3].fval = res;
-                v_stack[v_sp - 3].tag  = tvFLOAT;
-                v_sp -= 2;
                }
+              float__t res = StatFn (filename, msk, sfn, x);
+              if (isnan (res) || mxerr[0])
+               {
+                if (mxerr[0])
+                 errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                else
+                 error (v_stack[v_sp - 1].pos, "Error in statistical function");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - n_args - 1].ival = res;
+              v_stack[v_sp - n_args - 1].tag  = tvFLOAT;
+              v_sp -= n_args;
             }
             break;
 

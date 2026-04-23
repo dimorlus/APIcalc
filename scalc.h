@@ -296,6 +296,8 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_DIFF    (1 << tvDIFF)    // Mask for differentiation operator values
 #define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
 
+#define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
+
 #define MAX_R 7
 #define MAX_C 7
 
@@ -523,7 +525,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
 enum rtype // rtype represents the type of regression (fit) function in the calculator
 {
- rtLin, // Linear regression (polynomial fit of degree up to 6)
+ rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp, // Exponential regression (y = a * exp(b * x))
  rtLg,  // Logarithmic regression (y = a + b * ln(x))
  rtPow, // Power regression (y = a * x^b)
@@ -818,6 +820,7 @@ class calculator // calculator represents the main class for the expression calc
                                                                //the specified message
 
  //Functions and operators arguments check helpers.
+ bool CheckOperand (int sp, uint32_t mask);
  bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3]); 
  bool CheckOpArgs (int n_args, const uint32_t mask[2]);
  bool isMxIdx1 ();
@@ -845,7 +848,7 @@ class calculator // calculator represents the main class for the expression calc
  
  //
 
- int strscan (const char *str, int n, double *v = nullptr, ...); 
+ int strscan (const char *str, const char *msk = nullptr, int n =0, double *v = nullptr, ...); 
 
  // Math for solving, integrating and differentiating
  
@@ -895,7 +898,7 @@ class calculator // calculator represents the main class for the expression calc
  bool mxTranspose (value &res, value &M);
 
  bool mxPolyRoots (value &res, value &coeffs);
- bool mxRegrFn (const char *fname, int n, rtype rt, value &res);
+ bool mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res);
  float__t mxCalcFn (value M, rtype rt, float__t x);
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
@@ -906,8 +909,8 @@ class calculator // calculator represents the main class for the expression calc
               bool nl, // Print matrix in a formatted way, with an option for a new line
               int *size = nullptr); // and an optional pointer to store the size of the output
  
- float__t StatFn (const char *fname, sfntype sfn, float__t x=qnan);
- double Median (const char *fname, double totalN, double minV, double maxV);
+ float__t StatFn (const char *fname, const char *msk, sfntype sfn, float__t x=qnan);
+ double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
 
  public:
  calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint64_t mask=(MASK_NONE),

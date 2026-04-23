@@ -146,7 +146,7 @@ the output format based on the input format. For example
   /UTM+         ;Unix time
   /ALL+         ;All of the above 
 ```
-**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
+>**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
 
 ## Supported Functions
 

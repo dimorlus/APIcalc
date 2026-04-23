@@ -524,18 +524,18 @@ Designed for engineers and hardware developers, these functions can process data
 stability even with high-degree polynomials.
 
 ### Function Reference
-* **fitpoly("filename", degree)**: Fits a polynomial of the specified degree to the data pairs $$(x, y)$$. Degree: $$1$$ to $$6$$.<br>
+* **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $$(x, y)$$. Degree: $$1$$ to $$6$$.<br>
 Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial: $$y = a_n x^n + \dots + a_1 x + a_0$$<br>
-Example: ```fitpoly("ntc.txt", 2)``` returns coefficients for a quadratic curve.
-* **fitexp("filename")**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
+Example: ```fitpoly("ntc.txt","01", 2)``` returns coefficients for a quadratic curve.
+* **fitexp("filename", ["msk"])**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
 Returns: $$[b, a]$$.<br>
 *Note*: Automatically performs linearization via $$\ln(y)$$.
-* **fitlog("filename")**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
+* **fitlog("filename", ["msk"])**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
 Returns: $$[b, a]$$.
-* **fitpwr("filename")**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
+* **fitpwr("filename", ["msk"])**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
 Returns: $$[b, a]$$.<br>
 *Note*: Excellent for modeling physical laws and sensor characteristics.
-* **fitinv("filename")**: Fits an inverse model: $$y = a + b/x$$.<br>
+* **fitinv("filename", ["msk"])**: Fits an inverse model: $$y = a + b/x$$.<br>
 Returns: $$[b, a]$$.
 
 ### Regression Calculation
@@ -551,8 +551,8 @@ for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)
                                                                14 f
                                                                14 S
 
-C:\Projects>ccalc clcpoly(fitpoly("ntc.txt",6), 25) /ALL-
-clcpoly(fitpoly("ntc.txt",6), 25)
+C:\Projects>ccalc clcpoly(fitpoly("ntc.txt","01",6), 25) /ALL-
+clcpoly(fitpoly("ntc.txt","01",6), 25)
                                                 100056.0293486226 f
                                                            100.1k S ←
 C:\Projects>type ntc.txt
@@ -589,20 +589,20 @@ The median function uses an iterative binary search, allowing it to process mult
 and comments, focusing only on the numeric values.
 
 #### Function Reference
-* **num("filename")**: Returns the total count of valid numeric entries found in the file.<br>
+* **num("filename", ["msk"])**: Returns the total count of valid numeric entries found in the file.<br>
 Example: ``num("test.log")`` — useful for verifying data integrity.
-* **mean("filename")**: Calculates the arithmetic mean ($$\mu$$) of all values.<br>
+* **mean("filename", ["msk"])**: Calculates the arithmetic mean ($$\mu$$) of all values.<br>
 Returns: A single scalar value representing the DC component or average level.
-* **median("filename")**: Provides a robust estimate of the central value.<br>
+* **median("filename", ["msk"])**: Provides a robust estimate of the central value.<br>
 *Note*: Unlike the mean, the median is resistant to "glitches" and extreme outliers. 
 It is calculated using a high-precision iterative binary search on the value range.
-* **rms("filename")**: Calculates the Root Mean Square (effective value).<br>
-* **sumx("filename")**: Returns the plain sum of all values in the dataset.
-* **stddevp("filename")**: Calculates the Population Standard Deviation ($$\sigma$$). 
+* **rms("filename", ["msk"])**: Calculates the Root Mean Square (effective value).<br>
+* **sumx("filename", ["msk"])**: Returns the plain sum of all values in the dataset.
+* **stddevp("filename", ["msk"])**: Calculates the Population Standard Deviation ($$\sigma$$). 
 Use this when the file contains the entire set of data you are interested in.
-* **stddevs("filename")**: Calculates the Sample Standard Deviation ($$s$$).
+* **stddevs("filename", ["msk"])**: Calculates the Sample Standard Deviation ($$s$$).
 Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is ($$n-1$$).
-* **min("filename") / max("filename")**: Find the absolute minimum and maximum values.<br>
+* **min("filename", ["msk"]) / max("filename", ["msk"])**: Find the absolute minimum and maximum values.<br>
 Returns: The peak values, useful for determining the dynamic range or signal clipping.
 
 #### Robust Statistics Example
@@ -622,11 +622,11 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 ### Probability & Distributions (Normal)
 These functions use mean and stddev calculated from the data file:
 ![Normal Distribution](dist.png)
-* **normpd("file", x)** Probability Density Function at point x.
-* **normp("file", x)** Cumulative Distribution P(X <= x).
-* **normq("file", x)** Probability of falling within |x - mean| range.
-* **normr("file", x)** Upper tail probability P(X > x).
-* **invnorm("file", p)** Inverse Normal: find x such that P(X <= x) = p.
+* **normpd("file", ["msk"], x)** Probability Density Function at point x.
+* **normp("file", ["msk"], x)** Cumulative Distribution P(X <= x).
+* **normq("file", ["msk"], x)** Probability of falling within |x - mean| range.
+* **normr("file", ["msk"], x)** Upper tail probability P(X > x).
+* **invnorm("file", ["msk"], p)** Inverse Normal: find x such that P(X <= x) = p.
 
 ### Strings
 

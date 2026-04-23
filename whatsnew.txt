@@ -1,3 +1,14 @@
+23.04.26 (2.186)
++ Now all fit* and statistical analysis functions can accept not only a file name but also an optional 
+  mask for selecting arguments and their order from a data string. The mask has the form 
+  fitpoly("fname", "1 0", n) or fitpoly("fname", "* * 1 0", n) or fitpoly("fname", "0 * * 1", n), where 
+  the numbers indicate the parameter number (starting from zero), spaces are simply optional separators, 
+  and asterisks (or any character other than a space or a digit) indicate a missing number. So, if the 
+  file contains a string of, say, 5 numbers, where my X is the fourth and Y is the second, the pattern 
+  will be "* 1 * 0" or "- 1 - 0" or "# 1 * 0" (whatever you prefer), or "*1*0". From 0 to 9, given that 
+  no calculator function currently supports more than 2 parameters, there's plenty of scope. If there 
+  is no template, then everything is as already done, first the first (zero), then the second.
+
 22.04.26 (2.185)
 + Added follow Regression & Data Fitting and Statistical Analysis functions:
 	clcpoly(vector, x)  Evaluates a polynomial of any degree (up to 6).

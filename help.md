@@ -127,11 +127,11 @@ prime(n)                        Smallest prime number
 factorize(n)                    Prime factorization in to string
 polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
-fitpoly("fname", n)             Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
-fitexp("fname")                 Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
-fitlog("fname")                 Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
-fitpow("fname")                 Power regression. Fits y = a*x^b model to file data. Return [b, a]
-fitinv("fname")                 Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
+fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
+fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
+fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
+fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file data. Return [b, a]
+fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
 
 clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
 clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].
@@ -139,20 +139,20 @@ clclog(vector, x)               Evaluates y = a + b*ln(x). Expects vector [b, a]
 clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
 clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
 
-num("fname")                    Returns the count of valid numeric entries in the file.
-mean("fname")                   Calculates the arithmetic mean (average) of the dataset.
-median("fname")                 Robust center value estimate (iterative binary search).
-rms("fname")                    Root Mean Square. Calculates the effective value of the data.
-sumx("fname")                   Returns the sum of all numeric values in the file.
-stddevp("fname")                Population standard deviation (entire dataset, divisor n).
-stddevs("fname")                Sample standard deviation (random sample, divisor n-1).
-min("fname")                    Finds the minimum value in the dataset.
-max("fname")                    Finds the maximum value in the dataset.
-normp("fname", x)               Probability that a value from the dataset is <= x.
-normq("fname", x)               Probability of falling within |x - mean| range.
-normr("fname", x)               Probability that a value is > x (upper tail).
-normpd("fname", x)              Probability Density Function at point x.
-invnorm("fname", p)             Inverse Normal: find x such that P(X <= x) = p.
+num("fname","msk")              Returns the count of valid numeric entries in the file.
+mean("fname","msk")             Calculates the arithmetic mean (average) of the dataset.
+median("fname","msk")           Robust center value estimate (iterative binary search).
+rms("fname","msk")              Root Mean Square. Calculates the effective value of the data.
+sumx("fname","msk")             Returns the sum of all numeric values in the file.
+stddevp("fname","msk")          Population standard deviation (entire dataset, divisor n).
+stddevs("fname","msk")          Sample standard deviation (random sample, divisor n-1).
+min("fname","msk")              Finds the minimum value in the dataset.
+max("fname","msk")              Finds the maximum value in the dataset.
+normp("fname","msk", x)         Probability that a value from the dataset is <= x.
+normq("fname","msk", x)         Probability of falling within |x - mean| range.
+normr("fname","msk", x)         Probability that a value is > x (upper tail).
+normpd("fname","msk", x)        Probability Density Function at point x.
+invnorm("fname","msk", p)       Inverse Normal: find x such that P(X <= x) = p.
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
@@ -190,7 +190,8 @@ prnf(filename, fmt, ...)        Works the same as prn, but print to the filename
 datatime("2017.11.23 22:00:20") Return Unix time
 now(n)                          Current Unix time (+/- n hours)
 ```
-*Legend*: _x_, _y_ - real number; _z_ - complex number; _n_, _m_, _i_ - integer number; _A_, _B_, _M_ - matrix; _c_, _r_ - column, row of matrix<br>
+*Legend*: _x_, _y_ - real number; _z_ - complex number; _n_, _m_, _i_ - integer number; _A_, _B_, _M_ - matrix; _c_, _r_ - column, row of matrix.
+"fname" - data file name. "msk" - optional column mask.<br>
 (1) *Also for complex operands.*<br>
 (3) *Also for matrix operands.*<br>
 ### Special:

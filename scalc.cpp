@@ -1,6 +1,6 @@
 
 #include <windows.h>
-#include "pch.h"
+//#include "pch.h"
 #ifdef __BORLANDC__
 #include <stdint.h>
 #include <malloc.h>
@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 #include <time.h>
 
 #endif //__BORLANDC__
@@ -40,6 +41,7 @@
 #include "scalc.h"
 #include "sfmts.h"
 #include "sfunc.h"
+#include "bmp.h"
 
 #include "ver.h"
 
@@ -254,7 +256,7 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
-
+ add (tsPLOT, "plot", nullptr);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -587,22 +589,22 @@ void calculator::AddPredefined (void)
  addfconst ("uvc", (float__t)190e-9);
 
  // Integer Limits:
- addlvar ("max32", (float__t)2147483647.0L, 0x7fffffff);
- addlvar ("maxint", (float__t)2147483647.0L, 0x7fffffff);
- addlvar ("maxu32", (float__t)4294967295.0L, 0xffffffff);
- addlvar ("maxuint", (float__t)4294967295.0L, 0xffffffff);
- addlvar ("max64", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
- addlvar ("maxlong", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
- addlvar ("maxu64", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
- addlvar ("maxulong", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
+ addlconst ("max32", (float__t)2147483647.0L, 0x7fffffff);
+ addlconst ("maxint", (float__t)2147483647.0L, 0x7fffffff);
+ addlconst ("maxu32", (float__t)4294967295.0L, 0xffffffff);
+ addlconst ("maxuint", (float__t)4294967295.0L, 0xffffffff);
+ addlconst ("max64", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlconst ("maxlong", (float__t)9223372036854775807.0L, 0x7fffffffffffffffull);
+ addlconst ("maxu64", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
+ addlconst ("maxulong", (float__t)18446744073709551615.0L, 0xffffffffffffffffull);
 
- addlvar ("fp_sz", sizeof (float__t)*8, sizeof (float__t)*8);
- addlvar ("int_sz", sizeof (int_t)*8, sizeof (int_t)*8);
+ addlconst ("fp_sz", sizeof (float__t)*8, sizeof (float__t)*8);
+ addlconst ("int_sz", sizeof (int_t)*8, sizeof (int_t)*8);
 
- addlvar ("fp_dig", LDBL_DIG, LDBL_DIG);             // significant decimal digits
- addlvar ("fp_mant_dig", LDBL_MANT_DIG, LDBL_MANT_DIG);   // bits in the mantissa
- addlvar ("fp_max_exp", LDBL_MAX_EXP, LDBL_MAX_EXP);     // maximum exponent (base 2)
- addlvar ("fp_max_10_exp", LDBL_MAX_10_EXP, LDBL_MAX_10_EXP); // maximum exponent (base 10)
+ addlconst ("fp_dig", LDBL_DIG, LDBL_DIG);             // significant decimal digits
+ addlconst ("fp_mant_dig", LDBL_MANT_DIG, LDBL_MANT_DIG);   // bits in the mantissa
+ addlconst ("fp_max_exp", LDBL_MAX_EXP, LDBL_MAX_EXP);     // maximum exponent (base 2)
+ addlconst ("fp_max_10_exp", LDBL_MAX_10_EXP, LDBL_MAX_10_EXP); // maximum exponent (base 10)
 
  // System
  //  Get system timezone information
@@ -613,11 +615,17 @@ void calculator::AddPredefined (void)
  double tzHours    = -timezoneBias / 60.0;
  double currentTz  = tzHours + (daylight ? -tzi.DaylightBias / 60.0 : 0);
 
- addlvar ("timezone", (float__t)tzHours, (int)tzHours);
- addlvar ("daylight", (float__t)daylight, daylight);
- addlvar ("tz", (float__t)currentTz, (int)currentTz);
+ addlconst ("timezone", (float__t)tzHours, (int)tzHours);
+ addlconst ("daylight", (float__t)daylight, daylight);
+ addlconst ("tz", (float__t)currentTz, (int)currentTz);
  addfconst ("version", (float__t)_ver_);
  addim (); // Add imaginary unit 'i', 'j' as a predefined constant
+
+ addsvar ("file_path", ""); // Add a string variable to hold the file path for file operations)
+ addivar ("plot_width", 800.0); // Default plot width in pixels)
+ addivar ("plot_height", 600.0); // Default plot height in pixels)
+ addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
+ addivar ("plot_fgc", 0x00000000); // Default plot foreground color (black)
 }
  
 // Copy symbols from the provided symbol table with the specified copy mask
@@ -1930,6 +1938,55 @@ void calculator::addfvar (const char *name, float__t fval, float__t imval)
  sp->val.mval  = nullptr;
 }
 
+// Add a float variable to the hash table
+void calculator::addivar (const char *name, int_t ival)
+{
+ symbol *sp    = add (tsVARIABLE, name);
+ sp->val.fval  = (float__t)ival;
+ sp->val.ival  = ival;
+ sp->val.imval = (float__t)0.0L;
+ sp->val.tag = tvINT;
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
+}
+
+int_t calculator::getivar (const char *name)
+{
+ symbol *sp = find (name);
+ if (sp && sp->val.tag == tvINT)
+  {
+   return sp->val.ival;
+  }
+ return 0;
+}
+
+char *calculator::getsvar (const char *name)
+{
+ symbol *sp = find (name);
+ if (sp && sp->val.tag == tvSTR)
+  {
+   return sp->val.sval;
+  }
+ return nullptr;
+}
+
+// Add a string variable to the hash table
+void calculator::addsvar (const char *name, const char *svar)
+{
+ symbol *sp    = add (tsVARIABLE, name);
+ sp->val.fval  = 0L;
+ sp->val.ival  = 0;
+ sp->val.imval = 0L;
+ sp->val.tag   = tvSTR;
+ if (svar) sp->val.sval = dupString (svar);
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
+}
+
+
 // Add  variable to the hash table
 // todo:add matrix variable
 bool calculator::addvar (const char *name, value &val)
@@ -1968,7 +2025,7 @@ void calculator::addim ()
 }
 
 // Add an integer constant to the hash table (not in use)
-void calculator::addivar (const char *name, int_t val)
+void calculator::addiconst (const char *name, int_t val)
 {
  symbol *sp   = add (tsCONSTANT, name);
  sp->val.tag  = tvINT;
@@ -1978,7 +2035,7 @@ void calculator::addivar (const char *name, int_t val)
 }
 
 // Add an integer variable to the hash table
-void calculator::addlvar (const char *name, float__t fval, int_t ival)
+void calculator::addlconst (const char *name, float__t fval, int_t ival)
 {
  symbol *sp   = add (tsCONSTANT, name);
  sp->val.tag  = tvINT;
@@ -3127,6 +3184,253 @@ bool calculator::For(const char* expr, value& res)
  return false; 
 }
 
+
+// Function to normalize a path
+void calculator::NormalizePath (const char *input, char *output, int outSize)
+{
+ if (!input || !output || outSize <= 0) return;
+ const char *defaultPath = getsvar ("file_path");
+ char tempBuffer[MAX_PATH];
+
+ // 1. Check if the input is just a file name (no slashes)
+ bool isJustFileName = (strchr (input, '\\') == NULL && strchr (input, '/') == NULL);
+
+ if (isJustFileName && defaultPath && strlen (defaultPath) > 0)
+  {
+   // Copy the base path
+   strncpy (tempBuffer, defaultPath, MAX_PATH - 1);
+   tempBuffer[MAX_PATH - 1] = '\0';
+
+   // Add a slash if it's not present at the end of defaultPath
+   int len = (int)strlen (tempBuffer);
+   if (len > 0 && tempBuffer[len - 1] != '\\' && tempBuffer[len - 1] != '/')
+    {
+     strncat (tempBuffer, "\\", MAX_PATH - len - 1);
+    }
+
+   // Add the file name
+   strncat (tempBuffer, input, MAX_PATH - strlen (tempBuffer) - 1);
+  }
+ else
+  {
+   strncpy (tempBuffer, input, MAX_PATH - 1);
+   tempBuffer[MAX_PATH - 1] = '\0';
+  }
+
+ // 2. Expand environment variables (%ENVVAR%)
+ // ExpandEnvironmentStringsA works well in WinAPI
+ char expanded[MAX_PATH];
+ if (ExpandEnvironmentStringsA (tempBuffer, expanded, MAX_PATH) > 0)
+  {
+   // 3. Replace all '/' with '\' for consistency
+   for (int i = 0; expanded[i] != '\0'; i++)
+    {
+     if (expanded[i] == '/') expanded[i] = '\\';
+    }
+
+   // Copy result to the output buffer
+   strncpy (output, expanded, outSize - 1);
+   output[outSize - 1] = '\0';
+  }
+ else
+  {
+   // If ExpandEnvironmentStringsA failed, return what we have in tempBuffer
+   strncpy (output, tempBuffer, outSize - 1);
+   output[outSize - 1] = '\0';
+  }
+}
+
+
+bool calculator::CheckChildRes (calculator *child)
+{
+ if (child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   return false;
+  }
+ if (child->get_res_tag () == tvMATRIX)
+  {
+   errorf (pos, "Result is a matrix, expected a scalar");
+   return false;
+  }
+ if (child->get_res_tag () == tvSTR)
+  {
+   errorf (pos, "Result is a string, expected a scalar");
+   return false;
+  }
+ return true;
+}
+
+bool calculator::isChildResReal (calculator *child)
+{
+ float__t re = child->get_re_res ();
+ float__t im = child->get_im_res ();
+ if (isnan (re) && Abs (im) / AbsC (re, im) > (float__t)1e-12L)
+  {
+   return false; // treat very small real part with large relative imaginary part as non-real
+  }
+ return true;
+}
+
+bool calculator::Plot (const char *expr)
+{
+ if (!expr || !*expr)
+  {
+   errorf (pos, "empty expression");
+   return false;
+  }
+  char fname[STRBUF];
+  const char *cp = expr;
+  int i = 0;
+  while (*cp && ((*cp == ' ')||(*cp == '"') || (*cp == '\''))) cp++;
+  while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
+  fname[i] = '\0'; 
+  while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
+
+  char sexpr[STRBUF];
+  char sfrom[MAXOP];
+  char sto[MAXOP];
+  char svar[STRBUF];
+
+  float__t vfrom  = qnan;
+  float__t vto    = qnan;
+  float__t fvx    = qnan;
+  float__t result = 0;
+  int callCount   = 0;
+
+  if (!Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
+   {
+    result_fval = qnan;
+    return false;
+   }
+
+  calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+  if (!child)
+   {
+    errorf (pos, "Out of memory");
+    result_fval = qnan;
+    return false;
+   }
+
+  vfrom = child->evaluate_f (sfrom);
+  if (isnan (vfrom) || child->err[0])
+   {
+    errorf (pos, "%s", child->err);
+    delete child;
+    result_fval = qnan;
+    return false;
+   }
+  vto = child->evaluate_f (sto);
+  if (isnan (vto) || child->err[0])
+   {
+    errorf (pos, "%s", child->err);
+    delete child;
+    result_fval = qnan;
+    return false;
+   }
+
+   uint64_t init_ms        = GetTickCount64 ();
+   uint64_t last_gui_check = 0;
+
+   if (vfrom > vto)
+    {
+     float__t tmp = vfrom;
+     vfrom        = vto;
+     vto          = tmp;
+    }
+
+   child->addfvar (svar, vfrom);
+   fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                    // the syntax check before starting
+
+   if (isnan (fvx) || child->err[0]|| !CheckChildRes (child))
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+
+    int width = getivar ("plot_width");
+    if ((width <= 100) || (width > 2000)) width = 800;
+    int height = getivar ("plot_height");
+    if ((height <= 100) || (height > 2000)) height = 600;
+    int bgc = getivar ("plot_bgc");
+    int fgc = getivar ("plot_fgc");
+
+    int padding = 20;
+    float__t step = (vto - vfrom) / ((width - 2 * padding)/4);
+    float__t ymin = fvx, ymax = fvx;
+    float__t save_vfrom = vfrom;
+    bool has_valid_points = false;
+
+    bmpdraw *bmp = new bmpdraw ();
+
+    if (!bmp || !bmp->newbmp (width, height, bgc))
+     {
+      errorf (pos, "Failed to create bitmap for plotting");
+      delete bmp;
+      delete child;
+      result_fval = qnan;
+      return false;
+     }
+
+    //bmp->newbmp (width, height, bgc);
+
+    for (int pass = 0; pass < 2; pass++)
+    {
+     do
+      {
+       if (check_break (init_ms, last_gui_check) != brNONE)
+        {
+         delete child;
+         result_fval = qnan;
+         return qnan;
+        }
+
+       child->addfvar (svar, vfrom);
+       fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                        // the syntax check before starting the integration
+       if (pass == 0)
+        {
+         if (!isnan (fvx) && isChildResReal (child))
+          {
+           if (fvx < ymin) ymin = fvx;
+           if (fvx > ymax) ymax = fvx;
+          }
+        }
+       else
+        {
+         if (!isnan(fvx) && isChildResReal(child))
+          {
+           float__t x = padding + ((vfrom - save_vfrom) / (vto - save_vfrom)) * (width - 2 * padding);
+           float__t y = height - padding - ((fvx - ymin) / (ymax - ymin)) * (height - 2 * padding);
+           if (has_valid_points)
+            {
+             bmp->lineTo ((int)x, (int)y, 2,  fgc);
+            }
+           else
+            {
+             bmp->moveTo ((int)x, (int)y);
+             has_valid_points = true;
+            }
+          }
+        else has_valid_points = false;  
+       }
+       vfrom += step;
+      }
+    while (vfrom <= vto);
+    vfrom = save_vfrom;
+   }
+
+  bmp->save (fname);
+  delete bmp;
+  fflags |= child->isfflags ();
+  delete child;
+  return true;
+}
+
+
 t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
 {
  #ifdef NDEBUG
@@ -3386,6 +3690,7 @@ float__t calculator::Diff (const char *expr)
 // diff (x(2x+2)-2, 0, x)
 // for(expr, from, to, var)
 // sum(expr, from, to, var)
+// plot(fname, expr, from, to, var)
 // extract expression in () after the function name, and put it as string in the symbol table,
 // put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
 // and return toOPERAND or toERROR if something wrong.
@@ -3408,6 +3713,16 @@ t_operator calculator::sscan (symbol *sym)
  // skip whitespace befor '('
  while (isspace (*ipos & 0x7f)) ipos++;
 
+ //{
+ // char *cp = ipos;
+ // while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
+ // if (cp > ipos) //lead " or ' found
+ //  {
+ //   while (*cp && ((*cp != '"') && (*cp != '\''))) cp++;
+ //   if ((*cp == '"') || (*cp == '\'')) cp++;
+ //   ipos = cp;
+ //  }
+ //}
  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
   {
    if (*ipos == ',' && parenthesis_count == 1)
@@ -3476,6 +3791,22 @@ t_operator calculator::sscan (symbol *sym)
       }
     }
    else 
+   if (sym->tag == tsPLOT) // plot(fname, expr)
+    {
+     if (parenthesis_count == 0 && comma_count == 4)
+      {
+       v_stack[v_sp].tag = tvPLOT;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in plot expression");
+       else
+        error ("wrong number of arguments in plot expression");
+       return toERROR;
+      }
+    }
+   else
    if (sym->tag == tsFOR) //for(expr, from, to, var)
     {
      if (parenthesis_count == 0 && comma_count == 3)
@@ -4752,6 +5083,8 @@ t_operator calculator::scan (bool operand, bool percent)
      else 
      if (sym->tag == tsCALC)  return toSOLVE;
      else 
+     if (sym->tag == tsPLOT)  return toSOLVE;
+     else
      if (sym->tag == tsFOR) return toSOLVE;
      return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
     }
@@ -6865,7 +7198,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  //double v1=0, v2=0, v3=0;
  //int n = strscan ("2026-04-22 10:00:05 102.5 0.985", "* * * * * * 1 0", 2, &v1,&v2,&v3);
  //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
-
+ //test_bmp ();
 
  //init_mem_list ();
  clear_v_stack (); // Clear the value stack before evaluation
@@ -8545,6 +8878,24 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break;
 
+             case tsPLOT: //plot("fname", expr, from, to, var)
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one arguments");
+                return result_fval = qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvPLOT)
+               {
+                const char *fname_expr = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                if (!Plot (fname_expr)) return result_fval = qnan;
+               }
+              v_stack[v_sp - 2].ival = 1;
+              v_stack[v_sp - 2].tag  = tvINT;
+              v_sp -= 1;
+             }
+             break;
+
             case tsDIFF: // float f(str equation)
              {
               const uint32_t masks[] = { 0, 0, 0 };
@@ -8850,13 +9201,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
               if (!CheckOperand (n_args+1, MSK_STR)) return result_fval = qnan;
 
-              //if ((v_stack[v_sp - n_args].tag != tvSTR)
-              //    && (v_stack[v_sp - n_args + 1].tag != tvSTR))
-              // {
-              //  error (v_stack[v_sp - n_args].pos, "String operands required");
-              //  return result_fval = qnan;
-              // }
-
               //char filename[1024];
               //strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
               //filename[1023] = '\0';
@@ -8899,11 +9243,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
-              //if (v_stack[v_sp - 2].tag != tvSTR)
-              // {
-              //  error (v_stack[v_sp - 2].pos, "String operand required");
-              //  return result_fval = qnan;
-              // }
 
               bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
                   ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
@@ -8919,11 +9258,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
-              //if (v_stack[v_sp - 1].tag != tvSTR)
-              // {
-              //  error (v_stack[v_sp - 1].pos, "String operand required");
-              //  return result_fval = qnan;
-              // }
               v_stack[v_sp - 2].ival = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
@@ -9024,8 +9358,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   return result_fval = qnan;
                  }
                }
-
-              res = mxRegrFn (filename, msk, n, rfn, v_stack[v_sp - n_args - 1]); 
+              char fnamebuf[STRBUF];
+              NormalizePath (filename, fnamebuf, STRBUF);
+              res = mxRegrFn (fnamebuf, msk, n, rfn, v_stack[v_sp - n_args - 1]); 
 
               if (!res || mxerr[0])
                {
@@ -9045,11 +9380,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                                          MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
-              //if (v_stack[v_sp - 2].tag != tvMATRIX)
-              // {
-              //  error (v_stack[v_sp - 2].pos, "Matrix operand required");
-              //  return result_fval = qnan;
-              // }
               
               float__t res = mxCalcFn (v_stack[v_sp - 2], (rtype)sym->fidx, v_stack[v_sp - 1].get());
               if (isnan (res) || mxerr[0])

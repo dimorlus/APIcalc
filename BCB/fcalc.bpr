@@ -5,7 +5,7 @@
     <VERSION value="BCB.06.00"/>
     <PROJECT value="fcalc.exe"/>
     <OBJFILES value="fcalc.obj ..\sfmts.obj ViewVars.obj ..\scalc.obj HTMLHelpViewer.obj 
-      UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj"/>
+      UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj ..\bmp.obj"/>
     <RESFILES value="fcalc.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -16,7 +16,7 @@
     <SPARELIBS value="vcl.lib rtl.lib"/>
     <PACKAGES value="vcl.bpi rtl.bpi vclx.bpi BC100R61.bpi BCDB100R61.bpi bcqr100r61.bpi 
       aprdlgs60.bpi XLSRWII20_CPP6.bpi"/>
-    <PATHCPP value=".;..;..;.."/>
+    <PATHCPP value=".;..;..;..;.."/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -59,6 +59,7 @@
       <FILE FILENAME="hhctrl.lib" FORMNAME="" UNITNAME="hhctrl.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="frcalc.cpp" FORMNAME="CalcForm" UNITNAME="frcalc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\sfunc.cpp" FORMNAME="" UNITNAME="sfunc" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\bmp.cpp" FORMNAME="" UNITNAME="bmp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

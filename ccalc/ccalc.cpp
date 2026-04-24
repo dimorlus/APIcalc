@@ -1,5 +1,4 @@
-#include "pch.h"
-#include "ccalc.h"
+#include <windows.h>
 #include <fstream>
 #include <cctype>
 #include <cstring>
@@ -7,6 +6,7 @@
 #include <string>
 #include <stdio.h>
 #include <io.h>
+#include "ccalc.h"
 
 #ifdef USE_DLL
 #include "../scalc_dll.h"

@@ -1,6 +1,7 @@
 #ifndef CCALC_H
 #define CCALC_H
 
+#include <cstdint>
 #ifdef USE_DLL
 #include "../scalc_dll.h"
 #else

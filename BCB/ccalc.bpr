@@ -4,7 +4,7 @@
   <MACROS>
     <VERSION value="BCB.06.00"/>
     <PROJECT value="ccalc.exe"/>
-    <OBJFILES value="ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj"/>
+    <OBJFILES value="ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj ..\bmp.obj"/>
     <RESFILES value="ccalc.res ccalc.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -53,6 +53,7 @@
       <FILE FILENAME="..\scalc.cpp" FORMNAME="" UNITNAME="scalc.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\sfmts.cpp" FORMNAME="" UNITNAME="sfmts.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\sfunc.cpp" FORMNAME="" UNITNAME="sfunc.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\bmp.cpp" FORMNAME="" UNITNAME="bmp.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

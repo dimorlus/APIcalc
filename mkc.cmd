@@ -16,6 +16,7 @@ copy /Y x64\Release\calclib.lib .\
 ::del /Q gcc_release\*.*
 c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=dll_make.mak
 copy /Y gcc_release\calclib.dll bin64\Release\dll\calclib.dll
+pause
 cd BCB
 "C:\Program Files (x86)\Borland\CBuilder6\Bin\make.exe" -fccalc.mak -B
 "C:\Program Files (x86)\Borland\CBuilder6\Bin\make.exe" -ffcalc.mak -B

@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "WinApiCalc.h"
 #include <windowsx.h>
 #include <shellapi.h>

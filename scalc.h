@@ -280,6 +280,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvINTEGR,
  tvDIFF,
  tvFOR,
+ tvPLOT,
 };
 
 #define MSK_ERR     (1 << tvERR)     // Mask for error values
@@ -397,7 +398,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFITFN,    // 29  matrix fitpoly("data", int n) Fit function for curve fitting 
  tsSTFUN,    // 30  float mean("data") statistics function for calculating mean, median, etc
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
- tsNUM       // 32  Total number of symbol types, must be the last in the list
+ tsPLOT,     // 32  plot operator for plotting data (plot)
+ tsNUM       // 33  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -454,8 +456,9 @@ enum t_br_result
 #define MASK_FITFN      (1ULL << tsFITFN)       // Fit function for curve fitting
 #define MASK_STFUN      (1ULL << tsSTFUN)       // Statistics function for calculating mean, median, etc
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
+#define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
 
-#define MASK_DEFAULT (uint64_t)(MASK_ALL & ~MASK_VARIABLE) // default mask for user defined functions, excludes variables
+#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -878,6 +881,11 @@ class calculator // calculator represents the main class for the expression calc
  t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
                                                                       //during long calculations
  bool For (const char *expr, value &res); //Operator 'for' (loop).
+
+ void NormalizePath (const char *input, char *output, int outSize);
+ bool isChildResReal (calculator *child);
+ bool CheckChildRes (calculator *child);
+ bool Plot (const char *expr);      // Operator 'plot' for plotting data points or functions
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
@@ -946,9 +954,13 @@ class calculator // calculator represents the main class for the expression calc
  bool addconst (const char *name, value &val); // Add a constant with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
  // Add or assign if existing a floating-point or complex variable to the calculator
- void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);                
- void addivar (const char *name, int_t val); // Add an integer variable to the calculator
- void addlvar (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
+ void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L); 
+ void addivar (const char *name, int_t ival);
+ void addsvar (const char *name, const char *svar);
+ int_t getivar (const char *name);
+ char *getsvar (const char *name);
+ void addiconst (const char *name, int_t val); // Add an integer variable to the calculator
+ void addlconst (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
  void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator
  void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
 

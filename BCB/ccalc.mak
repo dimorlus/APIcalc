@@ -14,7 +14,7 @@ BCB = $(MAKEDIR)\..
 VERSION = BCB.06.00
 # ---------------------------------------------------------------------------
 PROJECT = ccalc.exe
-OBJFILES = ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj
+OBJFILES = ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj ..\bmp.obj
 RESFILES = ccalc.res ccalc.res
 MAINSOURCE = ccalc.bpf
 RESDEPEN = $(RESFILES)

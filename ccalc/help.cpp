@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ccalc.h"
 #include <iostream>
 

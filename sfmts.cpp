@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------
-#include "pch.h"
+//#include "pch.h"
 
 #ifdef __BORLANDC__
 #if defined(_WIN64)||defined(_WIN32)

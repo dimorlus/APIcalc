@@ -733,7 +733,8 @@ struct mxresult_t
  float__t *mval; // Matrix values (pointer to array of floats)
 };
 
-typedef bool (*fnShowImage) (int width, int height, uint32_t *pixels);
+//typedef bool (*fnShowImage) (int width, int height, uint32_t *pixels);
+typedef bool (*fnShowImage) (void *bmpObject); // Передаём указатель на bmpdraw
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and

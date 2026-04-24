@@ -3488,6 +3488,11 @@ bool calculator::Plot (const char *expr)
  title[sizeof (title) - 1] = '\0';
  bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
 
+ if (ShowImageFn)
+  {
+   ShowImageFn ((void *)bmp); // Передаём указатель на bmpdraw
+  }
+#ifdef _comment_
  if (ShowImageFn) // Проверка, что callback установлен
   {
    uint32_t *argbBuffer = bmp->getARGBBuffer ();
@@ -3497,7 +3502,7 @@ bool calculator::Plot (const char *expr)
      bmp->freeARGBBuffer (argbBuffer); // Освобождаем временный буфер
     }
   }
-
+ #endif
 
  bmp->save (fname);
  delete bmp;

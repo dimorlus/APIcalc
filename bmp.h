@@ -75,11 +75,10 @@ class bmpdraw
  public:
  int width;
  int height;
+ uint8_t *data;
+ int rowSize; // Size of the row with alignment
 
  private:
- int rowSize; // Size of the row with alignment
- uint8_t *data;
-
  
  int curX, curY; // current position for MoveTo/LineTo
 

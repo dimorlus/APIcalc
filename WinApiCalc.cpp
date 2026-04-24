@@ -6,6 +6,8 @@
 #include <fstream>
 #include <ctime>
 
+#include "bmp.h" // Теперь можем работать с bmpdraw напрямую
+
 //#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
 #include <crtdbg.h>
@@ -139,7 +141,7 @@ bool FileDlg (char *fName, int size)
  return false;
 }
 
-
+#ifdef _comment_
 // После FileDlg добавь:
 
 // Callback для показа изображения из буфера
@@ -148,6 +150,17 @@ bool ShowImageFn (int width, int height, uint32_t *pixels)
  if (!g_pCalcInstance || !pixels || width <= 0 || height <= 0) return false;
 
  return g_pCalcInstance->ShowImageWindow (width, height, pixels);
+}
+#endif
+
+bool ShowImageFn (void *bmpObject)
+{
+ if (!g_pCalcInstance || !bmpObject) return false;
+
+ // Предполагаем, что bmpObject — это bmpdraw*
+ // Но у нас нет доступа к заголовку bmp.h в WinApiCalc.cpp
+ // Поэтому используем обёртку:
+ return g_pCalcInstance->ShowImageWindowFromBMP (bmpObject);
 }
 
 WinApiCalc::WinApiCalc ()
@@ -3420,7 +3433,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
  return 0;
 }
 
-
+#ifdef _comment_
 // Показать окно с изображением
 bool WinApiCalc::ShowImageWindow (int width, int height, uint32_t *pixels)
 {
@@ -3513,6 +3526,109 @@ bool WinApiCalc::ShowImageWindow (int width, int height, uint32_t *pixels)
  SetWindowLongPtrA (hImageWnd, GWLP_USERDATA, (LONG_PTR)hBitmap);
 
  // Устанавливаем фокус на окно с изображением
+ SetFocus (hImageWnd);
+
+ return true;
+}
+#endif
+
+bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
+{
+ if (!bmpObject) return false;
+
+ bmpdraw *bmp = (bmpdraw *)bmpObject;
+ if (!bmp->data || bmp->width <= 0 || bmp->height <= 0) return false;
+
+ int width  = bmp->width;
+ int height = bmp->height;
+
+ const char *pClassName = "WinApiCalcImageWindow";
+
+ // --- ДОБАВЛЕНО: Регистрация класса окна ---
+ WNDCLASSEXA wc = { 0 };
+ if (!GetClassInfoExA (GetModuleHandle (nullptr), pClassName, &wc))
+  {
+   wc.cbSize        = sizeof (WNDCLASSEX);
+   wc.style         = CS_HREDRAW | CS_VREDRAW;
+   wc.lpfnWndProc   = WinApiCalc::ImageWndProc;
+   wc.hInstance     = GetModuleHandle (nullptr);
+   wc.hCursor       = LoadCursor (nullptr, IDC_ARROW);
+   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+   wc.lpszClassName = pClassName;
+   wc.hIcon         = LoadIcon (m_hInst, MAKEINTRESOURCE (IDI_SMALL));
+   wc.hIconSm       = LoadIcon (m_hInst, MAKEINTRESOURCE (IDI_SMALL));
+
+   if (!RegisterClassExA (&wc)) return false;
+  }
+
+ // Создаём DIB
+ BITMAPINFO bmi              = { 0 };
+ bmi.bmiHeader.biSize        = sizeof (BITMAPINFOHEADER);
+ bmi.bmiHeader.biWidth       = width;
+ bmi.bmiHeader.biHeight      = -height;
+ bmi.bmiHeader.biPlanes      = 1;
+ bmi.bmiHeader.biBitCount    = 32;
+ bmi.bmiHeader.biCompression = BI_RGB;
+
+ HDC hdcScreen   = GetDC (nullptr);
+ void *pBits     = nullptr;
+ HBITMAP hBitmap = CreateDIBSection (hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
+ ReleaseDC (nullptr, hdcScreen);
+
+ if (!hBitmap || !pBits) return false;
+
+ // --- ПРЯМОЕ ПРЕОБРАЗОВАНИЕ ИЗ bmp->data (BGR, 3 байта) В BGRA (4 байта) ---
+ uint32_t *dest = (uint32_t *)pBits;
+
+ for (int y = 0; y < height; y++)
+  {
+   for (int x = 0; x < width; x++)
+    {
+     int srcIdx = y * bmp->rowSize + x * 3; // BGR: учитываем выравнивание rowSize
+     int dstIdx = y * width + x;
+
+     uint8_t b = bmp->data[srcIdx + 0];
+     uint8_t g = bmp->data[srcIdx + 1];
+     uint8_t r = bmp->data[srcIdx + 2];
+
+     // Windows DIB: BGRA (little-endian)
+     dest[dstIdx] = (0xFF << 24) | (r << 16) | (g << 8) | b;
+    }
+  }
+
+ // --- Создание окна ---
+ RECT rc;
+ if (GetWindowRect (m_hWnd, &rc))
+  {
+   rc.left += 10;
+   rc.top += 10;
+  }
+ else
+  {
+   rc.left = 100;
+   rc.top  = 100;
+  }
+
+ RECT clientRect = { 0, 0, width, height };
+ DWORD dwStyle   = WS_POPUP | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_SYSMENU;
+ DWORD dwExStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
+
+ AdjustWindowRectEx (&clientRect, dwStyle, FALSE, dwExStyle);
+
+ int windowWidth  = clientRect.right - clientRect.left;
+ int windowHeight = clientRect.bottom - clientRect.top;
+
+ HWND hImageWnd = CreateWindowExA (dwExStyle, pClassName, "Image Preview", dwStyle, rc.left, rc.top,
+                                   windowWidth, windowHeight, m_hWnd, nullptr,
+                                   GetModuleHandle (nullptr), nullptr);
+
+ if (!hImageWnd)
+  {
+   DeleteObject (hBitmap);
+   return false;
+  }
+
+ SetWindowLongPtrA (hImageWnd, GWLP_USERDATA, (LONG_PTR)hBitmap);
  SetFocus (hImageWnd);
 
  return true;

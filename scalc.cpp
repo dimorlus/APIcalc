@@ -134,6 +134,8 @@ calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
 
  EscFn         = nullptr; // Clear the escape function pointer
  FileDlgFn     = nullptr; // Clear the file dialog function pointer
+ ShowImageFn   = nullptr; // Clear the show image function pointer
+
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count
  res_mval      = nullptr; // Clear the matrix result pointer
@@ -622,8 +624,8 @@ void calculator::AddPredefined (void)
  addim (); // Add imaginary unit 'i', 'j' as a predefined constant
 
  addsvar ("file_path", ""); // Add a string variable to hold the file path for file operations)
- addivar ("plot_width", 800.0); // Default plot width in pixels)
- addivar ("plot_height", 600.0); // Default plot height in pixels)
+ addivar ("plot_width", 800); // Default plot width in pixels)
+ addivar ("plot_height", 600); // Default plot height in pixels)
  addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
  addivar ("plot_fgc", 0x00000000); // Default plot foreground color (black)
 }
@@ -1955,9 +1957,9 @@ void calculator::addivar (const char *name, int_t ival)
 int_t calculator::getivar (const char *name)
 {
  symbol *sp = find (name);
- if (sp && sp->val.tag == tvINT)
+ if (sp && ((sp->val.tag == tvINT) || (sp->val.tag == tvFLOAT)))
   {
-   return sp->val.ival;
+   return sp->val.get_int();
   }
  return 0;
 }
@@ -3265,13 +3267,12 @@ bool calculator::isChildResReal (calculator *child)
 {
  float__t re = child->get_re_res ();
  float__t im = child->get_im_res ();
- if (isnan (re) && Abs (im) / AbsC (re, im) > (float__t)1e-12L)
+ if (isnan (re) || Abs (im) / AbsC (re, im) > (float__t)1e-12L)
   {
    return false; // treat very small real part with large relative imaginary part as non-real
   }
  return true;
 }
-
 bool calculator::Plot (const char *expr)
 {
  if (!expr || !*expr)
@@ -3279,157 +3280,231 @@ bool calculator::Plot (const char *expr)
    errorf (pos, "empty expression");
    return false;
   }
-  char fname[STRBUF];
-  const char *cp = expr;
-  int i = 0;
-  while (*cp && ((*cp == ' ')||(*cp == '"') || (*cp == '\''))) cp++;
-  while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
-  fname[i] = '\0'; 
-  while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
+ char fname[STRBUF];
+ const char *cp = expr;
+ int i          = 0;
+ while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
+ while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
+ fname[i] = '\0';
+ while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
 
-  char sexpr[STRBUF];
-  char sfrom[MAXOP];
-  char sto[MAXOP];
-  char svar[STRBUF];
+ char sexpr[STRBUF];
+ char sfrom[MAXOP];
+ char sto[MAXOP];
+ char svar[STRBUF];
 
-  float__t vfrom  = qnan;
-  float__t vto    = qnan;
-  float__t fvx    = qnan;
-  float__t result = 0;
-  int callCount   = 0;
+ float__t vfrom  = qnan;
+ float__t vto    = qnan;
+ float__t fvx    = qnan;
+ float__t result = 0;
+ int callCount   = 0;
 
-  if (!Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
-   {
-    result_fval = qnan;
-    return false;
-   }
+ if (!Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
+  {
+   result_fval = qnan;
+   return false;
+  }
 
-  calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
-  if (!child)
-   {
-    errorf (pos, "Out of memory");
-    result_fval = qnan;
-    return false;
-   }
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return false;
+  }
 
-  vfrom = child->evaluate_f (sfrom);
-  if (isnan (vfrom) || child->err[0])
-   {
-    errorf (pos, "%s", child->err);
-    delete child;
-    result_fval = qnan;
-    return false;
-   }
-  vto = child->evaluate_f (sto);
-  if (isnan (vto) || child->err[0])
-   {
-    errorf (pos, "%s", child->err);
-    delete child;
-    result_fval = qnan;
-    return false;
-   }
+ vfrom = child->evaluate_f (sfrom);
+ if (isnan (vfrom) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+ vto = child->evaluate_f (sto);
+ if (isnan (vto) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
 
-   uint64_t init_ms        = GetTickCount64 ();
-   uint64_t last_gui_check = 0;
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
 
-   if (vfrom > vto)
+ if (vfrom > vto)
+  {
+   float__t tmp = vfrom;
+   vfrom        = vto;
+   vto          = tmp;
+  }
+
+ child->addfvar (svar, vfrom);
+ fvx = child->evaluate_f (sexpr);
+
+ if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+
+ int width = getivar ("plot_width");
+ if ((width <= 100) || (width > 2000)) width = 800;
+ int height = getivar ("plot_height");
+ if ((height <= 100) || (height > 2000)) height = 600;
+ int bgc = getivar ("plot_bgc");
+ int fgc = getivar ("plot_fgc");
+
+ int padding   = 40; // increased for labels
+ float__t step = (vto - vfrom) / ((width - 2 * padding) / 4);
+ float__t ymin = fvx, ymax = fvx;
+ float__t save_vfrom   = vfrom;
+ bool has_valid_points = false;
+
+ bmpdraw *bmp = new bmpdraw ();
+
+ if (!bmp || !bmp->newbmp (width, height, bgc))
+  {
+   errorf (pos, "Failed to create bitmap for plotting");
+   delete bmp;
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+
+ // First pass: find ymin/ymax
+ for (int pass = 0; pass < 2; pass++)
+  {
+   do
     {
-     float__t tmp = vfrom;
-     vfrom        = vto;
-     vto          = tmp;
-    }
-
-   child->addfvar (svar, vfrom);
-   fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                    // the syntax check before starting
-
-   if (isnan (fvx) || child->err[0]|| !CheckChildRes (child))
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-
-    int width = getivar ("plot_width");
-    if ((width <= 100) || (width > 2000)) width = 800;
-    int height = getivar ("plot_height");
-    if ((height <= 100) || (height > 2000)) height = 600;
-    int bgc = getivar ("plot_bgc");
-    int fgc = getivar ("plot_fgc");
-
-    int padding = 20;
-    float__t step = (vto - vfrom) / ((width - 2 * padding)/4);
-    float__t ymin = fvx, ymax = fvx;
-    float__t save_vfrom = vfrom;
-    bool has_valid_points = false;
-
-    bmpdraw *bmp = new bmpdraw ();
-
-    if (!bmp || !bmp->newbmp (width, height, bgc))
-     {
-      errorf (pos, "Failed to create bitmap for plotting");
-      delete bmp;
-      delete child;
-      result_fval = qnan;
-      return false;
-     }
-
-    //bmp->newbmp (width, height, bgc);
-
-    for (int pass = 0; pass < 2; pass++)
-    {
-     do
+     if (check_break (init_ms, last_gui_check) != brNONE)
       {
-       if (check_break (init_ms, last_gui_check) != brNONE)
-        {
-         delete child;
-         result_fval = qnan;
-         return qnan;
-        }
+       delete bmp;
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
 
-       child->addfvar (svar, vfrom);
-       fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                        // the syntax check before starting the integration
-       if (pass == 0)
+     child->addfvar (svar, vfrom);
+     fvx = child->evaluate_f (sexpr);
+
+     if (pass == 0)
+      {
+       if (!isnan (fvx) && isChildResReal (child))
         {
-         if (!isnan (fvx) && isChildResReal (child))
+         if (fvx < ymin) ymin = fvx;
+         if (fvx > ymax) ymax = fvx;
+        }
+      }
+     else
+      {
+       if (!isnan (fvx) && isChildResReal (child))
+        {
+         float__t x = padding + ((vfrom - save_vfrom) / (vto - save_vfrom)) * (width - 2 * padding);
+         float__t y = height - padding - ((fvx - ymin) / (ymax - ymin)) * (height - 2 * padding);
+         if (has_valid_points)
           {
-           if (fvx < ymin) ymin = fvx;
-           if (fvx > ymax) ymax = fvx;
+           bmp->lineTo ((int)x, (int)y, 2, fgc);
+          }
+         else
+          {
+           bmp->moveTo ((int)x, (int)y);
+           has_valid_points = true;
           }
         }
        else
-        {
-         if (!isnan(fvx) && isChildResReal(child))
-          {
-           float__t x = padding + ((vfrom - save_vfrom) / (vto - save_vfrom)) * (width - 2 * padding);
-           float__t y = height - padding - ((fvx - ymin) / (ymax - ymin)) * (height - 2 * padding);
-           if (has_valid_points)
-            {
-             bmp->lineTo ((int)x, (int)y, 2,  fgc);
-            }
-           else
-            {
-             bmp->moveTo ((int)x, (int)y);
-             has_valid_points = true;
-            }
-          }
-        else has_valid_points = false;  
-       }
-       vfrom += step;
+        has_valid_points = false;
       }
-    while (vfrom <= vto);
-    vfrom = save_vfrom;
-   }
+     vfrom += step;
+    }
+   while (vfrom <= vto);
+   vfrom = save_vfrom;
+  }
 
-  bmp->save (fname);
-  delete bmp;
-  fflags |= child->isfflags ();
-  delete child;
-  return true;
+ // --- ADD AXES, GRID, AND LABELS ---
+
+ uint32_t grid_color = 0xC0C0C0; // light gray
+ uint32_t axis_color = 0x808080; // gray
+ uint32_t text_color = 0x000000; // black
+ // X and Y axes (if they fall within the visible range)
+ // Y axis (x = 0, if 0 is within the range [save_vfrom, vto])
+ if (save_vfrom <= 0.0 && vto >= 0.0)
+  {
+   int x_axis = padding + ((0.0 - save_vfrom) / (vto - save_vfrom)) * (width - 2 * padding);
+   bmp->drawLine (x_axis, padding, x_axis, height - padding, 1, axis_color);
+  }
+
+ // X axis (y = 0, if 0 is within the range [ymin, ymax])
+ if (ymin <= 0.0 && ymax >= 0.0)
+  {
+   int y_axis = height - padding - ((0.0 - ymin) / (ymax - ymin)) * (height - 2 * padding);
+   bmp->drawLine (padding, y_axis, width - padding, y_axis, 1, axis_color);
+  }
+
+ // Grid (every 10% on X and Y)
+ for (int i = 1; i < 10; i++)
+  {
+   // Vertical grid lines
+   int x_grid = padding + i * (width - 2 * padding) / 10;
+   for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_grid, y, grid_color);
+
+   // Horizontal grid lines 
+   int y_grid = padding + i * (height - 2 * padding) / 10;
+   for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_grid, grid_color);
+  }
+
+ // Axis labels
+ char label[64];
+
+ // Label min X (bottom left)
+ //sprintf (label, "%.3g", (double)save_vfrom);
+ d2scistr (label, (double)save_vfrom);
+ bmp->drawString (padding - 10, height - padding + 5, label, text_color, 0, 1);
+
+ // Label max X (bottom right)
+ //sprintf (label, "%.3g", (double)vto);
+ d2scistr (label, (double)vto);
+ bmp->drawString (width - padding - 30, height - padding + 5, label, text_color, 0, 1);
+
+ // Label min Y (bottom left)
+ //sprintf (label, "%.3g", (double)ymin);
+ d2scistr (label, (double)ymin);
+ bmp->drawString (5, height - padding - 5, label, text_color, 0, 1);
+
+ // Label max Y (top left)
+ //sprintf (label, "%.3g", (double)ymax);
+ d2scistr (label, (double)ymax);
+ bmp->drawString (5, padding + 5, label, text_color, 0, 1);
+
+ // Label variable on X axis (bottom center)
+ bmp->drawString (width / 2 - 10, height - padding + 5, svar, text_color, 0, 2);
+
+ // Label expression at the top
+ char title[128];
+ snprintf (title, sizeof (title), "y=%s", sexpr);
+ title[sizeof (title) - 1] = '\0';
+ bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+
+ if (ShowImageFn) // Проверка, что callback установлен
+  {
+   uint32_t *argbBuffer = bmp->getARGBBuffer ();
+   if (argbBuffer)
+    {
+     ShowImageFn (bmp->width, bmp->height, argbBuffer);
+     bmp->freeARGBBuffer (argbBuffer); // Освобождаем временный буфер
+    }
+  }
+
+
+ bmp->save (fname);
+ delete bmp;
+ fflags |= child->isfflags ();
+ delete child;
+ return true;
 }
-
 
 t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
 {

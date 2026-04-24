@@ -74,6 +74,8 @@ private:
     static HHOOK s_hKeyboardHook;
     static LRESULT CALLBACK KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
+    static LRESULT CALLBACK ImageWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 public:
     WinApiCalc();
     ~WinApiCalc();
@@ -182,4 +184,7 @@ public:
     void SetMenuVisibilityOption(bool visible);
     bool IsUIReady() const { return m_uiReady; }
     bool IsInteractiveSuppressed() const { return m_suppressInteractive; }
+
+    // Show window with image from buffer
+    bool ShowImageWindow (int width, int height, uint32_t *pixels);
 };

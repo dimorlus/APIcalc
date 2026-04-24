@@ -733,6 +733,8 @@ struct mxresult_t
  float__t *mval; // Matrix values (pointer to array of floats)
 };
 
+typedef bool (*fnShowImage) (int width, int height, uint32_t *pixels);
+
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic
@@ -762,6 +764,7 @@ class calculator // calculator represents the main class for the expression calc
 
  int (*EscFn) (void);
  bool (*FileDlgFn) (char*, int);
+ fnShowImage ShowImageFn;
 
  uint8_t res_cols; // Number of columns in the matrix result
  uint8_t res_rows;   // Number of rows in the matrix result
@@ -928,6 +931,7 @@ class calculator // calculator represents the main class for the expression calc
 
  void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
  void setFileDlgFn (bool (*fn) (char*, int)) {FileDlgFn = fn;} // Set the file dialog callback
+ void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
 
  inline int isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration

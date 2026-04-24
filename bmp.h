@@ -72,10 +72,15 @@ union tColor
 class bmpdraw
 {
  private:
+ public:
  int width;
  int height;
+
+ private:
  int rowSize; // Size of the row with alignment
  uint8_t *data;
+
+ 
  int curX, curY; // current position for MoveTo/LineTo
 
  void setPixel (int x, int y, uint32_t color);
@@ -112,6 +117,13 @@ class bmpdraw
  int getWidth () const { return width; }
  int getHeight () const { return height; }
  uint32_t getDominantColor () const; // get the dominant color
+
+     // Получить буфер изображения в формате ARGB (uint32_t)
+ uint32_t *getARGBBuffer ();
+
+ // Освободить буфер (вызывать после использования)
+ void freeARGBBuffer (uint32_t *buffer);
+
 
  ~bmpdraw (void);
 };

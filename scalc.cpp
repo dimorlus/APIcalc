@@ -4059,17 +4059,50 @@ bool calculator::Plot (const char *expr, v_func fidx)
    return false;
   }
 
- // 2. Create bitmap
- bmpdraw *bmp = new bmpdraw ();
- if (!bmp || !bmp->newbmp (params.width, params.height, params.bgc))
+ // 2. Create or load bitmap
+ bmpdraw *bmp    = new bmpdraw ();
+ bool is_overlay = ((fidx == pl_oplot) && fname[0]);
+
+ if (is_overlay)
   {
-   errorf (pos, "Failed to create bitmap for plotting");
-   delete bmp;
-   if (params.child) delete params.child;
-   if (params.sexpr) free (params.sexpr);
-   if (params.svar) free (params.svar);
-   result_fval = qnan;
-   return false;
+   // Try to load existing image for overlay
+   if (bmp->load (fname))
+    {
+     // Successfully loaded — get dimensions and dominant background color
+     params.width      = bmp->getWidth ();
+     params.height     = bmp->getHeight ();
+     params.bgc        = bmp->getDominantColor ();
+     params.text_color = ~params.bgc;
+    }
+   else
+    {
+     // Failed to load — create new bitmap (fallback to fplot behavior)
+     is_overlay = false;
+     if (!bmp->newbmp (params.width, params.height, params.bgc))
+      {
+       errorf (pos, "Failed to create bitmap for plotting");
+       delete bmp;
+       if (params.child) delete params.child;
+       if (params.sexpr) free (params.sexpr);
+       if (params.svar) free (params.svar);
+       result_fval = qnan;
+       return false;
+      }
+    }
+  }
+ else
+  {
+   // Normal plot or fplot — create new bitmap
+   if (!bmp->newbmp (params.width, params.height, params.bgc))
+    {
+     errorf (pos, "Failed to create bitmap for plotting");
+     delete bmp;
+     if (params.child) delete params.child;
+     if (params.sexpr) free (params.sexpr);
+     if (params.svar) free (params.svar);
+     result_fval = qnan;
+     return false;
+    }
   }
 
  // 3. Draw plot (Cartesian coordinates)
@@ -4083,8 +4116,11 @@ bool calculator::Plot (const char *expr, v_func fidx)
    return false;
   }
 
- // 4. Draw axes and grid
- PlotDrawAxesCartesian (bmp, params);
+ // 4. Draw axes and grid (skip for overlay mode)
+ if (!is_overlay)
+  {
+   PlotDrawAxesCartesian (bmp, params);
+  }
 
  // 5. Save or display
  if ((fidx == pl_fplot) || (fidx == pl_oplot))

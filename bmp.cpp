@@ -186,7 +186,6 @@ void bmpdraw::clear (uint32_t color)
 // Load BMP from file
 bool bmpdraw::load (const char *fname)
 {
-
  FILE *f = fopen (fname, "rb");
  if (!f) return false;
 
@@ -226,8 +225,8 @@ bool bmpdraw::load (const char *fname)
  // Move to the image data
  fseek (f, header.bfOffBits, SEEK_SET);
 
- // Read the data (BMP is stored bottom-up)
- for (int y = 0; y < height; y++)
+ // Read the data (BMP is stored bottom-up, so we read in reverse order)
+ for (int y = height - 1; y >= 0; y--) // <-- CHANGED: reading from bottom to top
   {
    fread (&data[y * rowSize], 1, rowSize, f);
   }
@@ -235,7 +234,6 @@ bool bmpdraw::load (const char *fname)
  fclose (f);
  return true;
 }
-
 // Save BMP to file
 bool bmpdraw::save (const char *fname)
 {

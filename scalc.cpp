@@ -278,34 +278,35 @@ void calculator::AddPredefined (void)
  add (tsMFUNCI2, "diag", (void *)Diag);
  add (tsMFUNCI2, "eye", (void *)Diag);
 
- add (tsFITFN, (v_func)rtPoly, "fitpoly", nullptr);
- add (tsFITFN, (v_func)rtExp, "fitexp", nullptr);
- add (tsFITFN, (v_func)rtLg, "fitlog", nullptr);
- add (tsFITFN, (v_func)rtPow, "fitpow", nullptr);
- add (tsFITFN, (v_func)rtInv, "fitinv", nullptr);
+ add (tsFITFN, rtPoly, "fitpoly", nullptr);
+ add (tsFITFN, rtExp, "fitexp", nullptr);
+ add (tsFITFN, rtLg, "fitlog", nullptr);
+ add (tsFITFN, rtPow, "fitpow", nullptr);
+ add (tsFITFN, rtInv, "fitinv", nullptr);
 
- add (tsCLCFN, (v_func)rtPoly, "clcpoly", nullptr);
- add (tsCLCFN, (v_func)rtExp, "clcexp", nullptr);
- add (tsCLCFN, (v_func)rtLg, "clclog", nullptr);
- add (tsCLCFN, (v_func)rtPow, "clcpow", nullptr);
- add (tsCLCFN, (v_func)rtInv, "clcinv", nullptr);
+ add (tsCLCFN, rtPoly, "clcpoly", nullptr);
+ add (tsCLCFN, rtExp, "clcexp", nullptr);
+ add (tsCLCFN, rtLg, "clclog", nullptr);
+ add (tsCLCFN, rtPow, "clcpow", nullptr);
+ add (tsCLCFN, rtInv, "clcinv", nullptr);
+ add (tsSTFUN, sfNum, "num", nullptr);
+ add (tsSTFUN, sfMean, "mean", nullptr);
+ add (tsSTFUN, sfMedian, "median", nullptr);
+ add (tsSTFUN, sfRMS, "rms", nullptr);
+ add (tsSTFUN, sfSumX, "sumx", nullptr);
+ add (tsSTFUN, sfStdDevP, "stddevp", nullptr);
+ add (tsSTFUN, sfStdDevS, "stddevs", nullptr);
+ add (tsSTFUN, sfMin, "min", nullptr);
+ add (tsSTFUN, sfMax, "max", nullptr);
 
- add (tsSTFUN, (v_func)sfNum, "num", nullptr);
- add (tsSTFUN, (v_func)sfMean, "mean", nullptr);
- add (tsSTFUN, (v_func)sfMedian, "median", nullptr);
- add (tsSTFUN, (v_func)sfRMS, "rms", nullptr);
- add (tsSTFUN, (v_func)sfSumX, "sumx", nullptr);
- add (tsSTFUN, (v_func)sfStdDevP, "stddevp", nullptr);
- add (tsSTFUN, (v_func)sfStdDevS, "stddevs", nullptr);
- add (tsSTFUN, (v_func)sfMin, "min", nullptr);
- add (tsSTFUN, (v_func)sfMax, "max", nullptr);
+ add (tsSTFUN, sfNormP, "normp", nullptr);
+ add (tsSTFUN, sfNormQ, "normq", nullptr);
+ add (tsSTFUN, sfNormR, "normr", nullptr);
 
- add (tsSTFUN, (v_func)sfNormP, "normp", nullptr);
- add (tsSTFUN, (v_func)sfNormQ, "normq", nullptr);
- add (tsSTFUN, (v_func)sfNormR, "normr", nullptr);
+ add (tsSTFUN, sfInvNorm, "invnorm", nullptr);
+ add (tsSTFUN, sfNormPD, "normpd", nullptr);
 
- add (tsSTFUN, (v_func)sfInvNorm, "invnorm", nullptr);
- add (tsSTFUN, (v_func)sfNormPD, "normpd", nullptr);
+ add (tsSFUNCS1, ssFdlg, "fdlg", nullptr);
 
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
@@ -2575,7 +2576,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
 
  char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
 
- if (!Split (expr, sexpr, STRBUF, svar, STRBUF))
+ if (!Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0))
   {
    errorf (pos, "solve: invalid expression");
    re_res = qnan;
@@ -2878,7 +2879,133 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
  return combined;
 }
 
-bool calculator::Split (const char *expr, 
+
+// Split expression to comma-separated parts using variadic arguments
+// Usage: Split(expr, buf1, size1, buf2, size2, ..., nullptr, 0)
+// Each buffer is specified as: char* buffer, int max_size
+// Terminate the list with nullptr, 0
+bool calculator::Split (const char *expr, ...)
+{
+ if (!expr || !*expr) return false;
+
+ va_list args;
+ va_start (args, expr);
+
+ // Collect all buffer pointers and sizes
+ struct BufferInfo
+ {
+  char *buf;
+  int size;
+ };
+ BufferInfo buffers[16]; // max 16 parts (should be enough)
+ int buf_count = 0;
+
+ while (buf_count < 16)
+  {
+   char *buf = va_arg (args, char *);
+   int size  = va_arg (args, int);
+
+   if (!buf || size <= 0) break; // terminator: nullptr, 0
+
+   buffers[buf_count].buf  = buf;
+   buffers[buf_count].size = size;
+   buf[0]                  = '\0'; // initialize to empty
+   buf_count++;
+  }
+
+ va_end (args);
+
+ if (buf_count == 0) return false; // no buffers provided
+
+ const char *p    = expr;
+ int depth        = 0; // depth of nested parentheses and brackets
+ int idx          = 0;
+ int current_part = 0;
+
+ // Skip leading whitespace
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+ while (*p)
+  {
+   char ch = *p;
+
+   // Track bracket/parenthesis depth
+   if (ch == '(' || ch == '[')
+    {
+     depth++;
+    }
+   else if (ch == ')' || ch == ']')
+    {
+     depth--;
+     if (depth < 0)
+      {
+       error (p - expr, "Unmatched closing bracket");
+       return false;
+      }
+    }
+   // Process comma only at depth 0 (outside of all brackets)
+   else if (ch == ',' && depth == 0)
+    {
+     // Terminate current part
+     if (current_part < buf_count)
+      {
+       buffers[current_part].buf[idx] = '\0';
+      }
+
+     current_part++;
+     if (current_part >= buf_count)
+      {
+       error (p - expr, "Too many arguments");
+       return false;
+      }
+
+     idx = 0;
+     p++;
+     // Skip whitespace after comma
+     while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+     continue;
+    }
+
+   // Copy character to current buffer
+   if (current_part < buf_count)
+    {
+     if (idx < buffers[current_part].size - 1)
+      {
+       buffers[current_part].buf[idx++] = ch;
+      }
+     else
+      {
+       error (p - expr, "Buffer overflow: part too long");
+       return false;
+      }
+    }
+
+   p++;
+  }
+
+ // Terminate the last part
+ if (current_part < buf_count)
+  {
+   buffers[current_part].buf[idx] = '\0';
+  }
+
+ if (depth != 0)
+  {
+   error (0, "Unmatched opening bracket");
+   return false;
+  }
+
+ if (current_part < buf_count - 1)
+  {
+   error (0, "Not enough arguments");
+   return false;
+  }
+
+ return true;
+}
+// Split expression to the comma separeted parts.
+#ifdef _comment_
+bool calculator::Split (const char *expr,
                         char *sexpr, int ex_l, 
                         char *sfrom, int fr_l,
                         char *sto, int to_l,
@@ -2941,7 +3068,7 @@ bool calculator::Split (const char *expr,
         svar[idx] = '\0';
 
        current_part++;
-       if (current_part >= expected_parts)
+       if (full && current_part >= expected_parts)
         {
          error (p - expr, "Too many arguments");
          return false;
@@ -3038,6 +3165,7 @@ bool calculator::Split (const char *expr,
   }
  return false;
 }
+#endif //_comment_
 
 bool calculator::For(const char* expr, value& res)
 {
@@ -3054,7 +3182,7 @@ bool calculator::For(const char* expr, value& res)
    float__t result = 0;
    int callCount   = 0;
 
-   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
     {
      result_fval = qnan;
      return false;
@@ -3289,18 +3417,11 @@ bool calculator::Plot (const char *expr, v_func fidx)
    return false;
   }
  char fname[STRBUF];
- fname[i]       = '\0';
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  {
-   while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
-   while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
-   fname[i] = '\0';
-   while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
-  }
  char sexpr[STRBUF];
  char sfrom[MAXOP];
  char sto[MAXOP];
  char svar[STRBUF];
+ fname[i] = '\0';
 
  float__t vfrom  = qnan;
  float__t vto    = qnan;
@@ -3308,7 +3429,13 @@ bool calculator::Plot (const char *expr, v_func fidx)
  float__t result = 0;
  int callCount   = 0;
 
- if (!Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
+ bool split_ok = false;
+ if ((fidx == pl_fplot) || (fidx == pl_oplot))
+  split_ok = Split (cp, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+ else
+  split_ok = Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+
+ if (!split_ok)
   {
    result_fval = qnan;
    return false;
@@ -3321,6 +3448,29 @@ bool calculator::Plot (const char *expr, v_func fidx)
    result_fval = qnan;
    return false;
   }
+
+ if ((fidx == pl_fplot) || (fidx == pl_oplot))
+ {
+   child->setFileDlgFn (FileDlgFn);
+  child->evaluate_f (fname);
+  if (child->err[0])
+   {
+    errorf (pos, "%s", child->err);
+    delete child;
+    result_fval = qnan;
+    return false;
+   }
+
+  if (child->get_res_tag () != tvSTR)
+   {
+    errorf (pos, "First argument is not a file name");
+    delete child;
+    result_fval = qnan;
+    return false;
+   }
+  strncpy (fname, child->get_str_res (), STRBUF - 1);
+  fname[STRBUF - 1] = '\0';
+ }
 
  vfrom = child->evaluate_f (sfrom);
  if (isnan (vfrom) || child->err[0])
@@ -3371,6 +3521,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
  float__t step = (vto - vfrom) / ((width - 2 * padding) / 4);
  float__t ymin = fvx, ymax = fvx;
  float__t save_vfrom   = vfrom;
+ float__t ypad = 0.0L;
  bool has_valid_points = false;
 
  bmpdraw *bmp = new bmpdraw ();
@@ -3431,13 +3582,23 @@ bool calculator::Plot (const char *expr, v_func fidx)
     }
    while (vfrom <= vto);
    vfrom = save_vfrom;
+   if (ymin == ymax)
+    {
+     ymin -= (float__t)1.0L;
+     ymax += (float__t)1.0L;
+    }
+   else
+    {
+     float__t ypad = (ymax - ymin) * (float__t)0.1L; // 10% padding on Y range
+     ymin -= ypad;
+     ymax += ypad;
+    }
   }
 
  // --- ADD AXES, GRID, AND LABELS ---
 
  uint32_t grid_color = 0xC0C0C0; // light gray
  uint32_t axis_color = 0x808080; // gray
- //uint32_t text_color = 0x000000; // black
  uint32_t text_color = ~bgc;
  // X and Y axes (if they fall within the visible range)
  // Y axis (x = 0, if 0 is within the range [save_vfrom, vto])
@@ -3450,7 +3611,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
  // X axis (y = 0, if 0 is within the range [ymin, ymax])
  if (ymin <= 0.0 && ymax >= 0.0)
   {
-   int y_axis = height - padding - ((0.0 - ymin) / (ymax - ymin)) * (height - 2 * padding);
+   //int y_axis = height - padding - ((0.0 - ymin) / (ymax - ymin)) * (height - 2 * padding);
+   int y_axis = height - padding - (ypad+(0.0 - ypad) / (ymax - ypad)) * (height - 2 * padding);
    bmp->drawLine (padding, y_axis, width - padding, y_axis, 1, axis_color);
   }
 
@@ -3569,7 +3731,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    float__t result = 0;
    int callCount   = 0;
 
-   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF))
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
     {
      return result_fval = qnan;
     }
@@ -3713,7 +3875,7 @@ float__t calculator::Diff (const char *expr)
      float__t fvx    = qnan;
      float__t result = 0;
 
-     if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF))
+     if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP,  svar, STRBUF, nullptr, 0))
       {
        return result_fval = qnan;
       }
@@ -9291,19 +9453,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
               if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
               if (!CheckOperand (n_args+1, MSK_STR)) return result_fval = qnan;
-
-              //char filename[1024];
-              //strncpy (filename, v_stack[v_sp - n_args].get_str (), 1023);
-              //filename[1023] = '\0';
-              //if (filename[0] == '\0' && FileDlgFn)
-              // {
-              //  strcpy (filename, "*.txt"); // default filename 
-              //  if (!FileDlgFn (filename, MAX_PATH))
-              //   {
-              //    error (v_stack[v_sp - n_args].pos, "No file selected");
-              //    return result_fval = qnan;
-              //   }
-              // }
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
                   (v_stack[v_sp - n_args].get_str (),                            // filename
                    v_stack[v_sp - n_args + 1].get_str (), n_args - 1, c_imaginary,
@@ -9315,6 +9464,28 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= n_args;
              }
              break;
+
+            case tsSFUNCS1: // str f(str) (filedlg("*.*) function)
+             {
+              char filename[STRBUF];
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
+              char *filemask = v_stack[v_sp - n_args].get_str ();
+              filename[0] = '\0';
+              if (FileDlgFn)
+               {
+                strncpy (filename, filemask, STRBUF - 1);
+                filename[STRBUF - 1] = '\0';
+                if (!FileDlgFn (filename, STRBUF)) filename[0] = '\0';
+               }
+              v_stack[v_sp - n_args - 1].sval = dupString (filename);
+              v_stack[v_sp - n_args - 1].fval = 0;
+              v_stack[v_sp - n_args - 1].ival = 0;
+              v_stack[v_sp - n_args - 1].tag  = tvSTR;
+              v_sp -= n_args;  
+             }
+            break;
 
             case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
                             // prec() function)

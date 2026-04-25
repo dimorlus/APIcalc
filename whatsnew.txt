@@ -1,3 +1,7 @@
+25.04.26 (2.187)
++ Added the fdlg("*.txt") function, which opens a file dialog with the specified mask and returns a 
+  string with the full name of the selected file, or an empty string if no file is selected.
+
 23.04.26 (2.186)
 + Now all fit* and statistical analysis functions can accept not only a file name but also an optional 
   mask for selecting arguments and their order from a data string. The mask has the form 

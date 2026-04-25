@@ -399,7 +399,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSTFUN,    // 30  float mean("data") statistics function for calculating mean, median, etc
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
  tsPLOT,     // 32  plot operator for plotting data (plot)
- tsNUM       // 33  Total number of symbol types, must be the last in the list
+ tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
+ tsNUM       // 34  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -457,6 +458,7 @@ enum t_br_result
 #define MASK_STFUN      (1ULL << tsSTFUN)       // Statistics function for calculating mean, median, etc
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 #define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
+#define MASK_SFUNCS1    (1ULL << tsSFUNCS1)     // char* f(char *s) (fdlg("*.bmp"))
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -550,6 +552,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  sfNormPD,  // Probability density function of the normal distribution (returns the height
             // of the normal distribution curve at a given x value)
 
+ ssFdlg,    // File dialog function for selecting files (e.g., for plotting)
 
  vf_num
 };
@@ -878,11 +881,12 @@ class calculator // calculator represents the main class for the expression calc
                      int &callCount, 
                      int maxCalls);
 
- bool Split (const char *expr, // Split "expr, from, to, var" into its components and return true if
-             char *sexpr, int ex_l, // successful, with the components being
-             char *sfrom = nullptr, int fr_l = 1, 
-             char *sto = nullptr, int to_l = 1,
-             char *svar = nullptr, int vr_l = 1);
+ //bool Split (const char *exp,// Split "expr, from, to, var" into its components and return true if
+ //            char *sexpr, int ex_l, // successful, with the components being
+ //            char *sfrom = nullptr, int fr_l = 1, 
+ //            char *sto = nullptr, int to_l = 1,
+ //            char *svar = nullptr, int vr_l = 1);
+ bool Split (const char *expr, ...);
  t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
                                                                       //during long calculations
  bool For (const char *expr, value &res); //Operator 'for' (loop).

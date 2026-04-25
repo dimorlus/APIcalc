@@ -15,6 +15,7 @@
 
 #include <cstdlib> // for free() function
 #include <limits>
+#include "bmp.h"
 
 // RW - set both by calc engine and application
 // WO - set only from application
@@ -737,14 +738,36 @@ struct mxresult_t
  float__t *mval; // Matrix values (pointer to array of floats)
 };
 
-//typedef bool (*fnShowImage) (int width, int height, uint32_t *pixels);
 typedef bool (*fnShowImage) (void *bmpObject); // Передаём указатель на bmpdraw
+
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic
 {
  private:
+
+// Structure for storing plot parameters
+ struct PlotParams
+   {
+    char *sexpr;         // Expression of the function
+    char *svar;          // Variable
+    float__t vfrom;      // Start of the range
+    float__t vto;        // End of the range
+    float__t ymin;       // Minimum Y
+    float__t ymax;       // Maximum Y
+    int width;           // Image width
+    int height;          // Image height
+    int padding;         // Padding
+    uint32_t bgc;        // Background color
+    uint32_t fgc;        // Plot line color
+    uint32_t grid_color; // Grid color
+    uint32_t axis_color; // Axis color
+    uint32_t text_color; // Text color
+    calculator *child;   // Calculator for computations
+   };
+    
+     
  int scfg; // Syntax configuration flags
  int fflags; // Founded format flags
  int deep; // Current stack depth
@@ -881,11 +904,6 @@ class calculator // calculator represents the main class for the expression calc
                      int &callCount, 
                      int maxCalls);
 
- //bool Split (const char *exp,// Split "expr, from, to, var" into its components and return true if
- //            char *sexpr, int ex_l, // successful, with the components being
- //            char *sfrom = nullptr, int fr_l = 1, 
- //            char *sto = nullptr, int to_l = 1,
- //            char *svar = nullptr, int vr_l = 1);
  bool Split (const char *expr, ...);
  t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
                                                                       //during long calculations
@@ -894,6 +912,15 @@ class calculator // calculator represents the main class for the expression calc
  void NormalizePath (const char *input, char *output, int outSize);
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
+
+
+
+ bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
+ bool PlotCartesian (bmpdraw *bmp, PlotParams &params);
+ void PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params);
+
+
+
  bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value

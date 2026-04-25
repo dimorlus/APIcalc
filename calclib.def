@@ -13,3 +13,4 @@ EXPORTS
     calc_error
     calc_setEscFn
 	calc_setFileDlgFn
+    calc_setShowImageFn

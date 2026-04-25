@@ -523,20 +523,16 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  vf_factorial, // Factorial function
 
- vf_num
-};
+ pl_plot, // plot function for plotting data
+ pl_fplot, // fplot function for plotting to file
+ pl_oplot, // oplot function for plotting data on an existing plot
 
-enum rtype // rtype represents the type of regression (fit) function in the calculator
-{
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
- rtExp, // Exponential regression (y = a * exp(b * x))
- rtLg,  // Logarithmic regression (y = a + b * ln(x))
- rtPow, // Power regression (y = a * x^b)
- rtInv  // Inverse regression (y = a + b / x)
-};
+ rtExp,  // Exponential regression (y = a * exp(b * x))
+ rtLg,   // Logarithmic regression (y = a + b * ln(x))
+ rtPow,  // Power regression (y = a * x^b)
+ rtInv,   // Inverse regression (y = a + b / x)
 
-enum sfntype // sfntype represents the type of statistical function in the calculator
-{
  sfNum,     // Number of elements in the dataset
  sfMean,    // Mean (average) of the dataset
  sfMedian,  // Median of the dataset
@@ -551,10 +547,15 @@ enum sfntype // sfntype represents the type of statistical function in the calcu
  sfNormR,   // Probability that a value is > x (upper tail).
  sfInvNorm, // Inverse of the normal distribution function (returns the z-score for a given
             // cumulative probability)
- sfNormPD,  // Probability density function of the normal distribution (returns the height 
-            //of the normal distribution curve at a given x value)
+ sfNormPD,  // Probability density function of the normal distribution (returns the height
+            // of the normal distribution curve at a given x value)
+
+
+ vf_num
 };
 
+typedef v_func rtype; // rtype represents the type of regression (fit) function in the calculator
+typedef v_func sfntype; // sfntype represents the type of statistical function in the
 
 
 class value // value represents a value in the calculator, which can be an integer, float, complex
@@ -889,7 +890,7 @@ class calculator // calculator represents the main class for the expression calc
  void NormalizePath (const char *input, char *output, int outSize);
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
- bool Plot (const char *expr);      // Operator 'plot' for plotting data points or functions
+ bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the

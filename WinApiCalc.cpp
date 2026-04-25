@@ -141,25 +141,9 @@ bool FileDlg (char *fName, int size)
  return false;
 }
 
-#ifdef _comment_
-// После FileDlg добавь:
-
-// Callback для показа изображения из буфера
-bool ShowImageFn (int width, int height, uint32_t *pixels)
-{
- if (!g_pCalcInstance || !pixels || width <= 0 || height <= 0) return false;
-
- return g_pCalcInstance->ShowImageWindow (width, height, pixels);
-}
-#endif
-
 bool ShowImageFn (void *bmpObject)
 {
  if (!g_pCalcInstance || !bmpObject) return false;
-
- // Предполагаем, что bmpObject — это bmpdraw*
- // Но у нас нет доступа к заголовку bmp.h в WinApiCalc.cpp
- // Поэтому используем обёртку:
  return g_pCalcInstance->ShowImageWindowFromBMP (bmpObject);
 }
 
@@ -753,8 +737,6 @@ void WinApiCalc::LoadConts (char *errMsg, int &lineNum, const char *Fname)
 {
  // Load user consts from consts.txt
 char exePath[MAX_PATH];
-//char errMsg[512] = { 0 };
-//int lineNum      = 0;
 
 if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
  {
@@ -3432,105 +3414,6 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
   }
  return 0;
 }
-
-#ifdef _comment_
-// Показать окно с изображением
-bool WinApiCalc::ShowImageWindow (int width, int height, uint32_t *pixels)
-{
- if (!pixels || width <= 0 || height <= 0) return false;
-
- const char *pClassName = "WinApiCalcImageWindow";
-
- // Регистрируем класс окна, если ещё не зарегистрирован
- WNDCLASSEXA wc = { 0 };
- if (!GetClassInfoExA (GetModuleHandle (nullptr), pClassName, &wc))
-  {
-   wc.cbSize        = sizeof (WNDCLASSEX);
-   wc.style         = CS_HREDRAW | CS_VREDRAW;
-   wc.lpfnWndProc   = WinApiCalc::ImageWndProc;
-   wc.hInstance     = GetModuleHandle (nullptr);
-   wc.hCursor       = LoadCursor (nullptr, IDC_ARROW);
-   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-   wc.lpszClassName = pClassName;
-   wc.hIcon         = LoadIcon (m_hInst, MAKEINTRESOURCE (IDI_SMALL));
-   wc.hIconSm       = LoadIcon (m_hInst, MAKEINTRESOURCE (IDI_SMALL));
-
-   if (!RegisterClassExA (&wc)) return false;
-  }
-
- // Создаём DIB (Device Independent Bitmap) из буфера
- BITMAPINFO bmi              = { 0 };
- bmi.bmiHeader.biSize        = sizeof (BITMAPINFOHEADER);
- bmi.bmiHeader.biWidth       = width;
- bmi.bmiHeader.biHeight      = -height; // Отрицательная высота = top-down (как в bmp.cpp)
- bmi.bmiHeader.biPlanes      = 1;
- bmi.bmiHeader.biBitCount    = 32;
- bmi.bmiHeader.biCompression = BI_RGB;
-
- HDC hdcScreen   = GetDC (nullptr);
- void *pBits     = nullptr;
- HBITMAP hBitmap = CreateDIBSection (hdcScreen, &bmi, DIB_RGB_COLORS, &pBits, nullptr, 0);
- ReleaseDC (nullptr, hdcScreen);
-
- if (!hBitmap || !pBits) return false;
-
- // Копируем пиксели (формат ARGB -> BGRA для Windows DIB)
- uint32_t *dest = (uint32_t *)pBits;
- for (int i = 0; i < width * height; i++)
-  {
-   uint32_t color = pixels[i]; // 0xAARRGGBB из getARGBBuffer()
-   // Windows DIB ожидает формат BGRA (little-endian: BB GG RR AA)
-   uint8_t a = (color >> 24) & 0xFF;
-   uint8_t r = (color >> 16) & 0xFF;
-   uint8_t g = (color >> 8) & 0xFF;
-   uint8_t b = color & 0xFF;
-   dest[i]   = (a << 24) | (r << 16) | (g << 8) | b; // Уже в правильном формате
-  }
-
- // Позиция окна — рядом с главным окном
- RECT rc;
- if (GetWindowRect (m_hWnd, &rc))
-  {
-   rc.left += 10;
-   rc.top += 10;
-  }
- else
-  {
-   rc.left = 100;
-   rc.top  = 100;
-  }
-
- // --- ИСПРАВЛЕНИЕ: Рассчитываем размер окна с учётом заголовка и рамок ---
- RECT clientRect = { 0, 0, width, height };
- DWORD dwStyle   = WS_POPUP | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_SYSMENU;
- DWORD dwExStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
-
- // Добавляем размеры non-client area (заголовок, рамки)
- AdjustWindowRectEx (&clientRect, dwStyle, FALSE, dwExStyle);
-
- int windowWidth  = clientRect.right - clientRect.left;
- int windowHeight = clientRect.bottom - clientRect.top;
-
- // Создаём окно для показа изображения с правильными размерами
- HWND hImageWnd = CreateWindowExA (dwExStyle, pClassName, "Image Preview", dwStyle, rc.left, rc.top,
-                                   windowWidth, windowHeight, // <-- Используем рассчитанные размеры
-                                   m_hWnd, nullptr, GetModuleHandle (nullptr), nullptr);
-
- if (!hImageWnd)
-  {
-   DeleteObject (hBitmap);
-   return false;
-  }
-
- // Сохраняем HBITMAP в user data окна (для WM_PAINT и cleanup)
- SetWindowLongPtrA (hImageWnd, GWLP_USERDATA, (LONG_PTR)hBitmap);
-
- // Устанавливаем фокус на окно с изображением
- SetFocus (hImageWnd);
-
- return true;
-}
-#endif
 
 bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 {

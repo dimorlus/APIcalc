@@ -258,7 +258,9 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
- add (tsPLOT, "plot", nullptr);
+ add (tsPLOT, pl_plot, "plot", nullptr);
+ add (tsPLOT, pl_fplot, "fplot", nullptr);
+ add (tsPLOT, pl_oplot, "oplot", nullptr);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -3273,21 +3275,28 @@ bool calculator::isChildResReal (calculator *child)
   }
  return true;
 }
-bool calculator::Plot (const char *expr)
+
+
+// Plotting function: expr should be in the form "f(x), from, to, var"
+bool calculator::Plot (const char *expr, v_func fidx)
 {
+ const char *cp = expr;
+ int i          = 0;
+
  if (!expr || !*expr)
   {
    errorf (pos, "empty expression");
    return false;
   }
  char fname[STRBUF];
- const char *cp = expr;
- int i          = 0;
- while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
- while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
- fname[i] = '\0';
- while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
-
+ fname[i]       = '\0';
+ if ((fidx == pl_fplot) || (fidx == pl_oplot))
+  {
+   while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
+   while (*cp && *cp != '"' && *cp != '\'' && *cp != ',') fname[i++] = *cp++;
+   fname[i] = '\0';
+   while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\'') || (*cp == ','))) cp++;
+  }
  char sexpr[STRBUF];
  char sfrom[MAXOP];
  char sto[MAXOP];
@@ -3428,7 +3437,8 @@ bool calculator::Plot (const char *expr)
 
  uint32_t grid_color = 0xC0C0C0; // light gray
  uint32_t axis_color = 0x808080; // gray
- uint32_t text_color = 0x000000; // black
+ //uint32_t text_color = 0x000000; // black
+ uint32_t text_color = ~bgc;
  // X and Y axes (if they fall within the visible range)
  // Y axis (x = 0, if 0 is within the range [save_vfrom, vto])
  if (save_vfrom <= 0.0 && vto >= 0.0)
@@ -3488,23 +3498,18 @@ bool calculator::Plot (const char *expr)
  title[sizeof (title) - 1] = '\0';
  bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
 
- if (ShowImageFn)
+ if ((fidx == pl_fplot) || (fidx == pl_oplot))
   {
-   ShowImageFn ((void *)bmp); // Передаём указатель на bmpdraw
+   bmp->save (fname);
   }
-#ifdef _comment_
- if (ShowImageFn) // Проверка, что callback установлен
+ else
   {
-   uint32_t *argbBuffer = bmp->getARGBBuffer ();
-   if (argbBuffer)
+   if (ShowImageFn)
     {
-     ShowImageFn (bmp->width, bmp->height, argbBuffer);
-     bmp->freeARGBBuffer (argbBuffer); // Освобождаем временный буфер
+     ShowImageFn ((void *)bmp); // Send pointer to bmpdraw
     }
   }
- #endif
-
- bmp->save (fname);
+ 
  delete bmp;
  fflags |= child->isfflags ();
  delete child;
@@ -3873,7 +3878,13 @@ t_operator calculator::sscan (symbol *sym)
    else 
    if (sym->tag == tsPLOT) // plot(fname, expr)
     {
-     if (parenthesis_count == 0 && comma_count == 4)
+     if (((sym->fidx == pl_fplot) || (sym->fidx == pl_oplot)) &&
+         (parenthesis_count == 0 && comma_count == 4))
+      {
+       v_stack[v_sp].tag = tvPLOT;
+      }
+     else 
+     if ((sym->fidx == pl_plot) && (parenthesis_count == 0 && comma_count == 3))
       {
        v_stack[v_sp].tag = tvPLOT;
       }
@@ -8968,7 +8979,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (v_stack[v_sp - 1].tag == tvPLOT)
                {
                 const char *fname_expr = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                if (!Plot (fname_expr)) return result_fval = qnan;
+                if (!Plot (fname_expr, sym->fidx)) return result_fval = qnan;
                }
               v_stack[v_sp - 2].ival = 1;
               v_stack[v_sp - 2].tag  = tvINT;

@@ -186,6 +186,5 @@ public:
     bool IsInteractiveSuppressed() const { return m_suppressInteractive; }
 
     // Show window with image from buffer
-    //bool ShowImageWindow (int width, int height, uint32_t *pixels);
     bool ShowImageWindowFromBMP (void *bmpObject);
 };

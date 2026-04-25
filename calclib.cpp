@@ -84,4 +84,12 @@ void __cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int))
  calculator *c = (calculator *)h;
  c->setFileDlgFn (fn);
 }
+
+void __cdecl calc_setShowImageFn (HCALC h, fnShowImage fn)
+{
+ calculator *c = (calculator *)h;
+ c->setShowImageFn (fn);
+}
+
+
 } // extern "C"

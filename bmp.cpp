@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #ifdef __BORLANDC__
 #include <windows.h>
@@ -270,8 +270,8 @@ void bmpdraw::setPixel (int x, int y, uint32_t color)
  tColor c;
  c.Color = color;
 
- int idx       = y * rowSize + x * 3;
- data[idx]     = c.B;
+ int idx = y * rowSize + x * 3;
+ data[idx] = c.B;
  data[idx + 1] = c.G;
  data[idx + 2] = c.R;
 }
@@ -523,9 +523,9 @@ uint32_t bmpdraw::getDominantColor () const
      if (!found)
       {
        ColorNode *newNode = new ColorNode;
-       newNode->color     = color;
-       newNode->count     = 1;
-       newNode->next      = nullptr;
+       newNode->color = color;
+       newNode->count = 1;
+       newNode->next = nullptr;
 
        if (prev)
         prev->next = newNode;
@@ -537,7 +537,7 @@ uint32_t bmpdraw::getDominantColor () const
 
  // Find maximum
  uint32_t dominantColor = 0xFFFFFF;
- int maxCount           = 0;
+ int maxCount = 0;
 
  for (int i = 0; i < HASH_SIZE; i++)
   {
@@ -546,7 +546,7 @@ uint32_t bmpdraw::getDominantColor () const
     {
      if (node->count > maxCount)
       {
-       maxCount       = node->count;
+       maxCount = node->count;
        dominantColor = node->color;
       }
      ColorNode *next = node->next;
@@ -557,40 +557,6 @@ uint32_t bmpdraw::getDominantColor () const
 
  return dominantColor;
 }
-
-// Получить буфер в формате ARGB (0xAARRGGBB)
-uint32_t *bmpdraw::getARGBBuffer ()
-{
- if (!data || width <= 0 || height <= 0) return nullptr;
-
- uint32_t *argbBuffer = (uint32_t *)malloc (width * height * sizeof (uint32_t));
- if (!argbBuffer) return nullptr;
-
- for (int y = 0; y < height; y++)
-  {
-   for (int x = 0; x < width; x++)
-    {
-     int srcIdx = (y * width + x) * 3; // BGR (3 байта на пиксель)
-     int dstIdx = y * width + x;       // ARGB (4 байта на пиксель)
-
-     uint8_t b = data[srcIdx + 0];
-     uint8_t g = data[srcIdx + 1];
-     uint8_t r = data[srcIdx + 2];
-
-     // Формат ARGB: 0xAARRGGBB (alpha=0xFF — непрозрачный)
-     argbBuffer[dstIdx] = (0xFF << 24) | (r << 16) | (g << 8) | b;
-    }
-  }
-
- return argbBuffer;
-}
-
-// Освободить буфер после использования
-void bmpdraw::freeARGBBuffer (uint32_t *buffer)
-{
- if (buffer) free (buffer);
-}
-
 
 void test_bmp ()
 {

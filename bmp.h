@@ -57,6 +57,7 @@ struct BMPHeader
 
 extern const uint8_t font5x8[104][5];
 
+#pragma pack(push, 1)
 union tColor
 {
  uint32_t Color;
@@ -68,10 +69,10 @@ union tColor
    uint8_t A;
   };
 };
+#pragma pack(pop)
 
 class bmpdraw
 {
- private:
  public:
  int width;
  int height;
@@ -116,13 +117,6 @@ class bmpdraw
  int getWidth () const { return width; }
  int getHeight () const { return height; }
  uint32_t getDominantColor () const; // get the dominant color
-
-     // Получить буфер изображения в формате ARGB (uint32_t)
- uint32_t *getARGBBuffer ();
-
- // Освободить буфер (вызывать после использования)
- void freeARGBBuffer (uint32_t *buffer);
-
 
  ~bmpdraw (void);
 };

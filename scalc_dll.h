@@ -2,6 +2,7 @@
 #pragma once
 #include "calclib.h"
 
+
 class calculator
 {
  HCALC h;
@@ -15,6 +16,7 @@ public:
 
  void setEscFn (int (__cdecl *fn) (void)) { calc_setEscFn (h, fn); }
  void setFileDlgFn (bool (__cdecl *fn) (char *, int)) { calc_setFileDlgFn (h, fn); }
+ void setShowImageFn (fnShowImage fn) { calc_setShowImageFn (h, fn); }
 
  double evaluate (char *expr)  { return calc_evaluate(h, expr); } 
  char *error() {return calc_error(h);}

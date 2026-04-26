@@ -2787,6 +2787,8 @@ float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, f
 {
  pCalc->addfvar (svar, x);
  float__t val = pCalc->evaluate_f (sexpr);
+ if (isnan (val) && pCalc->errt () == teMath) return (float__t)0.0L;
+ 
  if (pCalc->err[0]) return qnan;
  return val;
 }
@@ -3008,168 +3010,6 @@ bool calculator::Split (const char *expr, ...)
  return true;
 }
 // Split expression to the comma separeted parts.
-#ifdef _comment_
-bool calculator::Split (const char *expr,
-                        char *sexpr, int ex_l, 
-                        char *sfrom, int fr_l,
-                        char *sto, int to_l,
-                        char *svar, int vr_l)
-{
- if (expr && *expr)
-  {
-   // Initialize buffers (only non-null ones)
-   if (sexpr) sexpr[0] = '\0';
-   if (sfrom) sfrom[0] = '\0';
-   if (sto) sto[0] = '\0';
-   if (svar) svar[0] = '\0';
-
-   const char *p = expr;
-   int part = 0; // 0 = expr, 1 = from, 2 = to, 3 = var
-   int depth = 0; // depth of nested parentheses and brackets
-   int idx = 0;
-
-   // Count how many parts are expected (non-null pointers)
-   int expected_parts = 0;
-   if (sexpr) expected_parts++;
-   if (sfrom) expected_parts++;
-   if (sto) expected_parts++;
-   if (svar) expected_parts++;
-
-   int current_part = 0; // Current part index (0-based)
-
-   // Skip leading whitespace
-   while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
-
-   while (*p)
-    {
-     char ch = *p;
-
-     // Track bracket/parenthesis depth
-     if (ch == '(' || ch == '[')
-      {
-       depth++;
-      }
-     else if (ch == ')' || ch == ']')
-      {
-       depth--;
-       if (depth < 0)
-        {
-         error (p - expr, "Unmatched closing bracket");
-         return false;
-        }
-      }
-     // Process comma only at depth 0 (outside of all brackets)
-     else if (ch == ',' && depth == 0)
-      {
-       // Terminate current part
-       if (current_part == 0 && sexpr)
-        sexpr[idx] = '\0';
-       else if (current_part == 1 && sfrom)
-        sfrom[idx] = '\0';
-       else if (current_part == 2 && sto)
-        sto[idx] = '\0';
-       else if (current_part == 3 && svar)
-        svar[idx] = '\0';
-
-       current_part++;
-       if (full && current_part >= expected_parts)
-        {
-         error (p - expr, "Too many arguments");
-         return false;
-        }
-
-       idx = 0;
-       p++;
-       // Skip whitespace after comma
-       while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
-       continue;
-      }
-
-     // Copy character to appropriate buffer
-     bool copied = false;
-     if (current_part == 0 && sexpr)
-      {
-       if (idx < ex_l - 1)
-        {
-         sexpr[idx++] = ch;
-         copied       = true;
-        }
-       else
-        {
-         error (p - expr, "Expression too long");
-         return false;
-        }
-      }
-     else if (current_part == 1 && sfrom)
-      {
-       if (idx < fr_l - 1)
-        {
-         sfrom[idx++] = ch;
-         copied       = true;
-        }
-       else
-        {
-         error (p - expr, "From expression too long");
-         return false;
-        }
-      }
-     else if (current_part == 2 && sto)
-      {
-       if (idx < to_l - 1)
-        {
-         sto[idx++] = ch;
-         copied     = true;
-        }
-       else
-        {
-         error (p - expr, "To expression too long");
-         return false;
-        }
-      }
-     else if (current_part == 3 && svar)
-      {
-       if (idx < vr_l - 1)
-        {
-         svar[idx++] = ch;
-         copied      = true;
-        }
-       else
-        {
-         error (p - expr, "Variable name too long");
-         return false;
-        }
-      }
-
-     p++;
-    }
-
-   // Terminate the last part
-   if (current_part == 0 && sexpr)
-    sexpr[idx] = '\0';
-   else if (current_part == 1 && sfrom)
-    sfrom[idx] = '\0';
-   else if (current_part == 2 && sto)
-    sto[idx] = '\0';
-   else if (current_part == 3 && svar)
-    svar[idx] = '\0';
-
-   if (depth != 0)
-    {
-     error (0, "Unmatched opening bracket");
-     return false;
-    }
-
-   if (current_part < expected_parts - 1)
-    {
-     error (0, "Not enough arguments");
-     return false;
-    }
-
-   return true;
-  }
- return false;
-}
-#endif //_comment_
 
 bool calculator::For(const char* expr, value& res)
 {
@@ -4242,7 +4082,11 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
       child->addfvar (svar, vfrom);
       float__t fvx = child->evaluate_f (sexpr); // evaluate the function for
                                            // the syntax check before starting the integration
-
+      if (isnan (fvx) && child->errt () == teMath) 
+       {
+        fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
+       }
+      else
       if (isnan (fvx) || child->err[0])
        {
         errorf (pos, "%s", child->err);
@@ -4286,9 +4130,12 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
           }
 
          child->addfvar (svar, vfrom);
-         fvx += child->evaluate_f (sexpr); // evaluate the function for
-                                               // the syntax check before starting the integration
-
+         fvx += child->evaluate_f (sexpr); 
+         if (isnan (fvx) && child->errt () == teMath)
+          {
+           fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
+          }
+         else
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
@@ -4311,9 +4158,12 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
           }
 
          child->addfvar (svar, vfrom);
-         fvx += child->evaluate_f (sexpr); // evaluate the function for
-                                               // the syntax check before starting the integration
-
+         fvx += child->evaluate_f (sexpr); 
+         if (isnan (fvx) && child->errt () == teMath)
+          {
+           fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
+          }
+         else
          if (isnan (fvx) || child->err[0])
           {
            errorf (pos, "%s", child->err);
@@ -7911,6 +7761,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  pos = 0; // Reset the input buffer position
  t_mresult mr = mrERROR; // Initialize matrix result to error
  err[0] = '\0'; // Clear the error buffer
+ errtype = teMath;
  mxerr[0] = '\0';    // Clear the error buffer
  result_fval  = qnan;    // Clear the floating-point result
  result_imval = 0.0; // Clear the imaginary result

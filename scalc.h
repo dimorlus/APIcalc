@@ -562,6 +562,11 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 typedef v_func rtype; // rtype represents the type of regression (fit) function in the calculator
 typedef v_func sfntype; // sfntype represents the type of statistical function in the
 
+enum terr
+{
+ teSyntax,
+ teMath,
+};
 
 class value // value represents a value in the calculator, which can be an integer, float, complex
             // number, string, or user-defined function
@@ -785,6 +790,7 @@ class calculator // calculator represents the main class for the expression calc
  char err[80]; // Error message buffer
  char mxerr[80]; // Error message buffer for matrix operations
  int errpos;   // Error position
+ terr errtype;
  int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
  bool expr;    // Expression flag
@@ -849,10 +855,10 @@ class calculator // calculator represents the main class for the expression calc
                                    // with row and col being the parsed row and column indices
 
  // Error handling
- void error (int pos, const char *msg); // Report an error at the given position with the specified message
+ void error (int pos, const char *msg, terr errt = teSyntax); // Report an error at the given position with the specified message
  void errorf (int pos, const char *fmt, ...); // Report an error at the given position with a formatted message
- inline void error (const char *msg) { error (pos - 1, msg); } // Report an error at the current position with 
-                                                               //the specified message
+ inline void error (const char *msg) {error (pos - 1, msg, teSyntax);} // Report an error at the current position with 
+                                                                       //the specified message
 
  //Functions and operators arguments check helpers.
  bool CheckOperand (int sp, uint32_t mask);
@@ -974,6 +980,7 @@ class calculator // calculator represents the main class for the expression calc
  inline int errps (void) { return errpos; }; // Get error position
  inline char *Sres (void) { return sres; };  // Get string result
  inline char Ichar (void) { return c_imaginary;}; // Get the character used for the imaginary unit
+ inline terr errt (void) { return errtype; }; // Get the error type
 
  float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
  float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value

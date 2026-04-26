@@ -145,6 +145,7 @@ calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
  result_ival  = 0;    // Clear the integer result
  buf           = nullptr;
  errpos        = 0;
+ errtype       = teSyntax;
  pos           = 0;
  expr          = false;
  tmp_var_count = 0;
@@ -2542,10 +2543,11 @@ void calculator::scientific (char *&fpos, double &fval)
 }
 
 // Set an error message with the given position and message text
-void calculator::error (int pos, const char *msg)
+void calculator::error (int pos, const char *msg, terr errt)
 {
  sprintf (err, "Error: %s at %i", msg, pos);
  errpos = pos;
+ errtype = errt;
 }
 
 void calculator::errorf (int pos, const char *fmt, ...)
@@ -3816,13 +3818,17 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  child->addfvar (svar, vfrom);
  float__t fvx = child->evaluate_f (sexpr);
 
- if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
+ if (!(isnan (fvx) && child->errt () == teMath))
   {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
+   if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
   }
+ else fvx = 0;
 
  // Fill in the parameters
  params.sexpr = strdup (sexpr);
@@ -8416,7 +8422,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero");
+          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
           return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
@@ -8470,7 +8476,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if ((v_stack[v_sp - 1].get () == (float__t)0.0L)
                  || (v_stack[v_sp - 2].get () == (float__t)0.0L))
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero");
+          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
           return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
@@ -8503,7 +8509,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t b_norm2 = br * br + bi * bi;
           if (b_norm2 == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero");
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
             return result_fval = qnan;
            }
           float__t inv_b_r = br / b_norm2;
@@ -8517,7 +8523,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t sum_norm2 = sum_r * sum_r + sum_i * sum_i;
           if (sum_norm2 == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero");
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
             return result_fval = qnan;
            }
           v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
@@ -8552,7 +8558,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero");
+          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
           return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
@@ -8602,7 +8608,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if (v_stack[v_sp - 1].get () == 0.0)
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero");
+          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
           return result_fval = qnan;
          }
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)

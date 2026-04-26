@@ -296,7 +296,7 @@ threshold ($$10^{-12}$$), the drawing "pen" is lifted.
 no false lines connect disconnected real branches (e.g., in $$ln(x)$$ or $$\sqrt{x}$$).
 #### Related variables
 * **plot_width**: Graph width (100..2000, default - 800) `plot_width:=1024`
-* **plot_hegth**: Graph width (100..2000, default - 600) `plot_hegth:=768`
+* **plot_height**: Graph width (100..2000, default - 600) `plot_height:=768`
 * **plot_bgc**: Graph background color, default is white (0xFFFFFF) `plot_bgc:=0;;Black`
 * **plot_fgc**: Graph color, default is black (0) `plot_fgc:=wrgb(yellow)`
 * **path**: Default path to the "fname" `path:="%USERPROFILE%\Downloads"`

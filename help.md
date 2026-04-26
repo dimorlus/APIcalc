@@ -135,7 +135,7 @@ plot(expr,from,to,x)            Plot of the expr function in Cartesian coordinat
 
 	Variables
 plot_width                      Graph width (100..2000, default - 800)
-plot_hegth                      Graph width (100..2000, default - 600)
+plot_height                     Graph height (100..2000, default - 600)
 plot_bgc                        Graph background color, default is white (0xFFFFFF)
 plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"

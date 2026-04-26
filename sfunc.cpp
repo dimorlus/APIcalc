@@ -503,7 +503,12 @@ float__t Aerf(float__t x)
  return Erfinv_refine (x, 50); // 5 iterations of Newton-Raphson for refinement
 }
 
-// Generate a random float in the range [0, x)
+
+int_t Tick(int_t n)
+{
+ return (uint32_t)GetTickCount ();
+}
+    // Generate a random float in the range [0, x)
 static uint32_t randomi = 0;
 
 void Randomize (void)

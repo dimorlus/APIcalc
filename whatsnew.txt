@@ -1,7 +1,40 @@
 25.04.26 (2.187)
 + Added the fdlg("*.txt") function, which opens a file dialog with the specified mask and returns a 
   string with the full name of the selected file, or an empty string if no file is selected. Can be 
-  used with all functions that expect a file name.
+  used with all functions that expect a file name. In the CLI version, calling fdlg does nothing.
+  To avoid being interrupted by a constantly popping dialog box (which can be closed with the Esc key) 
+  while entering an expression containing a call to fdlg("mask"), it's recommended to use something 
+  like dlg instead of fdlg and only change it to fdlg once the entire expression has been entered. 
+  Multiple calls to fdlg in a single expression are allowed, but which one appears first depends on 
+  the calculation priority, which may not be obvious during expression interpretation.
++ Added tick(0) function, returns the current number of milliseconds in the system (32 bits for 
+  compatibility), can be used, for example, to create unique file names. The function argument is 
+  ignored. 
+    ;;Do not try to repeat with the same result, the data is unique.
+	prn("%x.txt", tick(0)) ->'36eb2396.txt'  
++ Added fplot("filename.bmp", expr, from, to, var) and oplot("filename.bmp", expr, from, to, var) 
+  functions, which create a BMP file with a plot of the expr function in Cartesian coordinates. 
+  The oplot (overlay plot) function can draw a graph over an existing one, but the user must ensure 
+  that it aligns with the existing one on the same axes. The default image size is 800x600, but can 
+  be changed by setting the variables plot_width:=1024;plot_hegth:=768. The default background color 
+  is white, changed by the variable plot_bgc:=0;;black. The graph color is determined by the variable 
+  plot_fgc, by default black, but can be changed, for example: 
+    plot_width:=1024;plot_hegth:=768
+	plot_bgc:=0;;black.
+	plot_fgc:=trgb(3000);;the color of an absolutely black body heated to 3000K.
++ Added the plot(expr, from, to, var) function, which opens a modal window with a plot (exactly the 
+  same as fplot). The window closes when you press any key or use the mouse. In the CLI version, calling 
+  plot does nothing (fplot works as in the GUI).	
+	plot(sin(x)/x, -15, 15, x)
++ The variable path:="C:\work" is now used as the file path for all functions that use a file name if 
+  they are passed a name without a path. It is permissible to use environment variables in file names, 
+  including in the path variable.	
+	path:="%USERPROFILE%\Downloads"
+~ It is convenient to define the above variables in the user.txt file.
+	path:="%USERPROFILE%\Downloads"	
+    plot_width:=1024;plot_hegth:=768
+	plot_bgc:=0;;Black.
+	plot_fgc:=trgb(3000);;the color of an absolutely black body heated to 3000K.
 
 23.04.26 (2.186)
 + Now all fit* and statistical analysis functions can accept not only a file name but also an optional 
@@ -685,6 +718,7 @@ $ Possible improvement: Add parameter passing by reference to func(&x). If this 
     * Changes
     ! Bug found and not yet fixed
     $ Not yet implemented feature
+	~ Explanations
 
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder 

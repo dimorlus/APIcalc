@@ -272,6 +272,34 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
 ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
 ```  
+### Plotting
+The engine provides two distinct operators for visualization:
+* **`plot(expr,from,to,var)`**: Show graph in the modal window. The window closes when you press any key or use the mouse.
+* **`fplot("fname",expr,from,to,var)`**: Creates a fresh chart. It initializes the background, draws the grid/axes based on the calculated range, 
+and renders the function. If the file exists, it will be overwritten.
+* **`oplot("fname",expr,from,to,var)`**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
+for comparing multiple functions on the same scale.
+#### Handling Special Values
+The engine is designed for robust engineering calculations:
+* **Division by Zero**: Handled gracefully. If an expression results in a singularity (like $$sin(x)/x$$ at $$x=0$$), 
+the parser maintains stability and continues rendering.
+* **Complex Transitions**: When a function enters the complex plane, the plot automatically breaks and resumes only 
+when real values are returned.
+* **Engineering Suffixes on Axes**: Labels automatically use standard notation (e.g., `m` for milli, `k` for kilo) to 
+keep the display concise.
+#### Complex Values & Continuity
+* **Real-only Rendering**: The `plot` operator automatically detects complex results. If the imaginary part exceeds a negligible 
+threshold ($$10^{-12}$$), the drawing "pen" is lifted.
+* **Automatic Resumption**: Plotting resumes with a `moveTo` command as soon as the expression returns to the real plane, ensuring 
+no false lines connect disconnected real branches (e.g., in $$ln(x)$$ or $$\sqrt{x}$$).
+#### Related variables
+* **plot_width**: Graph width (100..2000, default - 800) `plot_width:=1024`
+* **plot_hegth**: Graph width (100..2000, default - 600) `plot_hegth:=768`
+* **plot_bgc**: Graph background color, default is white (0xFFFFFF) `plot_bgc:=0;;Black`
+* **plot_fgc**: Graph color, default is black (0) `plot_fgc:=wrgb(yellow)`
+* **path**: Default path to the "fname" `path:="%USERPROFILE%\Downloads"`
+
+> **Technical Note**: To ensure accuracy, the engine monitors the ratio of the imaginary part to the total magnitude. If $Abs(im) / |z| > 10^{-12}$, the point is considered undefined in the real plane, and the line is broken.
 
 ### **Complex Number Support**
 
@@ -459,6 +487,16 @@ handles path normalization.
 #### File Paths:
 * *Relative paths* (e.g., "logs/data.txt") are relative to the calculator executable. 
 * *Full paths* (e.g., "C:\Projects\Test\sensor.log") are supported.  
+* **path**: Default path to the "fname" `path:="%USERPROFILE%\Downloads"`
+* **fdlg("*.txt")**: function, which opens a file dialog with the specified mask and returns a 
+string with the full name of the selected file, or an empty string if no file is selected. 
+Can be used with all functions that expect a file name. In the CLI version, calling **fdlg** does nothing.
+
+> **Technical Note**: To avoid being interrupted by a constantly popping dialog box (which can be closed with the Esc key) 
+while entering an expression containing a call to `fdlg("mask")`, it's recommended to use something 
+like `dlg` instead of fdlg and only change it to `fdlg` once the entire expression has been entered. 
+Multiple calls to `fdlg` in a single expression are allowed, but which one appears first depends on 
+the calculation priority, which may not be obvious during expression interpretation.
 
 #### The "All-Terrain" Parser
 The engine uses a robust, fault-tolerant scanner designed to extract numeric data from real-world engineering logs.

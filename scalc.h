@@ -401,7 +401,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
  tsPLOT,     // 32  plot operator for plotting data (plot)
  tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
- tsNUM       // 34  Total number of symbol types, must be the last in the list
+ tsSFUNC,    // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
+ tsNUM       // 35  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -738,7 +739,7 @@ struct mxresult_t
  float__t *mval; // Matrix values (pointer to array of floats)
 };
 
-typedef bool (*fnShowImage) (void *bmpObject); // Передаём указатель на bmpdraw
+typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
 
 
 class calculator // calculator represents the main class for the expression calculator, which

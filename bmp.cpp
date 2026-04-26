@@ -370,7 +370,7 @@ void bmpdraw::lineTo (int x, int y, int thickness, uint32_t color)
 // Drawing a character with scaling
 void bmpdraw::drawChar (int x, int y, char c, uint32_t color, int angle, int scale)
 {
- if (c < 32 || c > 127) return;
+ if ((uint8_t)c < 32 || (uint8_t)c > 127) return;
  if (scale < 1) scale = 1; // minimum scale 1
  int idx = c - 32;
  if (idx >= 104) return;

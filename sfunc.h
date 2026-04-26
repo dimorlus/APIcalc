@@ -84,6 +84,7 @@ float__t Ctgg(float__t x);
 float__t Ctg(float__t x);
 
 // Random number generation functions
+int_t Tick (int_t n);
 void Randomize (void);
 float__t Random (float__t x);
 // Rounding functions

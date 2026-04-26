@@ -400,7 +400,10 @@ void calculator::AddPredefined (void)
  
  add (tsIFUNC2, "gcd", (void *)(int_t (*) (int_t, int_t))Gcd);
  add (tsIFUNC2, "invmod", (void *)(int_t (*) (int_t, int_t))Invmod);
+
  add (tsIFUNC1, "prime", (void *)Prime);
+ add (tsIFUNC1, "tick", (void *)Tick);
+
  add (tsSFUNCI1, "factorize", (void *)factorize_p);
 
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
@@ -625,7 +628,7 @@ void calculator::AddPredefined (void)
  addfconst ("version", (float__t)_ver_);
  addim (); // Add imaginary unit 'i', 'j' as a predefined constant
 
- addsvar ("file_path", ""); // Add a string variable to hold the file path for file operations)
+ addsvar ("path", ""); // Add a string variable to hold the file path for file operations)
  addivar ("plot_width", 800); // Default plot width in pixels)
  addivar ("plot_height", 600); // Default plot height in pixels)
  addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
@@ -3320,7 +3323,7 @@ bool calculator::For(const char* expr, value& res)
 void calculator::NormalizePath (const char *input, char *output, int outSize)
 {
  if (!input || !output || outSize <= 0) return;
- const char *defaultPath = getsvar ("file_path");
+ const char *defaultPath = getsvar ("path");
  char tempBuffer[MAX_PATH];
 
  // 1. Check if the input is just a file name (no slashes)
@@ -4059,7 +4062,9 @@ bool calculator::Plot (const char *expr, v_func fidx)
    return false;
   }
 
- // 2. Create or load bitmap
+ NormalizePath (fname, fname, STRBUF);
+ 
+  // 2. Create or load bitmap
  bmpdraw *bmp    = new bmpdraw ();
  bool is_overlay = ((fidx == pl_oplot) && fname[0]);
 
@@ -4921,6 +4926,11 @@ t_operator calculator::dqscan (char qc)
 
  while (*ipos && (sidx < STRBUF - 1))
   {
+   if (*ipos < ' ') // skip control characters
+    {
+     ipos++;
+     continue;
+    } 
    if (*ipos == '\\')
     {
      // escape sequence
@@ -4976,20 +4986,11 @@ t_operator calculator::dqscan (char qc)
 
  if (*ipos == qc)
   {
-   //if (sbuf[0])
-   // {
-   //  scfg |= STR;
-   //  fflags |= STR;
-   // }
    v_stack[v_sp].tag  = tvSTR;
    v_stack[v_sp].ival = 0;
-   v_stack[v_sp].sval = (char *)sf_alloc (sidx + 1);
-   if (v_stack[v_sp].sval)
-    {
-     strcpy (v_stack[v_sp].sval, sbuf);
-    }
-   pos                 = ipos - buf + 1;
-   v_stack[v_sp].pos   = pos;
+   v_stack[v_sp].sval = dupString (sbuf);
+   pos = ipos - buf + 1;
+   v_stack[v_sp].pos = pos;
    v_stack[v_sp++].var = nullptr;
    return toOPERAND;
   }
@@ -9918,10 +9919,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 return result_fval = qnan;
                }
 
-              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
-              if (!CheckOperand (n_args+1, MSK_STR)) return result_fval = qnan;
+              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan; // filename (1st argument)
+              if (!CheckOperand (n_args - 1, MSK_STR)) return result_fval = qnan; // format string (2nd argument)
+              char fnamebuf[STRBUF];
+              NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
+
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
-                  (v_stack[v_sp - n_args].get_str (),                            // filename
+                  (fnamebuf,                            // filename
                    v_stack[v_sp - n_args + 1].get_str (), n_args - 1, c_imaginary,
                    &v_stack[v_sp - n_args + 2]);
 
@@ -9937,7 +9941,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               char filename[STRBUF];
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan;
+              if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan; // file mask (1st argument should be string)
               char *filemask = v_stack[v_sp - n_args].get_str ();
               filename[0] = '\0';
               if (FileDlgFn)
@@ -10189,7 +10193,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   return result_fval = qnan;
                  }
                }
-              float__t res = StatFn (filename, msk, sfn, x);
+              char fnamebuf[STRBUF];
+              NormalizePath (filename, fnamebuf, STRBUF);
+              float__t res = StatFn (fnamebuf, msk, sfn, x);
               if (isnan (res) || mxerr[0])
                {
                 if (mxerr[0])

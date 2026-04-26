@@ -127,6 +127,19 @@ prime(n)                        Smallest prime number
 factorize(n)                    Prime factorization in to string
 polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
+fdlg(fmask)						Opens a file dialog to select a file. 
+
+fplot("fname",expr,from,to,x)   Plot of the expr function in Cartesian coordinates to the BMP file.
+oplot("fname",expr,from,to,x)   Overlay plot of the expr function in Cartesian coordinates to the BMP file. 
+plot(expr,from,to,x)            Plot of the expr function in Cartesian coordinates
+
+	Variables
+plot_width                      Graph width (100..2000, default - 800)
+plot_hegth                      Graph width (100..2000, default - 600)
+plot_bgc                        Graph background color, default is white (0xFFFFFF)
+plot_fgc                        Graph color, default is black (0)
+path                            Default path to the "fname"
+
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
 fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
 fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
@@ -187,8 +200,9 @@ floatf(i)                       Reinterpret an integer as a floating-point 32
 
 printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
 prnf(filename, fmt, ...)        Works the same as prn, but print to the filename.
-datatime("2017.11.23 22:00:20") Return Unix time
-now(n)                          Current Unix time (+/- n hours)
+datatime("2017.11.23 22:00:20") Return Unix time.
+now(n)                          Current Unix time (+/- n hours).
+tick(n)							Current system milliseconds.
 ```
 *Legend*: _x_, _y_ - real number; _z_ - complex number; _n_, _m_, _i_ - integer number; _A_, _B_, _M_ - matrix; _c_, _r_ - column, row of matrix.
 "fname" - data file name. "msk" - optional column mask.<br>

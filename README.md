@@ -273,11 +273,13 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
 ```  
 ### Plotting
-The engine provides two distinct operators for visualization:
-* **`plot(expr,from,to,var)`**: Show graph in the modal window. The window closes when you press any key or use the mouse.
-* **`fplot("fname",expr,from,to,var)`**: Creates a fresh chart. It initializes the background, draws the grid/axes based on the calculated range, 
-and renders the function. If the file exists, it will be overwritten.
-* **`oplot("fname",expr,from,to,var)`**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
+The engine provides three distinct operators for visualization:
+* **plot(expr,from,to,var)**: Plot of the expr function in Cartesian coordinates and show graph in the modal window. 
+The window closes when you press any key or use the mouse.
+* **fplot("fname",expr,from,to,var)**: Plot of the expr function in Cartesian coordinates to the BMP file. Creates a fresh chart. 
+It initializes the background, draws the grid/axes based on the calculated range, and renders the function. If the file exists, 
+it will be overwritten.
+* **oplot("fname",expr,from,to,var)**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
 for comparing multiple functions on the same scale.
 #### Handling Special Values
 The engine is designed for robust engineering calculations:
@@ -494,7 +496,7 @@ Can be used with all functions that expect a file name. In the CLI version, call
 
 > **Technical Note**: To avoid being interrupted by a constantly popping dialog box (which can be closed with the Esc key) 
 while entering an expression containing a call to `fdlg("mask")`, it's recommended to use something 
-like `dlg` instead of fdlg and only change it to `fdlg` once the entire expression has been entered. 
+like `dlg` instead of `fdlg` and only change it to `fdlg` once the entire expression has been entered. 
 Multiple calls to `fdlg` in a single expression are allowed, but which one appears first depends on 
 the calculation priority, which may not be obvious during expression interpretation.
 

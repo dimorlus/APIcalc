@@ -1,4 +1,4 @@
-25.04.26 (2.187)
+26.04.26 (2.187)
 + Added the fdlg("*.txt") function, which opens a file dialog with the specified mask and returns a 
   string with the full name of the selected file, or an empty string if no file is selected. Can be 
   used with all functions that expect a file name. In the CLI version, calling fdlg does nothing.

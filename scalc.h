@@ -530,6 +530,12 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_plot, // plot function for plotting data
  pl_fplot, // fplot function for plotting to file
  pl_oplot, // oplot function for plotting data on an existing plot
+ pl_plotpol,  // NEW: polar plot to screen
+ pl_fplotpol, // NEW: polar plot to file
+ pl_oplotpol, // NEW: polar plot overlay to file
+ pl_xyplot,   // NEW: xy plot to screen
+ pl_fxyplot,  // NEW: xy plot to file
+ pl_oxyplot,  // NEW: xy plot overlay to file
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
@@ -762,6 +768,9 @@ class calculator // calculator represents the main class for the expression calc
     float__t vto;        // End of the range
     float__t ymin;       // Minimum Y
     float__t ymax;       // Maximum Y
+    float__t xmin;       // NEW: for polar plots
+    float__t xmax;       // NEW: for polar plots
+    float__t scale;      // NEW: for polar plots
     int width;           // Image width
     int height;          // Image height
     int padding;         // Padding
@@ -917,16 +926,15 @@ class calculator // calculator represents the main class for the expression calc
  bool For (const char *expr, value &res); //Operator 'for' (loop).
 
  void NormalizePath (const char *input, char *output, int outSize);
+
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
-
-
 
  bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
  bool PlotCartesian (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params);
-
-
+ bool PlotPolar (bmpdraw *bmp, PlotParams &params);
+ void PlotDrawAxesPolar (bmpdraw *bmp, PlotParams &params);
 
  bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the

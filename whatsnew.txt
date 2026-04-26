@@ -2,6 +2,8 @@
 * Now integration works even when passing through a singularity, for example 
   integr((sin(x)/x), -10, 10, x) at x=0. The result is now 3.317, not an error.
   
++ Added plotpol, fplotpol, oplotpol fuctions. The same as plot, fplot, oplot, but for polar coordinates. 
+  
 26.04.26 (2.187)
 + Added the fdlg("*.txt") function, which opens a file dialog with the specified mask and returns a 
   string with the full name of the selected file, or an empty string if no file is selected. Can be 

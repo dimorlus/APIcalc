@@ -261,6 +261,9 @@ void calculator::AddPredefined (void)
  add (tsPLOT, pl_plot, "plot", nullptr);
  add (tsPLOT, pl_fplot, "fplot", nullptr);
  add (tsPLOT, pl_oplot, "oplot", nullptr);
+ add (tsPLOT, pl_plotpol, "plotpol", nullptr);
+ add (tsPLOT, pl_fplotpol, "fplotpol", nullptr);
+ add (tsPLOT, pl_oplotpol, "oplotpol", nullptr);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -3249,327 +3252,6 @@ bool calculator::isChildResReal (calculator *child)
 }
 
 
-#ifdef _comment_
-
-bool calculator::Plot (const char *expr, v_func fidx)
-{
- const char *cp = expr;
- int i          = 0;
-
- if (!expr || !*expr)
-  {
-   errorf (pos, "empty expression");
-   return false;
-  }
- char fname[STRBUF];
- char sexpr[STRBUF];
- char sfrom[MAXOP];
- char sto[MAXOP];
- char svar[STRBUF];
- fname[i] = '\0';
-
- float__t vfrom  = qnan;
- float__t vto    = qnan;
- float__t fvx    = qnan;
- float__t result = 0;
- int callCount   = 0;
-
- bool split_ok = false;
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  split_ok = Split (cp, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
-                    nullptr, 0);
- else
-  split_ok = Split (cp, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
-
- if (!split_ok)
-  {
-   result_fval = qnan;
-   return false;
-  }
-
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
- if (!child)
-  {
-   errorf (pos, "Out of memory");
-   result_fval = qnan;
-   return false;
-  }
-
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  {
-   child->setFileDlgFn (FileDlgFn);
-   child->evaluate_f (fname);
-   if (child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-
-   if (child->get_res_tag () != tvSTR)
-    {
-     errorf (pos, "First argument is not a file name");
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   strncpy (fname, child->get_str_res (), STRBUF - 1);
-   fname[STRBUF - 1] = '\0';
-  }
-
- vfrom = child->evaluate_f (sfrom);
- if (isnan (vfrom) || child->err[0])
-  {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
- vto = child->evaluate_f (sto);
- if (isnan (vto) || child->err[0])
-  {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
-
- uint64_t init_ms        = GetTickCount64 ();
- uint64_t last_gui_check = 0;
-
- if (vfrom > vto)
-  {
-   float__t tmp = vfrom;
-   vfrom        = vto;
-   vto          = tmp;
-  }
-
- child->addfvar (svar, vfrom);
- fvx = child->evaluate_f (sexpr);
-
- if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
-  {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
-
- int width = getivar ("plot_width");
- if ((width <= 100) || (width > 2000)) width = 800;
- int height = getivar ("plot_height");
- if ((height <= 100) || (height > 2000)) height = 600;
- int bgc = getivar ("plot_bgc");
- int fgc = getivar ("plot_fgc");
-
- int padding   = 40;
- float__t step = (vto - vfrom) / ((width - 2 * padding) / 4);
- float__t ymin = fvx, ymax = fvx;
- float__t save_vfrom   = vfrom;
- bool has_valid_points = false;
-
- bmpdraw *bmp = new bmpdraw ();
-
- if (!bmp || !bmp->newbmp (width, height, bgc))
-  {
-   errorf (pos, "Failed to create bitmap for plotting");
-   delete bmp;
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
-
- // First pass: find ymin/ymax
- for (int pass = 0; pass < 2; pass++)
-  {
-   do
-    {
-     if (check_break (init_ms, last_gui_check) != brNONE)
-      {
-       delete bmp;
-       delete child;
-       result_fval = qnan;
-       return false;
-      }
-
-     child->addfvar (svar, vfrom);
-     fvx = child->evaluate_f (sexpr);
-
-     if (pass == 0)
-      {
-       if (!isnan (fvx) && isChildResReal (child))
-        {
-         if (fvx < ymin) ymin = fvx;
-         if (fvx > ymax) ymax = fvx;
-        }
-      }
-     else
-      {
-       if (!isnan (fvx) && isChildResReal (child))
-        {
-         float__t x = padding + ((vfrom - save_vfrom) / (vto - save_vfrom)) * (width - 2 * padding);
-         float__t y = height - padding - ((fvx - ymin) / (ymax - ymin)) * (height - 2 * padding);
-         if (has_valid_points)
-          {
-           bmp->lineTo ((int)x, (int)y, 2, fgc);
-          }
-         else
-          {
-           bmp->moveTo ((int)x, (int)y);
-           has_valid_points = true;
-          }
-        }
-       else
-        has_valid_points = false;
-      }
-     vfrom += step;
-    }
-   while (vfrom <= vto);
-   vfrom = save_vfrom;
-
-   if (pass == 0)
-    {
-     // Включаем ноль в диапазон
-     if (ymin > 0.0) ymin = 0.0;
-     if (ymax < 0.0) ymax = 0.0;
-
-     // Добавляем padding
-     if (ymin == ymax)
-      {
-       ymin -= (float__t)1.0L;
-       ymax += (float__t)1.0L;
-      }
-     else
-      {
-       float__t ypad = (ymax - ymin) * (float__t)0.1L;
-       ymin -= ypad;
-       ymax += ypad;
-      }
-    }
-  }
-
- // --- ADD AXES, GRID, AND LABELS ---
-
- uint32_t grid_color = 0xC0C0C0;
- uint32_t axis_color = 0x808080;
- uint32_t text_color = ~bgc;
-
- float__t x_range = vto - save_vfrom;
- float__t y_range = ymax - ymin;
-
- // Фиксированный шаг сетки в пикселях (делим более длинную сторону на ~10)
- int plot_width       = width - 2 * padding;
- int plot_height      = height - 2 * padding;
- int grid_step_pixels = (plot_width > plot_height ? plot_width : plot_height) / 10;
-
- // Вычисляем координату оси X (y=0) в пикселях
- int y_axis_pixel = height - padding - ((0.0 - ymin) / y_range) * plot_height;
-
- // Вычисляем координату оси Y (x=0) в пикселях (если ноль в диапазоне)
- int x_axis_pixel = -1;
- if (save_vfrom <= 0.0 && vto >= 0.0)
-  {
-   x_axis_pixel = padding + ((0.0 - save_vfrom) / x_range) * plot_width;
-  }
-
- // Рисуем горизонтальные линии сетки, выровненные по оси X
- for (int offset = 0; offset <= plot_height; offset += grid_step_pixels)
-  {
-   int y_up   = y_axis_pixel - offset;
-   int y_down = y_axis_pixel + offset;
-
-   // Линия выше оси
-   if (y_up >= padding && y_up < height - padding)
-    {
-     for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_up, grid_color);
-    }
-
-   // Линия ниже оси (не дублируем саму ось)
-   if (offset > 0 && y_down >= padding && y_down < height - padding)
-    {
-     for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_down, grid_color);
-    }
-  }
-
- // Рисуем вертикальные линии сетки, выровненные по оси Y (если она есть)
- if (x_axis_pixel >= 0)
-  {
-   for (int offset = 0; offset <= plot_width; offset += grid_step_pixels)
-    {
-     int x_left  = x_axis_pixel - offset;
-     int x_right = x_axis_pixel + offset;
-
-     // Линия левее оси
-     if (x_left >= padding && x_left < width - padding)
-      {
-       for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_left, y, grid_color);
-      }
-
-     // Линия правее оси (не дублируем саму ось)
-     if (offset > 0 && x_right >= padding && x_right < width - padding)
-      {
-       for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_right, y, grid_color);
-      }
-    }
-  }
- else
-  {
-   // Если оси Y нет, рисуем вертикальные линии от левого края
-   for (int x = padding; x < width - padding; x += grid_step_pixels)
-    {
-     for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x, y, grid_color);
-    }
-  }
-
- // Рисуем оси поверх сетки
- if (x_axis_pixel >= 0)
-  {
-   bmp->drawLine (x_axis_pixel, padding, x_axis_pixel, height - padding, 1, axis_color);
-  }
- bmp->drawLine (padding, y_axis_pixel, width - padding, y_axis_pixel, 1, axis_color);
-
- // Axis labels
- char label[64];
-
- d2scistr (label, (double)save_vfrom);
- bmp->drawString (padding - 10, height - padding + 5, label, text_color, 0, 1);
-
- d2scistr (label, (double)vto);
- bmp->drawString (width - padding - 30, height - padding + 5, label, text_color, 0, 1);
-
- d2scistr (label, (double)ymin);
- bmp->drawString (5, height - padding - 5, label, text_color, 0, 1);
-
- d2scistr (label, (double)ymax);
- bmp->drawString (5, padding + 5, label, text_color, 0, 1);
-
- bmp->drawString (width / 2 - 10, height - padding + 5, svar, text_color, 0, 2);
-
- char title[128];
- snprintf (title, sizeof (title), "y=%s", sexpr);
- title[sizeof (title) - 1] = '\0';
- bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
-
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  {
-   bmp->save (fname);
-  }
- else
-  {
-   if (ShowImageFn)
-    {
-     ShowImageFn ((void *)bmp);
-    }
-  }
-
- delete bmp;
- fflags |= child->isfflags ();
- delete child;
- return true;
-}
-#endif //_comment_
-
 
 // Prepare data for plotting (common part)
 bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params)
@@ -3586,13 +3268,24 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  char svar[STRBUF];
 
  bool split_ok = false;
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
- else
-  {
+ switch (fidx)
+ {
+  case pl_fplot:
+  case pl_oplot:
+  case pl_fplotpol:
+  case pl_oplotpol:
+   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+  break;
+  case pl_plot:
+  case pl_plotpol:
    if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+  break;
+   default:
+   errorf (pos, "Unknown plot function");
+   return false;
   }
+ 
  if (!split_ok)
   {
    result_fval = qnan;
@@ -3607,8 +3300,12 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    return false;
   }
 
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  {
+ switch (fidx)
+ {
+  case pl_fplot:
+  case pl_oplot:
+  case pl_fplotpol:
+  case pl_oplotpol:
    child->setFileDlgFn (FileDlgFn);
    child->evaluate_f (fname);
    if (child->err[0])
@@ -3618,7 +3315,6 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
      result_fval = qnan;
      return false;
     }
-
    if (child->get_res_tag () != tvSTR)
     {
      errorf (pos, "First argument is not a file name");
@@ -3628,6 +3324,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
     }
    strncpy (fname, child->get_str_res (), STRBUF - 1);
    fname[STRBUF - 1] = '\0';
+  break;
   }
 
  float__t vfrom = child->evaluate_f (sfrom);
@@ -3695,6 +3392,207 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  params.child = child;
 
  return true;
+}
+
+// Plot Polar graph (specific part)
+bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
+{
+ calculator *child   = params.child;
+ float__t angle_from = params.vfrom;
+ float__t angle_to   = params.vto;
+
+ int width    = params.width;
+ int height   = params.height;
+ int padding  = params.padding;
+ uint32_t fgc = params.fgc;
+
+ // Center of polar plot is always in the middle
+ int center_x = width / 2;
+ int center_y = height / 2;
+
+ // Calculate appropriate step for smooth circle
+ int available_size     = (width < height ? width : height) - 2 * padding;
+ float__t circumference = 2.0 * M_PI * (available_size / 2);
+ float__t step          = (angle_to - angle_from) / (circumference / 4.0); // ~4 pixels per step
+
+ float__t rmax           = 0;
+ bool first_point        = true;
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ // First pass: find maximum radius
+ float__t angle = angle_from;
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     return false;
+    }
+
+   child->addfvar (params.svar, angle);
+   float__t r = child->evaluate_f (params.sexpr);
+
+   if (!isnan (r) && isChildResReal (child))
+    {
+     float__t abs_r = Abs (r);
+     if (first_point || abs_r > rmax)
+      {
+       rmax        = abs_r;
+       first_point = false;
+      }
+    }
+   angle += step;
+  }
+ while (angle <= angle_to);
+
+ if (rmax < 1e-10) rmax = 1.0;
+
+ // Add 10% padding to radius
+ rmax *= 1.1;
+
+ // Calculate scale: how many pixels per unit radius
+ int plot_size  = (width < height ? width : height) - 2 * padding;
+ float__t scale = plot_size / (2.0 * rmax);
+
+ // Second pass: draw the curve
+ angle                 = angle_from;
+ bool has_valid_points = false;
+
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     return false;
+    }
+
+   child->addfvar (params.svar, angle);
+   float__t r = child->evaluate_f (params.sexpr);
+
+   if (!isnan (r) && isChildResReal (child))
+    {
+     // Convert polar to Cartesian
+     float__t x_cart = r * Cos (angle);
+     float__t y_cart = r * Sin (angle);
+
+     // Convert to screen coordinates (centered, Y-axis inverted)
+     int x_screen = center_x + (int)(x_cart * scale);
+     int y_screen = center_y - (int)(y_cart * scale);
+
+     if (has_valid_points)
+      {
+       bmp->lineTo (x_screen, y_screen, 2, fgc);
+      }
+     else
+      {
+       bmp->moveTo (x_screen, y_screen);
+       has_valid_points = true;
+      }
+    }
+   else
+    {
+     has_valid_points = false;
+    }
+
+   angle += step;
+  }
+ while (angle <= angle_to);
+
+ // Store parameters for grid drawing
+ params.ymin  = -rmax;
+ params.ymax  = rmax;
+ params.xmin  = -rmax;
+ params.xmax  = rmax;
+ params.scale = scale;
+
+ return true;
+}
+
+// Draw polar grid and axes
+void calculator::PlotDrawAxesPolar (bmpdraw *bmp, PlotParams &params)
+{
+ int width           = params.width;
+ int height          = params.height;
+ int padding         = params.padding;
+ uint32_t grid_color = params.grid_color;
+ uint32_t axis_color = params.axis_color;
+ uint32_t text_color = params.text_color;
+
+ int center_x = width / 2;
+ int center_y = height / 2;
+
+ float__t rmax  = params.ymax; // Maximum radius in data units
+ float__t scale = params.scale;
+
+ // Draw radial grid (10 circles)
+ for (int i = 1; i <= 10; i++)
+  {
+   float__t r_data = rmax * i / 10.0;
+   int r_pixels    = (int)(r_data * scale);
+
+   // Draw circle
+   for (int angle_deg = 0; angle_deg < 360; angle_deg += 2)
+    {
+     float__t angle_rad = angle_deg * M_PI / 180.0;
+     int x              = center_x + (int)(r_pixels * Cos (angle_rad));
+     int y              = center_y - (int)(r_pixels * Sin (angle_rad));
+
+     if (x >= padding && x < width - padding && y >= padding && y < height - padding)
+      {
+       bmp->drawPixel (x, y, grid_color);
+      }
+    }
+
+   // Draw radius label (only for outermost circle)
+   if (i == 10)
+    {
+     char label[32];
+     d2scistr (label, (double)r_data);
+     bmp->drawString (center_x + r_pixels + 5, center_y - 40, label, text_color, 0, 1);
+    }
+  }
+
+ // Draw angular grid (every 30 degrees)
+ int max_r_pixels = (int)(rmax * scale);
+ for (int angle_deg = 0; angle_deg < 360; angle_deg += 30)
+  {
+   float__t angle_rad = angle_deg * M_PI / 180.0;
+
+   // Draw radial line
+   for (int r = 0; r <= max_r_pixels; r += 4)
+    {
+     int x = center_x + (int)(r * Cos (angle_rad));
+     int y = center_y - (int)(r * Sin (angle_rad));
+
+     if (x >= padding && x < width - padding && y >= padding && y < height - padding)
+      {
+       bmp->drawPixel (x, y, grid_color);
+      }
+    }
+
+   // Draw angle labels
+   int label_r = max_r_pixels + 15;
+   int label_x = center_x + (int)(label_r * Cos (angle_rad));
+   int label_y = center_y - (int)(label_r * Sin (angle_rad));
+
+   char angle_label[16];
+   sprintf (angle_label, "%d°", angle_deg);
+   bmp->drawString (label_x - 10, label_y - 5, angle_label, text_color, 0, 1);
+  }
+
+ // Draw main axes (0° and 90°)
+ bmp->drawLine (center_x - max_r_pixels, center_y, center_x + max_r_pixels, center_y, 1,
+                axis_color);
+ bmp->drawLine (center_x, center_y - max_r_pixels, center_x, center_y + max_r_pixels, 1,
+                axis_color);
+
+ // Draw title
+ char title[128];
+ snprintf (title, sizeof (title), "r=%s", params.sexpr);
+ title[sizeof (title) - 1] = '\0';
+ bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+
+ // Draw variable name
+ bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
 }
 
 // Plot Cartesian graph (specific part)
@@ -3912,7 +3810,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
  
   // 2. Create or load bitmap
  bmpdraw *bmp    = new bmpdraw ();
- bool is_overlay = ((fidx == pl_oplot) && fname[0]);
+ bool is_overlay = ((fidx == pl_oplot || fidx == pl_oplotpol) && fname[0]);
+ bool is_polar   = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
 
  if (is_overlay)
   {
@@ -3956,8 +3855,18 @@ bool calculator::Plot (const char *expr, v_func fidx)
     }
   }
 
- // 3. Draw plot (Cartesian coordinates)
- if (!PlotCartesian (bmp, params))
+ // 3. Draw plot (Cartesian or Polar coordinates)
+ bool plot_success;
+ if (is_polar)
+  {
+   plot_success = PlotPolar (bmp, params);
+  }
+ else
+  {
+   plot_success = PlotCartesian (bmp, params);
+  }
+
+ if (!plot_success)
   {
    delete bmp;
    delete params.child;
@@ -3970,20 +3879,34 @@ bool calculator::Plot (const char *expr, v_func fidx)
  // 4. Draw axes and grid (skip for overlay mode)
  if (!is_overlay)
   {
-   PlotDrawAxesCartesian (bmp, params);
+   if (is_polar)
+    {
+     PlotDrawAxesPolar (bmp, params);
+    }
+   else
+    {
+     PlotDrawAxesCartesian (bmp, params);
+    }
   }
 
- // 5. Save or display
- if ((fidx == pl_fplot) || (fidx == pl_oplot))
-  {
+// 5. Save or display
+ switch (fidx)
+ {
+  case pl_fplot:
+  case pl_oplot:
+  case pl_fplotpol:
+  case pl_oplotpol:
+   // Already handled above with is_overlay logic
    bmp->save (fname);
-  }
- else
-  {
+  break;
+  case pl_plot:
+  case pl_plotpol:
+   // Show in GUI
    if (ShowImageFn)
     {
      ShowImageFn ((void *)bmp);
     }
+  break;
   }
 
  // 6. Cleanup
@@ -4288,16 +4211,6 @@ t_operator calculator::sscan (symbol *sym)
  // skip whitespace befor '('
  while (isspace (*ipos & 0x7f)) ipos++;
 
- //{
- // char *cp = ipos;
- // while (*cp && ((*cp == ' ') || (*cp == '"') || (*cp == '\''))) cp++;
- // if (cp > ipos) //lead " or ' found
- //  {
- //   while (*cp && ((*cp != '"') && (*cp != '\''))) cp++;
- //   if ((*cp == '"') || (*cp == '\'')) cp++;
- //   ipos = cp;
- //  }
- //}
  while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
   {
    if (*ipos == ',' && parenthesis_count == 1)
@@ -4368,24 +4281,31 @@ t_operator calculator::sscan (symbol *sym)
    else 
    if (sym->tag == tsPLOT) // plot(fname, expr)
     {
-     if (((sym->fidx == pl_fplot) || (sym->fidx == pl_oplot)) &&
-         (parenthesis_count == 0 && comma_count == 4))
+     bool error_in_args = false;
+     switch (sym->fidx)
       {
-       v_stack[v_sp].tag = tvPLOT;
-      }
-     else 
-     if ((sym->fidx == pl_plot) && (parenthesis_count == 0 && comma_count == 3))
-      {
-       v_stack[v_sp].tag = tvPLOT;
-      }
-     else
-      {
-       if (parenthesis_count)
-        error ("unmatched parenthesis in plot expression");
-       else
-        error ("wrong number of arguments in plot expression");
+      case pl_fplot:
+      case pl_oplot:
+      case pl_fplotpol:
+      case pl_oplotpol:
+       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+      case pl_plot:
+      case pl_plotpol:
+       if (parenthesis_count == 0 && comma_count == 3) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+      default:
+       error ("Unknown plot function");
        return toERROR;
       }
+     if (error_in_args)
+       {
+        if (parenthesis_count) error ("unmatched parenthesis in plot expression");
+        else error ("wrong number of arguments in plot expression");
+        return toERROR;
+       }
     }
    else
    if (sym->tag == tsFOR) //for(expr, from, to, var)
@@ -9624,7 +9544,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 v_sp -= 1;
                 break;
                }
-
+              errtype = teMath;
               ((void (*) (value *, value *, int))sym->func) (&v_stack[v_sp - 2], &v_stack[v_sp - 1],
                                                              sym->fidx);
               v_sp -= 1;
@@ -9636,7 +9556,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-
+              errtype = teMath;
               ((void (*) (value *, value *, value *, int))sym->func) (
                   &v_stack[v_sp - 3], &v_stack[v_sp - 2], &v_stack[v_sp - 1], sym->fidx);
               v_sp -= 2;
@@ -9647,7 +9567,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               {
                const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-
+               errtype = teMath;
                v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
                v_stack[v_sp - 2].tag  = tvFLOAT;
                v_sp -= 1;
@@ -9707,7 +9627,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-
+              errtype = teMath;
               v_stack[v_sp - 2].fval = (*(float__t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
               v_stack[v_sp - 2].tag = tvFLOAT;
               v_sp -= 1;
@@ -9719,7 +9639,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-
+              errtype = teMath;
               v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
                   v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
               v_stack[v_sp - 3].tag = tvFLOAT;
@@ -9735,7 +9655,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag == tvPERCENT) v_stack[v_sp - 1].fval /= ((float__t)100.0);
-
+              errtype = teMath;
               v_stack[v_sp - 4].fval = (*(float__t (*) (float__t, float__t, float__t))sym->func) (
                   v_stack[v_sp - 3].get (), v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
               v_stack[v_sp - 4].tag = tvFLOAT;
@@ -9833,7 +9753,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
-
+              errtype = teMath;  
               bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
                   ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
               if (!res) return result_fval = qnan;
@@ -9970,7 +9890,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                                          MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
-              
+              errtype = teMath;
               float__t res = mxCalcFn (v_stack[v_sp - 2], (rtype)sym->fidx, v_stack[v_sp - 1].get());
               if (isnan (res) || mxerr[0])
                {
@@ -10052,6 +9972,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
               char fnamebuf[STRBUF];
               NormalizePath (filename, fnamebuf, STRBUF);
+              errtype = teMath;
               float__t res = StatFn (fnamebuf, msk, sfn, x);
               if (isnan (res) || mxerr[0])
                {
@@ -10184,7 +10105,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   delete child;
                   return result_fval = qnan;
                  }
-
+                errtype = child->errt(); 
                 v_stack[v_sp - n_args - 1].tag = tvFLOAT;
                 v_stack[v_sp - n_args - 1].fval  = child->get_re_res ();
                 v_stack[v_sp - n_args - 1].imval = child->get_im_res ();

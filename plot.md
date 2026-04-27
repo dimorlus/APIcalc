@@ -94,6 +94,7 @@ plotpol(5sin(5t), 0, 2*pi, t)
 ;; 3-petal rose 
 plotpol(sin(3*t), 0, pi, t)
 ```
+
 #### Spirals
 ```
 ;; Archimedean spiral 
@@ -102,6 +103,7 @@ plotpol(t, 0, 4*pi, t)
 ;; Logarithmic spiral 
 plotpol(exp(t/10), 0, 10*pi, t)
 ```
+
 #### Classic Curves
 ```
 ;; Cardioid: r = 1 + cos(θ) 
@@ -152,6 +154,7 @@ plotxy(sin(3t), cos(2t+1), 0, 2*pi, t)
 ;; 5:4 ratio 
 plotxy(sin(5t), sin(4t), 0, 2*pi, t)
 ```
+
 ### Cycloids
 ```
 ;; Cycloid (wheel rolling) 
@@ -163,6 +166,7 @@ plotxy(t-0.5sin(t), 1-0.5cos(t), 0, 4*pi, t)
 ;; Epicycloid 
 plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 15 pi, t)
 ```
+
 ### Other Parametric Curves
 ```
 ;; Parametric spiral 
@@ -236,6 +240,7 @@ plotlgx(20 log10(abs(1/(1+i2 pi f/1k))), 10, 100k, f)
 ;; RC filter magnitude 
 plotlgx(abs(1/(1+i2 pi f 50*10n)), 100, 1M, f)
 ```
+
 #### Semi-log Y (`plotlgy`)
 Best for:
 - Exponential growth/decay
@@ -281,6 +286,7 @@ plotlgx(arg(1/(1+i2 pi*f/1k))*180/pi, 10, 100k, f)
 ;; Magnitude 
 plotlgx(abs(i2 pi f 100u/(50+i2 pi f 100u)), 100, 100k, f)
 ```
+
 #### RLC Resonator
 ```
 ;; Parallel RLC 
@@ -456,18 +462,21 @@ plotsmith(-i50/tan(2 pi f/1G pi/2), 500M, 2G, f)
 ;; L=25nH, C=8pF, matching around 1GHz 
 plotsmith(i2 pi f 25n + 200/(1 + i2 pi f 200*8p), 500M, 2G, f)
 ```
+
 #### Pi-Filter
 ```
 ;; Input C, series L, output C 
 ;; C1=10pF, L=50nH, C2=10pF 
 plotsmith(i2 pi f 50n + 1/(i2 pi f 10p), 100M, 5G, f)
 ```
+
 ### Antenna Impedance
 ```
 ;; Simple antenna model: R + jX 
 ;; Radiation resistance + reactive component 
 plotsmith(55 + i2 pi f 10u + 1/(i2 pi f 100p), 1M, 30M, f)
 ```
+
 ### Comparing Before/After Matching
 ```
 ;; Original antenna impedance 
@@ -536,6 +545,7 @@ fplot("comparison.bmp", sin(x), 0, 2*pi, x)
 oplot("comparison.bmp", cos(x), 0, 2*pi, x) 
 oplot("comparison.bmp", sin(2x), 0, 2*pi, x)
 ```
+
 ### Complete Filter Analysis
 ```
 ;; RC low-pass filter: fc = 1/(2πRC) = 1kHz 
@@ -549,6 +559,7 @@ fplotlgx("lp_phase.bmp", arg(1/(1+i2 pi f 1k*160n))*180/pi, 10, 100k, f)
 ;; Group delay: τ = -dφ/dω 
 fplotlgx("lp_delay.bmp", 1k 160n/(1+(2 pi f 1k*160n)^2), 10, 100k, f)
 ```
+
 ### Complex Parametric Curves
 ```
 ;; Spirograph pattern 
@@ -556,7 +567,7 @@ plotxy((5+3)cos(t)-3cos((5/3+1)*t), (5+3)sin(t)-3sin((5/3+1)t), 0, 6*pi, t)
 
 ;; Hypotrochoid 
 plotxy((3-1)cos(t)+1cos((3-1)*t/1), (3-1)sin(t)-1sin((3-1)t/1), 0, 2*pi, t)
-
+```
 ---
 
 ## Tips and Best Practices

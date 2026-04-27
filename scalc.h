@@ -527,15 +527,34 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  vf_factorial, // Factorial function
 
- pl_plot, // plot function for plotting data
- pl_fplot, // fplot function for plotting to file
- pl_oplot, // oplot function for plotting data on an existing plot
- pl_plotpol,  // NEW: polar plot to screen
- pl_fplotpol, // NEW: polar plot to file
- pl_oplotpol, // NEW: polar plot overlay to file
- pl_xyplot,   // NEW: xy plot to screen
- pl_fxyplot,  // NEW: xy plot to file
- pl_oxyplot,  // NEW: xy plot overlay to file
+ // Cartesian coordinates
+ pl_plot,       // plot plot Cartesian to screen
+ pl_fplot,      // fplot plot Cartesian to file
+ pl_oplot,      // oplot plot Cartesian overlay to file
+
+ // Polar coordinates
+ pl_plotpol,    // plotpol polar plot to screen
+ pl_fplotpol,   // fplotpol polar plot to file
+ pl_oplotpol,   // oplotpol polar plot overlay to file
+
+ // Parametric (X-Y) plot
+ pl_xyplot,     // xyplot xy plot to screen
+ pl_fxyplot,    // fxyplot xy plot to file
+ pl_oxyplot,    // oxyplot xy plot overlay to file
+
+ // Logarithmic plots
+ pl_plotlgx, // log X axis, linear Y
+ pl_fplotlgx,
+ pl_oplotlgx,
+
+ pl_plotlgy, // linear X, log Y axis
+ pl_fplotlgy,
+ pl_oplotlgy,
+
+ pl_plotlgxy, // log both X and Y axes
+ pl_fplotlgxy,
+ pl_oplotlgxy,
+
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
@@ -763,14 +782,17 @@ class calculator // calculator represents the main class for the expression calc
  struct PlotParams
    {
     char *sexpr;         // Expression of the function
+    char *sexpr_y;       // Expression of the function for Y
     char *svar;          // Variable
     float__t vfrom;      // Start of the range
     float__t vto;        // End of the range
     float__t ymin;       // Minimum Y
     float__t ymax;       // Maximum Y
-    float__t xmin;       // NEW: for polar plots
-    float__t xmax;       // NEW: for polar plots
-    float__t scale;      // NEW: for polar plots
+    float__t xmin;       // for polar plots
+    float__t xmax;       // for polar plots
+    float__t scale;      // for polar plots
+    bool log_x;          // logarithmic X axis
+    bool log_y;          // logarithmic Y axis
     int width;           // Image width
     int height;          // Image height
     int padding;         // Padding
@@ -931,12 +953,21 @@ class calculator // calculator represents the main class for the expression calc
  bool CheckChildRes (calculator *child);
 
  bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
+
  bool PlotCartesian (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params);
+
  bool PlotPolar (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesPolar (bmpdraw *bmp, PlotParams &params);
+ 
+ bool PlotParametric (bmpdraw *bmp, PlotParams &params);
+ void PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params);
+ 
+ bool PlotLogarithmic (bmpdraw *bmp, PlotParams &params);
+ void PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params);
 
  bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
+
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the

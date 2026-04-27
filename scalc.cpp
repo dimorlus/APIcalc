@@ -258,12 +258,32 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
+
  add (tsPLOT, pl_plot, "plot", nullptr);
  add (tsPLOT, pl_fplot, "fplot", nullptr);
  add (tsPLOT, pl_oplot, "oplot", nullptr);
+
  add (tsPLOT, pl_plotpol, "plotpol", nullptr);
  add (tsPLOT, pl_fplotpol, "fplotpol", nullptr);
  add (tsPLOT, pl_oplotpol, "oplotpol", nullptr);
+
+ add (tsPLOT, pl_xyplot, "plotxy", nullptr);
+ add (tsPLOT, pl_fxyplot, "fplotxy", nullptr);
+ add (tsPLOT, pl_oxyplot, "oplotxy", nullptr);
+
+ // Logarithmic plots
+ add (tsPLOT, pl_plotlgx, "plotlgx", nullptr);
+ add (tsPLOT, pl_fplotlgx, "fplotlgx", nullptr);
+ add (tsPLOT, pl_oplotlgx, "oplotlgx", nullptr);
+
+ add (tsPLOT, pl_plotlgy, "plotlgy", nullptr);
+ add (tsPLOT, pl_fplotlgy, "fplotlgy", nullptr);
+ add (tsPLOT, pl_oplotlgy, "oplotlgy", nullptr);
+
+ add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr);
+ add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr);
+ add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr);
+
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -3251,8 +3271,6 @@ bool calculator::isChildResReal (calculator *child)
  return true;
 }
 
-
-
 // Prepare data for plotting (common part)
 bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params)
 {
@@ -3263,25 +3281,56 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   }
 
  char sexpr[STRBUF];
+ char sexpr_y[STRBUF];
  char sfrom[MAXOP];
  char sto[MAXOP];
  char svar[STRBUF];
 
  bool split_ok = false;
+ 
+ // Determine which split pattern to use
  switch (fidx)
  {
+  case pl_plot:
+  case pl_plotpol:
+  case pl_plotlgx:
+  case pl_plotlgy:
+  case pl_plotlgxy:
+   // expr, from, to, var
+   if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
+   split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+   break;
+
+  case pl_xyplot:
+   // x_expr, y_expr, from, to, var
+   if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
+   split_ok = Split (expr, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
+                     nullptr, 0);
+  break;
+
   case pl_fplot:
   case pl_oplot:
   case pl_fplotpol:
   case pl_oplotpol:
-   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+  case pl_fplotlgx:
+  case pl_oplotlgx:
+  case pl_fplotlgy:
+  case pl_oplotlgy:
+  case pl_fplotlgxy:
+  case pl_oplotlgxy:
+   // fname, expr, from, to, var
+   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, 
+                     sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
   break;
-  case pl_plot:
-  case pl_plotpol:
-   if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting
-   split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+
+  case pl_fxyplot:
+  case pl_oxyplot:
+   // fname, x_expr, y_expr, from, to, var
+   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP,
+                     svar, STRBUF, nullptr, 0);
   break;
-   default:
+
+  default:
    errorf (pos, "Unknown plot function");
    return false;
   }
@@ -3300,12 +3349,21 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    return false;
   }
 
+// Process filename for file-based functions
  switch (fidx)
  {
   case pl_fplot:
   case pl_oplot:
   case pl_fplotpol:
   case pl_oplotpol:
+  case pl_fxyplot:     
+  case pl_oxyplot: 
+  case pl_fplotlgx:
+  case pl_oplotlgx:
+  case pl_fplotlgy:
+  case pl_oplotlgy:
+  case pl_fplotlgxy:
+  case pl_oplotlgxy:
    child->setFileDlgFn (FileDlgFn);
    child->evaluate_f (fname);
    if (child->err[0])
@@ -3327,6 +3385,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   break;
   }
 
+ // Evaluate from/to parameters
  float__t vfrom = child->evaluate_f (sfrom);
  if (isnan (vfrom) || child->err[0])
   {
@@ -3352,6 +3411,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    vto          = tmp;
   }
 
+ // Test evaluate first expression
  child->addfvar (svar, vfrom);
  float__t fvx = child->evaluate_f (sexpr);
 
@@ -3367,8 +3427,27 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   }
  else fvx = 0;
 
+ // For parametric plots, test second expression
+ if (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
+  {
+   float__t fvy = child->evaluate_f (sexpr_y);
+   if (!(isnan (fvy) && child->errt () == teMath))
+    {
+     if (isnan (fvy) || child->err[0] || !CheckChildRes (child))
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
+    }
+   else fvx = 0;
+  }
+
  // Fill in the parameters
  params.sexpr = strdup (sexpr);
+ params.sexpr_y = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot) 
+                  ? strdup (sexpr_y) : nullptr;
  params.svar  = strdup (svar);
  params.vfrom = vfrom;
  params.vto   = vto;
@@ -3388,6 +3467,12 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  params.grid_color = 0xC0C0C0;
  params.axis_color = 0x808080;
  params.text_color = ~params.bgc;
+
+  // Set logarithmic flags
+ params.log_x = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx
+                 || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+ params.log_y = (fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy
+                 || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
 
  params.child = child;
 
@@ -3791,6 +3876,696 @@ void calculator::PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params)
  bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
 }
 
+bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
+{
+ calculator *child = params.child;
+ float__t t_from   = params.vfrom;
+ float__t t_to     = params.vto;
+
+ int width    = params.width;
+ int height   = params.height;
+ int padding  = params.padding;
+ uint32_t fgc = params.fgc;
+
+ float__t step = (t_to - t_from) / ((width - 2 * padding) * 2);
+
+ float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+ bool first_point        = true;
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ // First pass: find bounding box
+ float__t t = t_from;
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+
+   child->addfvar (params.svar, t);
+
+   float__t x = child->evaluate_f (params.sexpr);
+   if (!(isnan (x) && child->errt () == teMath))
+    {
+     if (isnan (x) || child->err[0] || !CheckChildRes (child))
+      {
+       t += step;
+       continue;
+      }
+    }
+   else
+    x = 0;
+
+   float__t y = child->evaluate_f (params.sexpr_y);
+   if (!(isnan (y) && child->errt () == teMath))
+    {
+     if (isnan (y) || child->err[0] || !CheckChildRes (child))
+      {
+       t += step;
+       continue;
+      }
+    }
+   else
+    y = 0;
+
+   if (!isChildResReal (child))
+    {
+     t += step;
+     continue;
+    }
+
+   if (first_point)
+    {
+     xmin = xmax = x;
+     ymin = ymax = y;
+     first_point = false;
+    }
+   else
+    {
+     if (x < xmin) xmin = x;
+     if (x > xmax) xmax = x;
+     if (y < ymin) ymin = y;
+     if (y > ymax) ymax = y;
+    }
+
+   t += step;
+  }
+ while (t <= t_to);
+
+ // Add padding
+ if (xmin == xmax)
+  {
+   xmin -= 1.0;
+   xmax += 1.0;
+  }
+ if (ymin == ymax)
+  {
+   ymin -= 1.0;
+   ymax += 1.0;
+  }
+
+ float__t x_pad = (xmax - xmin) * 0.1;
+ float__t y_pad = (ymax - ymin) * 0.1;
+ xmin -= x_pad;
+ xmax += x_pad;
+ ymin -= y_pad;
+ ymax += y_pad;
+
+ // Calculate UNIFORM scale (like in polar plots)
+ float__t x_range = xmax - xmin;
+ float__t y_range = ymax - ymin;
+
+ int plot_width  = width - 2 * padding;
+ int plot_height = height - 2 * padding;
+
+ float__t scale_x = plot_width / x_range;
+ float__t scale_y = plot_height / y_range;
+
+ // Use smaller scale to fit both dimensions
+ float__t scale = (scale_x < scale_y) ? scale_x : scale_y;
+
+ // Center the plot
+ int center_x = width / 2;
+ int center_y = height / 2;
+
+ float__t x_center = (xmin + xmax) / 2.0;
+ float__t y_center = (ymin + ymax) / 2.0;
+
+ // Second pass: draw the curve
+ t                     = t_from;
+ bool has_valid_points = false;
+
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+
+   child->addfvar (params.svar, t);
+
+   float__t x   = child->evaluate_f (params.sexpr);
+   bool x_valid = true;
+   if (isnan (x) && child->errt () == teMath)
+    x = 0;
+   else if (isnan (x) || !isChildResReal (child))
+    x_valid = false;
+
+   float__t y   = child->evaluate_f (params.sexpr_y);
+   bool y_valid = true;
+   if (isnan (y) && child->errt () == teMath)
+    y = 0;
+   else if (isnan (y) || !isChildResReal (child))
+    y_valid = false;
+
+   if (x_valid && y_valid)
+    {
+     // Use uniform scale and center
+     int x_screen = center_x + (int)((x - x_center) * scale);
+     int y_screen = center_y - (int)((y - y_center) * scale);
+
+     if (has_valid_points)
+      {
+       bmp->lineTo (x_screen, y_screen, 2, fgc);
+      }
+     else
+      {
+       bmp->moveTo (x_screen, y_screen);
+       has_valid_points = true;
+      }
+    }
+   else
+    {
+     has_valid_points = false;
+    }
+
+   t += step;
+  }
+ while (t <= t_to);
+
+ // Store parameters for axis drawing
+ params.xmin  = xmin;
+ params.xmax  = xmax;
+ params.ymin  = ymin;
+ params.ymax  = ymax;
+ params.scale = scale;
+
+ return true;
+}
+
+void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
+{
+ int width           = params.width;
+ int height          = params.height;
+ int padding         = params.padding;
+ float__t ymin       = params.ymin;
+ float__t ymax       = params.ymax;
+ float__t xmin       = params.xmin;
+ float__t xmax       = params.xmax;
+ uint32_t grid_color = params.grid_color;
+ uint32_t axis_color = params.axis_color;
+ uint32_t text_color = params.text_color;
+
+ float__t x_range = xmax - xmin;
+ float__t y_range = ymax - ymin;
+
+ int plot_width       = width - 2 * padding;
+ int plot_height      = height - 2 * padding;
+ int grid_step_pixels = (plot_width > plot_height ? plot_width : plot_height) / 10;
+
+ int center_x = width / 2;
+ int center_y = height / 2;
+
+ float__t x_center = (xmin + xmax) / 2.0;
+ float__t y_center = (ymin + ymax) / 2.0;
+ float__t scale    = params.scale;
+
+ // Calculate axis positions
+ int x_axis_pixel = center_y - (int)((0.0 - y_center) * scale);
+ int y_axis_pixel = center_x + (int)((0.0 - x_center) * scale);
+
+ // Horizontal grid lines
+ for (int offset = 0; offset <= plot_height / 2; offset += grid_step_pixels)
+  {
+   int y_up   = center_y - offset;
+   int y_down = center_y + offset;
+
+   if (y_up >= padding && y_up < height - padding)
+    {
+     for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_up, grid_color);
+    }
+
+   if (offset > 0 && y_down >= padding && y_down < height - padding)
+    {
+     for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_down, grid_color);
+    }
+  }
+
+ // Vertical grid lines
+ for (int offset = 0; offset <= plot_width / 2; offset += grid_step_pixels)
+  {
+   int x_left  = center_x - offset;
+   int x_right = center_x + offset;
+
+   if (x_left >= padding && x_left < width - padding)
+    {
+     for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_left, y, grid_color);
+    }
+
+   if (offset > 0 && x_right >= padding && x_right < width - padding)
+    {
+     for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_right, y, grid_color);
+    }
+  }
+
+ // Axes
+ if (x_axis_pixel >= padding && x_axis_pixel < height - padding)
+  {
+   bmp->drawLine (padding, x_axis_pixel, width - padding, x_axis_pixel, 1, axis_color);
+  }
+ if (y_axis_pixel >= padding && y_axis_pixel < width - padding)
+  {
+   bmp->drawLine (y_axis_pixel, padding, y_axis_pixel, height - padding, 1, axis_color);
+  }
+
+ // Axis labels
+ char label[64];
+
+ d2scistr (label, (double)xmin);
+ bmp->drawString (padding - 10, height - padding + 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)xmax);
+ bmp->drawString (width - padding - 30, height - padding + 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)ymin);
+ bmp->drawString (5, height - padding - 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)ymax);
+ bmp->drawString (5, padding + 5, label, text_color, 0, 1);
+
+ // Draw parameter name
+ bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
+
+ // Draw titles for both functions (on two lines or shortened)
+ char title_x[128];
+ char title_y[128];
+
+ // Shorten expressions if too long
+ int max_len = 30;
+ if (strlen (params.sexpr) > max_len)
+  snprintf (title_x, sizeof (title_x), "x=%.27s...", params.sexpr);
+ else
+  snprintf (title_x, sizeof (title_x), "x=%s", params.sexpr);
+
+ if (strlen (params.sexpr_y) > max_len)
+  snprintf (title_y, sizeof (title_y), "y=%.27s...", params.sexpr_y);
+ else
+  snprintf (title_y, sizeof (title_y), "y=%s", params.sexpr_y);
+
+ title_x[sizeof (title_x) - 1] = '\0';
+ title_y[sizeof (title_y) - 1] = '\0';
+
+ // Draw on two lines
+ bmp->drawString (5, 5, title_x, text_color, 0, 1);
+ bmp->drawString (5, 17, title_y, text_color, 0, 1);
+}
+
+
+// PlotLogarithmic:
+bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
+{
+ calculator *child = params.child;
+ float__t vfrom    = params.vfrom;
+ float__t vto      = params.vto;
+
+ int width    = params.width;
+ int height   = params.height;
+ int padding  = params.padding;
+ uint32_t fgc = params.fgc;
+
+ bool log_x = params.log_x;
+ bool log_y = params.log_y;
+
+ // Calculate step
+ float__t step = (vto - vfrom) / ((width - 2 * padding) * 2);
+
+ float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+ bool first_point        = true;
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ // First pass: find min/max, skipping invalid values
+ float__t x = vfrom;
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+
+   child->addfvar (params.svar, x);
+   float__t y = child->evaluate_f (params.sexpr);
+
+   // Skip NaN and complex results
+   if (!(isnan (y) && child->errt () == teMath))
+    {
+     if (isnan (y) || !isChildResReal (child))
+      {
+       x += step;
+       continue;
+      }
+    }
+   else
+    y = 0;
+
+   // Skip invalid values for logarithmic axes
+   if ((log_x && x <= 0) || (log_y && y <= 0))
+    {
+     x += step;
+     continue;
+    }
+
+   if (first_point)
+    {
+     xmin = xmax = x;
+     ymin = ymax = y;
+     first_point = false;
+    }
+   else
+    {
+     if (x < xmin) xmin = x;
+     if (x > xmax) xmax = x;
+     if (y < ymin) ymin = y;
+     if (y > ymax) ymax = y;
+    }
+
+   x += step;
+  }
+ while (x <= vto);
+
+ if (first_point)
+  {
+   errorf (pos, "No valid points to plot");
+   return false;
+  }
+
+ // Add padding (in linear or log space)
+ if (log_x)
+  {
+   float__t log_range = log10 (xmax) - log10 (xmin);
+   float__t pad       = log_range * 0.1;
+   xmin               = pow (10.0, log10 (xmin) - pad);
+   xmax               = pow (10.0, log10 (xmax) + pad);
+  }
+ else
+  {
+   if (xmin == xmax)
+    {
+     xmin -= 1.0;
+     xmax += 1.0;
+    }
+   else
+    {
+     float__t x_pad = (xmax - xmin) * 0.1;
+     xmin -= x_pad;
+     xmax += x_pad;
+    }
+   // Include zero in range for linear axis
+   if (xmin > 0.0) xmin = 0.0;
+   if (xmax < 0.0) xmax = 0.0;
+  }
+
+ if (log_y)
+  {
+   float__t log_range = log10 (ymax) - log10 (ymin);
+   float__t pad       = log_range * 0.1;
+   ymin               = pow (10.0, log10 (ymin) - pad);
+   ymax               = pow (10.0, log10 (ymax) + pad);
+  }
+ else
+  {
+   if (ymin == ymax)
+    {
+     ymin -= 1.0;
+     ymax += 1.0;
+    }
+   else
+    {
+     float__t y_pad = (ymax - ymin) * 0.1;
+     ymin -= y_pad;
+     ymax += y_pad;
+    }
+   // Include zero in range for linear axis
+   if (ymin > 0.0) ymin = 0.0;
+   if (ymax < 0.0) ymax = 0.0;
+  }
+
+ // Second pass: draw the curve
+ x                     = vfrom;
+ bool has_valid_points = false;
+
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+
+   child->addfvar (params.svar, x);
+   float__t y = child->evaluate_f (params.sexpr);
+
+   bool valid = true;
+   if (isnan (y) && child->errt () == teMath)
+    y = 0;
+   else if (isnan (y) || !isChildResReal (child))
+    valid = false;
+
+   if ((log_x && x <= 0) || (log_y && y <= 0)) valid = false;
+
+   if (valid)
+    {
+     int x_screen, y_screen;
+
+     if (log_x)
+      {
+       float__t log_x_norm = (log10 (x) - log10 (xmin)) / (log10 (xmax) - log10 (xmin));
+       x_screen            = padding + (int)(log_x_norm * (width - 2 * padding));
+      }
+     else
+      {
+       x_screen = padding + (int)(((x - xmin) / (xmax - xmin)) * (width - 2 * padding));
+      }
+
+     if (log_y)
+      {
+       float__t log_y_norm = (log10 (y) - log10 (ymin)) / (log10 (ymax) - log10 (ymin));
+       y_screen            = height - padding - (int)(log_y_norm * (height - 2 * padding));
+      }
+     else
+      {
+       y_screen = height - padding - (int)(((y - ymin) / (ymax - ymin)) * (height - 2 * padding));
+      }
+
+     if (has_valid_points)
+      {
+       bmp->lineTo (x_screen, y_screen, 2, fgc);
+      }
+     else
+      {
+       bmp->moveTo (x_screen, y_screen);
+       has_valid_points = true;
+      }
+    }
+   else
+    {
+     has_valid_points = false;
+    }
+
+   x += step;
+  }
+ while (x <= vto);
+
+ // Store parameters for axis drawing
+ params.xmin = xmin;
+ params.xmax = xmax;
+ params.ymin = ymin;
+ params.ymax = ymax;
+
+ return true;
+}
+
+
+// PlotDrawAxesLog:
+void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
+{
+ int width           = params.width;
+ int height          = params.height;
+ int padding         = params.padding;
+ float__t ymin       = params.ymin;
+ float__t ymax       = params.ymax;
+ float__t xmin       = params.xmin;
+ float__t xmax       = params.xmax;
+ bool log_x          = params.log_x;
+ bool log_y          = params.log_y;
+ uint32_t grid_color = params.grid_color;
+ uint32_t axis_color = params.axis_color;
+ uint32_t text_color = params.text_color;
+
+ int plot_width  = width - 2 * padding;
+ int plot_height = height - 2 * padding;
+
+ // Helper lambda to convert value to screen coordinate
+ auto x_to_screen = [&] (float__t x) -> int {
+  if (log_x)
+   {
+    float__t log_norm = (log10 (x) - log10 (xmin)) / (log10 (xmax) - log10 (xmin));
+    return padding + (int)(log_norm * plot_width);
+   }
+  else
+   {
+    return padding + (int)(((x - xmin) / (xmax - xmin)) * plot_width);
+   }
+ };
+
+ auto y_to_screen = [&] (float__t y) -> int {
+  if (log_y)
+   {
+    float__t log_norm = (log10 (y) - log10 (ymin)) / (log10 (ymax) - log10 (ymin));
+    return height - padding - (int)(log_norm * plot_height);
+   }
+  else
+   {
+    return height - padding - (int)(((y - ymin) / (ymax - ymin)) * plot_height);
+   }
+ };
+
+ // Draw Y axis grid
+ if (log_y)
+  {
+   // Logarithmic Y grid
+   int decade_min = (int)floor (log10 (ymin));
+   int decade_max = (int)ceil (log10 (ymax));
+
+   for (int decade = decade_min; decade <= decade_max; decade++)
+    {
+     float__t base = pow (10.0, decade);
+
+     // Major grid line at each decade (1, 10, 100, ...)
+     if (base >= ymin && base <= ymax)
+      {
+       int y_screen = y_to_screen (base);
+       if (y_screen >= padding && y_screen < height - padding)
+        {
+         for (int x = padding; x < width - padding; x++) bmp->drawPixel (x, y_screen, axis_color);
+        }
+      }
+
+     // Minor grid lines (2, 3, 4, 5, 6, 7, 8, 9)
+     for (int minor = 2; minor <= 9; minor++)
+      {
+       float__t value = base * minor;
+       if (value >= ymin && value <= ymax)
+        {
+         int y_screen = y_to_screen (value);
+         if (y_screen >= padding && y_screen < height - padding)
+          {
+           for (int x = padding; x < width - padding; x += 4)
+            bmp->drawPixel (x, y_screen, grid_color);
+          }
+        }
+      }
+    }
+  }
+ else
+  {
+   // Linear Y grid (reuse Cartesian logic)
+   int grid_step_pixels = plot_height / 10;
+   int y_axis_pixel     = y_to_screen (0.0);
+
+   for (int offset = 0; offset <= plot_height; offset += grid_step_pixels)
+    {
+     int y_up   = y_axis_pixel - offset;
+     int y_down = y_axis_pixel + offset;
+
+     if (y_up >= padding && y_up < height - padding)
+      {
+       for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_up, grid_color);
+      }
+
+     if (offset > 0 && y_down >= padding && y_down < height - padding)
+      {
+       for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_down, grid_color);
+      }
+    }
+  }
+
+ // Draw X axis grid
+ if (log_x)
+  {
+   // Logarithmic X grid
+   int decade_min = (int)floor (log10 (xmin));
+   int decade_max = (int)ceil (log10 (xmax));
+
+   for (int decade = decade_min; decade <= decade_max; decade++)
+    {
+     float__t base = pow (10.0, decade);
+
+     // Major grid line at each decade
+     if (base >= xmin && base <= xmax)
+      {
+       int x_screen = x_to_screen (base);
+       if (x_screen >= padding && x_screen < width - padding)
+        {
+         for (int y = padding; y < height - padding; y++) bmp->drawPixel (x_screen, y, axis_color);
+        }
+      }
+
+     // Minor grid lines
+     for (int minor = 2; minor <= 9; minor++)
+      {
+       float__t value = base * minor;
+       if (value >= xmin && value <= xmax)
+        {
+         int x_screen = x_to_screen (value);
+         if (x_screen >= padding && x_screen < width - padding)
+          {
+           for (int y = padding; y < height - padding; y += 4)
+            bmp->drawPixel (x_screen, y, grid_color);
+          }
+        }
+      }
+    }
+  }
+ else
+  {
+   // Linear X grid
+   int grid_step_pixels = plot_width / 10;
+   int x_axis_pixel     = x_to_screen (0.0);
+
+   for (int offset = 0; offset <= plot_width; offset += grid_step_pixels)
+    {
+     int x_left  = x_axis_pixel - offset;
+     int x_right = x_axis_pixel + offset;
+
+     if (x_left >= padding && x_left < width - padding)
+      {
+       for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_left, y, grid_color);
+      }
+
+     if (offset > 0 && x_right >= padding && x_right < width - padding)
+      {
+       for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_right, y, grid_color);
+      }
+    }
+  }
+
+ // Draw main axes
+ int x_axis_pixel = y_to_screen (0.0);
+ int y_axis_pixel = x_to_screen (0.0);
+
+ if (x_axis_pixel >= padding && x_axis_pixel < height - padding)
+  {
+   bmp->drawLine (padding, x_axis_pixel, width - padding, x_axis_pixel, 1, axis_color);
+  }
+ if (y_axis_pixel >= padding && y_axis_pixel < width - padding)
+  {
+   bmp->drawLine (y_axis_pixel, padding, y_axis_pixel, height - padding, 1, axis_color);
+  }
+
+ // Axis labels
+ char label[64];
+
+ d2scistr (label, (double)xmin);
+ bmp->drawString (padding - 10, height - padding + 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)xmax);
+ bmp->drawString (width - padding - 30, height - padding + 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)ymin);
+ bmp->drawString (5, height - padding - 5, label, text_color, 0, 1);
+
+ d2scistr (label, (double)ymax);
+ bmp->drawString (5, padding + 5, label, text_color, 0, 1);
+
+ // Variable name
+ bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
+
+ // Title
+ char title[128];
+ snprintf (title, sizeof (title), "y=%s", params.sexpr);
+ title[sizeof (title) - 1] = '\0';
+ bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+}
+
 // Main plotting function
 bool calculator::Plot (const char *expr, v_func fidx)
 {
@@ -3810,8 +4585,12 @@ bool calculator::Plot (const char *expr, v_func fidx)
  
   // 2. Create or load bitmap
  bmpdraw *bmp    = new bmpdraw ();
- bool is_overlay = ((fidx == pl_oplot || fidx == pl_oplotpol) && fname[0]);
+ bool is_overlay = ((fidx == pl_oplot || fidx == pl_oplotpol || fidx == pl_oxyplot) && fname[0]);
  bool is_polar   = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
+ bool is_parametric = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot);
+ bool is_logarithmic = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx ||
+                        fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy ||
+                        fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
 
  if (is_overlay)
   {
@@ -3834,6 +4613,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
        delete bmp;
        if (params.child) delete params.child;
        if (params.sexpr) free (params.sexpr);
+       if (params.sexpr_y) free (params.sexpr_y);
        if (params.svar) free (params.svar);
        result_fval = qnan;
        return false;
@@ -3849,6 +4629,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
      delete bmp;
      if (params.child) delete params.child;
      if (params.sexpr) free (params.sexpr);
+     if (params.sexpr_y) free (params.sexpr_y);
      if (params.svar) free (params.svar);
      result_fval = qnan;
      return false;
@@ -3857,6 +4638,16 @@ bool calculator::Plot (const char *expr, v_func fidx)
 
  // 3. Draw plot (Cartesian or Polar coordinates)
  bool plot_success;
+ if (is_logarithmic)
+  {
+   plot_success = PlotLogarithmic (bmp, params);
+  }
+ else
+ if (is_parametric)
+  {
+   plot_success = PlotParametric (bmp, params);
+  }
+ else
  if (is_polar)
   {
    plot_success = PlotPolar (bmp, params);
@@ -3871,6 +4662,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
    delete bmp;
    delete params.child;
    free (params.sexpr);
+   if (params.sexpr_y) free (params.sexpr_y);
    free (params.svar);
    result_fval = qnan;
    return false;
@@ -3879,6 +4671,16 @@ bool calculator::Plot (const char *expr, v_func fidx)
  // 4. Draw axes and grid (skip for overlay mode)
  if (!is_overlay)
   {
+   if (is_logarithmic)
+    {
+     PlotDrawAxesLog (bmp, params);
+    }
+   else
+   if (is_parametric)
+    {
+     PlotDrawAxesParametric (bmp, params);
+    }
+   else 
    if (is_polar)
     {
      PlotDrawAxesPolar (bmp, params);
@@ -3896,11 +4698,23 @@ bool calculator::Plot (const char *expr, v_func fidx)
   case pl_oplot:
   case pl_fplotpol:
   case pl_oplotpol:
+  case pl_fxyplot:
+  case pl_oxyplot:
+  case pl_fplotlgx:
+  case pl_oplotlgx:
+  case pl_fplotlgy:
+  case pl_oplotlgy:
+  case pl_fplotlgxy:
+  case pl_oplotlgxy:
    // Already handled above with is_overlay logic
    bmp->save (fname);
   break;
   case pl_plot:
   case pl_plotpol:
+  case pl_xyplot:
+  case pl_plotlgx:
+  case pl_plotlgy:
+  case pl_plotlgxy:
    // Show in GUI
    if (ShowImageFn)
     {
@@ -3914,6 +4728,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
  fflags |= params.child->isfflags ();
  delete params.child;
  free (params.sexpr);
+ if (params.sexpr_y) free (params.sexpr_y);
  free (params.svar);
 
  return true;
@@ -4284,16 +5099,34 @@ t_operator calculator::sscan (symbol *sym)
      bool error_in_args = false;
      switch (sym->fidx)
       {
-      case pl_fplot:
-      case pl_oplot:
-      case pl_fplotpol:
-      case pl_oplotpol:
+      case pl_fplot:    // fplot(file, expr, from, to, var)
+      case pl_oplot:    // oplot(file, expr, from, to, var)
+      case pl_fplotpol: // fplotpol(file, expr, from, to, var)
+      case pl_oplotpol: // oplotpol(file, expr, from, to, var)
+      case pl_fplotlgx:
+      case pl_oplotlgx:
+      case pl_fplotlgy:
+      case pl_oplotlgy:
+      case pl_fplotlgxy:
+      case pl_oplotlgxy:
        if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
-      case pl_plot:
-      case pl_plotpol:
+      case pl_plot:    // plot(expr, from, to, var)
+      case pl_plotpol: // plotpol(expr, from, to, var)
+      case pl_plotlgx:
+      case pl_plotlgy:
+      case pl_plotlgxy:
        if (parenthesis_count == 0 && comma_count == 3) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+      case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+      case pl_fxyplot: // fxyplot(file, xexpr, yexpr, from, to, var)
+      case pl_oxyplot: // oxyplot(file, xexpr, yexpr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
       default:

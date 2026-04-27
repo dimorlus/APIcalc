@@ -3722,7 +3722,7 @@ void calculator::PlotDrawAxesPolar (bmpdraw *bmp, PlotParams &params)
  char title[128];
  snprintf (title, sizeof (title), "r=%s", params.sexpr);
  title[sizeof (title) - 1] = '\0';
- bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+ bmp->drawString (5, 5, title, text_color, 0, 2);
 
  // Draw variable name
  bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
@@ -3921,7 +3921,7 @@ void calculator::PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params)
  char title[128];
  snprintf (title, sizeof (title), "y=%s", params.sexpr);
  title[sizeof (title) - 1] = '\0';
- bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+ bmp->drawString (5, 5, title, text_color, 0, 2);
 }
 
 bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
@@ -4411,6 +4411,7 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 }
 
 // PlotDrawAxesLog:
+// Replace PlotDrawAxesLog function - remove lambda functions
 void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
 {
  int width           = params.width;
@@ -4429,46 +4430,24 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
  int plot_width  = width - 2 * padding;
  int plot_height = height - 2 * padding;
 
- // Helper lambda to convert value to screen coordinate
- auto x_to_screen = [&] (float__t x) -> int {
-  if (log_x)
-   {
-    float__t log_norm = (log10 (x) - log10 (xmin)) / (log10 (xmax) - log10 (xmin));
-    return padding + (int)(log_norm * plot_width);
-   }
-  else
-   {
-    return padding + (int)(((x - xmin) / (xmax - xmin)) * plot_width);
-   }
- };
-
- auto y_to_screen = [&] (float__t y) -> int {
-  if (log_y)
-   {
-    float__t log_norm = (log10 (y) - log10 (ymin)) / (log10 (ymax) - log10 (ymin));
-    return height - padding - (int)(log_norm * plot_height);
-   }
-  else
-   {
-    return height - padding - (int)(((y - ymin) / (ymax - ymin)) * plot_height);
-   }
- };
-
  // Draw Y axis grid
  if (log_y)
   {
    // Logarithmic Y grid
-   int decade_min = (int)floor (log10 (ymin));
-   int decade_max = (int)ceil (log10 (ymax));
+   int decade_min = (int)Floor (Lg (ymin));
+   int decade_max = (int)Ceil (Lg (ymax));
 
    for (int decade = decade_min; decade <= decade_max; decade++)
     {
-     float__t base = pow (10.0, decade);
+     float__t base = Pow (10.0, decade);
 
      // Major grid line at each decade (1, 10, 100, ...)
      if (base >= ymin && base <= ymax)
       {
-       int y_screen = y_to_screen (base);
+       // Convert Y to screen coordinate (logarithmic)
+       float__t log_norm = (Lg (base) - Lg (ymin)) / (Lg (ymax) - Lg (ymin));
+       int y_screen      = height - padding - (int)(log_norm * plot_height);
+
        if (y_screen >= padding && y_screen < height - padding)
         {
          for (int x = padding; x < width - padding; x++) bmp->drawPixel (x, y_screen, axis_color);
@@ -4481,7 +4460,10 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
        float__t value = base * minor;
        if (value >= ymin && value <= ymax)
         {
-         int y_screen = y_to_screen (value);
+         // Convert Y to screen coordinate (logarithmic)
+         float__t log_norm = (Lg (value) - Lg (ymin)) / (Lg (ymax) - Lg (ymin));
+         int y_screen      = height - padding - (int)(log_norm * plot_height);
+
          if (y_screen >= padding && y_screen < height - padding)
           {
            for (int x = padding; x < width - padding; x += 4)
@@ -4493,9 +4475,11 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
   }
  else
   {
-   // Linear Y grid (reuse Cartesian logic)
+   // Linear Y grid
    int grid_step_pixels = plot_height / 10;
-   int y_axis_pixel     = y_to_screen (0.0);
+
+   // Convert Y=0 to screen coordinate (linear)
+   int y_axis_pixel = height - padding - (int)(((0.0 - ymin) / (ymax - ymin)) * plot_height);
 
    for (int offset = 0; offset <= plot_height; offset += grid_step_pixels)
     {
@@ -4518,17 +4502,20 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
  if (log_x)
   {
    // Logarithmic X grid
-   int decade_min = (int)floor (log10 (xmin));
-   int decade_max = (int)ceil (log10 (xmax));
+   int decade_min = (int)Floor (Lg (xmin));
+   int decade_max = (int)Ceil (Lg (xmax));
 
    for (int decade = decade_min; decade <= decade_max; decade++)
     {
-     float__t base = pow (10.0, decade);
+     float__t base = Pow (10.0, decade);
 
      // Major grid line at each decade
      if (base >= xmin && base <= xmax)
       {
-       int x_screen = x_to_screen (base);
+       // Convert X to screen coordinate (logarithmic)
+       float__t log_norm = (Lg (base) - Lg (xmin)) / (Lg (xmax) - Lg (xmin));
+       int x_screen      = padding + (int)(log_norm * plot_width);
+
        if (x_screen >= padding && x_screen < width - padding)
         {
          for (int y = padding; y < height - padding; y++) bmp->drawPixel (x_screen, y, axis_color);
@@ -4541,7 +4528,10 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
        float__t value = base * minor;
        if (value >= xmin && value <= xmax)
         {
-         int x_screen = x_to_screen (value);
+         // Convert X to screen coordinate (logarithmic)
+         float__t log_norm = (Lg (value) - Lg (xmin)) / (Lg (xmax) - Lg (xmin));
+         int x_screen      = padding + (int)(log_norm * plot_width);
+
          if (x_screen >= padding && x_screen < width - padding)
           {
            for (int y = padding; y < height - padding; y += 4)
@@ -4555,7 +4545,9 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
   {
    // Linear X grid
    int grid_step_pixels = plot_width / 10;
-   int x_axis_pixel     = x_to_screen (0.0);
+
+   // Convert X=0 to screen coordinate (linear)
+   int x_axis_pixel = padding + (int)(((0.0 - xmin) / (xmax - xmin)) * plot_width);
 
    for (int offset = 0; offset <= plot_width; offset += grid_step_pixels)
     {
@@ -4575,8 +4567,29 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
   }
 
  // Draw main axes
- int x_axis_pixel = y_to_screen (0.0);
- int y_axis_pixel = x_to_screen (0.0);
+ // Calculate axis positions
+ int x_axis_pixel;
+ int y_axis_pixel;
+
+ if (log_y)
+  {
+   float__t log_norm = (Lg (0.0) - Lg (ymin)) / (Lg (ymax) - Lg (ymin));
+   x_axis_pixel      = height - padding - (int)(log_norm * plot_height);
+  }
+ else
+  {
+   x_axis_pixel = height - padding - (int)(((0.0 - ymin) / (ymax - ymin)) * plot_height);
+  }
+
+ if (log_x)
+  {
+   float__t log_norm = (Lg (0.0) - Lg (xmin)) / (Lg (xmax) - Lg (xmin));
+   y_axis_pixel      = padding + (int)(log_norm * plot_width);
+  }
+ else
+  {
+   y_axis_pixel = padding + (int)(((0.0 - xmin) / (xmax - xmin)) * plot_width);
+  }
 
  if (x_axis_pixel >= padding && x_axis_pixel < height - padding)
   {
@@ -4609,9 +4622,9 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
  char title[128];
  snprintf (title, sizeof (title), "y=%s", params.sexpr);
  title[sizeof (title) - 1] = '\0';
- bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+ //bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+ bmp->drawString (10, 5, title, text_color, 0, 2);
 }
-
 // PlotSmith with frequency labels:
 bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 {
@@ -4955,7 +4968,7 @@ void calculator::PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params)
  char title[128];
  snprintf (title, sizeof (title), "Z=%s", params.sexpr);
  title[sizeof (title) - 1] = '\0';
- bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+ bmp->drawString (5, 5, title, text_color, 0, 2);
 
  // Parameter name
  bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);

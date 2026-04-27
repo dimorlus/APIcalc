@@ -4195,12 +4195,12 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
 
  // Shorten expressions if too long
  int max_len = 30;
- if (strlen (params.sexpr) > max_len)
+ if ((int)strlen (params.sexpr) > max_len)
   snprintf (title_x, sizeof (title_x), "x=%.27s...", params.sexpr);
  else
   snprintf (title_x, sizeof (title_x), "x=%s", params.sexpr);
 
- if (strlen (params.sexpr_y) > max_len)
+ if ((int)strlen (params.sexpr_y) > max_len)
   snprintf (title_y, sizeof (title_y), "y=%.27s...", params.sexpr_y);
  else
   snprintf (title_y, sizeof (title_y), "y=%s", params.sexpr_y);
@@ -4291,10 +4291,10 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
  // Add padding (in linear or log space)
  if (log_x)
   {
-   float__t log_range = log10 (xmax) - log10 (xmin);
+   float__t log_range = Lg (xmax) - Lg (xmin);
    float__t pad       = log_range * 0.1;
-   xmin               = pow (10.0, log10 (xmin) - pad);
-   xmax               = pow (10.0, log10 (xmax) + pad);
+   xmin               = Pow (10.0, Lg (xmin) - pad);
+   xmax               = Pow (10.0, Lg (xmax) + pad);
   }
  else
   {
@@ -4316,10 +4316,10 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
  if (log_y)
   {
-   float__t log_range = log10 (ymax) - log10 (ymin);
+   float__t log_range = Lg (ymax) - Lg (ymin);
    float__t pad       = log_range * 0.1;
-   ymin               = pow (10.0, log10 (ymin) - pad);
-   ymax               = pow (10.0, log10 (ymax) + pad);
+   ymin               = Pow (10.0, Lg (ymin) - pad);
+   ymax               = Pow (10.0, Lg (ymax) + pad);
   }
  else
   {
@@ -4364,7 +4364,7 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
      if (log_x)
       {
-       float__t log_x_norm = (log10 (x) - log10 (xmin)) / (log10 (xmax) - log10 (xmin));
+       float__t log_x_norm = (Lg (x) - Lg (xmin)) / (Lg (xmax) - Lg (xmin));
        x_screen            = padding + (int)(log_x_norm * (width - 2 * padding));
       }
      else
@@ -4374,7 +4374,7 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
      if (log_y)
       {
-       float__t log_y_norm = (log10 (y) - log10 (ymin)) / (log10 (ymax) - log10 (ymin));
+       float__t log_y_norm = (Lg (y) - Lg (ymin)) / (Lg (ymax) - Lg (ymin));
        y_screen            = height - padding - (int)(log_y_norm * (height - 2 * padding));
       }
      else

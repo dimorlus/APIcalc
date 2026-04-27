@@ -259,14 +259,17 @@ void calculator::AddPredefined (void)
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
 
+ // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr);
  add (tsPLOT, pl_fplot, "fplot", nullptr);
  add (tsPLOT, pl_oplot, "oplot", nullptr);
 
+ // Polar plots
  add (tsPLOT, pl_plotpol, "plotpol", nullptr);
  add (tsPLOT, pl_fplotpol, "fplotpol", nullptr);
  add (tsPLOT, pl_oplotpol, "oplotpol", nullptr);
 
+ // Parametric plots
  add (tsPLOT, pl_xyplot, "plotxy", nullptr);
  add (tsPLOT, pl_fxyplot, "fplotxy", nullptr);
  add (tsPLOT, pl_oxyplot, "oplotxy", nullptr);
@@ -283,6 +286,15 @@ void calculator::AddPredefined (void)
  add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr);
  add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr);
  add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr);
+
+ // Smith chart
+ add (tsPLOT, pl_plotsmith, "plotsmith", nullptr);
+ add (tsPLOT, pl_fplotsmith, "fplotsmith", nullptr);
+ add (tsPLOT, pl_oplotsmith, "oplotsmith", nullptr);
+
+ add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr);
+ add (tsPLOT, pl_fplotsmithz, "fplotsmithz", nullptr);
+ add (tsPLOT, pl_oplotsmithz, "osmithz", nullptr);
 
 
  add (tsDIFF, "diff", nullptr);
@@ -340,6 +352,7 @@ void calculator::AddPredefined (void)
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
+ add (tsVFUNC1, vf_pol, "arg", (void *)vfunc);
 
  add (tsVFUNC1, vf_sin, "sin", (void *)vfunc);
  add (tsVFUNC1, vf_cos, "cos", (void *)vfunc);
@@ -3285,30 +3298,30 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  char sfrom[MAXOP];
  char sto[MAXOP];
  char svar[STRBUF];
+ char sz0[MAXOP];
 
  bool split_ok = false;
  
  // Determine which split pattern to use
  switch (fidx)
  {
-  case pl_plot:
+  case pl_plot:     // expr, from, to, var
   case pl_plotpol:
   case pl_plotlgx:
   case pl_plotlgy:
   case pl_plotlgxy:
-   // expr, from, to, var
+  case pl_plotsmith:
    if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
    break;
 
-  case pl_xyplot:
-   // x_expr, y_expr, from, to, var
+  case pl_xyplot:  // x_expr, y_expr, from, to, var
    if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
                      nullptr, 0);
   break;
 
-  case pl_fplot:
+  case pl_fplot:    // fname, expr, from, to, var
   case pl_oplot:
   case pl_fplotpol:
   case pl_oplotpol:
@@ -3318,17 +3331,28 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   case pl_oplotlgy:
   case pl_fplotlgxy:
   case pl_oplotlgxy:
-   // fname, expr, from, to, var
+  case pl_fplotsmith:
+  case pl_oplotsmith:
    split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, 
                      sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
   break;
 
-  case pl_fxyplot:
+  case pl_fxyplot: // fname, x_expr, y_expr, from, to, var
   case pl_oxyplot:
-   // fname, x_expr, y_expr, from, to, var
    split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP,
                      svar, STRBUF, nullptr, 0);
   break;
+
+  case pl_plotsmithz: // expr, from, to, var, z0
+   split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, sz0, MAXOP,
+                     nullptr, 0);
+   break;
+
+  case pl_fplotsmithz: // file, expr, from, to, var, z0
+  case pl_oplotsmithz:
+   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
+                     sz0, MAXOP, nullptr, 0);
+   break;
 
   default:
    errorf (pos, "Unknown plot function");
@@ -3364,6 +3388,10 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   case pl_oplotlgy:
   case pl_fplotlgxy:
   case pl_oplotlgxy:
+  case pl_fplotsmith: 
+  case pl_oplotsmith: 
+  case pl_fplotsmithz:
+  case pl_oplotsmithz: 
    child->setFileDlgFn (FileDlgFn);
    child->evaluate_f (fname);
    if (child->err[0])
@@ -3410,6 +3438,23 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    vfrom        = vto;
    vto          = tmp;
   }
+
+ // Evaluate Z0 for Smith chart with explicit Z0
+ float__t z0 = 50.0; // Default
+ if (fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz)
+  {
+   z0 = child->evaluate_f (sz0);
+   if (isnan (z0) || child->err[0] || 
+       !CheckChildRes (child) || 
+       !isChildResReal (child) || z0 <= 0)
+    {
+     errorf (pos, "Invalid Z0 (must be positive real number)");
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+  }
+
 
  // Test evaluate first expression
  child->addfvar (svar, vfrom);
@@ -3473,6 +3518,9 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
                  || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
  params.log_y = (fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy
                  || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+
+ // Set Z0 for Smith chart
+ params.z0 = z0;
 
  params.child = child;
 
@@ -4165,7 +4213,6 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
  bmp->drawString (5, 17, title_y, text_color, 0, 1);
 }
 
-
 // PlotLogarithmic:
 bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 {
@@ -4362,7 +4409,6 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
  return true;
 }
-
 
 // PlotDrawAxesLog:
 void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
@@ -4566,6 +4612,355 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
  bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
 }
 
+// PlotSmith with frequency labels:
+bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
+{
+ calculator *child = params.child;
+ float__t vfrom    = params.vfrom;
+ float__t vto      = params.vto;
+ float__t z0       = params.z0;
+
+ int width           = params.width;
+ int height          = params.height;
+ int padding         = params.padding;
+ uint32_t fgc        = params.fgc;
+ uint32_t text_color = params.text_color;
+
+ // Center of Smith chart
+ int center_x = width / 2;
+ int center_y = height / 2;
+
+ // Calculate radius (use smaller dimension)
+ int plot_size = (width < height ? width : height) - 2 * padding;
+ int radius    = plot_size / 2;
+
+ // Calculate step for smooth curve
+ float__t step           = (vto - vfrom) / (radius * 50);
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ // Storage for axis crossings
+ struct AxisCrossing
+ {
+  float__t freq;
+  int x, y;
+  bool is_real_axis; // true = real axis, false = imaginary axis
+ };
+
+ AxisCrossing crossings[100];
+ int crossing_count = 0;
+
+ // Previous gamma values for detecting crossings
+ float__t prev_gamma_re = 0, prev_gamma_im = 0;
+ bool has_prev = false;
+
+ // Draw the impedance trace
+ float__t param        = vfrom;
+ bool has_valid_points = false;
+
+ do
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+
+   child->addfvar (params.svar, param);
+
+   // Evaluate impedance (can be complex)
+   child->evaluate_f (params.sexpr);
+
+   float__t z_re = child->get_re_res ();
+   float__t z_im = child->get_im_res ();
+
+   // Check for valid result
+   bool valid = true;
+   if (isnan (z_re) && child->errt () == teMath)
+    {
+     param += step;
+     continue;
+    }
+   else if (isnan (z_re))
+    {
+     valid = false;
+    }
+
+   if (valid)
+    {
+     // Calculate reflection coefficient: Γ = (Z - Z0) / (Z + Z0)
+     float__t z_norm_re = z_re / z0;
+     float__t z_norm_im = z_im / z0;
+
+     // Γ = (Z/Z0 - 1) / (Z/Z0 + 1)
+     float__t num_re = z_norm_re - 1.0;
+     float__t num_im = z_norm_im;
+     float__t den_re = z_norm_re + 1.0;
+     float__t den_im = z_norm_im;
+
+     // Complex division: (num_re + i*num_im) / (den_re + i*den_im)
+     float__t den_mag2 = den_re * den_re + den_im * den_im;
+
+     if (den_mag2 < 1e-15)
+      {
+       param += step;
+       continue;
+      }
+
+     float__t gamma_re = (num_re * den_re + num_im * den_im) / den_mag2;
+     float__t gamma_im = (num_im * den_re - num_re * den_im) / den_mag2;
+
+     // Check if Γ is within unit circle
+     float__t gamma_mag2 = gamma_re * gamma_re + gamma_im * gamma_im;
+     if (gamma_mag2 > 1.0)
+      {
+       param += step;
+       continue;
+      }
+
+     // Convert Γ to screen coordinates
+     int x_screen = center_x + (int)(gamma_re * radius);
+     int y_screen = center_y - (int)(gamma_im * radius);
+
+     // Detect axis crossings
+     if (has_prev && crossing_count < 100)
+      {
+       // Real axis crossing (gamma_im changes sign)
+       if ((prev_gamma_im < 0 && gamma_im >= 0) || (prev_gamma_im > 0 && gamma_im <= 0))
+        {
+         // Linear interpolation to find exact crossing point
+         float__t t              = Abs (prev_gamma_im) / (Abs (prev_gamma_im) + Abs (gamma_im));
+         float__t cross_freq     = param - step + t * step;
+         float__t cross_gamma_re = prev_gamma_re + t * (gamma_re - prev_gamma_re);
+
+         crossings[crossing_count].freq         = cross_freq;
+         crossings[crossing_count].x            = center_x + (int)(cross_gamma_re * radius);
+         crossings[crossing_count].y            = center_y;
+         crossings[crossing_count].is_real_axis = true;
+         crossing_count++;
+        }
+
+       // Imaginary axis crossing (gamma_re changes sign)
+       if ((prev_gamma_re < 0 && gamma_re >= 0) || (prev_gamma_re > 0 && gamma_re <= 0))
+        {
+         // Linear interpolation to find exact crossing point
+         float__t t              = Abs (prev_gamma_re) / (Abs (prev_gamma_re) + Abs (gamma_re));
+         float__t cross_freq     = param - step + t * step;
+         float__t cross_gamma_im = prev_gamma_im + t * (gamma_im - prev_gamma_im);
+
+         crossings[crossing_count].freq         = cross_freq;
+         crossings[crossing_count].x            = center_x;
+         crossings[crossing_count].y            = center_y - (int)(cross_gamma_im * radius);
+         crossings[crossing_count].is_real_axis = false;
+         crossing_count++;
+        }
+      }
+
+     prev_gamma_re = gamma_re;
+     prev_gamma_im = gamma_im;
+     has_prev      = true;
+
+     if (has_valid_points)
+      {
+       bmp->lineTo (x_screen, y_screen, 2, fgc);
+      }
+     else
+      {
+       bmp->moveTo (x_screen, y_screen);
+       has_valid_points = true;
+      }
+    }
+   else
+    {
+     has_valid_points = false;
+     has_prev         = false;
+    }
+
+   param += step;
+  }
+ while (param <= vto);
+
+ // Draw markers at axis crossings
+ for (int i = 0; i < crossing_count; i++)
+  {
+   int mx = crossings[i].x;
+   int my = crossings[i].y;
+
+   // Draw small circle marker
+   for (int angle = 0; angle < 360; angle += 30)
+    {
+     float__t rad = angle * M_PI / 180.0;
+     int dx       = (int)(4 * Cos (rad));
+     int dy       = (int)(4 * Sin (rad));
+     bmp->drawPixel (mx + dx, my + dy, text_color);
+    }
+
+   // Format frequency label
+   char label[64];
+   float__t freq = crossings[i].freq;
+
+   if (freq >= 1e9)
+    sprintf (label, "%.2fG", (double)(freq / 1e9));
+   else if (freq >= 1e6)
+    sprintf (label, "%.1fM", (double)(freq / 1e6));
+   else if (freq >= 1e3)
+    sprintf (label, "%.1fk", (double)(freq / 1e3));
+   else
+    sprintf (label, "%.0f", (double)freq);
+
+   // Position label (offset from marker)
+   int label_x = mx + 8;
+   int label_y = my - 8;
+
+   // Adjust label position to avoid going off-screen
+   if (label_x > width - 60) label_x = mx - 50;
+   if (label_y < 15) label_y = my + 8;
+
+   bmp->drawString (label_x, label_y, label, text_color, 0, 1);
+  }
+
+ // Store parameters for grid drawing
+ params.scale = (float__t)radius;
+
+ return true;
+}
+//PlotDrawAxesSmith - drawing Smith chart grid:
+void calculator::PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params)
+{
+ int width           = params.width;
+ int height          = params.height;
+ int padding         = params.padding;
+ uint32_t grid_color = params.grid_color;
+ uint32_t axis_color = params.axis_color;
+ uint32_t text_color = params.text_color;
+ float__t z0         = params.z0;
+
+ int center_x = width / 2;
+ int center_y = height / 2;
+ int radius   = (int)params.scale;
+
+ // Draw outer circle (|Γ| = 1)
+ for (int angle = 0; angle < 360; angle++)
+  {
+   float__t rad = angle * M_PI / 180.0;
+   int x        = center_x + (int)(radius * Cos (rad));
+   int y        = center_y - (int)(radius * Sin (rad));
+   bmp->drawPixel (x, y, axis_color);
+  }
+
+ // Draw horizontal axis (real axis of Γ)
+ bmp->drawLine (center_x - radius, center_y, center_x + radius, center_y, 1, axis_color);
+
+ // Constant resistance circles (normalized r = R/Z0)
+ // Draw circles for r = 0.2, 0.5, 1.0, 2.0, 5.0
+ float__t r_values[] = { 0.2, 0.5, 1.0, 2.0, 5.0 };
+ for (int i = 0; i < 5; i++)
+  {
+   float__t r = r_values[i];
+
+   // Circle center and radius for constant resistance
+   // Center: (r/(1+r), 0) in Γ plane
+   // Radius: 1/(1+r)
+   float__t circle_center_x = r / (1.0 + r);
+   float__t circle_radius   = 1.0 / (1.0 + r);
+
+   int screen_center_x = center_x + (int)(circle_center_x * radius);
+   int screen_radius   = (int)(circle_radius * radius);
+
+   // Draw circle (upper and lower halves)
+   for (int angle = 0; angle < 360; angle += 2)
+    {
+     float__t rad = angle * M_PI / 180.0;
+     int x        = screen_center_x + (int)(screen_radius * Cos (rad));
+     int y        = center_y - (int)(screen_radius * Sin (rad));
+
+     if (x >= padding && x < width - padding && y >= padding && y < height - padding)
+      bmp->drawPixel (x, y, grid_color);
+    }
+  }
+
+ // Constant reactance arcs (normalized x = X/Z0)
+ // Draw arcs for x = ±0.2, ±0.5, ±1.0, ±2.0, ±5.0
+ float__t x_values[] = { 0.2, 0.5, 1.0, 2.0, 5.0 };
+ for (int i = 0; i < 5; i++)
+  {
+   float__t x = x_values[i];
+
+   // Arc center and radius for constant reactance
+   // Center: (1, 1/x) in Γ plane
+   // Radius: 1/x
+   float__t arc_center_x     = 1.0;
+   float__t arc_center_y_pos = 1.0 / x;
+   float__t arc_center_y_neg = -1.0 / x;
+   float__t arc_radius       = 1.0 / x;
+
+   int screen_center_x = center_x + (int)(arc_center_x * radius);
+
+   // Positive reactance (inductive, upper half)
+   int screen_center_y_pos = center_y - (int)(arc_center_y_pos * radius);
+   int screen_arc_radius   = (int)(arc_radius * radius);
+
+   // Draw arc from left intersection to right edge
+   for (int angle = 90; angle <= 270; angle += 2)
+    {
+     float__t rad = angle * M_PI / 180.0;
+     int x_pos    = screen_center_x + (int)(screen_arc_radius * Cos (rad));
+     int y_pos    = screen_center_y_pos - (int)(screen_arc_radius * Sin (rad));
+
+     // Check if inside outer circle
+     int dx = x_pos - center_x;
+     int dy = y_pos - center_y;
+     if (dx * dx + dy * dy <= radius * radius)
+      {
+       if (x_pos >= padding && x_pos < width - padding && y_pos >= padding
+           && y_pos < height - padding)
+        bmp->drawPixel (x_pos, y_pos, grid_color);
+      }
+    }
+
+   // Negative reactance (capacitive, lower half)
+   int screen_center_y_neg = center_y - (int)(arc_center_y_neg * radius);
+
+   for (int angle = 90; angle <= 270; angle += 2)
+    {
+     float__t rad = angle * M_PI / 180.0;
+     int x_neg    = screen_center_x + (int)(screen_arc_radius * Cos (rad));
+     int y_neg    = screen_center_y_neg - (int)(screen_arc_radius * Sin (rad));
+
+     // Check if inside outer circle
+     int dx = x_neg - center_x;
+     int dy = y_neg - center_y;
+     if (dx * dx + dy * dy <= radius * radius)
+      {
+       if (x_neg >= padding && x_neg < width - padding && y_neg >= padding
+           && y_neg < height - padding)
+        bmp->drawPixel (x_neg, y_neg, grid_color);
+      }
+    }
+  }
+
+ // Add labels
+ char label[64];
+
+ // Z0 label
+ sprintf (label, "Z0=%.0fΩ", (double)z0);
+ bmp->drawString (center_x + radius + 5, center_y - 10, label, text_color, 0, 1);
+
+ // Open circuit (right edge)
+ bmp->drawString (center_x + radius - 20, center_y + 5, "∞", text_color, 0, 1);
+
+ // Short circuit (left edge)
+ bmp->drawString (center_x - radius + 5, center_y + 5, "0", text_color, 0, 1);
+
+ // Matched load (center)
+ bmp->drawString (center_x - 10, center_y + 15, "Z0", text_color, 0, 1);
+
+ // Title
+ char title[128];
+ snprintf (title, sizeof (title), "Z=%s", params.sexpr);
+ title[sizeof (title) - 1] = '\0';
+ bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
+
+ // Parameter name
+ bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
+}
+
 // Main plotting function
 bool calculator::Plot (const char *expr, v_func fidx)
 {
@@ -4585,12 +4980,22 @@ bool calculator::Plot (const char *expr, v_func fidx)
  
   // 2. Create or load bitmap
  bmpdraw *bmp    = new bmpdraw ();
- bool is_overlay = ((fidx == pl_oplot || fidx == pl_oplotpol || fidx == pl_oxyplot) && fname[0]);
- bool is_polar   = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
+ bool is_overlay     = ((fidx == pl_oplot || fidx == pl_oplotpol || fidx == pl_oxyplot
+                     || fidx == pl_oplotlgx || fidx == pl_oplotlgy || fidx == pl_oplotlgxy
+                     || fidx == pl_oplotsmith || fidx == pl_oplotsmithz)
+                    && fname[0]);
+
+ bool is_polar       = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
+
  bool is_parametric = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot);
+
  bool is_logarithmic = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx ||
                         fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy ||
                         fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+
+ bool is_smith       = (fidx == pl_plotsmith || fidx == pl_fplotsmith || fidx == pl_oplotsmith
+                  || fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz);
+
 
  if (is_overlay)
   {
@@ -4638,6 +5043,11 @@ bool calculator::Plot (const char *expr, v_func fidx)
 
  // 3. Draw plot (Cartesian or Polar coordinates)
  bool plot_success;
+ if (is_smith)
+  {
+   plot_success = PlotSmith (bmp, params);
+  }
+ else
  if (is_logarithmic)
   {
    plot_success = PlotLogarithmic (bmp, params);
@@ -4671,6 +5081,11 @@ bool calculator::Plot (const char *expr, v_func fidx)
  // 4. Draw axes and grid (skip for overlay mode)
  if (!is_overlay)
   {
+   if (is_smith)
+    {
+     PlotDrawAxesSmith (bmp, params);
+    }
+   else 
    if (is_logarithmic)
     {
      PlotDrawAxesLog (bmp, params);
@@ -4706,6 +5121,10 @@ bool calculator::Plot (const char *expr, v_func fidx)
   case pl_oplotlgy:
   case pl_fplotlgxy:
   case pl_oplotlgxy:
+  case pl_fplotsmith:
+  case pl_oplotsmith:
+  case pl_fplotsmithz:
+  case pl_oplotsmithz:
    // Already handled above with is_overlay logic
    bmp->save (fname);
   break;
@@ -4715,6 +5134,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
   case pl_plotlgx:
   case pl_plotlgy:
   case pl_plotlgxy:
+  case pl_plotsmith:
+  case pl_plotsmithz:
    // Show in GUI
    if (ShowImageFn)
     {
@@ -5109,26 +5530,44 @@ t_operator calculator::sscan (symbol *sym)
       case pl_oplotlgy:
       case pl_fplotlgxy:
       case pl_oplotlgxy:
+      case pl_fplotsmith: //fplotsmith(file, expr, from, to, var)
+      case pl_oplotsmith: //oplotsmith(file, expr, from, to, var)
        if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
+
       case pl_plot:    // plot(expr, from, to, var)
       case pl_plotpol: // plotpol(expr, from, to, var)
       case pl_plotlgx:
       case pl_plotlgy:
       case pl_plotlgxy:
+      case pl_plotsmith: // plotsmith(expr, from, to, var)
        if (parenthesis_count == 0 && comma_count == 3) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
+
       case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var)
        if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
+
       case pl_fxyplot: // fxyplot(file, xexpr, yexpr, from, to, var)
       case pl_oxyplot: // oxyplot(file, xexpr, yexpr, from, to, var)
        if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
+
+      case pl_plotsmithz: // plotsmithz(expr, from, to, var, Z0)
+       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+
+      case pl_fplotsmithz: // fplotsmithz(file, expr, from, to, var, Z0)
+      case pl_oplotsmithz: // oplotsmithz(file, expr, from, to, var, Z0)
+       if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+
       default:
        error ("Unknown plot function");
        return toERROR;

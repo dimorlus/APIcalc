@@ -555,12 +555,20 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_fplotlgxy,
  pl_oplotlgxy,
 
+ // Smith chart
+ pl_plotsmith,  // smith(expr, from, to, var) - Z0=50Ω
+ pl_fplotsmith, // fsmith("file", expr, from, to, var)
+ pl_oplotsmith, // osmith("file", expr, from, to, var)
+
+ pl_plotsmithz,  // smithz(expr, from, to, var, Z0)
+ pl_fplotsmithz, // fsmithz("file", expr, from, to, var, Z0)
+ pl_oplotsmithz, // osmithz("file", expr, from, to, var, Z0)
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
  rtLg,   // Logarithmic regression (y = a + b * ln(x))
  rtPow,  // Power regression (y = a * x^b)
- rtInv,   // Inverse regression (y = a + b / x)
+ rtInv,  // Inverse regression (y = a + b / x)
 
  sfNum,     // Number of elements in the dataset
  sfMean,    // Mean (average) of the dataset
@@ -791,6 +799,7 @@ class calculator // calculator represents the main class for the expression calc
     float__t xmin;       // for polar plots
     float__t xmax;       // for polar plots
     float__t scale;      // for polar plots
+    float__t z0;         // Reference impedance for Smith chart
     bool log_x;          // logarithmic X axis
     bool log_y;          // logarithmic Y axis
     int width;           // Image width
@@ -965,6 +974,9 @@ class calculator // calculator represents the main class for the expression calc
  
  bool PlotLogarithmic (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params);
+
+ bool PlotSmith (bmpdraw *bmp, PlotParams &params);
+ void PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params);
 
  bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
 

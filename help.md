@@ -119,7 +119,7 @@ cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
 re(z)                     (1)   Return real part of complex
 im(z)                     (1)   Return imaginary part of complex
 conj(z)                   (1)   Complex conjugate  
-pol(z)                    (1)   atan(im(z)/re(z))
+pol(z), arg(z)            (1)   atan(im(z)/re(z))
 min(x,y)                        Minimum of x, y
 max(x,y)                        Maximum of x, y
 fact(n|x|z), n|x|z!       (1)   Factorial (n!)

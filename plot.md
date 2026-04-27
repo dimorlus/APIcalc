@@ -53,10 +53,11 @@ plot(sin(x), 0, 2*pi, x)
 plot(exp(-t/10)*sin(t), 0, 50, t)
 
 ;; Transfer function magnitude 
-fplot("filter.bmp", abs(1/(1+i2pi*f/1k)), 1, 100k, f)
+fplot("filter.bmp", abs(1/(1+i2 pi*f/1k)), 1, 100k, f)
 
 ;; Overlay multiple functions 
-fplot("combined.bmp", sin(x), 0, 2pi, x) oplot("combined.bmp", cos(x), 0, 2pi, x)
+fplot("combined.bmp", sin(x), 0, 2 pi, x) 
+oplot("combined.bmp", cos(x), 0, 2 pi, x)
 ```
 ---
 
@@ -107,7 +108,7 @@ plotpol(exp(t/10), 0, 10*pi, t)
 plotpol(1+cos(t), 0, 2*pi, t)
 
 ;; Limaçon: r = 1 + 2cos(θ) 
-plotpol(1+2cos(t), 0, 2pi, t)
+plotpol(1+2cos(t), 0, 2 pi, t)
 
 ;; Circle: r = constant 
 plotpol(3, 0, 2*pi, t)
@@ -160,7 +161,7 @@ plotxy(t-sin(t), 1-cos(t), 0, 4*pi, t)
 plotxy(t-0.5sin(t), 1-0.5cos(t), 0, 4*pi, t)
 
 ;; Epicycloid 
-plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 2pi, t)
+plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 15 pi, t)
 ```
 ### Other Parametric Curves
 ```
@@ -168,10 +169,10 @@ plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 2pi, t)
 plotxy(t cos(t), t sin(t), 0, 10*pi, t)
 
 ;; Figure-8 
-plotxy(sin(t), sin(2t), 0, 2pi, t)
+plotxy(sin(t), sin(2t), 0, 2*pi, t)
 
 ;; Lemniscate 
-plotxy(cos(t)/(1+sin(t)**2), sin(t)cos(t)/(1+sin(t)^2), 0, 2pi, t)
+plotxy(cos(t)/(1+sin(t)^2), sin(t)cos(t)/(1+sin(t)^2), 0, 2*pi, t)
 
 ;; Butterfly curve 
 plotxy(sin(t)(exp(cos(t))-2cos(4t)-sin(t/12)^5), cos(t)(exp(cos(t))-2cos(4t)-sin(t/12)^5), 0, 12*pi, t)
@@ -233,7 +234,7 @@ Best for:
 plotlgx(20 log10(abs(1/(1+i2 pi f/1k))), 10, 100k, f)
 
 ;; RC filter magnitude 
-plotlgx(abs(1/(1+i2pif50*10n)), 100, 1M, f)
+plotlgx(abs(1/(1+i2 pi f 50*10n)), 100, 1M, f)
 ```
 #### Semi-log Y (`plotlgy`)
 Best for:
@@ -286,7 +287,7 @@ plotlgx(abs(i2 pi f 100u/(50+i2 pi f 100u)), 100, 100k, f)
 plotlgxy(abs(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u))), 10M, 200M, f)
 
 ;; Series RLC 
-plotlgxy(abs(10 + i2 pi f 100n + 1/(i2 pi f 2.5p)), 500M, 2G, f)
+plotlgxy(abs(10 + i2 pi f 100n + 1/(i2 pi f 2.5p)), 50M, 2G, f)
 ```
 
 ---
@@ -532,7 +533,7 @@ plotlgx(arg(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)))*180/pi, 10M, 200M, f)
 fplot("comparison.bmp", sin(x), 0, 2*pi, x)
 
 ;; Add more traces 
-oplot("comparison.bmp", cos(x), 0, 2pi, x) 
+oplot("comparison.bmp", cos(x), 0, 2*pi, x) 
 oplot("comparison.bmp", sin(2x), 0, 2*pi, x)
 ```
 ### Complete Filter Analysis
@@ -551,10 +552,10 @@ fplotlgx("lp_delay.bmp", 1k 160n/(1+(2 pi f 1k*160n)^2), 10, 100k, f)
 ### Complex Parametric Curves
 ```
 ;; Spirograph pattern 
-plotxy((5+3)cos(t)-3cos((5/3+1)*t), (5+3)sin(t)-3sin((5/3+1)t), 0, 6pi, t)
+plotxy((5+3)cos(t)-3cos((5/3+1)*t), (5+3)sin(t)-3sin((5/3+1)t), 0, 6*pi, t)
 
 ;; Hypotrochoid 
-plotxy((3-1)cos(t)+1cos((3-1)*t/1), (3-1)sin(t)-1sin((3-1)t/1), 0, 2pi, t)
+plotxy((3-1)cos(t)+1cos((3-1)*t/1), (3-1)sin(t)-1sin((3-1)t/1), 0, 2*pi, t)
 
 ---
 

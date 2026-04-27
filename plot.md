@@ -27,7 +27,7 @@ Standard $y = f(x)$ plots in Cartesian coordinates.
 | `oplot(filename, expr, from, to, var)` | Overlay plot on existing file |
 
 ### Syntax
-plot(expression, start_value, end_value, variable_name)
+`plot(expression, start_value, end_value, variable_name)`
 
 ### Parameters
 
@@ -45,11 +45,19 @@ plot(expression, start_value, end_value, variable_name)
 - Automatic range padding (10%)
 
 ### Examples
-// Simple sine wave plot(sin(x), 0, 2*pi, x)
-// Damped oscillation plot(exp(-t/10)*sin(t), 0, 50, t)
-// Transfer function magnitude fplot("filter.bmp", abs(1/(1+i2pi*f/1k)), 1, 100k, f)
-// Overlay multiple functions fplot("combined.bmp", sin(x), 0, 2pi, x) oplot("combined.bmp", cos(x), 0, 2pi, x)
+```
+;; Simple sine wave 
+plot(sin(x), 0, 2*pi, x)
 
+;; Damped oscillation 
+plot(exp(-t/10)*sin(t), 0, 50, t)
+
+;; Transfer function magnitude 
+fplot("filter.bmp", abs(1/(1+i2pi*f/1k)), 1, 100k, f)
+
+;; Overlay multiple functions 
+fplot("combined.bmp", sin(x), 0, 2pi, x) oplot("combined.bmp", cos(x), 0, 2pi, x)
+```
 ---
 
 ## Polar Plots
@@ -66,7 +74,7 @@ Plots in polar coordinates where $r = f(\theta)$.
 
 ### Syntax
 
-plotpol(r_expression, angle_start, angle_end, angle_variable)
+`plotpol(r_expression, angle_start, angle_end, angle_variable)`
 
 ### Features
 
@@ -78,18 +86,32 @@ plotpol(r_expression, angle_start, angle_end, angle_variable)
 ### Common Polar Functions
 
 #### Rose Curves
-// 5-petal rose plotpol(5sin(5t), 0, 2*pi, t)
-// 3-petal rose plotpol(sin(3*t), 0, pi, t)
+```
+;; 5-petal rose 
+plotpol(5sin(5t), 0, 2*pi, t)
 
+;; 3-petal rose 
+plotpol(sin(3*t), 0, pi, t)
+```
 #### Spirals
-// Archimedean spiral plotpol(t, 0, 4*pi, t)
-// Logarithmic spiral plotpol(exp(t/10), 0, 10*pi, t)
+```
+;; Archimedean spiral 
+plotpol(t, 0, 4*pi, t)
 
+;; Logarithmic spiral 
+plotpol(exp(t/10), 0, 10*pi, t)
+```
 #### Classic Curves
-// Cardioid: r = 1 + cos(θ) plotpol(1+cos(t), 0, 2*pi, t)
-// Limaçon: r = 1 + 2cos(θ) plotpol(1+2cos(t), 0, 2pi, t)
-// Circle: r = constant plotpol(3, 0, 2*pi, t)
+```
+;; Cardioid: r = 1 + cos(θ) 
+plotpol(1+cos(t), 0, 2*pi, t)
 
+;; Limaçon: r = 1 + 2cos(θ) 
+plotpol(1+2cos(t), 0, 2pi, t)
+
+;; Circle: r = constant 
+plotpol(3, 0, 2*pi, t)
+```
 ---
 
 ## Parametric Plots
@@ -105,7 +127,7 @@ Plots where both $x$ and $y$ are functions of a parameter: $x = f(t)$, $y = g(t)
 | `oplotxy(filename, x_expr, y_expr, from, to, var)` | Overlay parametric plot on existing file |
 
 ### Syntax
-plotxy(x_expression, y_expression, param_start, param_end, parameter)
+`plotxy(x_expression, y_expression, param_start, param_end, parameter)`
 
 ### Features
 
@@ -119,23 +141,41 @@ plotxy(x_expression, y_expression, param_start, param_end, parameter)
 Lissajous figures are created by parametric equations:
 
 $$x = A \sin(at + \delta), \quad y = B \sin(bt)$$
+```
+;; 3:2 frequency ratio 
+plotxy(sin(3t), sin(2t), 0, 2*pi, t)
 
-// 3:2 frequency ratio plotxy(sin(3t), sin(2t), 0, 2*pi, t)
-// 3:2 with phase shift plotxy(sin(3t), cos(2t+1), 0, 2*pi, t)
-// 5:4 ratio plotxy(sin(5t), sin(4t), 0, 2*pi, t)
+;; 3:2 with phase shift 
+plotxy(sin(3t), cos(2t+1), 0, 2*pi, t)
 
+;; 5:4 ratio 
+plotxy(sin(5t), sin(4t), 0, 2*pi, t)
+```
 ### Cycloids
-// Cycloid (wheel rolling) plotxy(t-sin(t), 1-cos(t), 0, 4*pi, t)
-// Trochoid plotxy(t-0.5sin(t), 1-0.5cos(t), 0, 4*pi, t)
-// Epicycloid plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 2pi, t)
+```
+;; Cycloid (wheel rolling) 
+plotxy(t-sin(t), 1-cos(t), 0, 4*pi, t)
 
+;; Trochoid 
+plotxy(t-0.5sin(t), 1-0.5cos(t), 0, 4*pi, t)
+
+;; Epicycloid 
+plotxy((5+3)cos(t)-3cos((5+3)*t/3), (5+3)sin(t)-3sin((5+3)t/3), 0, 2pi, t)
+```
 ### Other Parametric Curves
-// Parametric spiral plotxy(tcos(t), tsin(t), 0, 10*pi, t)
-// Figure-8 plotxy(sin(t), sin(2t), 0, 2pi, t)
-// Lemniscate plotxy(cos(t)/(1+sin(t)**2), sin(t)cos(t)/(1+sin(t)**2), 0, 2pi, t)
-// Butterfly curve plotxy(sin(t)(exp(cos(t))-2cos(4t)-sin(t/12)**5), cos(t)(exp(cos(t))-2cos(4t)-sin(t/12)**5), 0, 12*pi, t)
+```
+;; Parametric spiral 
+plotxy(t cos(t), t sin(t), 0, 10*pi, t)
 
+;; Figure-8 
+plotxy(sin(t), sin(2t), 0, 2pi, t)
 
+;; Lemniscate 
+plotxy(cos(t)/(1+sin(t)**2), sin(t)cos(t)/(1+sin(t)^2), 0, 2pi, t)
+
+;; Butterfly curve 
+plotxy(sin(t)(exp(cos(t))-2cos(4t)-sin(t/12)^5), cos(t)(exp(cos(t))-2cos(4t)-sin(t/12)^5), 0, 12*pi, t)
+```
 ---
 
 ## Logarithmic Plots
@@ -169,10 +209,11 @@ Plots with logarithmic scale on one or both axes. Essential for frequency respon
 | `oplotlgxy(filename, expr, from, to, var)` | Overlay on file |
 
 ### Syntax
+```
 plotlgx(expression, start_value, end_value, variable) 
 plotlgy(expression, start_value, end_value, variable) 
 plotlgxy(expression, start_value, end_value, variable)
-
+```
 
 ### Features
 
@@ -187,38 +228,66 @@ plotlgxy(expression, start_value, end_value, variable)
 Best for:
 - Frequency response (magnitude vs frequency)
 - Bode plots (gain in dB vs log frequency)
-// Low-pass filter response (dB) plotlgx(20log10(abs(1/(1+i2pif/1k))), 10, 100k, f)
-// RC filter magnitude plotlgx(abs(1/(1+i2pif50*10n)), 100, 1M, f)
+```
+;; Low-pass filter response (dB) 
+plotlgx(20 log10(abs(1/(1+i2 pi f/1k))), 10, 100k, f)
 
+;; RC filter magnitude 
+plotlgx(abs(1/(1+i2pif50*10n)), 100, 1M, f)
+```
 #### Semi-log Y (`plotlgy`)
 Best for:
 - Exponential growth/decay
 - Logarithmic scales
-// Exponential growth plotlgy(exp(t), 0, 10, t)
-// Exponential decay plotlgy(exp(-t/5), 0, 20, t)
+```
+;; Exponential growth 
+plotlgy(exp(t), 0, 10, t)
+
+;; Exponential decay 
+plotlgy(exp(-t/5), 0, 20, t)
+```
 
 #### Log-Log (`plotlgxy`)
 Best for:
 - Power law relationships
 - Impedance magnitude vs frequency
-// Power law: y = x^n plotlgxy(x**2, 0.1, 100, x)
-// Impedance magnitude plotlgxy(abs(50 + i2pif100n), 1M, 1G, f)
+```
+;; Power law: y = x^n 
+plotlgxy(x^2, 0.1, 100, x)
+
+;; Impedance magnitude 
+plotlgxy(abs(50 + i2*pi f 100n), 1M, 1G, f)
+```
 
 ### Filter Frequency Response Examples
 
 #### RC Low-Pass Filter
 
 Transfer function: $H(f) = \frac{1}{1 + j2\pi fRC}$
-// Magnitude response (normalized) plotlgx(abs(1/(1+i2pi*f/1k)), 10, 100k, f)
-// Magnitude in dB plotlgx(20log10(abs(1/(1+i2pif/1k))), 10, 100k, f)
-// Phase response plotlgx(arg(1/(1+i2pi*f/1k))*180/pi, 10, 100k, f)
+```
+;; Magnitude response (normalized) 
+plotlgx(abs(1/(1+i2 pi*f/1k)), 10, 100k, f)
+
+;; Magnitude in dB 
+plotlgx(20log10(abs(1/(1+i2 pi f/1k))), 10, 100k, f)
+
+;; Phase response 
+plotlgx(arg(1/(1+i2 pi*f/1k))*180/pi, 10, 100k, f)
+```
 
 #### RL High-Pass Filter
-// Magnitude plotlgx(abs(i2pif100u/(50+i2pif100u)), 100, 100k, f)
-
+```
+;; Magnitude 
+plotlgx(abs(i2 pi f 100u/(50+i2 pi f 100u)), 100, 100k, f)
+```
 #### RLC Resonator
-// Parallel RLC plotlgxy(abs(1/(1/1k + i2pif10p + 1/(i2pif1u))), 10M, 200M, f)
-// Series RLC plotlgxy(abs(10 + i2pif100n + 1/(i2pif2.5p)), 500M, 2G, f)
+```
+;; Parallel RLC 
+plotlgxy(abs(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u))), 10M, 200M, f)
+
+;; Series RLC 
+plotlgxy(abs(10 + i2 pi f 100n + 1/(i2 pi f 2.5p)), 500M, 2G, f)
+```
 
 ---
 
@@ -228,7 +297,7 @@ Specialized plot for RF and microwave engineering. Displays complex impedance on
 
 ### Functions
 
-#### Default Z₀ = 50Ω
+#### Default Z0 = 50Ω
 
 | Function | Description |
 |----------|-------------|
@@ -236,7 +305,7 @@ Specialized plot for RF and microwave engineering. Displays complex impedance on
 | `fplotsmith(filename, expr, from, to, var)` | Save to file |
 | `oplotsmith(filename, expr, from, to, var)` | Overlay on file |
 
-#### Custom Z₀
+#### Custom Z0
 
 | Function | Description |
 |----------|-------------|
@@ -245,9 +314,10 @@ Specialized plot for RF and microwave engineering. Displays complex impedance on
 | `osmithz(filename, expr, from, to, var, Z0)` | Overlay on file |
 
 ### Syntax
+```
 plotsmith(Z_expression, freq_start, freq_end, freq_variable) 
 plotsmithz(Z_expression, freq_start, freq_end, freq_variable, reference_impedance)
-
+```
 
 ### Parameters
 
@@ -305,7 +375,10 @@ $$\text{SWR} = \frac{1 + |\Gamma|}{1 - |\Gamma|}$$
 #### Series RC
 
 Impedance: $Z = R + \frac{1}{j\omega C}$
-// R=50Ω, C=1nF, sweep 1MHz-1GHz plotsmith(50 + 1/(i2pif1n), 1M, 1G, f)
+```
+;; R=50Ω, C=1nF, sweep 1MHz-1GHz 
+plotsmith(50 + 1/(i2 pi f 1n), 1M, 1G, f)
+```
 
 Characteristics:
 - Starts capacitive (lower half)
@@ -315,7 +388,10 @@ Characteristics:
 #### Series RL
 
 Impedance: $Z = R + j\omega L$
-// R=50Ω, L=100nH, sweep 1MHz-1GHz plotsmith(50 + i2pif100n, 1M, 1G, f)
+```
+;; R=50Ω, L=100nH, sweep 1MHz-1GHz 
+plotsmith(50 + i2 pi f 100n, 1M, 1G, f)
+```
 
 Characteristics:
 - Starts near center (low frequency)
@@ -325,7 +401,10 @@ Characteristics:
 #### Series RLC
 
 Impedance: $Z = R + j\omega L + \frac{1}{j\omega C} = R + j\left(\omega L - \frac{1}{\omega C}\right)$
-// R=50Ω, L=100nH, C=1pF plotsmith(50 + i2pif100n + 1/(i2pif1p), 100M, 10G, f)
+```
+;; R=50Ω, L=100nH, C=1pF 
+plotsmith(50 + i2 pi f 100n + 1/(i2 pi f 1p), 100M, 10G, f)
+```
 
 Resonance frequency: $f_0 = \frac{1}{2\pi\sqrt{LC}} \approx 1.59$ GHz
 
@@ -339,8 +418,10 @@ Characteristics:
 Admittance: $Y = \frac{1}{R} + j\omega C + \frac{1}{j\omega L}$
 
 Impedance: $Z = \frac{1}{Y}$
-// R=1kΩ, L=1µH, C=10pF plotsmith(1/(1/1k + i2pif10p + 1/(i2pif1u)), 10M, 200M, f)
-
+```
+;; R=1kΩ, L=1µH, C=10pF 
+plotsmith(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)), 10M, 200M, f)
+```
 Resonance: $f_0 = \frac{1}{2\pi\sqrt{LC}} \approx 50.3$ MHz
 
 Characteristics:
@@ -353,30 +434,47 @@ Characteristics:
 #### Short Circuit Stub
 
 Input impedance: $Z_{in} = jZ_0 \tan(\beta l)$
-// Quarter-wave stub at 1GHz plotsmith(i50tan(2pif/1G*pi/2), 500M, 2G, f)
+```
+;; Quarter-wave stub at 1GHz 
+plotsmith(i50 tan(2 pi f/1G*pi/2), 500M, 2G, f)
+```
 
 #### Open Circuit Stub
 
 Input impedance: $Z_{in} = -jZ_0 \cot(\beta l)$
-// Quarter-wave open stub at 1GHz plotsmith(-i50/tan(2pif/1Gpi/2), 500M, 2G, f)
+```
+;; Quarter-wave open stub at 1GHz 
+plotsmith(-i50/tan(2 pi f/1G pi/2), 500M, 2G, f)
+```
 
 ### Matching Network Examples
 
 #### L-Match (50Ω → 200Ω)
-// Series L, shunt C matching network 
-// L=25nH, C=8pF, matching around 1GHz 
-plotsmith(i2pif25n + 200/(1 + i2pif200*8p), 500M, 2G, f)
-
+```
+;; Series L, shunt C matching network 
+;; L=25nH, C=8pF, matching around 1GHz 
+plotsmith(i2 pi f 25n + 200/(1 + i2 pi f 200*8p), 500M, 2G, f)
+```
 #### Pi-Filter
-// Input C, series L, output C // C1=10pF, L=50nH, C2=10pF plotsmith(i2pif50n + 1/(i2pif10p), 100M, 5G, f)
-
+```
+;; Input C, series L, output C 
+;; C1=10pF, L=50nH, C2=10pF 
+plotsmith(i2 pi f 50n + 1/(i2 pi f 10p), 100M, 5G, f)
+```
 ### Antenna Impedance
-// Simple antenna model: R + jX // Radiation resistance + reactive component plotsmith(55 + i2pif10u + 1/(i2pif100p), 1M, 30M, f)
-
+```
+;; Simple antenna model: R + jX 
+;; Radiation resistance + reactive component 
+plotsmith(55 + i2 pi f 10u + 1/(i2 pi f 100p), 1M, 30M, f)
+```
 ### Comparing Before/After Matching
-// Original antenna impedance fplotsmith("antenna.bmp", 75 + i2pif5u, 1M, 30M, f)
-// With matching network oplotsmith("antenna.bmp", 75 + i2pif5u + 1/(i2pif200p), 1M, 30M, f)
+```
+;; Original antenna impedance 
+fplotsmith("antenna.bmp", 75 + i2 pi f 5u, 1M, 30M, f)
 
+;; With matching network 
+oplotsmith("antenna.bmp", 75 + i2 pi f 5u + 1/(i2 pi f 200p), 1M, 30M, f)
+```
 ---
 
 ## Common Parameters
@@ -393,7 +491,9 @@ These variables control plot appearance (set before calling plot functions):
 | `plot_fgc` | 0x000000 | Foreground/trace color (RGB hex) |
 
 ### Setting Configuration
-plot_width = 1024 plot_height = 768 plot_bgc = 0xFFFFFF    // white background plot_fgc = 0x0000FF    // blue trace
+plot_width := 1024; plot_height := 768; 
+plot_bgc := 0xFFFFFF    ;; white background 
+plot_fgc := 0x0000FF    ;; blue trace
 plot(sin(x), 0, 2*pi, x)
 
 ### Color Format
@@ -413,24 +513,48 @@ Colors are specified as 24-bit RGB hex values:
 ### Comparing Representations
 
 Same circuit, different visualizations:
-// Parallel RLC resonator // R=1kΩ, L=1µH, C=10pF, f₀≈50.3MHz
-// 1. Impedance magnitude (log-log) plotlgxy(abs(1/(1/1k + i2pif10p + 1/(i2pif1u))), 10M, 200M, f)
-// 2. Smith chart (shows impedance trajectory) plotsmith(1/(1/1k + i2pif10p + 1/(i2pif1u)), 10M, 200M, f)
-// 3. Phase response plotlgx(arg(1/(1/1k + i2pif10p + 1/(i2pif1u)))*180/pi, 10M, 200M, f)
+```
+;; Parallel RLC resonator 
+;; R=1kΩ, L=1µH, C=10pF, f0≈50.3MHz
+;; 1. Impedance magnitude (log-log) 
+plotlgxy(abs(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u))), 10M, 200M, f)
+
+;; 2. Smith chart (shows impedance trajectory) 
+plotsmith(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)), 10M, 200M, f)
+
+;; 3. Phase response 
+plotlgx(arg(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)))*180/pi, 10M, 200M, f)
+```
 
 ### Multi-Trace Overlay
-// Create base plot fplot("comparison.bmp", sin(x), 0, 2*pi, x)
-// Add more traces oplot("comparison.bmp", cos(x), 0, 2pi, x) oplot("comparison.bmp", sin(2x), 0, 2*pi, x)
+```
+;; Create base plot 
+fplot("comparison.bmp", sin(x), 0, 2*pi, x)
 
+;; Add more traces 
+oplot("comparison.bmp", cos(x), 0, 2pi, x) 
+oplot("comparison.bmp", sin(2x), 0, 2*pi, x)
+```
 ### Complete Filter Analysis
-// RC low-pass filter: fc = 1/(2πRC) = 1kHz // R=1kΩ, C=160nF
-// Magnitude response in dB fplotlgx("lp_mag.bmp", 20log10(abs(1/(1+i2pif1k160n))), 10, 100k, f)
-// Phase response fplotlgx("lp_phase.bmp", arg(1/(1+i2pif1k*160n))*180/pi, 10, 100k, f)
-// Group delay: τ = -dφ/dω fplotlgx("lp_delay.bmp", 1k160n/(1+(2pif1k*160n)**2), 10, 100k, f)
+```
+;; RC low-pass filter: fc = 1/(2πRC) = 1kHz 
+;; R=1kΩ, C=160nF
+;; Magnitude response in dB 
+fplotlgx("lp_mag.bmp", 20log10(abs(1/(1+i2 pi f 1k 160n))), 10, 100k, f)
 
+;; Phase response 
+fplotlgx("lp_phase.bmp", arg(1/(1+i2 pi f 1k*160n))*180/pi, 10, 100k, f)
+
+;; Group delay: τ = -dφ/dω 
+fplotlgx("lp_delay.bmp", 1k 160n/(1+(2 pi f 1k*160n)^2), 10, 100k, f)
+```
 ### Complex Parametric Curves
-// Spirograph pattern plotxy((5+3)cos(t)-3cos((5/3+1)*t), (5+3)sin(t)-3sin((5/3+1)t), 0, 6pi, t)
-// Hypotrochoid plotxy((3-1)cos(t)+1cos((3-1)*t/1), (3-1)sin(t)-1sin((3-1)t/1), 0, 2pi, t)
+```
+;; Spirograph pattern 
+plotxy((5+3)cos(t)-3cos((5/3+1)*t), (5+3)sin(t)-3sin((5/3+1)t), 0, 6pi, t)
+
+;; Hypotrochoid 
+plotxy((3-1)cos(t)+1cos((3-1)*t/1), (3-1)sin(t)-1sin((3-1)t/1), 0, 2pi, t)
 
 ---
 

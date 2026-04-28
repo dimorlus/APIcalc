@@ -93,10 +93,6 @@ invmod(n,m)                     Inverse of n modulo m
 mod, fmod(x|z,y|z)        (1)   Reminder
 rnd(x|z|M),rand(x|z|M)  (1,3)   Random value 0..x
 
-erf(x)                          Error function
-erfc(x)                         Complementary error function
-aerf(x)                         Invert error function 
-
 db(x|z)                   (1)   Decibel, 10*lg(x), 10*lg(abs(z)) 
 np(x|z)                   (1)   Neper, 20*lg(x), 20*lg(abs(z))
 adb(x|z)                  (1)   10^(x/10), 10^(z/10)  
@@ -128,52 +124,43 @@ factorize(n)                    Prime factorization in to string
 polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
 fdlg(fmask)						Opens a file dialog to select a file. 
-
+                           Plot functions
+          Each function in this group has three versions.
+       plot(...) - displays a plot in a pop-up modal window (does not work in the CLI version)
+       fplot("bmpfile", ...) - places a plot in the specified BMP file (replaces an existing one or creates a new one)
+       oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
 plot(expr,from,to,x)                       Plot of the expr function in Cartesian coordinates
-fplot("fname",expr,from,to,x)              Plot of the expr function in Cartesian coordinates to the BMP file.
-oplot("fname",expr,from,to,x)              Overlay plot of the expr function in Cartesian coordinates to the BMP file. 
 plotpol(expr,from, to, x)                  Plot of the expr function in Polar coordinates.
-fplotpol("fname",expr,from, to, x)         Plot of the expr function in Polar coordinates to the BMP file.
-oplotpol("fname",expr,from, to, x)         Overlay plot of the expr function in Cartesian coordinates to the BMP file.
 plotxy(exprX, exprY,from, to, t)           Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
-fplotxy("fname",exprX, exprY,from, to, t)  Parametric plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
-oplotxy("fname",exprX, exprY,from, to, t)  Overlay plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
 plotlgx(expr,from,to,x)                    Plots with logarithmic scale on X axis.  
 plotlgy(expr,from,to,x)                    Plots with logarithmic scale on Y axis.
 plotlgxy(expr,from,to,x)                   Plots with logarithmic scale on both axes. 
-fplotlgx("fname",expr,from,to,x)           Plots with logarithmic scale on X axis to the BMP file.
-fplotlgy("fname",expr,from,to,x)           Plots with logarithmic scale on Y axis to the BMP file.
-fplotlgxy("fname",expr,from,to,x)          Plots with logarithmic scale on both axes to the BMP file.
-oplotlgx("fname",expr,from,to,x)           Overlay plot with logarithmic scale on X axis to the BMP file.
-oplotlgy("fname",expr,from,to,x)           Overlay plot with logarithmic scale on Y axis to the BMP file.
-oplotlgxy("fname",expr,from,to,x)          Overlay plot with logarithmic scale on both axes to the BMP file. 
 plotsmith(expr,from,to,x)                  Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
-fplotsmith("fname",expr,from,to,x)         Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
-oplotsmith("fname",expr,from,to,x)         Overlay Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
 plotsmithz(expr,from,to,x,z0)              Smith Chart plot for RF and microwave engineering.
-fplotsmithz("fname",expr,from,to,x,z0)     Smith Chart plot to the BMP file for RF and microwave engineering.
-oplotsmithz("fname",expr,from,to,x,z0)     Overlay Smith Chart plot to the BMP file for RF and microwave engineering.
-
-
-	Variables
+plotdata("datafile"[,"mask"])              Display points in window 
+plotdatal ("datafile"[,"mask"])            Display lines in window
+	                       Related Variables
 plot_width                      Graph width (100..2000, default - 800)
 plot_height                     Graph height (100..2000, default - 600)
 plot_bgc                        Graph background color, default is white (0xFFFFFF)
 plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"
-
+                       Regression & Data Fitting
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
 fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
 fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
 fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file data. Return [b, a]
 fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
-
+                       Regression Calculation
 clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
 clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].
 clclog(vector, x)               Evaluates y = a + b*ln(x). Expects vector [b, a].
 clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
 clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
-
+                       Statistical Analysis
+erf(x)                          Error function
+erfc(x)                         Complementary error function
+aerf(x)                         Invert error function 
 num("fname","msk")              Returns the count of valid numeric entries in the file.
 mean("fname","msk")             Calculates the arithmetic mean (average) of the dataset.
 median("fname","msk")           Robust center value estimate (iterative binary search).
@@ -181,8 +168,8 @@ rms("fname","msk")              Root Mean Square. Calculates the effective value
 sumx("fname","msk")             Returns the sum of all numeric values in the file.
 stddevp("fname","msk")          Population standard deviation (entire dataset, divisor n).
 stddevs("fname","msk")          Sample standard deviation (random sample, divisor n-1).
-min("fname","msk")              Finds the minimum value in the dataset.
-max("fname","msk")              Finds the maximum value in the dataset.
+smin("fname","msk")             Finds the minimum value in the dataset.
+smax("fname","msk")             Finds the maximum value in the dataset.
 normp("fname","msk", x)         Probability that a value from the dataset is <= x.
 normq("fname","msk", x)         Probability of falling within |x - mean| range.
 normr("fname","msk", x)         Probability that a value is > x (upper tail).

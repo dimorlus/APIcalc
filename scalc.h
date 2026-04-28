@@ -9,6 +9,7 @@
 #ifndef scalcH
 #define scalcH
 
+#pragma region Includes and definitions
 #ifndef _WIN32
 #include <minwindef.h>
 #endif
@@ -16,6 +17,7 @@
 #include <cstdlib> // for free() function
 #include <limits>
 #include "bmp.h"
+#pragma endregion
 
 // RW - set both by calc engine and application
 // WO - set only from application
@@ -59,6 +61,7 @@
 #define AUTO (1 << 29) // (UI) Auto output format
 #define FCTR (1 << 30) // (UI) Factorization output
 
+
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  64  // maximum length of operator or function name
 #define MAXSTK 10  // maximum stack depth
@@ -93,7 +96,7 @@ typedef int int32_t;
 #endif
 typedef int64_t int_t;
 typedef uint64_t unsigned_t;
-#endif //__BORLANDC__
+#endif 
 
 
 #ifdef __BORLANDC__
@@ -101,6 +104,7 @@ typedef uint64_t unsigned_t;
 #include <process.h>
 #endif
 
+#pragma region Floating-point 128-bit support
 
 #ifdef _float128_
 #include <quadmath.h>
@@ -262,7 +266,9 @@ const float__t inf = 1.0 / 0.0;
 constexpr float__t qnan = std::numeric_limits<float__t>::quiet_NaN ();
 constexpr float__t inf = std::numeric_limits<float__t>::infinity ();
 #endif
+#pragma endregion
 
+#pragma region Value and symbol definitions
 class value;
 class symbol;
 
@@ -610,6 +616,9 @@ enum terr
  teMath,
 };
 
+#pragma endregion
+
+#pragma region Sybols and values classes
 class value // value represents a value in the calculator, which can be an integer, float, complex
             // number, string, or user-defined function
 {
@@ -674,7 +683,9 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
   next = nullptr;
  }
 };
+#pragma endregion
 
+#pragma region Memory management class
 class MemList
 {
  void **list;
@@ -769,6 +780,7 @@ void *register_mem (void *mem)
 
  int size () const { return count; }
 };
+#pragma endregion
 
 const int max_stack_size        = 256;  // Maximum size of value and operator stacks
 const int max_expression_length = 1024; // Maximum length of expression
@@ -825,8 +837,7 @@ class calculator // calculator represents the main class for the expression calc
     uint32_t text_color; // Text color
     calculator *child;   // Calculator for computations
    };
-    
-     
+         
  int scfg; // Syntax configuration flags
  int fflags; // Founded format flags
  int deep; // Current stack depth

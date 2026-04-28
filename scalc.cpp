@@ -1,6 +1,5 @@
-
+#pragma region Include Headers and Define Constants
 #include <windows.h>
-//#include "pch.h"
 #ifdef __BORLANDC__
 #include <stdint.h>
 #include <malloc.h>
@@ -123,8 +122,10 @@ void DebugLog (const char *format, ...)
 #define DebugLog(x, ...) ((void)0)
 #endif //__BORLANDC__
 #endif // _ENABLE_DEBUG_LOG_
+#pragma endregion
+//---------------------------------------------------------------------------
 
-
+#pragma region Calculator Class constructor and destructor
 calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
 {
  this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
@@ -175,9 +176,10 @@ calculator::~calculator (void)
  clear_mem_list ();
  if (res_mval) free (res_mval);
 }
+#pragma endregion
 //---------------------------------------------------------------------------
 
-
+#pragma region Wrapper Functions for External Use
 bool Const (void *clc, char *name, value &x)
 {
  return ((calculator *)clc)->addconst (name, x);
@@ -246,7 +248,10 @@ int_t SetPrecision (void *clc, int_t prec)
  calc->set_fprec (prec);
  return prec;
 }
+#pragma endregion
+//---------------------------------------------------------------------------
 
+#pragma region Predefined Symbols
 void calculator::AddPredefined (void)
 {
  // This function can be used to add predefined constants and functions
@@ -340,8 +345,8 @@ void calculator::AddPredefined (void)
  add (tsSTFUN, sfSumX, "sumx", nullptr);
  add (tsSTFUN, sfStdDevP, "stddevp", nullptr);
  add (tsSTFUN, sfStdDevS, "stddevs", nullptr);
- add (tsSTFUN, sfMin, "min", nullptr);
- add (tsSTFUN, sfMax, "max", nullptr);
+ add (tsSTFUN, sfMin, "stmin", nullptr);
+ add (tsSTFUN, sfMax, "stmax", nullptr);
 
  add (tsSTFUN, sfNormP, "normp", nullptr);
  add (tsSTFUN, sfNormQ, "normq", nullptr);
@@ -680,7 +685,11 @@ void calculator::AddPredefined (void)
  addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
  addivar ("plot_fgc", 0x00000000); // Default plot foreground color (black)
 }
- 
+#pragma endregion
+//---------------------------------------------------------------------------
+
+#pragma region Symbols and vars
+
 // Copy symbols from the provided symbol table with the specified copy mask
 // Copy symbols from the provided symbol table
 // The function should create a new hashed linked list
@@ -691,7 +700,6 @@ void calculator::AddPredefined (void)
 // not (depending on the value of the tag field).
 // All pointers freed in the destructor must be
 // recreated; the rest can be copied.
-
 
 void calculator::copy_symbols (symbol **symtab, uint64_t mask)
 {
@@ -786,8 +794,10 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
     }
   }
 }
-
+#pragma endregion
 //---------------------------------------------------------------------------
+
+#pragma region Memory Management
 // Memory management functions for static memory management mode
 
 // Do not clean variables with other trash
@@ -841,11 +851,11 @@ void calculator::save_vars_mem (void)
     }
    return nullptr;
   }
+#pragma endregion
 //---------------------------------------------------------------------------
 
-
-
-//---------------------------------------------------------------------------
+#pragma region Output Formatting
+  //---------------------------------------------------------------------------
 // Print matrix result in a formatted way, with an option for a new line
 // and an optional pointer to store the size of the output
 int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, 
@@ -1717,7 +1727,10 @@ int calculator::print (char *str, int Options, int binwide, int *size)
  if (size) *size = bsize;
  return n;
 }
+#pragma endregion
 //---------------------------------------------------------------------------
+
+#pragma region Variable listing and hash table management
 
 int calculator::varlist (char *buf, int bsize, int *maxlen)
 {
@@ -2099,6 +2112,10 @@ void calculator::addlconst (const char *name, float__t fval, int_t ival)
  sp->val.imval = 0;
 }
 
+#pragma endregion
+//---------------------------------------------------------------------------
+
+#pragma region Data conversion functions
 // Parse a hexadecimal string and convert it to an integer value, returning the number of characters
 // parsed
 int calculator::hscanf (char *str, int_t &ival, int &nn)
@@ -2589,6 +2606,10 @@ void calculator::scientific (char *&fpos, double &fval)
   }
 }
 
+#pragma endregion
+//---------------------------------------------------------------------------
+
+#pragma region ERROR_HANDLING
 // Set an error message with the given position and message text
 void calculator::error (int pos, const char *msg, terr errt)
 {
@@ -2611,328 +2632,10 @@ void calculator::mxerror (const char *msg)
  strcpy (mxerr, msg);
 }
 
-// Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
-// expr -> x(2x+2)-2, x:=0
-// Complex support
-//#define _DAMPED_
-bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
-{
- if (!expr || !*expr)
-  {
-   errorf (0, "empty expression");
-   re_res = qnan;
-   im_res = qnan;
-   return false;
-  }
+#pragma endregion
+//---------------------------------------------------------------------------
 
- char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
-
- if (!Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0))
-  {
-   errorf (pos, "solve: invalid expression");
-   re_res = qnan;
-   im_res = qnan;
-   return false;
-  }
-
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
- if (!child)
-  {
-   errorf (pos, "Out of memory");
-   re_res = qnan;
-   im_res = qnan;
-   return false;
-  }
-
- child->evaluate_f (svar);
- if (child->err[0])
-  {
-   errorf (pos, "%s", child->err);
-   delete child;
-   re_res = qnan;
-   im_res = qnan;
-   return false;
-  }
- strcpy (nvar, (char *)child->get_last_var ());
- float__t xr = child->get_re_res ();
- float__t xi = child->get_im_res (); // 0 if real initial approximation
-
- if (tag == tsCALC)
-  {
-   child->addfvar (nvar, xr, xi);
-   child->evaluate_f (sexpr);
-   if (child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     re_res = qnan;
-     im_res = qnan;
-     return false;
-    }
-   re_res  = child->get_re_res ();
-   im_res = child->get_im_res ();
-   fflags |= child->isfflags ();
-   delete child;
-   return true;
-  }
-
-#ifdef _float128_
- const float__t tol   = 1e-28Q;
- const float__t delta = 1.5e-17Q;
-#else
- const float__t tol   = 1e-12L;
- const float__t delta = 1.5e-10L;
-#endif
- const int maxIter = 100;
- bool converged    = false;
-
- for (int i = 0; i < maxIter; i++)
-  {
-   // f(z)
-   child->addfvar (nvar, xr, xi);
-   child->evaluate_f (sexpr);
-   if (child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     re_res = qnan;
-     im_res = qnan;
-     return false;
-    }
-   float__t fr = child->get_re_res ();
-   float__t fi = child->get_im_res ();
-
-   // |f(z)|
-   float__t fabs_f = Sqrt (fr * fr + fi * fi);
-   if (fabs_f < tol)
-    {
-     converged = true;
-     break;
-    }
-
-   // step d = max(|z|, 1) * delta
-#ifdef _float128_
-   float__t d = fmaxq (sqrtq (xr * xr + xi * xi), 1.0Q) * delta;
-#else
-#ifdef __BORLANDC__
-     float__t ax = Sqrt (xr * xr + xi * xi);
-     float__t d = ((ax > 1.0L) ? ax : 1.0L) * delta;
-#else
-   float__t d = fmaxl (Sqrt (xr * xr + xi * xi), 1.0L) * delta;
-#endif
-#endif
-   // f(z+d) and f(z-d)  on the real axis
-   child->addfvar (nvar, xr + d, xi);
-   child->evaluate_f (sexpr);
-   float__t fpr_r = child->get_re_res (), fpr_i = child->get_im_res ();
-
-   child->addfvar (nvar, xr - d, xi);
-   child->evaluate_f (sexpr);
-   float__t fmr_r = child->get_re_res (), fmr_i = child->get_im_res ();
-
-   // f'(z) ≈ (f(z+d) - f(z-d)) / (2d)
-   float__t fp_r = (fpr_r - fmr_r) / ((float__t)2.0 * d);
-   float__t fp_i = (fpr_i - fmr_i) / ((float__t)2.0 * d);
-
-   float__t fp2 = fp_r * fp_r + fp_i * fp_i;
-   if (fp2 < tol * tol)
-    {
-     xr += d * (float__t)1000.0;
-     continue;
-    }
-
-   // Newton step: z -= f(z)/f'(z)
-   float__t step_r = (fr * fp_r + fi * fp_i) / fp2;
-   float__t step_i = (fi * fp_r - fr * fp_i) / fp2;
-   float__t xr_new = xr - step_r;
-   float__t xi_new = xi - step_i;
-
-   if (isnan (xr_new) || isnan (xi_new))
-    {
-     errorf (pos, "Solution diverged");
-     delete child;
-     re_res = qnan;
-     im_res = qnan;
-     return false;
-    }
-
-#ifdef _DAMPED_
-   // damped Newton:
-   float__t step_abs = Sqrt (step_r * step_r + step_i * step_i);
-   float__t z_abs    = Sqrt (xr * xr + xi * xi);
-   float__t max_step = ((float__t)1.0 + z_abs) * (float__t)10.0; // step limit
-   if (step_abs > max_step)
-    {
-     float__t scale = max_step / step_abs;
-     step_r *= scale;
-     step_i *= scale;
-    }
-   xr = xr - step_r;
-   xi = xi - step_i;
-#else
-   float__t step_abs = Sqrt (step_r * step_r + step_i * step_i);
-   float__t z_abs    = Sqrt (xr * xr + xi * xi);
-   if (step_abs < tol * ((float__t)1.0 + z_abs))
-    {
-     xr = xr_new;
-     xi = xi_new;
-     converged = true;
-     break;
-    }
-   xr = xr_new;
-   xi = xi_new;
-#endif
-  }
-
- fflags |= child->isfflags ();
- delete child;
-
- if (!converged)
-  {
-   errorf (pos, "No solution found");
-   re_res = qnan;
-   im_res = qnan;
-   return false;
-  }
-
- re_res  = xr;
- im_res = xi;
- return true;
-}
-
-// Gauss-Kronrod G7/K15 adaptive quadrature
-// C++98 compatible (BCB6 / VS2022)
-//
-// K15 nodes (positive half, index 0 = center node = 0.0)
-// G7 uses nodes at indices 0, 2, 4, 6  (every other K15 node)
-
-static const float__t GK_NODES[8] = {
- 0.0L, 0.20778495500789846760L, 0.40584515137739716691L, 0.58608723546769113029L, 
- 0.74153118559939443986L, 0.86486442335976907279L, 0.94910791234275852453L, 0.99145537112081263921L,
-};
-
-// K15 weights: index i corresponds to nodes +-GK_NODES[i]
-// (index 0 has no symmetry — centre point)
-static const float__t K15_WEIGHTS[8] = {
- 0.20948214108472782801L, 0.20443294007529889241L, 0.19035057806478540991L, 0.16900472663926790283L,
- 0.14065325971552591875L, 0.10479001032224928880L, 0.06309209262997855329L, 0.02293532201052922497L,
-};
-
-// G7 weights: 4 values for nodes at GK_NODES[0,2,4,6]
-static const float__t G7_WEIGHTS[4] = {
- 0.41795918367346938776L, 0.38183005050511894495L, 0.27970539148927664160L, 0.12948496616886732340L,
-};
-
-// G7 node indices into GK_NODES[]
-static const int G7_IDX[4] = { 0, 2, 4, 6 };
-
-// ---------------------------------------------------------------------------
-
-// Evaluate f(x) = sexpr with variable svar set to x in child calculator
-// Returns qnan on any error
-float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, float__t x)
-{
- pCalc->addfvar (svar, x);
- float__t val = pCalc->evaluate_f (sexpr);
- if (isnan (val) && pCalc->errt () == teMath) return (float__t)0.0L;
- 
- if (pCalc->err[0]) return qnan;
- return val;
-}
-
-// Single G7/K15 panel on [a, b], no recursion
-GKResult calculator::gkPanel (calculator *pCalc, char *sexpr, const char *svar, float__t a,
-                              float__t b)
-{
- GKResult res    = { 0.0L, 0.0L, true };
- float__t center = (a + b) / 2.0L;
- float__t half   = (b - a) / 2.0L;
-
- // f values at all 15 points: fL[i] = f(center - half*node[i])
- //                            fR[i] = f(center + half*node[i])
- // index 0: fL[0] == fR[0] == f(center)
- float__t fL[8], fR[8];
- fL[0] = fR[0] = gkEval (pCalc, sexpr, svar, center);
- if (isnan (fL[0]))
-  {
-   res.ok = false;
-   return res;
-  }
-
- for (int i = 1; i < 8; i++)
-  {
-   fL[i] = gkEval (pCalc, sexpr, svar, center - half * GK_NODES[i]);
-   if (isnan (fL[i]))
-    {
-     res.ok = false;
-     return res;
-    }
-   fR[i] = gkEval (pCalc, sexpr, svar, center + half * GK_NODES[i]);
-   if (isnan (fR[i]))
-    {
-     res.ok = false;
-     return res;
-    }
-  }
-
- // K15: sum over all 8 node pairs (index 0 counted once)
- float__t k15 = K15_WEIGHTS[0] * fL[0];
- for (int i = 1; i < 8; i++) k15 += K15_WEIGHTS[i] * (fL[i] + fR[i]);
- k15 *= half;
-
- // G7: sum over node indices 0, 2, 4, 6
- float__t g7 = G7_WEIGHTS[0] * fL[0];
- for (int i = 1; i < 4; i++)
-  {
-   int idx = G7_IDX[i];
-   g7 += G7_WEIGHTS[i] * (fL[idx] + fR[idx]);
-  }
- g7 *= half;
-
- res.value = k15;
- res.error = fabsl (k15 - g7);
- return res;
-}
-
-// Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
-GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
-                                 float__t b,
-                                 float__t tol, // not divided!
-                                 int depth, int maxDepth,
-                                 int &callCount, 
-                                 int maxCalls)
-{
- if (++callCount > maxCalls) // hard stop
-  {
-   GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
-   res.ok = true;
-   return res;
-  }
-
- GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
- if (!res.ok) return res;
-
- if (res.error <= tol || depth >= maxDepth) return res;
-
- float__t mid = (a + b) / 2.0L;
-
- GKResult left  = gkAdaptive (pCalc, sexpr, svar, a, mid, tol, depth + 1, maxDepth, callCount, maxCalls);
- GKResult right = gkAdaptive (pCalc, sexpr, svar, mid, b, tol, depth + 1, maxDepth, callCount, maxCalls);
-
- if (!left.ok || !right.ok)
-  {
-   GKResult bad = { qnan, qnan, false };
-   return bad;
-  }
-
- GKResult combined;
- combined.value = left.value + right.value;
- combined.error = left.error + right.error;
- combined.ok    = true;
- return combined;
-}
-
-
+#pragma region Solvers and Plotting helpers
 // Split expression to comma-separated parts using variadic arguments
 // Usage: Split(expr, buf1, size1, buf2, size2, ..., nullptr, 0)
 // Each buffer is specified as: char* buffer, int max_size
@@ -3058,156 +2761,6 @@ bool calculator::Split (const char *expr, ...)
 }
 // Split expression to the comma separeted parts.
 
-bool calculator::For(const char* expr, value& res)
-{
- if (expr && *expr)
-  {
-   char sexpr[STRBUF];
-   char sfrom[MAXOP];
-   char sto[MAXOP];
-   char svar[STRBUF];
-
-   float__t vfrom  = qnan;
-   float__t vto    = qnan;
-   float__t fvx    = qnan;
-   float__t result = 0;
-   int callCount   = 0;
-
-   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
-    {
-     result_fval = qnan;
-     return false;
-    }
-
-   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
-   if (!child)
-    {
-     errorf (pos, "Out of memory");
-     result_fval = qnan;
-     return false;
-    }
-
-   vfrom = child->evaluate_f (sfrom);
-   if (isnan (vfrom) || child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   vto = child->evaluate_f (sto);
-   if (isnan (vto) || child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-    {
-     float__t fvx = (float__t)0.0L;
-     uint64_t init_ms = GetTickCount64 ();
-     uint64_t last_gui_check = 0;
-
-     if (vfrom > vto)
-      {
-       do
-        {
-         if (check_break (init_ms, last_gui_check) != brNONE)
-          {
-           delete child;
-           result_fval = qnan;
-           return false;
-          }
-
-         child->addfvar (svar, vfrom);
-         fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                                 // the syntax check before starting the integration
-
-         if (isnan (fvx) || child->err[0])
-          {
-           errorf (pos, "%s", child->err);
-           delete child;
-           result_fval = qnan;
-           return false;
-          }
-         vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
-                       // step sizes
-        }
-       while (vfrom >= vto);
-      }
-     else
-      {
-       do
-        {
-         if (check_break (init_ms, last_gui_check) != brNONE)
-          {
-           delete child;
-           result_fval = qnan;
-           return qnan;
-          }
-
-         child->addfvar (svar, vfrom);
-         fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                                // the syntax check before starting the integration
-
-         if (isnan (fvx) || child->err[0])
-          {
-           errorf (pos, "%s", child->err);
-           delete child;
-           result_fval = qnan;
-           return false;
-          }
-         vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support different
-                       // step sizes
-        }
-       while (vfrom <= vto);
-      }
-    }
-
-   res.tag = child->get_res_tag ();
-   if (res.tag == tvMATRIX)
-    {
-     res.fval  = child->get_re_res ();
-     res.ival  = child->get_int_res ();
-     res.imval = child->get_im_res ();
-     res.sval  = dupString (get_str_res ());
-     mxresult_t mxr = child->get_mx_res ();
-     res.mcols = mxr.cols;
-     res.mrows = mxr.rows;
-     int msize = mxr.rows * mxr.cols * sizeof (float__t);
-     if (msize)
-      {
-       float__t *new_mval = (float__t *)sf_alloc (msize);
-       if (new_mval)
-        {
-         memcpy (new_mval, mxr.mval, msize);
-         res.mval = new_mval;
-        }
-       else
-        {
-         errorf (res.pos, "Out of memory");
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
-    }
-   else 
-    {
-     res.fval = child->get_re_res ();
-     res.ival = child->get_int_res ();
-     res.imval = child->get_im_res ();
-     res.sval  = dupString (get_str_res ());
-    }
-
-   fflags |= child->isfflags ();
-   delete child;
-   return true;
-  }
- return false; 
-}
-
-
 // Function to normalize a path
 void calculator::NormalizePath (const char *input, char *output, int outSize)
 {
@@ -3263,7 +2816,110 @@ void calculator::NormalizePath (const char *input, char *output, int outSize)
   }
 }
 
+int calculator::scanmasknum (const char *str)
+{
+ const char *cp = str;
+ int num        = 0;
+ while (*cp)
+  {
+   if (*cp >= '0' && *cp <= '9') num++;
+   cp++;
+  }
+ return num;
+}
 
+int calculator::strscan (const char *str, const char *msk, int n, double *v, ...)
+{
+ const char *cp = str;
+ const char *mp = msk;
+ int num_count  = 0;
+ double **vals  = &v;
+
+ while (*cp && (num_count < n))
+  {
+   switch (*cp)
+    {
+    case '-':
+    case '+':
+    case '.':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+     {
+      char *fpos;
+      double val = strtod (cp, &fpos);
+      scientific (fpos, val);
+      cp = fpos;
+      if (mp && *mp) // if mask is provided, check if current character matches the mask
+       {
+        int idx = -1;
+        while (*mp && isspace (*mp)) mp++;             // skip spaces in mask
+        if (*mp >= '0' && *mp <= '9') idx = *mp - '0'; // get index from mask
+        if (*mp) mp++;
+        if (idx >= 0 && idx < n && vals[idx])
+         {
+          *vals[idx] = val; // store value in the correct variable based on mask
+          num_count++;
+         }
+       }
+      else // if no mask, capture all numbers
+       {
+        if (vals[num_count]) *vals[num_count++] = val;
+       }
+     }
+     break;
+    }
+   cp++;
+  }
+ return num_count;
+}
+
+
+t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
+{
+#ifdef NDEBUG
+ uint64_t current_ms = GetTickCount64 ();
+
+ if (current_ms - init_ms > 1000)
+  {
+   if (!EscFn)
+    {
+     errorf (pos, "Operation took too long");
+     return brTIMEOUT;
+    }
+   if (EscFn && EscFn ())
+    {
+     errorf (pos, "Operation cancelled by user");
+     return brESC;
+    }
+   else
+    {
+     if (current_ms - last_gui_check > 100)
+      {
+       last_gui_check = current_ms;
+       Sleep (1); // Sleep briefly to allow GUI to remain responsive
+      }
+     if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+      {
+       errorf (pos, "Operation took too long");
+       return brTIMEOUT;
+      }
+    }
+  }
+#endif // NDEBUG
+ return brNONE;
+}
+#pragma endregion
+//---------------------------------------------------------------------------
+
+#pragma region GRAPHICS_ENGINE
 bool calculator::CheckChildRes (calculator *child)
 {
  if (child->err[0])
@@ -5579,41 +5235,492 @@ bool calculator::Plot (const char *expr, v_func fidx)
 
  return true;
 }
+#pragma endregion
+//---------------------------------------------------------------------------
 
-t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
+#pragma region SOLVERS
+
+// Newton-Raphson solution of the equation solve(x(2x+2)-2, x:=0)
+// expr -> x(2x+2)-2, x:=0
+// Complex support
+// #define _DAMPED_
+bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
 {
- #ifdef NDEBUG
- uint64_t current_ms = GetTickCount64 ();
-
- if (current_ms - init_ms > 1000)
+ if (!expr || !*expr)
   {
-   if (!EscFn)
+   errorf (0, "empty expression");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
+
+ if (!Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0))
+  {
+   errorf (pos, "solve: invalid expression");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ child->evaluate_f (svar);
+ if (child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+ strcpy (nvar, (char *)child->get_last_var ());
+ float__t xr = child->get_re_res ();
+ float__t xi = child->get_im_res (); // 0 if real initial approximation
+
+ if (tag == tsCALC)
+  {
+   child->addfvar (nvar, xr, xi);
+   child->evaluate_f (sexpr);
+   if (child->err[0])
     {
-     errorf (pos, "Operation took too long");
-     return brTIMEOUT;    
+     errorf (pos, "%s", child->err);
+     delete child;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
     }
-   if (EscFn && EscFn ())
+   re_res = child->get_re_res ();
+   im_res = child->get_im_res ();
+   fflags |= child->isfflags ();
+   delete child;
+   return true;
+  }
+
+#ifdef _float128_
+ const float__t tol   = 1e-28Q;
+ const float__t delta = 1.5e-17Q;
+#else
+ const float__t tol   = 1e-12L;
+ const float__t delta = 1.5e-10L;
+#endif
+ const int maxIter = 100;
+ bool converged    = false;
+
+ for (int i = 0; i < maxIter; i++)
+  {
+   // f(z)
+   child->addfvar (nvar, xr, xi);
+   child->evaluate_f (sexpr);
+   if (child->err[0])
     {
-     errorf (pos, "Operation cancelled by user");
-     return brESC;
+     errorf (pos, "%s", child->err);
+     delete child;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+   float__t fr = child->get_re_res ();
+   float__t fi = child->get_im_res ();
+
+   // |f(z)|
+   float__t fabs_f = Sqrt (fr * fr + fi * fi);
+   if (fabs_f < tol)
+    {
+     converged = true;
+     break;
+    }
+
+    // step d = max(|z|, 1) * delta
+#ifdef _float128_
+   float__t d = fmaxq (sqrtq (xr * xr + xi * xi), 1.0Q) * delta;
+#else
+#ifdef __BORLANDC__
+   float__t ax = Sqrt (xr * xr + xi * xi);
+   float__t d  = ((ax > 1.0L) ? ax : 1.0L) * delta;
+#else
+   float__t d = fmaxl (Sqrt (xr * xr + xi * xi), 1.0L) * delta;
+#endif
+#endif
+   // f(z+d) and f(z-d)  on the real axis
+   child->addfvar (nvar, xr + d, xi);
+   child->evaluate_f (sexpr);
+   float__t fpr_r = child->get_re_res (), fpr_i = child->get_im_res ();
+
+   child->addfvar (nvar, xr - d, xi);
+   child->evaluate_f (sexpr);
+   float__t fmr_r = child->get_re_res (), fmr_i = child->get_im_res ();
+
+   // f'(z) ≈ (f(z+d) - f(z-d)) / (2d)
+   float__t fp_r = (fpr_r - fmr_r) / ((float__t)2.0 * d);
+   float__t fp_i = (fpr_i - fmr_i) / ((float__t)2.0 * d);
+
+   float__t fp2 = fp_r * fp_r + fp_i * fp_i;
+   if (fp2 < tol * tol)
+    {
+     xr += d * (float__t)1000.0;
+     continue;
+    }
+
+   // Newton step: z -= f(z)/f'(z)
+   float__t step_r = (fr * fp_r + fi * fp_i) / fp2;
+   float__t step_i = (fi * fp_r - fr * fp_i) / fp2;
+   float__t xr_new = xr - step_r;
+   float__t xi_new = xi - step_i;
+
+   if (isnan (xr_new) || isnan (xi_new))
+    {
+     errorf (pos, "Solution diverged");
+     delete child;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+
+#ifdef _DAMPED_
+   // damped Newton:
+   float__t step_abs = Sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = Sqrt (xr * xr + xi * xi);
+   float__t max_step = ((float__t)1.0 + z_abs) * (float__t)10.0; // step limit
+   if (step_abs > max_step)
+    {
+     float__t scale = max_step / step_abs;
+     step_r *= scale;
+     step_i *= scale;
+    }
+   xr = xr - step_r;
+   xi = xi - step_i;
+#else
+   float__t step_abs = Sqrt (step_r * step_r + step_i * step_i);
+   float__t z_abs    = Sqrt (xr * xr + xi * xi);
+   if (step_abs < tol * ((float__t)1.0 + z_abs))
+    {
+     xr        = xr_new;
+     xi        = xi_new;
+     converged = true;
+     break;
+    }
+   xr = xr_new;
+   xi = xi_new;
+#endif
+  }
+
+ fflags |= child->isfflags ();
+ delete child;
+
+ if (!converged)
+  {
+   errorf (pos, "No solution found");
+   re_res = qnan;
+   im_res = qnan;
+   return false;
+  }
+
+ re_res = xr;
+ im_res = xi;
+ return true;
+}
+
+// Gauss-Kronrod G7/K15 adaptive quadrature
+// C++98 compatible (BCB6 / VS2022)
+//
+// K15 nodes (positive half, index 0 = center node = 0.0)
+// G7 uses nodes at indices 0, 2, 4, 6  (every other K15 node)
+
+static const float__t GK_NODES[8] = {
+ 0.0L,
+ 0.20778495500789846760L,
+ 0.40584515137739716691L,
+ 0.58608723546769113029L,
+ 0.74153118559939443986L,
+ 0.86486442335976907279L,
+ 0.94910791234275852453L,
+ 0.99145537112081263921L,
+};
+
+// K15 weights: index i corresponds to nodes +-GK_NODES[i]
+// (index 0 has no symmetry — centre point)
+static const float__t K15_WEIGHTS[8] = {
+ 0.20948214108472782801L, 0.20443294007529889241L, 0.19035057806478540991L, 0.16900472663926790283L,
+ 0.14065325971552591875L, 0.10479001032224928880L, 0.06309209262997855329L, 0.02293532201052922497L,
+};
+
+// G7 weights: 4 values for nodes at GK_NODES[0,2,4,6]
+static const float__t G7_WEIGHTS[4] = {
+ 0.41795918367346938776L,
+ 0.38183005050511894495L,
+ 0.27970539148927664160L,
+ 0.12948496616886732340L,
+};
+
+// G7 node indices into GK_NODES[]
+static const int G7_IDX[4] = { 0, 2, 4, 6 };
+
+// ---------------------------------------------------------------------------
+
+// Evaluate f(x) = sexpr with variable svar set to x in child calculator
+// Returns qnan on any error
+float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, float__t x)
+{
+ pCalc->addfvar (svar, x);
+ float__t val = pCalc->evaluate_f (sexpr);
+ if (isnan (val) && pCalc->errt () == teMath) return (float__t)0.0L;
+
+ if (pCalc->err[0]) return qnan;
+ return val;
+}
+
+// Single G7/K15 panel on [a, b], no recursion
+GKResult calculator::gkPanel (calculator *pCalc, char *sexpr, const char *svar, float__t a,
+                              float__t b)
+{
+ GKResult res    = { 0.0L, 0.0L, true };
+ float__t center = (a + b) / 2.0L;
+ float__t half   = (b - a) / 2.0L;
+
+ // f values at all 15 points: fL[i] = f(center - half*node[i])
+ //                            fR[i] = f(center + half*node[i])
+ // index 0: fL[0] == fR[0] == f(center)
+ float__t fL[8], fR[8];
+ fL[0] = fR[0] = gkEval (pCalc, sexpr, svar, center);
+ if (isnan (fL[0]))
+  {
+   res.ok = false;
+   return res;
+  }
+
+ for (int i = 1; i < 8; i++)
+  {
+   fL[i] = gkEval (pCalc, sexpr, svar, center - half * GK_NODES[i]);
+   if (isnan (fL[i]))
+    {
+     res.ok = false;
+     return res;
+    }
+   fR[i] = gkEval (pCalc, sexpr, svar, center + half * GK_NODES[i]);
+   if (isnan (fR[i]))
+    {
+     res.ok = false;
+     return res;
+    }
+  }
+
+ // K15: sum over all 8 node pairs (index 0 counted once)
+ float__t k15 = K15_WEIGHTS[0] * fL[0];
+ for (int i = 1; i < 8; i++) k15 += K15_WEIGHTS[i] * (fL[i] + fR[i]);
+ k15 *= half;
+
+ // G7: sum over node indices 0, 2, 4, 6
+ float__t g7 = G7_WEIGHTS[0] * fL[0];
+ for (int i = 1; i < 4; i++)
+  {
+   int idx = G7_IDX[i];
+   g7 += G7_WEIGHTS[i] * (fL[idx] + fR[idx]);
+  }
+ g7 *= half;
+
+ res.value = k15;
+ res.error = fabsl (k15 - g7);
+ return res;
+}
+
+// Adaptive G7/K15: recursively subdivide until error < tol or maxDepth reached
+GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *svar, float__t a,
+                                 float__t b,
+                                 float__t tol, // not divided!
+                                 int depth, int maxDepth, int &callCount, int maxCalls)
+{
+ if (++callCount > maxCalls) // hard stop
+  {
+   GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
+   res.ok       = true;
+   return res;
+  }
+
+ GKResult res = gkPanel (pCalc, sexpr, svar, a, b);
+ if (!res.ok) return res;
+
+ if (res.error <= tol || depth >= maxDepth) return res;
+
+ float__t mid = (a + b) / 2.0L;
+
+ GKResult left
+     = gkAdaptive (pCalc, sexpr, svar, a, mid, tol, depth + 1, maxDepth, callCount, maxCalls);
+ GKResult right
+     = gkAdaptive (pCalc, sexpr, svar, mid, b, tol, depth + 1, maxDepth, callCount, maxCalls);
+
+ if (!left.ok || !right.ok)
+  {
+   GKResult bad = { qnan, qnan, false };
+   return bad;
+  }
+
+ GKResult combined;
+ combined.value = left.value + right.value;
+ combined.error = left.error + right.error;
+ combined.ok    = true;
+ return combined;
+}
+
+
+bool calculator::For (const char *expr, value &res)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char sfrom[MAXOP];
+   char sto[MAXOP];
+   char svar[STRBUF];
+
+   float__t vfrom  = qnan;
+   float__t vto    = qnan;
+   float__t fvx    = qnan;
+   float__t result = 0;
+   int callCount   = 0;
+
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
+    {
+     result_fval = qnan;
+     return false;
+    }
+
+   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   if (!child)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return false;
+    }
+
+   vfrom = child->evaluate_f (sfrom);
+   if (isnan (vfrom) || child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   vto = child->evaluate_f (sto);
+   if (isnan (vto) || child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   {
+    float__t fvx            = (float__t)0.0L;
+    uint64_t init_ms        = GetTickCount64 ();
+    uint64_t last_gui_check = 0;
+
+    if (vfrom > vto)
+     {
+      do
+       {
+        if (check_break (init_ms, last_gui_check) != brNONE)
+         {
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+
+        child->addfvar (svar, vfrom);
+        fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                         // the syntax check before starting the integration
+
+        if (isnan (fvx) || child->err[0])
+         {
+          errorf (pos, "%s", child->err);
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+        vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support
+                                 // different step sizes
+       }
+      while (vfrom >= vto);
+     }
+    else
+     {
+      do
+       {
+        if (check_break (init_ms, last_gui_check) != brNONE)
+         {
+          delete child;
+          result_fval = qnan;
+          return qnan;
+         }
+
+        child->addfvar (svar, vfrom);
+        fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                         // the syntax check before starting the integration
+
+        if (isnan (fvx) || child->err[0])
+         {
+          errorf (pos, "%s", child->err);
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+        vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support
+                                 // different step sizes
+       }
+      while (vfrom <= vto);
+     }
+   }
+
+   res.tag = child->get_res_tag ();
+   if (res.tag == tvMATRIX)
+    {
+     res.fval       = child->get_re_res ();
+     res.ival       = child->get_int_res ();
+     res.imval      = child->get_im_res ();
+     res.sval       = dupString (get_str_res ());
+     mxresult_t mxr = child->get_mx_res ();
+     res.mcols      = mxr.cols;
+     res.mrows      = mxr.rows;
+     int msize      = mxr.rows * mxr.cols * sizeof (float__t);
+     if (msize)
+      {
+       float__t *new_mval = (float__t *)sf_alloc (msize);
+       if (new_mval)
+        {
+         memcpy (new_mval, mxr.mval, msize);
+         res.mval = new_mval;
+        }
+       else
+        {
+         errorf (res.pos, "Out of memory");
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
+      }
     }
    else
     {
-     if (current_ms - last_gui_check > 100)
-      {
-       last_gui_check = current_ms;
-       Sleep (1); // Sleep briefly to allow GUI to remain responsive
-      }
-     if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
-      {
-       errorf (pos, "Operation took too long");
-       return brTIMEOUT;
-      }
+     res.fval  = child->get_re_res ();
+     res.ival  = child->get_int_res ();
+     res.imval = child->get_im_res ();
+     res.sval  = dupString (get_str_res ());
     }
+
+   fflags |= child->isfflags ();
+   delete child;
+   return true;
   }
-#endif // NDEBUG   
- return brNONE;
+ return false;
 }
+
+
 
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // sum(expr(x), from, to, x) 
@@ -5842,1574 +5949,10 @@ float__t calculator::Diff (const char *expr)
     }
   return result_fval = qnan; 
 }
+#pragma endregion
+//---------------------------------------------------------------------------
 
-// solve (x(2x+2)-2,x:=0)
-// calc (x(2x+2)-2,x:=0)
-// integr (x(2x+2)-2,0,10,x)
-// diff (x(2x+2)-2, 0, x)
-// for(expr, from, to, var)
-// sum(expr, from, to, var)
-// plot(fname, expr, from, to, var)
-// extract expression in () after the function name, and put it as string in the symbol table,
-// put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
-// and return toOPERAND or toERROR if something wrong.
-t_operator calculator::sscan (symbol *sym)
-{
- char sbuf[STRBUF];
- int sidx              = 0;
- int comma_count       = 0;
- int parenthesis_count = 1; // we start after the opening parenthesis, so we are already at depth 1
-
- char *ipos = buf + pos;
- if (*ipos == ')')
-  {
-   pos++;
-   return toRPAR;
-  }
- else 
- if (*ipos == '\0') return toEND; // end of input
-
- // skip whitespace befor '('
- while (isspace (*ipos & 0x7f)) ipos++;
-
- while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
-  {
-   if (*ipos == ',' && parenthesis_count == 1)
-    comma_count++; // count commas only at the top level of parentheses
-   else 
-   if (*ipos == '(' || *ipos == '[')
-    parenthesis_count++; // increase depth for nested parentheses and brackets
-   else 
-   if (*ipos == ')' || *ipos == ']')
-    parenthesis_count--; // decrease depth for closing parentheses and brackets
-   sbuf[sidx++] = *ipos++;
-  }
- if (sidx && sbuf[sidx - 1] == ')')
-  sbuf[sidx - 1] = '\0';  // remove the closing parenthesis from the string
- sbuf[STRBUF - 1] = '\0'; // null-terminate the string in case of overflow
-
- if (sym)
-  {
-   blockflag |= sym->block;
-   if ((sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
-    || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
-    {
-     if (parenthesis_count == 0 && comma_count == 1)
-      {
-       v_stack[v_sp].tag = tvSOLVE;
-      }
-     else
-      {
-       if (parenthesis_count)
-        error ("unmatched parenthesis in solve expression");
-       else
-        error ("wrong number of arguments in solve expression");
-       return toERROR;
-      }
-    }
-   else 
-   if (sym->tag == tsINTEGR || // integr (x(2x+2)-2,0,10,x) 
-       sym->tag == tsSUM)      // sum (x(2x+2)-2,0,10,x)
-    {
-     if (parenthesis_count == 0 && comma_count == 3)
-      {
-       v_stack[v_sp].tag = tvINTEGR;
-      }
-     else
-      {
-       if (parenthesis_count)
-        error ("unmatched parenthesis in integral expression");
-       else
-        error ("wrong number of arguments in integral expression");
-       return toERROR;
-      }
-    }
-   else 
-   if (sym->tag == tsDIFF) // diff (x(2x+2)-2, 0, x)
-    {
-     if (parenthesis_count == 0 && comma_count == 2)
-      {
-       v_stack[v_sp].tag = tvDIFF;
-      }
-     else
-      {
-       if (parenthesis_count)
-        error ("unmatched parenthesis in diff");
-       else
-        error ("wrong number of arguments in diff");
-       return toERROR;
-      }
-    }
-   else 
-   if (sym->tag == tsPLOT) // plot(fname, expr)
-    {
-     bool error_in_args = false;
-     switch (sym->fidx)
-      {
-      case pl_fplot:    // fplot(file, expr, from, to, var)
-      case pl_oplot:    // oplot(file, expr, from, to, var)
-      case pl_fplotpol: // fplotpol(file, expr, from, to, var)
-      case pl_oplotpol: // oplotpol(file, expr, from, to, var)
-      case pl_fplotlgx:
-      case pl_oplotlgx:
-      case pl_fplotlgy:
-      case pl_oplotlgy:
-      case pl_fplotlgxy:
-      case pl_oplotlgxy:
-      case pl_fplotsmith: //fplotsmith(file, expr, from, to, var)
-      case pl_oplotsmith: //oplotsmith(file, expr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_plot:    // plot(expr, from, to, var)
-      case pl_plotpol: // plotpol(expr, from, to, var)
-      case pl_plotlgx:
-      case pl_plotlgy:
-      case pl_plotlgxy:
-      case pl_plotsmith: // plotsmith(expr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 3) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_fxyplot: // fxyplot(file, xexpr, yexpr, from, to, var)
-      case pl_oxyplot: // oxyplot(file, xexpr, yexpr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_plotsmithz: // plotsmithz(expr, from, to, var, Z0)
-       if (parenthesis_count == 0 && comma_count == 4) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_fplotsmithz: // fplotsmithz(file, expr, from, to, var, Z0)
-      case pl_oplotsmithz: // oplotsmithz(file, expr, from, to, var, Z0)
-       if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_plotdata:  // plotdata(datafile, mask)
-      case pl_plotdatal: // plotdatal(datafile, mask) - with lines
-       if (parenthesis_count == 0 && comma_count <= 1) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      case pl_fplotdata: // fplotdata(bmpfile, datafile, mask)
-      case pl_oplotdata: // oplotdata(bmpfile, datafile, mask)
-      case pl_fplotdatal: // fplotdatal(bmpfile, datafile, mask)
-      case pl_oplotdatal: // oplotdatal(bmpfile, datafile, mask)
-       if (parenthesis_count == 0 && comma_count <= 2) v_stack[v_sp].tag = tvPLOT;
-       else error_in_args = true;
-      break;
-
-      default:
-       error ("Unknown plot function");
-       return toERROR;
-      }
-     if (error_in_args)
-       {
-        if (parenthesis_count) error ("unmatched parenthesis in plot expression");
-        else error ("wrong number of arguments in plot expression");
-        return toERROR;
-       }
-    }
-   else
-   if (sym->tag == tsFOR) //for(expr, from, to, var)
-    {
-     if (parenthesis_count == 0 && comma_count == 3)
-      {
-       v_stack[v_sp].tag = tvFOR;
-      }
-     else
-      {
-       if (parenthesis_count)
-        error ("unmatched parenthesis in for expression");
-       else
-        error ("wrong number of arguments in for expression");
-       return toERROR;
-      }
-    }
-
-    {
-     char *sval = dupString (sbuf); // dup and register the string in the string table 
-     if (!sval)
-      {
-       error ("memory allocation failed");
-       return toERROR;
-      }
-
-     pos = ipos - buf - 1;
-     v_stack[v_sp].sval   = sval;
-     v_stack[v_sp].var    = sym;
-     v_stack[v_sp].pos    = pos;
-     v_stack[v_sp].fval   = qnan;
-     v_stack[v_sp].imval  = ((float__t)0.0);
-     v_stack[v_sp++].ival = 0;
-     return toOPERAND;
-    }
-  }
- return toERROR;
-}
-
-// M[row, col] matrix element access
-int calculator::mx_idx (int &row, int &col)
-{
- int rows   = 0;
- int cols   = 0;
- int idx[2] = { 0, 0 };
- int ii     = 0;
- char *ipos = buf + pos;
- while (isspace (*ipos & 0x7f)) ipos++;
- // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
- if (!child)
-  {
-   errorf (pos, "Out of memory");
-   result_fval = qnan;
-   return 0;
-  }
- while (*ipos && *ipos != ']')
-  {
-   // collect element expression respecting parenthesis depth
-   char ebuf[STRBUF];
-   int eidx  = 0;
-   int depth = 0;
-   while (*ipos && *ipos != ']')
-    {
-     if (*ipos == '(') depth++;
-     else 
-     if (*ipos == ')' && depth > 0) depth--;
-     else 
-     if ((*ipos == ',' || *ipos == ']') && depth == 0)  break;
-     if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
-    }
-   ebuf[eidx] = '\0';
-   //if (*ipos == ']') break;
-   float__t res = child->evaluate_f (ebuf);
-   if (isnan (res) || child->error ()[0])
-    {
-     error (child->error ());
-     delete child;
-     return 0;
-    }
-   if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
-    {
-     error ("Matrix index must be scalar");
-     delete child;
-     return 0;
-    }
-
-   if (child->result_imval != 0.0L)
-    {
-     error ("Complex matrix indices not supported");
-     delete child;
-     return 0;
-    }
-   if (ii < 2)
-    {
-     idx[ii++] = (int)child->result_fval;
-     if (idx[ii - 1] < 0)
-      {
-       error ("Matrix indices must be positive integers");
-       delete child;
-       return 0;
-      }
-    }
-   else
-    {
-     error ("Too many indices for matrix access");
-     delete child;
-     return 0;
-    }
-   while (isspace (*ipos & 0x7f)) ipos++;
-   if (*ipos == ',') ipos++;
-   while (isspace (*ipos & 0x7f)) ipos++;
-  }
- fflags |= child->isfflags ();
- delete child; // done with child calculator
-
- if (*ipos != ']')
-  {
-   error ("Expected ']'");
-   return 0;
-  }
- row = idx[0];
- col = idx[1];
- pos = ipos - buf + 1;
- return ii;
-}
-
-//[(a11,a12,...);(a21,a22,...);...]
-// Matrix parser for calculator
-// Called with pos pointing to char after '['
-// Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
-// Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful,
-// or toERROR if there is a syntax error.
-t_operator calculator::sqbraces (void)
-{
- char *ipos = buf + pos;
- while (isspace (*ipos & 0x7f)) ipos++;
-
- float__t tmp[MAX_R * MAX_C];
- int rows    = 0;
- int cols    = 0;
- int curCols = 0;
-
- // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
- if (!child)
-  {
-   errorf (pos, "Out of memory");
-   result_fval = qnan;
-   return toERROR;
-  }
-
- while (*ipos && *ipos != ']')
-  {
-   if (*ipos != '(')
-    {
-     error ("Expected '('");
-     delete child;
-     return toERROR;
-    }
-   ipos++;
-   rows++;
-   if (rows > MAX_R)
-    {
-     error ("Too many rows");
-     delete child;
-     return toERROR;
-    }
-   curCols = 0;
-   while (isspace (*ipos & 0x7f)) ipos++;
-
-   while (*ipos && *ipos != ')' && *ipos != ']')
-    {
-     // collect element expression respecting parenthesis depth
-     char ebuf[STRBUF];
-     int eidx  = 0;
-     int depth = 0;
-     while (*ipos)
-      {
-       if (*ipos == '(')
-        depth++;
-       else if (*ipos == ')' && depth > 0)
-        depth--;
-       else if ((*ipos == ',' || *ipos == ')') && depth == 0)
-        break;
-       if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
-      }
-     ebuf[eidx] = '\0';
-     if (eidx == 0)
-      {
-       error ("Empty matrix element");
-       delete child;
-       return toERROR;
-      }
-
-     float__t res = child->evaluate_f (ebuf);
-     if (isnan (res) || child->error ()[0])
-      {
-       error (child->error ());
-       delete child;
-       return toERROR;
-      }
-
-     if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
-      {
-       error ("Matrix element must be scalar");
-       delete child;
-       return toERROR;
-      }
-     
-     if (child->result_imval != 0.0L)
-      {
-       error ("Complex matrix elements not supported");
-       delete child;
-       return toERROR;
-      }
-
-     curCols++;
-     if (curCols > MAX_C)
-      {
-       error ("Too many columns");
-       delete child;
-       return toERROR;
-      }
-     tmp[(rows - 1) * MAX_C + (curCols - 1)] = child->result_fval;
-
-     while (isspace (*ipos & 0x7f)) ipos++;
-     if (*ipos == ',') ipos++;
-     while (isspace (*ipos & 0x7f)) ipos++;
-    }
-
-   if (*ipos != ')')
-    {
-     error ("Expected ')'");
-     delete child;
-     return toERROR;
-    }
-   ipos++;
-
-   if (rows == 1)
-    cols = curCols;
-   else if (curCols != cols)
-    {
-     error ("Inconsistent column count");
-     delete child;
-     return toERROR;
-    }
-
-   while (isspace (*ipos & 0x7f)) ipos++;
-   if (*ipos == ';')
-    {
-     ipos++;
-     while (isspace (*ipos & 0x7f)) ipos++;
-    }
-   else if (*ipos != ']' && *ipos != '\0')
-    {
-     error ("Expected ';' or ']'");
-     delete child;
-     return toERROR;
-    }
-  }
-
- fflags |= child->isfflags ();
- delete child; // done with child calculator
-
- if (*ipos != ']')
-  {
-   error ("Expected ']'");
-   return toERROR;
-  }
- if (rows == 0 || cols == 0)
-  {
-   error ("Empty matrix");
-   return toERROR;
-  }
-
- float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
-
- if (!mval)
-  {
-   error ("Memory allocation failed");
-   return toERROR;
-  }
-
- for (int r = 0; r < rows; r++)
-  for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
-
- pos = ipos - buf + 1;
- v_stack[v_sp].sval  = nullptr;
- v_stack[v_sp].var   = nullptr;
- v_stack[v_sp].pos   = pos;
- v_stack[v_sp].fval  = qnan;
- v_stack[v_sp].imval = ((float__t)0.0);
- v_stack[v_sp].ival  = 0;
- v_stack[v_sp].mrows = rows;
- v_stack[v_sp].mcols = cols;
- v_stack[v_sp].mval  = mval;
- v_stack[v_sp].tag   = tvMATRIX;
- v_sp++;
- return toOPERAND;
-}
-
-// User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
-// 1. Find the expression in {}
-// 2. Find the function name in it before (..) -> frq
-// 3. Place the name (frq) in the list of names (symbols), and replace the function
-//   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)).
-//   If such a name already exists, but not for user defined function, return toERROR.
-//   If such a name already exists for user defined function, return the existing one.
-//   its done in addUF function, which is called from here. addUF returns nullptr if there is a
-//   name conflict, and the new symbol if added successfully or already exists as a user
-//   function.
-// 4. Place the new type tsUFUNC in the list of names (by addUF function)
-// 5. Return the new type toCONTINUE to continue scanning the expression.
-t_operator calculator::braces (void) //{...}
-{
- char sbuf[STRBUF];
- int sidx = 0;
- char *ipos = buf + pos;
- while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
- sbuf[sidx] = '\0';
- if (*ipos == '}')
-  {
-   // extract user function name here and put it as symbol in the hash table
-   char fname[STRBUF];
-   char *fnp;
-   fnp = fname;
-   int spos = 0;
-   while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
-    {
-     *fnp++ = sbuf[spos++] & 0x7f;
-    }
-   if (fnp == fname)
-    {
-     error ("Bad character");
-     return toERROR;
-    }
-   *fnp = '\0';
-
-   if (fname[0])
-    {
-     // Add user function to symbol table
-     if (!addUF (fname, &sbuf[spos]))
-      {
-       error ("Duplicate name");
-       return toERROR;
-      }
-    }
-   else
-    {
-     error ("User function name missing");
-     return toERROR;
-    }
-  }
- else
-  {
-   error ("unmatched brace");
-   return toERROR;
-  }
- pos = ipos - buf + 1;
-#ifdef _UF_AS_OPERAND_
- // if used this way, expression in {} is treated as a 0 and {expr};expr syntax is supported for
- // user functions
- v_stack[v_sp].tag   = tvINT;
- v_stack[v_sp].ival  = 0;
- v_stack[v_sp].pos   = pos;
- v_stack[v_sp++].var = nullptr;
- return toOPERAND;
-#else  //_UF_AS_OPERAND_
- // if used this way, expression in {} is treated as a empty and {expr}expr syntax is supported
- // for user functions
- return toCONTINUE;
-#endif //_UF_AS_OPERAND_
-}
-
-
-// "...." or '....'
-// Supported escape sequences:
-//   \n  -> newline
-//   \r  -> carriage return
-//   \t  -> tab
-//   \\  -> backslash
-//   \"  -> double quote (alternative to "" inside ""-quoted strings)
-//   \'  -> single quote (alternative to '' inside ''-quoted strings)
-// Doubled quote character (same as opening quote) also represents a single quote:
-//   "Hello! ""World"""  -> Hello! "World"
-//   'It''s fine'        -> It's fine
-t_operator calculator::dqscan (char qc)
-{
- char *ipos;
- char sbuf[STRBUF];
- int sidx = 0;
- ipos = buf + pos;
-
- while (*ipos && (sidx < STRBUF - 1))
-  {
-   if (*ipos < ' ') // skip control characters
-    {
-     ipos++;
-     continue;
-    } 
-   if (*ipos == '\\')
-    {
-     // escape sequence
-     ipos++;
-     if (!*ipos) break; // unexpected end of string
-     switch (*ipos)
-      {
-#ifdef _CRLF_
-      case 'n':
-       sbuf[sidx++] = '\n';
-       break;
-      case 'r':
-       sbuf[sidx++] = '\r';
-       break;
-      case 't':
-       sbuf[sidx++] = '\t';
-       break;
-#endif //_CRLF_
-      case '\\':
-       sbuf[sidx++] = '\\';
-       break;
-      case '"':
-       sbuf[sidx++] = '"';
-       break;
-      case '\'':
-       sbuf[sidx++] = '\'';
-       break;
-      default: // unknown escape - keep as-is (e.g. \x -> \x)
-       if (sidx < STRBUF - 2) sbuf[sidx++] = '\\';
-       sbuf[sidx++] = *ipos;
-       break;
-      }
-     ipos++;
-    }
-   else if (*ipos == qc)
-    {
-     // check for doubled quote: "" or ''
-     if (*(ipos + 1) == qc)
-      {
-       sbuf[sidx++] = qc; // one quote character in result
-       ipos += 2;         // skip both
-      }
-     else
-      break; // end of string literal
-    }
-   else
-    {
-     sbuf[sidx++] = *ipos++;
-    }
-  }
-
- sbuf[sidx] = '\0';
-
- if (*ipos == qc)
-  {
-   v_stack[v_sp].tag  = tvSTR;
-   v_stack[v_sp].ival = 0;
-   v_stack[v_sp].sval = dupString (sbuf);
-   pos = ipos - buf + 1;
-   v_stack[v_sp].pos = pos;
-   v_stack[v_sp++].var = nullptr;
-   return toOPERAND;
-  }
- else
-  {
-   error ("unterminated string literal");
-   return toERROR;
-  }
-}
-
-void calculator::isNRM(char* start, char* end)
-{
- int ppos = 0; 
- int epos = 0;
- int len  = end - start;
- // Check if the number is in normal (non-scientific) format
- // by looking for 'e' or 'E' in the part of the string that was parsed as a number
- for (char *p = start; p < end; p++)
-  {
-   if (*p == '.') ppos = p - start + 1;              // position of decimal point, if any
-   if (*p == 'e' || *p == 'E') epos = p - start + 1; // position of exponent, if any
-  }
-
- if (ppos == 0 && epos == 0 && len <= 4) //1234
-   {
-    fflags |= NRM;
-    return;
-   }
- if (ppos && epos == 0 && len <= 5) //123.4
-   {
-    fflags |= NRM;
-    return;
-   }
-  if (ppos && epos > 0 && epos <= 6) //123.4E3
-   {
-    fflags |= NRM;
-    return;
-   }
-  if (ppos == 0 && epos > 0 && epos <= 4) //123E3 
-   {
-    fflags |= NRM;
-    return;
-   }
-}
-
-int calculator::scanmasknum (const char *str)
-{
- const char *cp = str;
- int num  = 0;
- while (*cp)
-  {
-   if (*cp >= '0' && *cp <= '9') num++;
-   cp++;
-  }
- return num;
-}
-
-int calculator::strscan (const char *str, const char *msk, int n, double *v, ...)
-{
- const char *cp = str;
- const char *mp = msk;
- int num_count = 0;
- double **vals  = &v;
-
- while (*cp && (num_count < n))
-  {
-   switch (*cp)
-    {
-        case '-':
-        case '+':
-        case '.':
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-         {
-          char *fpos;
-          double val = strtod (cp, &fpos);
-          scientific (fpos, val);
-          cp = fpos;
-          if (mp && *mp) // if mask is provided, check if current character matches the mask
-           {
-            int idx = -1;
-            while (*mp && isspace(*mp)) mp++;                // skip spaces in mask
-            if (*mp >= '0' && *mp <= '9') idx = *mp - '0'; // get index from mask
-            if (*mp) mp++;
-            if (idx >= 0 && idx < n && vals[idx])
-             {
-              *vals[idx] = val; // store value in the correct variable based on mask
-              num_count++;
-             } 
-           }
-          else // if no mask, capture all numbers
-           {
-            if (vals[num_count]) *vals[num_count++] = val;
-           }
-         }
-        break;
-    }
-   cp++;
-  }
- return num_count;
-}
-
-// Scan a number in various formats: decimal, hex (0x or $), octal (0o), binary (0b), or with
-// backslash for base prefix
-t_operator calculator::dscan (bool operand, bool percent)
- {
-  uint32_t info = 0;
-  int_t ival = 0;
-  double fval = 0;
-  double sfval = 0;
-  int ierr = 0, ferr;
-  char *ipos, *fpos, *sfpos;
-  int n = 0;
-
-  if (buf[pos - 1] == '\\')
-   {
-    ierr = xscanf (buf + pos, 1, ival, n);
-    ipos = buf + pos + n;
-    if (n) info |= ESC;
-    fflags |= ESC;
-   }
-  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
-   {
-    ierr = bscanf (buf + pos + 1, ival, n);
-    ipos = buf + pos + n + 1;
-    if (n) info |= fBIN;
-    fflags |= fBIN;
-   }
-  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
-   {
-    ierr = oscanf (buf + pos + 1, ival, n);
-    ipos = buf + pos + n + 1;
-    if (n) info |= OCT;
-    fflags |= OCT;
-   }
-  else if (buf[pos - 1] == '$')
-   {
-    ierr = hscanf (buf + pos, ival, n);
-    ipos = buf + pos + n;
-    if (n) info |= HEX;
-    fflags |= HEX;
-   }
-  else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
-   {
-    ierr = hscanf (buf + pos + 1, ival, n);
-    ipos = buf + pos + n + 1;
-    if (n) info |= HEX;
-    fflags |= HEX;
-   }
-  else
-   {
-    errno = 0;
-#ifdef __BORLANDC__
-    ival = strtol (buf + pos - 1, &ipos, 10);
-#else
-    ival = strtoll (buf + pos - 1, &ipos, 10);
-#endif
-    ierr = errno;
-   }
-  errno = 0;
-
-  sfval = fval = strtod (buf + pos - 1, &fpos);
-
-  if (errno == 0 && (fpos > ipos)) 
-      isNRM (buf + pos - 1, fpos); //
-
-  sfpos = fpos;
-
-  v_stack[v_sp].tag = tvFLOAT;
-
-  //` - degrees, ' - minutes, " - seconds
-  if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
-   {
-    fval = dstrtod (buf + pos - 1, &fpos);
-    if ((fval != qnan) && (fpos > sfpos)) info |= DEG;
-   }
-  else if (*fpos == ':')
-   {
-    fval = tstrtod (buf + pos - 1, &fpos);
-    if ((fval != qnan) && (fpos > sfpos)) info |= DAT;
-   }
-  else if (scfg & (ENG | SCI | FRI))
-   {
-    scientific (fpos, fval);
-    if (fpos > sfpos) info |= ENG;
-   }
-  if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
-   {
-    fpos++;
-    if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS))
-     fval = -(-fval - 32.0) * 5.0 / 9.0;
-    else
-     fval = (fval - 32.0) * 5.0 / 9.0;
-    fflags |= FRH;
-    info |= FRH;
-   }
-#ifdef _KELVIN_
-  if ((scfg & FRH) && (*fpos == 'K')) // Kelvin to Celsius
-   {
-    fpos++;
-    if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS)) //fval = qnan;
-    {
-     error ("Temperature below absolute zero");
-     return toERROR;
-    }
-    else  fval = fval - 273.15;
-    fflags |= FRH;
-   }
-#endif //_KELVIN_
-  if (operand && percent && (*fpos == '%'))
-   {
-    fpos++;
-    v_stack[v_sp].tag = tvPERCENT;
-   }
-  if ((*fpos == 'i') || (*fpos == 'j'))
-   {
-    c_imaginary = *fpos;
-    fpos++;
-    fflags |= CPX;
-    v_stack[v_sp].tag = tvCOMPLEX;
-   }
-  if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
-   { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
-    fpos = sfpos;
-    fval = sfval;
-    v_stack[v_sp].tag = tvFLOAT;
-   }
-
-  if (v_stack[v_sp].tag == tvCOMPLEX)
-   {
-    v_stack[v_sp].imval = (float__t)fval;
-    v_stack[v_sp].fval  = (float__t)0.0L;
-   }
-  else
-   {
-    v_stack[v_sp].fval  = (float__t)fval;
-    v_stack[v_sp].imval = (float__t)0.0L;
-   }
-  pos = fpos - buf;
-
-  if (v_stack[v_sp].tag == tvFLOAT)
-   {
-    ferr = errno;
-    if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\')))
-     {
-      pos = fpos - buf + 1;
-      error ("bad numeric constant");
-      return toERROR;
-     }
-    if (ierr && ferr)
-     {
-      error ("bad numeric constant");
-      return toERROR;
-     }
-    if (v_sp == max_stack_size)
-     {
-      error ("stack overflow");
-      return toERROR;
-     }
-    if (!ierr && ipos >= fpos && (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
-     {
-      if (scfg & FFLOAT) v_stack[v_sp].tag = tvFLOAT;
-      else v_stack[v_sp].tag = tvINT;
-      v_stack[v_sp].ival = ival;
-      v_stack[v_sp].fval = (float__t)ival;
-      pos = ipos - buf;
-     }
-   }
-  v_stack[v_sp].info = info;
-  v_stack[v_sp].pos  = pos;
-  if (v_stack[v_sp].tag == tvFLOAT) fflags |= FLT;
-  v_stack[v_sp++].var = nullptr;
-  return toOPERAND;
- }
-
-// parse the next operator from the input buffer, returning the operator type
-t_operator calculator::scan (bool operand, bool percent)
-{
- char name[max_expression_length], *np;
-
- while (isspace (buf[pos] & 0x7f)) pos += 1; // skip whitespace
- switch (buf[pos++])
-  {
-  case '\0': 
-   return toEND; // end of input
-  case '(':
-   return toLPAR;
-  case ')':
-   return toRPAR;
-  case '+':
-   if (buf[pos] == '+') // (RO) ++ operator
-    {
-     pos += 1;
-     return operand ? toPREINC : toPOSTINC;
-    }
-   else if (buf[pos] == '=') // (RO) += operator
-    {
-     pos += 1;
-     return toSETADD;
-    }
-   return operand ? toPLUS : toADD;
-  case '-':
-   if (buf[pos] == '-') // (RO) -- operator
-    {
-     pos += 1;
-     return operand ? toPREDEC : toPOSTDEC;
-    }
-   else if (buf[pos] == '=') // (RO) -= operator
-    {
-     pos += 1;
-     return toSETSUB;
-    }
-   return operand ? toMINUS : toSUB;
-  case '!':
-   if (buf[pos] == '=') // (RO) != operator
-    {
-     pos += 1;
-     return toNE;
-    }
-   return operand ? toNOT : toFACT;
-  case '~':
-   return toCOM;
-  case ';':
-   if (buf[pos] == ';') // (RO) ;; operator (comment to end of line)
-    {
-     pos += 1;
-     scan_opt (&buf[pos], fflags);
-     return toEND;
-    } 
-   return toSEMI;
-  case '*':
-   if (buf[pos] == '*') // (RO) ** or **= operator
-    {
-     if (buf[pos + 1] == '=') // (RO) **= operator
-      {
-       pos += 2;
-       return toSETPOW;
-      }
-     pos += 1;
-     return toPOW;
-    }
-   else if (buf[pos] == '=') // (RO) *= operator
-    {
-     pos += 1;
-     return toSETMUL;
-    }
-   return toMUL;
-  case '/':
-   if (buf[pos] == '=') // (RO) /= operator
-    {
-     pos += 1;
-     return toSETDIV;
-    }
-   else if (buf[pos] == '/') // (RO) // operator (parallel resistors)
-    {
-     pos += 1;
-     return toPAR;
-    }
-   return toDIV;
-  case '%':
-   if (buf[pos] == '=') // (RO) %= operator
-    {
-     pos += 1;
-     return toSETMOD;
-    }
-   else if (buf[pos] == '%') // (RO) %% operator (percent)
-    {
-     pos += 1;
-     return toPERCENT;
-    }
-   return toMOD;
-  case '<':
-   if (buf[pos] == '<') // (RO) << or <<= operator
-    {
-     if (buf[pos + 1] == '=') // (RO) <<= operator
-      {
-       pos += 2;
-       return toSETASL;
-      }
-     else // (RO) << operator
-      {
-       pos += 1;
-       return toASL;
-      }
-    }
-   else if (buf[pos] == '=') // (RO) <= operator
-    {
-     pos += 1;
-     return toLE;
-    }
-   else if (buf[pos] == '>') // (RO) <> operator (not equal)
-    {
-     pos += 1;
-     return toNE;
-    }
-   return toLT;
-  case '>':
-   if (buf[pos] == '>') // (RO) >> or >>= operator
-    {
-     if (buf[pos + 1] == '>') // (RO) >>> or >>>= operator
-      {
-       if (buf[pos + 2] == '=') // (RO) >>>= operator
-        {
-         pos += 3;
-         return toSETLSR;
-        }
-       pos += 2;
-       return toLSR;
-      }
-     else if (buf[pos + 1] == '=') // (RO) >>= operator
-      {
-       pos += 2;
-       return toSETASR;
-      }
-     else // (RO) >> operator
-      {
-       pos += 1;
-       return toASR;
-      }
-    }
-   else if (buf[pos] == '=') // (RO) >= operator
-    {
-     pos += 1;
-     return toGE;
-    }
-   return toGT;
-  case '=':
-   if (buf[pos] == '=') // (RO) == operator
-    {
-     scfg &= ~PAS;
-     fflags &= ~PAS;
-     pos += 1;
-     return toEQ;
-    }
-   if (scfg & PAS)
-    return toEQ;
-   else
-    return toSET;
-  case ':':
-   if (buf[pos] == '=') // (RO) := operator
-    {
-     scfg |= PAS;
-     fflags |= PAS;
-     pos += 1;
-     return toSET;
-    }
-   error ("syntax error");
-   return toERROR;
-  case '&':
-   if (buf[pos] == '&') // (RO) && operator
-    {
-     pos += 1;
-     return toAND;
-    }
-   else if (buf[pos] == '=') // (RO) &= operator
-    {
-     pos += 1;
-     return toSETAND;
-    }
-   return toAND;
-  case '|':
-   if (buf[pos] == '|' ) // (RO) || operator
-    {
-     pos += 1;
-     return toOR;
-    }
-   else if (buf[pos] == '=') // (RO) |= operator
-    {
-     pos += 1;
-     return toSETOR;
-    }
-   return toOR;
-  case '^':
-   if (scfg & PAS)
-    {
-     if (buf[pos] == '=') // (RO) ^= operator
-      {
-       pos += 1;
-       return toSETPOW;
-      }
-     return toPOW;
-    }
-   else
-    {
-     if (buf[pos] == '=') // (RO) ^= operator
-      {
-       pos += 1;
-       return toSETXOR;
-      }
-     return toXOR;
-    }
-  case '#':
-   if (operand) // (RO) # gauge simbol
-    {
-     float__t fval;
-     char *fpos;
-     if (buf[pos])
-      {
-       fval = Awg ((float__t)strtod (buf + pos, &fpos));
-       pos = fpos - buf;
-       v_stack[v_sp].tag = tvFLOAT;
-       v_stack[v_sp].fval = (float__t)fval;
-       v_stack[v_sp].pos = pos;
-       v_stack[v_sp++].var = nullptr;
-       return toOPERAND;
-      }
-     else
-      {
-       error ("bad numeric constant");
-       return toERROR;
-      }
-    }
-   else
-    {
-     if (buf[pos] == '=') // (RO) #= operator
-      {
-       pos += 1;
-       return toSETXOR;
-      }
-     return toXOR;
-    }
-  case ',':
-   return toCOMMA;
-  case '{':
-   return braces ();
-  case '[':
-   if (operand) return sqbraces ();
-   else
-    {
-     if (v_sp && v_stack[v_sp - 1].tag == tvMATRIX && v_stack[v_sp - 1].mval)
-      {
-       int row = 0, col = 0, ii = 0;
-       ii = mx_idx (row, col);
-
-       if (ii == 0)
-        {
-         error ("syntax error");
-         return toERROR;
-        }
-       else if (ii == 1)
-        {
-         int idx = row; // single index provided, treat as linear index into matrix     
-         row = idx / v_stack[v_sp - 1].mcols;
-         col = idx % v_stack[v_sp - 1].mcols;
-         ii  = 2; // treat as element access if index is valid
-        }
-
-       if (ii == 2  && 
-           (v_stack[v_sp - 1].mrows > row) && 
-           (v_stack[v_sp - 1].mcols > col))
-        {
-         v_stack[v_sp].tag = tvMX_ELEM;
-         v_stack[v_sp].info = v_stack[v_sp - 1].info;
-         v_stack[v_sp].imval = (float__t)0.0L;
-         v_stack[v_sp].fval  = v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col];
-         v_stack[v_sp].ival  = (int_t)v_stack[v_sp].fval;
-         v_stack[v_sp].pos   = pos;
-         v_stack[v_sp].var   = nullptr;
-         v_stack[v_sp].mrows = v_stack[v_sp - 1].mrows;
-         v_stack[v_sp].mcols = v_stack[v_sp - 1].mcols; 
-         v_stack[v_sp].irows = row;
-         v_stack[v_sp].icols = col;
-         v_stack[v_sp].mval  = v_stack[v_sp - 1].mval; // keep pointer to matrix for later updates
-         v_sp++;
-         return toMX_ELEM;
-        }
-       else
-        {
-         errorf (pos, "Matrix index out of bounds: [%d,%d]", row, col);
-         return toERROR;
-        }
-      }
-     else
-      {
-        error ("syntax error");
-        return toERROR;
-      }
-    }
-
-  case '\'':
-   {
-    int_t ival;
-    uint32_t info = 0;
-    char *ipos;
-    int n = 0;
-
-    if (buf[pos] == '\\')
-     {
-      xscanf (buf + pos + 1, 1, ival, n);
-      ipos = buf + pos + n + 1;
-      if (*ipos == '\'') ipos++;
-      else
-       {
-        error ("bad char constant");
-        return toERROR;
-       }
-     }
-    else
-     {
-      ipos = buf + pos + 1;
-      if (*ipos == '\'')
-       {
-#ifdef _WCHAR_
-#ifdef _WIN_
-        if (*(ipos + 1) == 'W') // (RO) wide char constant
-         {
-          wchar_t wbuf[2];
-          char cbuf[2];
-
-          cbuf[0] = *(ipos - 1);
-          cbuf[1] = '\0';
-
-          MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
-          //ival = *(int *)&wbuf[0];
-          ival = 0;
-          memcpy (&ival, &wbuf[0], 2);
-          ipos += 2;
-          fflags |= WCH;
-          info |= WCH;
-         }
-        else
-#endif /*_WIN_*/
-#endif /*_WCHAR_*/
-         {
-          fflags |= CHR;
-          info |= CHR;
-          ival = *(unsigned char *)(ipos - 1);
-          v_stack[v_sp].sval = (char *)sf_alloc (2);
-          if (v_stack[v_sp].sval)
-           {
-            if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);
-            if (v_stack[v_sp].sval) v_stack[v_sp].sval[1] = '\0';
-           }
-          ipos++;
-         }
-       }
-      else
-       {
-        return dqscan ('\'');
-       }
-     }
-    pos = ipos - buf;
-    v_stack[v_sp].tag = tvINT;
-    v_stack[v_sp].info = info;
-    v_stack[v_sp].ival = ival;
-    v_stack[v_sp].pos = pos;
-    v_stack[v_sp++].var = nullptr;
-    return toOPERAND;
-   }
-#ifdef _WCHAR_
-#ifdef _WIN_
-  case 'L':
-   {
-    int_t ival;
-    char *ipos;
-    int n = 0;
-    uint32_t info = 0;
-    if (buf[pos] == '\'')
-     {
-      if (buf[pos + 1] == '\\')
-       {
-        xscanf (buf + pos + 2, 2, ival, n);
-        ipos = buf + pos + n + 2;
-        if (*ipos == '\'')
-         ipos++;
-        else
-         {
-          error ("bad char constant");
-          return toERROR;
-         }
-       }
-      else
-       {
-        ipos = buf + pos;
-        if (*(ipos + 2) == '\'')
-         {
-          wchar_t wbuf[2];
-          char cbuf[2];
-
-          cbuf[0] = *(ipos + 1);
-          cbuf[1] = '\0';
-
-          MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
-          //ival = *(int *)&wbuf[0];
-          ival = 0;
-          memcpy (&ival, &wbuf[0], 2);
-          ipos += 3;
-          fflags |= WCH;
-          info |= WCH;
-         }
-        else
-         {
-          error ("bad char constant");
-          return toERROR;
-         }
-       }
-      pos = ipos - buf;
-      v_stack[v_sp].tag = tvINT;
-      v_stack[v_sp].info = info;
-      v_stack[v_sp].ival = ival;
-      v_stack[v_sp].pos = pos;
-      v_stack[v_sp++].var = nullptr;
-      return toOPERAND;
-     }
-    goto def;
-   }
-#endif /*_WIN_*/
-#endif /*_WCHAR_*/
-  case '"':
-   return dqscan ('"');
-   
-#ifdef _ENABLE_PREIMAGINARY_
- case 'i': 
- case 'j':
-   {
-    uint32_t info = 0;
-    char *fpos;
-    if (buf[pos] && (isdigit (buf[pos] & 0x7f) || buf[pos] == '.'))
-     {
-      double fval = strtod (buf + pos, &fpos);
-      if (scfg & (ENG | SCI | FRI))
-       {
-        char *spos = fpos;
-        scientific (fpos, fval);
-        if (fpos > spos) info |= ENG;
-       }
-      int ferr = errno;
-      if ((ferr) && (*fpos == '.'))
-       {
-        pos = fpos - buf + 1;
-        error ("bad numeric constant");
-        return toERROR;
-       }
-      if (v_sp == max_stack_size)
-       {
-        error ("stack overflow");
-        return toERROR;
-       }
-
-      c_imaginary = buf[pos - 1];
-      
-      v_stack[v_sp].tag  = tvCOMPLEX;
-      v_stack[v_sp].info = info;
-      scfg |= CPX;
-      fflags |= CPX;
-      v_stack[v_sp].imval = (float__t)fval;
-      v_stack[v_sp].fval = (float__t)0.0;
-      v_stack[v_sp].pos = pos;
-      v_stack[v_sp++].var = nullptr;
-      pos = fpos - buf;
-      return toOPERAND;
-     }
-    else
-     goto def;
-   }
-#endif /*_ENABLE_PREIMAGINARY_*/
-  case '.':
-  case '0':
-  case '1':
-  case '2':
-  case '3':
-  case '4':
-  case '5':
-  case '6':
-  case '7':
-  case '8':
-  case '9':
-  case '\\':
-  case '$':
-   return dscan (operand, percent);
-  default:
-  def:
-   pos -= 1;
-   np = name;
-   while (isalnum (buf[pos] & 0x7f) || buf[pos] == '@' || buf[pos] == '_' || buf[pos] == '?')
-    {
-     *np++ = buf[pos++] & 0x7f;
-    }
-   if (np == buf)
-    {
-     error ("Bad character");
-     return toERROR;
-    }
-   *np = '\0';
-   symbol *sym = nullptr;
-   if (strlen (name) > MAXNAME)
-    {
-     error ("Name too long");
-     return toERROR;
-    }
-   if (name[0])
-    {
-     if (buf[pos] == '\0') sym = find (name);
-     else sym = add (tsVARIABLE, name);
-    }
-   if (v_sp == max_stack_size)
-    {
-     error ("stack overflow");
-     return toERROR;
-    }
-
-   if (sym)
-    {
-     blockflag |= sym->block;
-     if (sym->tag == tsVARIABLE) strcpy (lastvar, sym->name);
-     v_stack[v_sp] = sym->val;
-     v_stack[v_sp].pos = pos;
-     v_stack[v_sp++].var = sym;
-     if (sym->tag == tsSUM) return toSOLVE;
-     else 
-     if (sym->tag == tsINTEGR) return toSOLVE;
-     else
-     if (sym->tag == tsDIFF) return toSOLVE;
-     else
-     if (sym->tag == tsSOLVE) return toSOLVE;
-     else 
-     if (sym->tag == tsCALC)  return toSOLVE;
-     else 
-     if (sym->tag == tsPLOT)  return toSOLVE;
-     else
-     if (sym->tag == tsFOR) return toSOLVE;
-     return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
-    }
-   else return toOPERAND;
-  }
-}
-
-// Left precedence for operators, used to determine when to push operators onto the stack during
-// expression evaluation. Higher values indicate higher precedence.
-static int lpr[toTERMINALS] = {
- 2,  0,  0,  0,              // BEGIN, OPERAND, ERROR, END,
- 4,  4,                      // LPAR, RPAR
- 5,  5, 98, 98, 98,          // FUNC, SOLVE, POSTINC, POSTDEC, FACT
- 98, 98, 98, 98, 98, 98,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
- 95,                         // POW,
- 80, 80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
- 70, 70,                     // ADD, SUB,
- 60, 60, 60,                 // ASL, ASR, LSR,
- 50, 50, 50, 50,             // GT, GE, LT, LE,
- 40, 40,                     // EQ, NE,
- 38,                         // AND,
- 36,                         // XOR,
- 34, 100,                    // OR, MX_ELEM
- 20, 20, 20, 20, 20, 20, 20, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
- 20, 20, 20, 20, 20, 20,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
- 8,                          // SEMI
- 10                          // COMMA
-};
-
-// Right precedence for operators, used to determine when to pop operators from the stack during
-// expression evaluation. Higher values indicate higher precedence.
-static int rpr[toTERMINALS] = {
- 0,   0,  0,  1,              // BEGIN, OPERAND, ERROR, END,
- 110, 3,                      // LPAR, RPAR
- 120, 120, 99, 99, 99,        // FUNC, SOLVE, POSTINC, POSTDEC, FACT
- 99,  99, 99, 99, 99, 99,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
- 100,                         // POW,
- 80,  80, 80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
- 70,  70,                     // ADD, SUB,
- 60,  60, 60,                 // ASL, ASR, LSR,
- 50,  50, 50, 50,             // GT, GE, LT, LE,
- 40,  40,                     // EQ, NE,
- 38,                          // AND,
- 36,                          // XOR,
- 34, 130,                     // OR, MX_ELEM
- 25,  25, 25, 25, 25, 25, 25, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
- 25,  25, 25, 25, 25, 25,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
- 10,                          // SEMI
- 15                           // COMMA
-};
-
-// Perform assignment operation for the top value on the stack, checking for variable and constant
-// rules. Used for operators like '++', '--', '+=', '-=', etc. that assign to a variable.
-bool calculator::set_op () 
-{
- value &v = v_stack[v_sp - 1];
- if (v.tag == tvFLOAT &&
-     v.mval &&
-     v.mcols + v.mrows)
-  {
-   int row = v.irows;
-   int col = v.icols;
-   v.mval[row * v.mcols + col] = v.fval;
-   return true;
-  }
- else
- if (v.var == nullptr)
-  {
-   error (v.pos, "variable expected");
-   return false;
-  }
- else
-  {
-   if (v.var->tag == tsCONSTANT)
-    {
-     error (v.pos, "assignment to constant");
-     return false;
-    }
-   v.var->val = v;
-   return true;
-  }
-}
-
-// Clear the value stack by resetting all entries to default values and 
-// setting the stack pointer to 0
-void calculator::clear_v_stack ()
-{
- for (int i = 0; i < max_stack_size; ++i)
-  {
-   v_stack[i].tag   = tvINT;
-   v_stack[i].sval = nullptr;  
-   v_stack[i].var   = nullptr;
-   v_stack[i].pos   = 0;
-   v_stack[i].ival  = 0;
-   v_stack[i].fval  = (float__t)0.0L;
-   v_stack[i].imval = (float__t)0.0L;
-   v_stack[i].mval  = nullptr;
-   v_stack[i].mrows = 0;
-   v_stack[i].mcols = 0;
-  }
- v_sp = 0;
-}
-
+#pragma region MATRIX OPERATIONS
 
 // matrixbin: binary operations, matrixuno: unary operations
 // ---------------------------------------------------------------------------
@@ -8503,7 +7046,6 @@ float__t calculator::StatFn (const char *fname, const char *msk, sfntype sfn, fl
  return qnan; // Should never reach here
 }
 
-
 bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res)
 {
  FILE *f = nullptr;
@@ -9239,33 +7781,1507 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
   }
  return mrSKIP;
 }
+#pragma endregion
+//---------------------------------------------------------------------------
 
+#pragma region Scan expression
+
+// M[row, col] matrix element access
+int calculator::mx_idx (int &row, int &col)
+{
+ int rows   = 0;
+ int cols   = 0;
+ int idx[2] = { 0, 0 };
+ int ii     = 0;
+ char *ipos = buf + pos;
+ while (isspace (*ipos & 0x7f)) ipos++;
+ // one child calculator for all elements — new names stay local to matrix
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return 0;
+  }
+ while (*ipos && *ipos != ']')
+  {
+   // collect element expression respecting parenthesis depth
+   char ebuf[STRBUF];
+   int eidx  = 0;
+   int depth = 0;
+   while (*ipos && *ipos != ']')
+    {
+     if (*ipos == '(')
+      depth++;
+     else if (*ipos == ')' && depth > 0)
+      depth--;
+     else if ((*ipos == ',' || *ipos == ']') && depth == 0)
+      break;
+     if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
+    }
+   ebuf[eidx] = '\0';
+   // if (*ipos == ']') break;
+   float__t res = child->evaluate_f (ebuf);
+   if (isnan (res) || child->error ()[0])
+    {
+     error (child->error ());
+     delete child;
+     return 0;
+    }
+   if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
+    {
+     error ("Matrix index must be scalar");
+     delete child;
+     return 0;
+    }
+
+   if (child->result_imval != 0.0L)
+    {
+     error ("Complex matrix indices not supported");
+     delete child;
+     return 0;
+    }
+   if (ii < 2)
+    {
+     idx[ii++] = (int)child->result_fval;
+     if (idx[ii - 1] < 0)
+      {
+       error ("Matrix indices must be positive integers");
+       delete child;
+       return 0;
+      }
+    }
+   else
+    {
+     error ("Too many indices for matrix access");
+     delete child;
+     return 0;
+    }
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (*ipos == ',') ipos++;
+   while (isspace (*ipos & 0x7f)) ipos++;
+  }
+ fflags |= child->isfflags ();
+ delete child; // done with child calculator
+
+ if (*ipos != ']')
+  {
+   error ("Expected ']'");
+   return 0;
+  }
+ row = idx[0];
+ col = idx[1];
+ pos = ipos - buf + 1;
+ return ii;
+}
+
+//[(a11,a12,...);(a21,a22,...);...]
+// Matrix parser for calculator
+// Called with pos pointing to char after '['
+// Format: [(1, 2, 3);(4, 5, 6);(7, 8, 9)]
+// Returns toOPERAND with v_stack[v_sp].mval pointing to the matrix  if successful,
+// or toERROR if there is a syntax error.
+t_operator calculator::sqbraces (void)
+{
+ char *ipos = buf + pos;
+ while (isspace (*ipos & 0x7f)) ipos++;
+
+ float__t tmp[MAX_R * MAX_C];
+ int rows    = 0;
+ int cols    = 0;
+ int curCols = 0;
+
+ // one child calculator for all elements — new names stay local to matrix
+ calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return toERROR;
+  }
+
+ while (*ipos && *ipos != ']')
+  {
+   if (*ipos != '(')
+    {
+     error ("Expected '('");
+     delete child;
+     return toERROR;
+    }
+   ipos++;
+   rows++;
+   if (rows > MAX_R)
+    {
+     error ("Too many rows");
+     delete child;
+     return toERROR;
+    }
+   curCols = 0;
+   while (isspace (*ipos & 0x7f)) ipos++;
+
+   while (*ipos && *ipos != ')' && *ipos != ']')
+    {
+     // collect element expression respecting parenthesis depth
+     char ebuf[STRBUF];
+     int eidx  = 0;
+     int depth = 0;
+     while (*ipos)
+      {
+       if (*ipos == '(')
+        depth++;
+       else if (*ipos == ')' && depth > 0)
+        depth--;
+       else if ((*ipos == ',' || *ipos == ')') && depth == 0)
+        break;
+       if (eidx < STRBUF - 1) ebuf[eidx++] = *ipos++;
+      }
+     ebuf[eidx] = '\0';
+     if (eidx == 0)
+      {
+       error ("Empty matrix element");
+       delete child;
+       return toERROR;
+      }
+
+     float__t res = child->evaluate_f (ebuf);
+     if (isnan (res) || child->error ()[0])
+      {
+       error (child->error ());
+       delete child;
+       return toERROR;
+      }
+
+     if (!(child->result_tag == tvFLOAT || child->result_tag == tvINT))
+      {
+       error ("Matrix element must be scalar");
+       delete child;
+       return toERROR;
+      }
+
+     if (child->result_imval != 0.0L)
+      {
+       error ("Complex matrix elements not supported");
+       delete child;
+       return toERROR;
+      }
+
+     curCols++;
+     if (curCols > MAX_C)
+      {
+       error ("Too many columns");
+       delete child;
+       return toERROR;
+      }
+     tmp[(rows - 1) * MAX_C + (curCols - 1)] = child->result_fval;
+
+     while (isspace (*ipos & 0x7f)) ipos++;
+     if (*ipos == ',') ipos++;
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+
+   if (*ipos != ')')
+    {
+     error ("Expected ')'");
+     delete child;
+     return toERROR;
+    }
+   ipos++;
+
+   if (rows == 1)
+    cols = curCols;
+   else if (curCols != cols)
+    {
+     error ("Inconsistent column count");
+     delete child;
+     return toERROR;
+    }
+
+   while (isspace (*ipos & 0x7f)) ipos++;
+   if (*ipos == ';')
+    {
+     ipos++;
+     while (isspace (*ipos & 0x7f)) ipos++;
+    }
+   else if (*ipos != ']' && *ipos != '\0')
+    {
+     error ("Expected ';' or ']'");
+     delete child;
+     return toERROR;
+    }
+  }
+
+ fflags |= child->isfflags ();
+ delete child; // done with child calculator
+
+ if (*ipos != ']')
+  {
+   error ("Expected ']'");
+   return toERROR;
+  }
+ if (rows == 0 || cols == 0)
+  {
+   error ("Empty matrix");
+   return toERROR;
+  }
+
+ float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
+
+ if (!mval)
+  {
+   error ("Memory allocation failed");
+   return toERROR;
+  }
+
+ for (int r = 0; r < rows; r++)
+  for (int c = 0; c < cols; c++) mval[r * cols + c] = tmp[r * MAX_C + c];
+
+ pos                 = ipos - buf + 1;
+ v_stack[v_sp].sval  = nullptr;
+ v_stack[v_sp].var   = nullptr;
+ v_stack[v_sp].pos   = pos;
+ v_stack[v_sp].fval  = qnan;
+ v_stack[v_sp].imval = ((float__t)0.0);
+ v_stack[v_sp].ival  = 0;
+ v_stack[v_sp].mrows = rows;
+ v_stack[v_sp].mcols = cols;
+ v_stack[v_sp].mval  = mval;
+ v_stack[v_sp].tag   = tvMATRIX;
+ v_sp++;
+ return toOPERAND;
+}
+
+// User function definition syntax: {frq(L, C)1/(2 pi sqrt(L C))}
+// 1. Find the expression in {}
+// 2. Find the function name in it before (..) -> frq
+// 3. Place the name (frq) in the list of names (symbols), and replace the function
+//   pointer with a string with parameters and body (L, C)1/(2 pi sqrt(L C)).
+//   If such a name already exists, but not for user defined function, return toERROR.
+//   If such a name already exists for user defined function, return the existing one.
+//   its done in addUF function, which is called from here. addUF returns nullptr if there is a
+//   name conflict, and the new symbol if added successfully or already exists as a user
+//   function.
+// 4. Place the new type tsUFUNC in the list of names (by addUF function)
+// 5. Return the new type toCONTINUE to continue scanning the expression.
+t_operator calculator::braces (void) //{...}
+{
+ char sbuf[STRBUF];
+ int sidx   = 0;
+ char *ipos = buf + pos;
+ while (*ipos && (*ipos != '}') && (sidx < STRBUF - 1)) sbuf[sidx++] = *ipos++;
+ sbuf[sidx] = '\0';
+ if (*ipos == '}')
+  {
+   // extract user function name here and put it as symbol in the hash table
+   char fname[STRBUF];
+   char *fnp;
+   fnp      = fname;
+   int spos = 0;
+   while (isalnum (sbuf[spos] & 0x7f) || sbuf[spos] == '_')
+    {
+     *fnp++ = sbuf[spos++] & 0x7f;
+    }
+   if (fnp == fname)
+    {
+     error ("Bad character");
+     return toERROR;
+    }
+   *fnp = '\0';
+
+   if (fname[0])
+    {
+     // Add user function to symbol table
+     if (!addUF (fname, &sbuf[spos]))
+      {
+       error ("Duplicate name");
+       return toERROR;
+      }
+    }
+   else
+    {
+     error ("User function name missing");
+     return toERROR;
+    }
+  }
+ else
+  {
+   error ("unmatched brace");
+   return toERROR;
+  }
+ pos = ipos - buf + 1;
+#ifdef _UF_AS_OPERAND_
+ // if used this way, expression in {} is treated as a 0 and {expr};expr syntax is supported for
+ // user functions
+ v_stack[v_sp].tag   = tvINT;
+ v_stack[v_sp].ival  = 0;
+ v_stack[v_sp].pos   = pos;
+ v_stack[v_sp++].var = nullptr;
+ return toOPERAND;
+#else  //_UF_AS_OPERAND_
+ // if used this way, expression in {} is treated as a empty and {expr}expr syntax is supported
+ // for user functions
+ return toCONTINUE;
+#endif //_UF_AS_OPERAND_
+}
+
+// "...." or '....'
+// Supported escape sequences:
+//   \n  -> newline
+//   \r  -> carriage return
+//   \t  -> tab
+//   \\  -> backslash
+//   \"  -> double quote (alternative to "" inside ""-quoted strings)
+//   \'  -> single quote (alternative to '' inside ''-quoted strings)
+// Doubled quote character (same as opening quote) also represents a single quote:
+//   "Hello! ""World"""  -> Hello! "World"
+//   'It''s fine'        -> It's fine
+t_operator calculator::dqscan (char qc)
+{
+ char *ipos;
+ char sbuf[STRBUF];
+ int sidx = 0;
+ ipos     = buf + pos;
+
+ while (*ipos && (sidx < STRBUF - 1))
+  {
+   if (*ipos < ' ') // skip control characters
+    {
+     ipos++;
+     continue;
+    }
+   if (*ipos == '\\')
+    {
+     // escape sequence
+     ipos++;
+     if (!*ipos) break; // unexpected end of string
+     switch (*ipos)
+      {
+#ifdef _CRLF_
+      case 'n':
+       sbuf[sidx++] = '\n';
+       break;
+      case 'r':
+       sbuf[sidx++] = '\r';
+       break;
+      case 't':
+       sbuf[sidx++] = '\t';
+       break;
+#endif //_CRLF_
+      case '\\':
+       sbuf[sidx++] = '\\';
+       break;
+      case '"':
+       sbuf[sidx++] = '"';
+       break;
+      case '\'':
+       sbuf[sidx++] = '\'';
+       break;
+      default: // unknown escape - keep as-is (e.g. \x -> \x)
+       if (sidx < STRBUF - 2) sbuf[sidx++] = '\\';
+       sbuf[sidx++] = *ipos;
+       break;
+      }
+     ipos++;
+    }
+   else if (*ipos == qc)
+    {
+     // check for doubled quote: "" or ''
+     if (*(ipos + 1) == qc)
+      {
+       sbuf[sidx++] = qc; // one quote character in result
+       ipos += 2;         // skip both
+      }
+     else
+      break; // end of string literal
+    }
+   else
+    {
+     sbuf[sidx++] = *ipos++;
+    }
+  }
+
+ sbuf[sidx] = '\0';
+
+ if (*ipos == qc)
+  {
+   v_stack[v_sp].tag   = tvSTR;
+   v_stack[v_sp].ival  = 0;
+   v_stack[v_sp].sval  = dupString (sbuf);
+   pos                 = ipos - buf + 1;
+   v_stack[v_sp].pos   = pos;
+   v_stack[v_sp++].var = nullptr;
+   return toOPERAND;
+  }
+ else
+  {
+   error ("unterminated string literal");
+   return toERROR;
+  }
+}
+
+void calculator::isNRM (char *start, char *end)
+{
+ int ppos = 0;
+ int epos = 0;
+ int len  = end - start;
+ // Check if the number is in normal (non-scientific) format
+ // by looking for 'e' or 'E' in the part of the string that was parsed as a number
+ for (char *p = start; p < end; p++)
+  {
+   if (*p == '.') ppos = p - start + 1;              // position of decimal point, if any
+   if (*p == 'e' || *p == 'E') epos = p - start + 1; // position of exponent, if any
+  }
+
+ if (ppos == 0 && epos == 0 && len <= 4) // 1234
+  {
+   fflags |= NRM;
+   return;
+  }
+ if (ppos && epos == 0 && len <= 5) // 123.4
+  {
+   fflags |= NRM;
+   return;
+  }
+ if (ppos && epos > 0 && epos <= 6) // 123.4E3
+  {
+   fflags |= NRM;
+   return;
+  }
+ if (ppos == 0 && epos > 0 && epos <= 4) // 123E3
+  {
+   fflags |= NRM;
+   return;
+  }
+}
+
+// Scan a number in various formats: decimal, hex (0x or $), octal (0o), binary (0b), or with
+// backslash for base prefix
+t_operator calculator::dscan (bool operand, bool percent)
+{
+ uint32_t info = 0;
+ int_t ival    = 0;
+ double fval   = 0;
+ double sfval  = 0;
+ int ierr      = 0, ferr;
+ char *ipos, *fpos, *sfpos;
+ int n = 0;
+
+ if (buf[pos - 1] == '\\')
+  {
+   ierr = xscanf (buf + pos, 1, ival, n);
+   ipos = buf + pos + n;
+   if (n) info |= ESC;
+   fflags |= ESC;
+  }
+ else if ((buf[pos - 1] == '0') && ((buf[pos] == 'B') || (buf[pos] == 'b')))
+  {
+   ierr = bscanf (buf + pos + 1, ival, n);
+   ipos = buf + pos + n + 1;
+   if (n) info |= fBIN;
+   fflags |= fBIN;
+  }
+ else if ((buf[pos - 1] == '0') && ((buf[pos] == 'O') || (buf[pos] == 'o')))
+  {
+   ierr = oscanf (buf + pos + 1, ival, n);
+   ipos = buf + pos + n + 1;
+   if (n) info |= OCT;
+   fflags |= OCT;
+  }
+ else if (buf[pos - 1] == '$')
+  {
+   ierr = hscanf (buf + pos, ival, n);
+   ipos = buf + pos + n;
+   if (n) info |= HEX;
+   fflags |= HEX;
+  }
+ else if ((buf[pos - 1] == '0') && ((buf[pos] == 'X') || (buf[pos] == 'x')))
+  {
+   ierr = hscanf (buf + pos + 1, ival, n);
+   ipos = buf + pos + n + 1;
+   if (n) info |= HEX;
+   fflags |= HEX;
+  }
+ else
+  {
+   errno = 0;
+#ifdef __BORLANDC__
+   ival = strtol (buf + pos - 1, &ipos, 10);
+#else
+   ival = strtoll (buf + pos - 1, &ipos, 10);
+#endif
+   ierr = errno;
+  }
+ errno = 0;
+
+ sfval = fval = strtod (buf + pos - 1, &fpos);
+
+ if (errno == 0 && (fpos > ipos)) isNRM (buf + pos - 1, fpos); //
+
+ sfpos = fpos;
+
+ v_stack[v_sp].tag = tvFLOAT;
+
+ //` - degrees, ' - minutes, " - seconds
+ if ((*fpos == '\'') || (*fpos == '`') || (((scfg & FRI) == 0) && (*fpos == '\"')))
+  {
+   fval = dstrtod (buf + pos - 1, &fpos);
+   if ((fval != qnan) && (fpos > sfpos)) info |= DEG;
+  }
+ else if (*fpos == ':')
+  {
+   fval = tstrtod (buf + pos - 1, &fpos);
+   if ((fval != qnan) && (fpos > sfpos)) info |= DAT;
+  }
+ else if (scfg & (ENG | SCI | FRI))
+  {
+   scientific (fpos, fval);
+   if (fpos > sfpos) info |= ENG;
+  }
+ if ((scfg & FRH) && (*fpos == 'F')) // Fahrenheit to Celsius
+  {
+   fpos++;
+   if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS))
+    fval = -(-fval - 32.0) * 5.0 / 9.0;
+   else
+    fval = (fval - 32.0) * 5.0 / 9.0;
+   fflags |= FRH;
+   info |= FRH;
+  }
+#ifdef _KELVIN_
+ if ((scfg & FRH) && (*fpos == 'K')) // Kelvin to Celsius
+  {
+   fpos++;
+   if ((o_sp > 0) && (o_stack[o_sp - 1] == toMINUS)) // fval = qnan;
+    {
+     error ("Temperature below absolute zero");
+     return toERROR;
+    }
+   else
+    fval = fval - 273.15;
+   fflags |= FRH;
+  }
+#endif //_KELVIN_
+ if (operand && percent && (*fpos == '%'))
+  {
+   fpos++;
+   v_stack[v_sp].tag = tvPERCENT;
+  }
+ if ((*fpos == 'i') || (*fpos == 'j'))
+  {
+   c_imaginary = *fpos;
+   fpos++;
+   fflags |= CPX;
+   v_stack[v_sp].tag = tvCOMPLEX;
+  }
+ if (*fpos && (isalnum (*fpos & 0x7f) || *fpos == '@' || *fpos == '_' || *fpos == '?'))
+  { // Rollback to float if followed by identifier (e.g. 1k => 1.0k, but 1kB => 1k * B)
+   fpos              = sfpos;
+   fval              = sfval;
+   v_stack[v_sp].tag = tvFLOAT;
+  }
+
+ if (v_stack[v_sp].tag == tvCOMPLEX)
+  {
+   v_stack[v_sp].imval = (float__t)fval;
+   v_stack[v_sp].fval  = (float__t)0.0L;
+  }
+ else
+  {
+   v_stack[v_sp].fval  = (float__t)fval;
+   v_stack[v_sp].imval = (float__t)0.0L;
+  }
+ pos = fpos - buf;
+
+ if (v_stack[v_sp].tag == tvFLOAT)
+  {
+   ferr = errno;
+   if ((ipos <= fpos) && ((*fpos == '.') || (*fpos == '$') || (*fpos == '\\')))
+    {
+     pos = fpos - buf + 1;
+     error ("bad numeric constant");
+     return toERROR;
+    }
+   if (ierr && ferr)
+    {
+     error ("bad numeric constant");
+     return toERROR;
+    }
+   if (v_sp == max_stack_size)
+    {
+     error ("stack overflow");
+     return toERROR;
+    }
+   if (!ierr && ipos >= fpos && (*fpos != 'i') && (*fpos != 'j') && (*fpos != '%'))
+    {
+     if (scfg & FFLOAT)
+      v_stack[v_sp].tag = tvFLOAT;
+     else
+      v_stack[v_sp].tag = tvINT;
+     v_stack[v_sp].ival = ival;
+     v_stack[v_sp].fval = (float__t)ival;
+     pos                = ipos - buf;
+    }
+  }
+ v_stack[v_sp].info = info;
+ v_stack[v_sp].pos  = pos;
+ if (v_stack[v_sp].tag == tvFLOAT) fflags |= FLT;
+ v_stack[v_sp++].var = nullptr;
+ return toOPERAND;
+}
+
+// solve (x(2x+2)-2,x:=0)
+// calc (x(2x+2)-2,x:=0)
+// integr (x(2x+2)-2,0,10,x)
+// diff (x(2x+2)-2, 0, x)
+// for(expr, from, to, var)
+// sum(expr, from, to, var)
+// plot(fname, expr, from, to, var)
+// extract expression in () after the function name, and put it as string in the symbol table,
+// put variable with tvSOLVE tag and 'x(2x+2)-2,x:=0' in sval to variable stack
+// and return toOPERAND or toERROR if something wrong.
+t_operator calculator::sscan (symbol *sym)
+{
+ char sbuf[STRBUF];
+ int sidx              = 0;
+ int comma_count       = 0;
+ int parenthesis_count = 1; // we start after the opening parenthesis, so we are already at depth 1
+
+ char *ipos = buf + pos;
+ if (*ipos == ')')
+  {
+   pos++;
+   return toRPAR;
+  }
+ else if (*ipos == '\0')
+  return toEND; // end of input
+
+ // skip whitespace befor '('
+ while (isspace (*ipos & 0x7f)) ipos++;
+
+ while (*ipos && (sidx < STRBUF - 1) && (parenthesis_count > 0))
+  {
+   if (*ipos == ',' && parenthesis_count == 1)
+    comma_count++; // count commas only at the top level of parentheses
+   else if (*ipos == '(' || *ipos == '[')
+    parenthesis_count++; // increase depth for nested parentheses and brackets
+   else if (*ipos == ')' || *ipos == ']')
+    parenthesis_count--; // decrease depth for closing parentheses and brackets
+   sbuf[sidx++] = *ipos++;
+  }
+ if (sidx && sbuf[sidx - 1] == ')')
+  sbuf[sidx - 1] = '\0';  // remove the closing parenthesis from the string
+ sbuf[STRBUF - 1] = '\0'; // null-terminate the string in case of overflow
+
+ if (sym)
+  {
+   blockflag |= sym->block;
+   if ((sym->tag == tsSOLVE)    // solve (x(2x+2)-2,x:=0)
+       || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
+    {
+     if (parenthesis_count == 0 && comma_count == 1)
+      {
+       v_stack[v_sp].tag = tvSOLVE;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in solve expression");
+       else
+        error ("wrong number of arguments in solve expression");
+       return toERROR;
+      }
+    }
+   else if (sym->tag == tsINTEGR || // integr (x(2x+2)-2,0,10,x)
+            sym->tag == tsSUM)      // sum (x(2x+2)-2,0,10,x)
+    {
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvINTEGR;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in integral expression");
+       else
+        error ("wrong number of arguments in integral expression");
+       return toERROR;
+      }
+    }
+   else if (sym->tag == tsDIFF) // diff (x(2x+2)-2, 0, x)
+    {
+     if (parenthesis_count == 0 && comma_count == 2)
+      {
+       v_stack[v_sp].tag = tvDIFF;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in diff");
+       else
+        error ("wrong number of arguments in diff");
+       return toERROR;
+      }
+    }
+   else if (sym->tag == tsPLOT) // plot(fname, expr)
+    {
+     bool error_in_args = false;
+     switch (sym->fidx)
+      {
+      case pl_fplot:    // fplot(file, expr, from, to, var)
+      case pl_oplot:    // oplot(file, expr, from, to, var)
+      case pl_fplotpol: // fplotpol(file, expr, from, to, var)
+      case pl_oplotpol: // oplotpol(file, expr, from, to, var)
+      case pl_fplotlgx:
+      case pl_oplotlgx:
+      case pl_fplotlgy:
+      case pl_oplotlgy:
+      case pl_fplotlgxy:
+      case pl_oplotlgxy:
+      case pl_fplotsmith: // fplotsmith(file, expr, from, to, var)
+      case pl_oplotsmith: // oplotsmith(file, expr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 4)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_plot:    // plot(expr, from, to, var)
+      case pl_plotpol: // plotpol(expr, from, to, var)
+      case pl_plotlgx:
+      case pl_plotlgy:
+      case pl_plotlgxy:
+      case pl_plotsmith: // plotsmith(expr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 3)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 4)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_fxyplot: // fxyplot(file, xexpr, yexpr, from, to, var)
+      case pl_oxyplot: // oxyplot(file, xexpr, yexpr, from, to, var)
+       if (parenthesis_count == 0 && comma_count == 5)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_plotsmithz: // plotsmithz(expr, from, to, var, Z0)
+       if (parenthesis_count == 0 && comma_count == 4)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_fplotsmithz: // fplotsmithz(file, expr, from, to, var, Z0)
+      case pl_oplotsmithz: // oplotsmithz(file, expr, from, to, var, Z0)
+       if (parenthesis_count == 0 && comma_count == 5)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_plotdata:  // plotdata(datafile, mask)
+      case pl_plotdatal: // plotdatal(datafile, mask) - with lines
+       if (parenthesis_count == 0 && comma_count <= 1)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      case pl_fplotdata:  // fplotdata(bmpfile, datafile, mask)
+      case pl_oplotdata:  // oplotdata(bmpfile, datafile, mask)
+      case pl_fplotdatal: // fplotdatal(bmpfile, datafile, mask)
+      case pl_oplotdatal: // oplotdatal(bmpfile, datafile, mask)
+       if (parenthesis_count == 0 && comma_count <= 2)
+        v_stack[v_sp].tag = tvPLOT;
+       else
+        error_in_args = true;
+       break;
+
+      default:
+       error ("Unknown plot function");
+       return toERROR;
+      }
+     if (error_in_args)
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in plot expression");
+       else
+        error ("wrong number of arguments in plot expression");
+       return toERROR;
+      }
+    }
+   else if (sym->tag == tsFOR) // for(expr, from, to, var)
+    {
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvFOR;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in for expression");
+       else
+        error ("wrong number of arguments in for expression");
+       return toERROR;
+      }
+    }
+
+   {
+    char *sval = dupString (sbuf); // dup and register the string in the string table
+    if (!sval)
+     {
+      error ("memory allocation failed");
+      return toERROR;
+     }
+
+    pos                  = ipos - buf - 1;
+    v_stack[v_sp].sval   = sval;
+    v_stack[v_sp].var    = sym;
+    v_stack[v_sp].pos    = pos;
+    v_stack[v_sp].fval   = qnan;
+    v_stack[v_sp].imval  = ((float__t)0.0);
+    v_stack[v_sp++].ival = 0;
+    return toOPERAND;
+   }
+  }
+ return toERROR;
+}
+
+// parse the next operator from the input buffer, returning the operator type
+t_operator calculator::scan (bool operand, bool percent)
+{
+ char name[max_expression_length], *np;
+
+ while (isspace (buf[pos] & 0x7f)) pos += 1; // skip whitespace
+ switch (buf[pos++])
+  {
+  case '\0':
+   return toEND; // end of input
+  case '(':
+   return toLPAR;
+  case ')':
+   return toRPAR;
+  case '+':
+   if (buf[pos] == '+') // (RO) ++ operator
+    {
+     pos += 1;
+     return operand ? toPREINC : toPOSTINC;
+    }
+   else if (buf[pos] == '=') // (RO) += operator
+    {
+     pos += 1;
+     return toSETADD;
+    }
+   return operand ? toPLUS : toADD;
+  case '-':
+   if (buf[pos] == '-') // (RO) -- operator
+    {
+     pos += 1;
+     return operand ? toPREDEC : toPOSTDEC;
+    }
+   else if (buf[pos] == '=') // (RO) -= operator
+    {
+     pos += 1;
+     return toSETSUB;
+    }
+   return operand ? toMINUS : toSUB;
+  case '!':
+   if (buf[pos] == '=') // (RO) != operator
+    {
+     pos += 1;
+     return toNE;
+    }
+   return operand ? toNOT : toFACT;
+  case '~':
+   return toCOM;
+  case ';':
+   if (buf[pos] == ';') // (RO) ;; operator (comment to end of line)
+    {
+     pos += 1;
+     scan_opt (&buf[pos], fflags);
+     return toEND;
+    }
+   return toSEMI;
+  case '*':
+   if (buf[pos] == '*') // (RO) ** or **= operator
+    {
+     if (buf[pos + 1] == '=') // (RO) **= operator
+      {
+       pos += 2;
+       return toSETPOW;
+      }
+     pos += 1;
+     return toPOW;
+    }
+   else if (buf[pos] == '=') // (RO) *= operator
+    {
+     pos += 1;
+     return toSETMUL;
+    }
+   return toMUL;
+  case '/':
+   if (buf[pos] == '=') // (RO) /= operator
+    {
+     pos += 1;
+     return toSETDIV;
+    }
+   else if (buf[pos] == '/') // (RO) // operator (parallel resistors)
+    {
+     pos += 1;
+     return toPAR;
+    }
+   return toDIV;
+  case '%':
+   if (buf[pos] == '=') // (RO) %= operator
+    {
+     pos += 1;
+     return toSETMOD;
+    }
+   else if (buf[pos] == '%') // (RO) %% operator (percent)
+    {
+     pos += 1;
+     return toPERCENT;
+    }
+   return toMOD;
+  case '<':
+   if (buf[pos] == '<') // (RO) << or <<= operator
+    {
+     if (buf[pos + 1] == '=') // (RO) <<= operator
+      {
+       pos += 2;
+       return toSETASL;
+      }
+     else // (RO) << operator
+      {
+       pos += 1;
+       return toASL;
+      }
+    }
+   else if (buf[pos] == '=') // (RO) <= operator
+    {
+     pos += 1;
+     return toLE;
+    }
+   else if (buf[pos] == '>') // (RO) <> operator (not equal)
+    {
+     pos += 1;
+     return toNE;
+    }
+   return toLT;
+  case '>':
+   if (buf[pos] == '>') // (RO) >> or >>= operator
+    {
+     if (buf[pos + 1] == '>') // (RO) >>> or >>>= operator
+      {
+       if (buf[pos + 2] == '=') // (RO) >>>= operator
+        {
+         pos += 3;
+         return toSETLSR;
+        }
+       pos += 2;
+       return toLSR;
+      }
+     else if (buf[pos + 1] == '=') // (RO) >>= operator
+      {
+       pos += 2;
+       return toSETASR;
+      }
+     else // (RO) >> operator
+      {
+       pos += 1;
+       return toASR;
+      }
+    }
+   else if (buf[pos] == '=') // (RO) >= operator
+    {
+     pos += 1;
+     return toGE;
+    }
+   return toGT;
+  case '=':
+   if (buf[pos] == '=') // (RO) == operator
+    {
+     scfg &= ~PAS;
+     fflags &= ~PAS;
+     pos += 1;
+     return toEQ;
+    }
+   if (scfg & PAS)
+    return toEQ;
+   else
+    return toSET;
+  case ':':
+   if (buf[pos] == '=') // (RO) := operator
+    {
+     scfg |= PAS;
+     fflags |= PAS;
+     pos += 1;
+     return toSET;
+    }
+   error ("syntax error");
+   return toERROR;
+  case '&':
+   if (buf[pos] == '&') // (RO) && operator
+    {
+     pos += 1;
+     return toAND;
+    }
+   else if (buf[pos] == '=') // (RO) &= operator
+    {
+     pos += 1;
+     return toSETAND;
+    }
+   return toAND;
+  case '|':
+   if (buf[pos] == '|') // (RO) || operator
+    {
+     pos += 1;
+     return toOR;
+    }
+   else if (buf[pos] == '=') // (RO) |= operator
+    {
+     pos += 1;
+     return toSETOR;
+    }
+   return toOR;
+  case '^':
+   if (scfg & PAS)
+    {
+     if (buf[pos] == '=') // (RO) ^= operator
+      {
+       pos += 1;
+       return toSETPOW;
+      }
+     return toPOW;
+    }
+   else
+    {
+     if (buf[pos] == '=') // (RO) ^= operator
+      {
+       pos += 1;
+       return toSETXOR;
+      }
+     return toXOR;
+    }
+  case '#':
+   if (operand) // (RO) # gauge simbol
+    {
+     float__t fval;
+     char *fpos;
+     if (buf[pos])
+      {
+       fval                = Awg ((float__t)strtod (buf + pos, &fpos));
+       pos                 = fpos - buf;
+       v_stack[v_sp].tag   = tvFLOAT;
+       v_stack[v_sp].fval  = (float__t)fval;
+       v_stack[v_sp].pos   = pos;
+       v_stack[v_sp++].var = nullptr;
+       return toOPERAND;
+      }
+     else
+      {
+       error ("bad numeric constant");
+       return toERROR;
+      }
+    }
+   else
+    {
+     if (buf[pos] == '=') // (RO) #= operator
+      {
+       pos += 1;
+       return toSETXOR;
+      }
+     return toXOR;
+    }
+  case ',':
+   return toCOMMA;
+  case '{':
+   return braces ();
+  case '[':
+   if (operand)
+    return sqbraces ();
+   else
+    {
+     if (v_sp && v_stack[v_sp - 1].tag == tvMATRIX && v_stack[v_sp - 1].mval)
+      {
+       int row = 0, col = 0, ii = 0;
+       ii = mx_idx (row, col);
+
+       if (ii == 0)
+        {
+         error ("syntax error");
+         return toERROR;
+        }
+       else if (ii == 1)
+        {
+         int idx = row; // single index provided, treat as linear index into matrix
+         row     = idx / v_stack[v_sp - 1].mcols;
+         col     = idx % v_stack[v_sp - 1].mcols;
+         ii      = 2; // treat as element access if index is valid
+        }
+
+       if (ii == 2 && (v_stack[v_sp - 1].mrows > row) && (v_stack[v_sp - 1].mcols > col))
+        {
+         v_stack[v_sp].tag   = tvMX_ELEM;
+         v_stack[v_sp].info  = v_stack[v_sp - 1].info;
+         v_stack[v_sp].imval = (float__t)0.0L;
+         v_stack[v_sp].fval  = v_stack[v_sp - 1].mval[row * v_stack[v_sp - 1].mcols + col];
+         v_stack[v_sp].ival  = (int_t)v_stack[v_sp].fval;
+         v_stack[v_sp].pos   = pos;
+         v_stack[v_sp].var   = nullptr;
+         v_stack[v_sp].mrows = v_stack[v_sp - 1].mrows;
+         v_stack[v_sp].mcols = v_stack[v_sp - 1].mcols;
+         v_stack[v_sp].irows = row;
+         v_stack[v_sp].icols = col;
+         v_stack[v_sp].mval  = v_stack[v_sp - 1].mval; // keep pointer to matrix for later updates
+         v_sp++;
+         return toMX_ELEM;
+        }
+       else
+        {
+         errorf (pos, "Matrix index out of bounds: [%d,%d]", row, col);
+         return toERROR;
+        }
+      }
+     else
+      {
+       error ("syntax error");
+       return toERROR;
+      }
+    }
+
+  case '\'':
+   {
+    int_t ival;
+    uint32_t info = 0;
+    char *ipos;
+    int n = 0;
+
+    if (buf[pos] == '\\')
+     {
+      xscanf (buf + pos + 1, 1, ival, n);
+      ipos = buf + pos + n + 1;
+      if (*ipos == '\'')
+       ipos++;
+      else
+       {
+        error ("bad char constant");
+        return toERROR;
+       }
+     }
+    else
+     {
+      ipos = buf + pos + 1;
+      if (*ipos == '\'')
+       {
+#ifdef _WCHAR_
+#ifdef _WIN_
+        if (*(ipos + 1) == 'W') // (RO) wide char constant
+         {
+          wchar_t wbuf[2];
+          char cbuf[2];
+
+          cbuf[0] = *(ipos - 1);
+          cbuf[1] = '\0';
+
+          MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
+          // ival = *(int *)&wbuf[0];
+          ival = 0;
+          memcpy (&ival, &wbuf[0], 2);
+          ipos += 2;
+          fflags |= WCH;
+          info |= WCH;
+         }
+        else
+#endif /*_WIN_*/
+#endif /*_WCHAR_*/
+         {
+          fflags |= CHR;
+          info |= CHR;
+          ival               = *(unsigned char *)(ipos - 1);
+          v_stack[v_sp].sval = (char *)sf_alloc (2);
+          if (v_stack[v_sp].sval)
+           {
+            if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);
+            if (v_stack[v_sp].sval) v_stack[v_sp].sval[1] = '\0';
+           }
+          ipos++;
+         }
+       }
+      else
+       {
+        return dqscan ('\'');
+       }
+     }
+    pos                 = ipos - buf;
+    v_stack[v_sp].tag   = tvINT;
+    v_stack[v_sp].info  = info;
+    v_stack[v_sp].ival  = ival;
+    v_stack[v_sp].pos   = pos;
+    v_stack[v_sp++].var = nullptr;
+    return toOPERAND;
+   }
+#ifdef _WCHAR_
+#ifdef _WIN_
+  case 'L':
+   {
+    int_t ival;
+    char *ipos;
+    int n         = 0;
+    uint32_t info = 0;
+    if (buf[pos] == '\'')
+     {
+      if (buf[pos + 1] == '\\')
+       {
+        xscanf (buf + pos + 2, 2, ival, n);
+        ipos = buf + pos + n + 2;
+        if (*ipos == '\'')
+         ipos++;
+        else
+         {
+          error ("bad char constant");
+          return toERROR;
+         }
+       }
+      else
+       {
+        ipos = buf + pos;
+        if (*(ipos + 2) == '\'')
+         {
+          wchar_t wbuf[2];
+          char cbuf[2];
+
+          cbuf[0] = *(ipos + 1);
+          cbuf[1] = '\0';
+
+          MultiByteToWideChar (CP_OEMCP, 0, (LPSTR)cbuf, -1, (LPWSTR)wbuf, 2);
+          // ival = *(int *)&wbuf[0];
+          ival = 0;
+          memcpy (&ival, &wbuf[0], 2);
+          ipos += 3;
+          fflags |= WCH;
+          info |= WCH;
+         }
+        else
+         {
+          error ("bad char constant");
+          return toERROR;
+         }
+       }
+      pos                 = ipos - buf;
+      v_stack[v_sp].tag   = tvINT;
+      v_stack[v_sp].info  = info;
+      v_stack[v_sp].ival  = ival;
+      v_stack[v_sp].pos   = pos;
+      v_stack[v_sp++].var = nullptr;
+      return toOPERAND;
+     }
+    goto def;
+   }
+#endif /*_WIN_*/
+#endif /*_WCHAR_*/
+  case '"':
+   return dqscan ('"');
+
+#ifdef _ENABLE_PREIMAGINARY_
+  case 'i':
+  case 'j':
+   {
+    uint32_t info = 0;
+    char *fpos;
+    if (buf[pos] && (isdigit (buf[pos] & 0x7f) || buf[pos] == '.'))
+     {
+      double fval = strtod (buf + pos, &fpos);
+      if (scfg & (ENG | SCI | FRI))
+       {
+        char *spos = fpos;
+        scientific (fpos, fval);
+        if (fpos > spos) info |= ENG;
+       }
+      int ferr = errno;
+      if ((ferr) && (*fpos == '.'))
+       {
+        pos = fpos - buf + 1;
+        error ("bad numeric constant");
+        return toERROR;
+       }
+      if (v_sp == max_stack_size)
+       {
+        error ("stack overflow");
+        return toERROR;
+       }
+
+      c_imaginary = buf[pos - 1];
+
+      v_stack[v_sp].tag  = tvCOMPLEX;
+      v_stack[v_sp].info = info;
+      scfg |= CPX;
+      fflags |= CPX;
+      v_stack[v_sp].imval = (float__t)fval;
+      v_stack[v_sp].fval  = (float__t)0.0;
+      v_stack[v_sp].pos   = pos;
+      v_stack[v_sp++].var = nullptr;
+      pos                 = fpos - buf;
+      return toOPERAND;
+     }
+    else
+     goto def;
+   }
+#endif /*_ENABLE_PREIMAGINARY_*/
+  case '.':
+  case '0':
+  case '1':
+  case '2':
+  case '3':
+  case '4':
+  case '5':
+  case '6':
+  case '7':
+  case '8':
+  case '9':
+  case '\\':
+  case '$':
+   return dscan (operand, percent);
+  default:
+  def:
+   pos -= 1;
+   np = name;
+   while (isalnum (buf[pos] & 0x7f) || buf[pos] == '@' || buf[pos] == '_' || buf[pos] == '?')
+    {
+     *np++ = buf[pos++] & 0x7f;
+    }
+   if (np == buf)
+    {
+     error ("Bad character");
+     return toERROR;
+    }
+   *np         = '\0';
+   symbol *sym = nullptr;
+   if (strlen (name) > MAXNAME)
+    {
+     error ("Name too long");
+     return toERROR;
+    }
+   if (name[0])
+    {
+     if (buf[pos] == '\0')
+      sym = find (name);
+     else
+      sym = add (tsVARIABLE, name);
+    }
+   if (v_sp == max_stack_size)
+    {
+     error ("stack overflow");
+     return toERROR;
+    }
+
+   if (sym)
+    {
+     blockflag |= sym->block;
+     if (sym->tag == tsVARIABLE) strcpy (lastvar, sym->name);
+     v_stack[v_sp]       = sym->val;
+     v_stack[v_sp].pos   = pos;
+     v_stack[v_sp++].var = sym;
+     if (sym->tag == tsSUM)
+      return toSOLVE;
+     else if (sym->tag == tsINTEGR)
+      return toSOLVE;
+     else if (sym->tag == tsDIFF)
+      return toSOLVE;
+     else if (sym->tag == tsSOLVE)
+      return toSOLVE;
+     else if (sym->tag == tsCALC)
+      return toSOLVE;
+     else if (sym->tag == tsPLOT)
+      return toSOLVE;
+     else if (sym->tag == tsFOR)
+      return toSOLVE;
+     return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
+    }
+   else
+    return toOPERAND;
+  }
+}
+#pragma endregion
+//---------------------------------------------------------------------------
+
+#pragma region Expression Evaluation
+// Left precedence for operators, used to determine when to push operators onto the stack during
+// expression evaluation. Higher values indicate higher precedence.
+static int lpr[toTERMINALS] = {
+ 2,  0,   0,  0,              // BEGIN, OPERAND, ERROR, END,
+ 4,  4,                       // LPAR, RPAR
+ 5,  5,   98, 98, 98,         // FUNC, SOLVE, POSTINC, POSTDEC, FACT
+ 98, 98,  98, 98, 98, 98,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
+ 95,                          // POW,
+ 80, 80,  80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
+ 70, 70,                      // ADD, SUB,
+ 60, 60,  60,                 // ASL, ASR, LSR,
+ 50, 50,  50, 50,             // GT, GE, LT, LE,
+ 40, 40,                      // EQ, NE,
+ 38,                          // AND,
+ 36,                          // XOR,
+ 34, 100,                     // OR, MX_ELEM
+ 20, 20,  20, 20, 20, 20, 20, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
+ 20, 20,  20, 20, 20, 20,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
+ 8,                           // SEMI
+ 10                           // COMMA
+};
+
+// Right precedence for operators, used to determine when to pop operators from the stack during
+// expression evaluation. Higher values indicate higher precedence.
+static int rpr[toTERMINALS] = {
+ 0,   0,   0,  1,              // BEGIN, OPERAND, ERROR, END,
+ 110, 3,                       // LPAR, RPAR
+ 120, 120, 99, 99, 99,         // FUNC, SOLVE, POSTINC, POSTDEC, FACT
+ 99,  99,  99, 99, 99, 99,     // PREINC, PREDEC, PLUS, MINUS, NOT, COM,
+ 100,                          // POW,
+ 80,  80,  80, 80, 80,         // toPERCENT, MUL, DIV, MOD, PAR
+ 70,  70,                      // ADD, SUB,
+ 60,  60,  60,                 // ASL, ASR, LSR,
+ 50,  50,  50, 50,             // GT, GE, LT, LE,
+ 40,  40,                      // EQ, NE,
+ 38,                           // AND,
+ 36,                           // XOR,
+ 34,  130,                     // OR, MX_ELEM
+ 25,  25,  25, 25, 25, 25, 25, // SET, SETADD, SETSUB, SETMUL, SETDIV, SETMOD,
+ 25,  25,  25, 25, 25, 25,     // SETASL, SETASR, SETLSR, SETAND, SETXOR, SETOR,
+ 10,                           // SEMI
+ 15                            // COMMA
+};
 
 bool calculator::CheckOperand (int sp, uint32_t mask)
 {
  t_value tag = v_stack[v_sp - sp].tag;
  int pos     = v_stack[v_sp - sp].pos;
- if (!((1<<tag) & mask)) // valid type for this operand
+ if (!((1 << tag) & mask)) // valid type for this operand
   {
    switch (tag)
     {
-     case tvERR:
-      error (pos, "Undefined operand");
+    case tvERR:
+     error (pos, "Undefined operand");
      break;
-     case tvCOMPLEX:
-      error (pos, "Complex operand required");
+    case tvCOMPLEX:
+     error (pos, "Complex operand required");
      break;
-     case tvSTR:
-      error (pos, "String operand required");
+    case tvSTR:
+     error (pos, "String operand required");
      break;
-     case tvMATRIX:
-      error (pos, "Matrix operand required");
+    case tvMATRIX:
+     error (pos, "Matrix operand required");
      break;
-     default:
-      error (pos, "Invalid operand type");
+    default:
+     error (pos, "Invalid operand type");
      break;
     }
-   return false; 
+   return false;
   }
  return true;
 }
@@ -9276,23 +9292,24 @@ bool calculator::CheckOperand (int sp, uint32_t mask)
 // mask is an array of bitmasks for each argument position, where each bit corresponds to a t_value
 // tag type that is invalid for that argument. For example, if mask[0] has bit 1<<tvSTR set, then a
 // string is not allowed for the first argument.
-// First mask is for the last argument (top of stack), second mask for the previous argument down, etc.
+// First mask is for the last argument (top of stack), second mask for the previous argument down,
+// etc.
 bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3])
 {
  if (n_args != expected_args)
   {
    switch (expected_args)
     {
-       case 1:
-         error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
-        break;
-       case 2:
-         error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
-        break;
-       case 3:
-         error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
-        break;
-    } 
+    case 1:
+     error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+     break;
+    case 2:
+     error (v_stack[v_sp - n_args - 1].pos, "Function should take two arguments");
+     break;
+    case 3:
+     error (v_stack[v_sp - n_args - 1].pos, "Function should take three arguments");
+     break;
+    }
    return false;
   }
 
@@ -9300,28 +9317,28 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask
   {
    t_value tag = v_stack[v_sp - 1 - i].tag;
    int pos     = v_stack[v_sp - 1 - i].pos;
-   if ((1<<tag) & mask[i]) // invalid type for this argument
-     {
-      switch (tag)
-       {
-        case tvERR:
-         error (pos, "Undefined operand");
-        break;
-        case tvCOMPLEX:
-         error (pos, "Illegal complex operand");
-        break;
-        case tvSTR:
-         error (pos, "Illegal string operand");
-        break;
-        case tvMATRIX:
-         error (pos, "Illegal matrix operand");
-        break;
-        default:
-         error (pos, "Invalid argument type");
-        break;
-       }
-      return false; 
-     }
+   if ((1 << tag) & mask[i]) // invalid type for this argument
+    {
+     switch (tag)
+      {
+      case tvERR:
+       error (pos, "Undefined operand");
+       break;
+      case tvCOMPLEX:
+       error (pos, "Illegal complex operand");
+       break;
+      case tvSTR:
+       error (pos, "Illegal string operand");
+       break;
+      case tvMATRIX:
+       error (pos, "Illegal matrix operand");
+       break;
+      default:
+       error (pos, "Invalid argument type");
+       break;
+      }
+     return false;
+    }
   }
  return true;
 }
@@ -9335,41 +9352,42 @@ bool calculator::CheckOpArgs (int n_args, const uint32_t mask[2])
   {
    t_value tag = v_stack[v_sp - 1 - i].tag;
    int pos     = v_stack[v_sp - 1 - i].pos;
-   if ((1<<tag) & mask[i]) // invalid type for this operand
-     {
-      switch (tag)
-       {
-        case tvERR:
-         error (pos, "Undefined operand");
-        break;
-        case tvCOMPLEX:
-         error (pos, "Illegal complex operand");
-        break;
-        case tvSTR:
-         error (pos, "Illegal string operand");
-        break;
-        case tvMATRIX:
-         error (pos, "Illegal matrix operand");
-        break;
-        default:
-         error (pos, "Invalid operand type");
-        break;
-       }
-      return false; 
-     }
+   if ((1 << tag) & mask[i]) // invalid type for this operand
+    {
+     switch (tag)
+      {
+      case tvERR:
+       error (pos, "Undefined operand");
+       break;
+      case tvCOMPLEX:
+       error (pos, "Illegal complex operand");
+       break;
+      case tvSTR:
+       error (pos, "Illegal string operand");
+       break;
+      case tvMATRIX:
+       error (pos, "Illegal matrix operand");
+       break;
+      default:
+       error (pos, "Invalid operand type");
+       break;
+      }
+     return false;
+    }
   }
  return true;
 }
 
+
 // Check if the top of the value stack is a matrix with valid dimensions (used for indexing like
 // A[i,j])
-bool calculator::isMxIdx1()
+bool calculator::isMxIdx1 ()
 {
  if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-      v_stack[v_sp - 1].mval && 
-      v_stack[v_sp - 1].mcols + 
-      v_stack[v_sp - 1].mrows)) return true;
- else return false;
+      v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows))
+  return true;
+ else
+  return false;
 }
 
 // Check if the top two entries on the value stack are matrices with valid dimensions (used for
@@ -9377,14 +9395,61 @@ bool calculator::isMxIdx1()
 bool calculator::isMxIdx2 ()
 {
  if ((v_stack[v_sp - 1].tag == tvFLOAT && // A[i,j]
-      v_stack[v_sp - 1].mval && 
-      v_stack[v_sp - 1].mcols + 
-      v_stack[v_sp - 1].mrows) || 
-     (v_stack[v_sp - 2].tag == tvFLOAT && // B[i,j]
-      v_stack[v_sp - 2].mval && 
-      v_stack[v_sp - 2].mcols + 
-      v_stack[v_sp - 2].mrows)) return true;
- else return false;
+      v_stack[v_sp - 1].mval && v_stack[v_sp - 1].mcols + v_stack[v_sp - 1].mrows)
+     || (v_stack[v_sp - 2].tag == tvFLOAT && // B[i,j]
+         v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows))
+  return true;
+ else
+  return false;
+}
+
+// Perform assignment operation for the top value on the stack, checking for variable and constant
+// rules. Used for operators like '++', '--', '+=', '-=', etc. that assign to a variable.
+bool calculator::set_op ()
+{
+ value &v = v_stack[v_sp - 1];
+ if (v.tag == tvFLOAT && v.mval && v.mcols + v.mrows)
+  {
+   int row                     = v.irows;
+   int col                     = v.icols;
+   v.mval[row * v.mcols + col] = v.fval;
+   return true;
+  }
+ else if (v.var == nullptr)
+  {
+   error (v.pos, "variable expected");
+   return false;
+  }
+ else
+  {
+   if (v.var->tag == tsCONSTANT)
+    {
+     error (v.pos, "assignment to constant");
+     return false;
+    }
+   v.var->val = v;
+   return true;
+  }
+}
+
+// Clear the value stack by resetting all entries to default values and
+// setting the stack pointer to 0
+void calculator::clear_v_stack ()
+{
+ for (int i = 0; i < max_stack_size; ++i)
+  {
+   v_stack[i].tag   = tvINT;
+   v_stack[i].sval  = nullptr;
+   v_stack[i].var   = nullptr;
+   v_stack[i].pos   = 0;
+   v_stack[i].ival  = 0;
+   v_stack[i].fval  = (float__t)0.0L;
+   v_stack[i].imval = (float__t)0.0L;
+   v_stack[i].mval  = nullptr;
+   v_stack[i].mrows = 0;
+   v_stack[i].mcols = 0;
+  }
+ v_sp = 0;
 }
 
 // Evaluate the given expression and return the result as a floating-point value. The expression is
@@ -11904,3 +11969,4 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
    o_stack[o_sp++] = oper;
   }
 }
+#pragma endregion

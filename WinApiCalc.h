@@ -114,8 +114,8 @@ public:
     void OnLButtonDown(int x, int y);
 
     // Calculator operations
-    void EvaluateExpression();
-    void OnExpressionChanged();
+    void EvaluateExpression(bool block=false);
+    void OnExpressionChanged (bool block = false);
     void OnEnterPressed();
     
     // Menu operations

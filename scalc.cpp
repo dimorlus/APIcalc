@@ -3924,9 +3924,6 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
  uint32_t axis_color = params.axis_color;
  uint32_t text_color = params.text_color;
 
- float__t x_range = xmax - xmin;
- float__t y_range = ymax - ymin;
-
  int plot_width       = width - 2 * padding;
  int plot_height      = height - 2 * padding;
  int grid_step_pixels = (plot_width > plot_height ? plot_width : plot_height) / 10;
@@ -3938,15 +3935,16 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
  float__t y_center = (ymin + ymax) / 2.0;
  float__t scale    = params.scale;
 
- // Calculate axis positions
- int x_axis_pixel = center_y - (int)((0.0 - y_center) * scale);
- int y_axis_pixel = center_x + (int)((0.0 - x_center) * scale);
+ // Calculate axis positions using same formula as point drawing
+ int y_axis_pixel = center_x + (int)((0.0 - x_center) * scale); // X=0 position
+ int x_axis_pixel = center_y - (int)((0.0 - y_center) * scale); // Y=0 position
 
- // Horizontal grid lines
+ // FIX: Draw grid centered on data center (not canvas center)
+ // Horizontal grid lines (centered on Y=0 axis, not canvas center)
  for (int offset = 0; offset <= plot_height / 2; offset += grid_step_pixels)
   {
-   int y_up   = center_y - offset;
-   int y_down = center_y + offset;
+   int y_up   = x_axis_pixel - offset;
+   int y_down = x_axis_pixel + offset;
 
    if (y_up >= padding && y_up < height - padding)
     {
@@ -3959,11 +3957,11 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
     }
   }
 
- // Vertical grid lines
+ // Vertical grid lines (centered on X=0 axis, not canvas center)
  for (int offset = 0; offset <= plot_width / 2; offset += grid_step_pixels)
   {
-   int x_left  = center_x - offset;
-   int x_right = center_x + offset;
+   int x_left  = y_axis_pixel - offset;
+   int x_right = y_axis_pixel + offset;
 
    if (x_left >= padding && x_left < width - padding)
     {
@@ -3976,7 +3974,7 @@ void calculator::PlotDrawAxesParametric (bmpdraw *bmp, PlotParams &params)
     }
   }
 
- // Axes
+ // Draw axes (at zero crossings)
  if (x_axis_pixel >= padding && x_axis_pixel < height - padding)
   {
    bmp->drawLine (padding, x_axis_pixel, width - padding, x_axis_pixel, 1, axis_color);

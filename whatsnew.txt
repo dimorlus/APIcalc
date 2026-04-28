@@ -10,6 +10,8 @@
 * Now, when you encounter functions that open modal windows (fdlg, plot) while entering an expression, after perhaps 
   their first call, the computing core is blocked until Enter is pressed, so that the modal windows that pop up every 
   time do not interfere with editing the expression.
+- Fixed bug in the plotxy grid.
+
 
 27.04.26 (2.188)
 + Added follow functions:

@@ -931,7 +931,7 @@ void WinApiCalc::OnCreate ()
   }
 
  // Always update title to reflect current expression (even if empty)
- OnExpressionChanged ();
+ OnExpressionChanged (); // OnCreate
 
  // Set fixed window size immediately at creation
  ResizeWindow ();
@@ -1047,7 +1047,7 @@ void WinApiCalc::OnCommand (WPARAM wParam)
    m_options |= (SCI | NRM | FRC | CMP | IGR | UNS | HEX | OCT | FBIN | CHR | WCH | DAT | UTM | DEG
                  | STR | FRI | FRH);
    UpdateMenuChecks ();
-   EvaluateExpression ();
+   EvaluateExpression (); //OnCommand ID_FORMAT_ALL
    break;
 
   // Binary width menu items
@@ -1151,7 +1151,7 @@ void WinApiCalc::OnCommand (WPARAM wParam)
     {
      if (!m_isUpdatingHistory)
       {
-       OnExpressionChanged ();
+       OnExpressionChanged (); //OnCommand CBN_EDITCHANGE
       }
     }
    else if (wmEvent == CBN_SELCHANGE)
@@ -1185,7 +1185,7 @@ void WinApiCalc::OnMove (int x, int y)
   }
 }
 
-void WinApiCalc::OnExpressionChanged ()
+void WinApiCalc::OnExpressionChanged (bool block)
 {
  // Get current expression using ANSI
  char buffer[2048];
@@ -1216,7 +1216,7 @@ void WinApiCalc::OnExpressionChanged ()
  SetWindowTextA (m_hWnd, title.c_str ());
 
  // Evaluate expression as user types
- EvaluateExpression ();
+ EvaluateExpression (block); //OnExpressionChanged
 }
 
 void WinApiCalc::OnEnterPressed ()
@@ -1243,7 +1243,7 @@ void WinApiCalc::OnEnterPressed ()
      blocked = m_pCalculator->block ();
      m_pCalculator->syntax (m_options);
 
-     m_pCalculator->evaluate (exprBuf);
+     m_pCalculator->evaluate (exprBuf); //OnEnterPressed
 
      // Check for errors
      char *error = m_pCalculator->error ();
@@ -1282,7 +1282,7 @@ void WinApiCalc::OnEnterPressed ()
   }
 }
 
-void WinApiCalc::EvaluateExpression ()
+void WinApiCalc::EvaluateExpression (bool block)
 {
  if (!m_pCalculator)
   {
@@ -1297,7 +1297,7 @@ void WinApiCalc::EvaluateExpression ()
    // Prepare expression buffer
    char exprBuf[2048];
 
-   if (m_pCalculator->block()) return;
+   if (!block && m_pCalculator->block()) return;
 
    memset (exprBuf, 0, sizeof (exprBuf));
    strncpy_s (exprBuf, m_currentExpression.c_str (), sizeof (exprBuf) - 1);
@@ -1309,7 +1309,7 @@ void WinApiCalc::EvaluateExpression ()
    // Evaluate expression
    m_hasPendingColor = false;
 
-   m_pCalculator->evaluate (exprBuf); 
+   m_pCalculator->evaluate (exprBuf); //EvaluateExpression
 
    // Get syntax flags from calculator
    int scfg = m_pCalculator->issyntax ();
@@ -1400,7 +1400,7 @@ void WinApiCalc::WrapExpressionWith (const char *prefix, const char *suffix)
  SendMessageA (m_hExpressionEdit, EM_SETSEL, newExpression.length (), newExpression.length ());
 
  // Update the expression and recalculate
- OnExpressionChanged ();
+ OnExpressionChanged (); //WrapExpressionWith
 }
 
 void WinApiCalc::OnKeyDown (WPARAM key)
@@ -1451,7 +1451,7 @@ void WinApiCalc::OnKeyDown (WPARAM key)
     case 'N': // Ctrl+N - Clear input
      SetWindowTextA (m_hExpressionEdit, "");
      SetWindowTextA (m_hComboBox, "");
-     OnExpressionChanged ();
+     OnExpressionChanged (); // Ctrl+N
      break;
     case VK_ADD:
     case VK_OEM_PLUS: // Ctrl+Shift++ - Increase opacity
@@ -1584,7 +1584,7 @@ void WinApiCalc::ToggleOption (int flag)
   }
 
  UpdateMenuChecks ();
- EvaluateExpression ();
+ EvaluateExpression (); //ToggleOption
  ResizeWindow (); // Recalculate size when options change
 }
 
@@ -2403,7 +2403,7 @@ void WinApiCalc::LoadHistoryItem (int index)
  m_isUpdatingHistory = false;
 
  // Force update of title and result
- OnExpressionChanged ();
+ OnExpressionChanged (true); // OnHistoryItemSelected
 
  // Set cursor to end of text without selection
  // Set cursor to end of text without selection using PostMessage to ensure it happens after any

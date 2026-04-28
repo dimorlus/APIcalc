@@ -1221,6 +1221,7 @@ void WinApiCalc::OnExpressionChanged ()
 
 void WinApiCalc::OnEnterPressed ()
 {
+ bool blocked;
  // Add current expression to history
  if (!m_currentExpression.empty ())
   {
@@ -1239,6 +1240,7 @@ void WinApiCalc::OnEnterPressed ()
      strncpy_s (exprBuf, m_currentExpression.c_str (), sizeof (exprBuf) - 1);
      exprBuf[sizeof (exprBuf) - 1] = '\0';
 
+     blocked = m_pCalculator->block ();
      m_pCalculator->syntax (m_options);
 
      m_pCalculator->evaluate (exprBuf);
@@ -1249,7 +1251,23 @@ void WinApiCalc::OnEnterPressed ()
       {
        return; // Don't replace on error
       }
-
+     if (blocked)
+      {
+       char printBuf[2048];
+       int lineCount = 0;
+       int prnSize;
+       memset (printBuf, 0, sizeof (printBuf));
+       lineCount = m_pCalculator->print (printBuf, m_options, m_binWidth, &prnSize);
+       if ((prnSize > 2) && (printBuf[prnSize - 2] == '\r')) printBuf[prnSize - 2] = '\0';
+       // Count lines in result for window sizing
+       if (lineCount > 20) lineCount = 20; // Safety check
+       if (lineCount) m_resultLines = lineCount;
+       else m_resultLines = 1; // At least 1 line
+       SetWindowTextA (m_hResultEdit, printBuf);
+       // Resize window to fit content
+       ResizeWindow ();
+      }
+     else
       {
        char resultStr[256];
        m_pCalculator->printres (resultStr);
@@ -1278,6 +1296,9 @@ void WinApiCalc::EvaluateExpression ()
   {
    // Prepare expression buffer
    char exprBuf[2048];
+
+   if (m_pCalculator->block()) return;
+
    memset (exprBuf, 0, sizeof (exprBuf));
    strncpy_s (exprBuf, m_currentExpression.c_str (), sizeof (exprBuf) - 1);
    exprBuf[sizeof (exprBuf) - 1] = '\0';

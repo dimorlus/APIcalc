@@ -131,6 +131,7 @@ calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
  v_sp         = 0;    // Clear the value stack pointer
  o_sp         = 0;    // Clear the operator stack pointer
 
+ blockflag     = false;   // Clear the block flag
  EscFn         = nullptr; // Clear the escape function pointer
  FileDlgFn     = nullptr; // Clear the file dialog function pointer
  ShowImageFn   = nullptr; // Clear the show image function pointer
@@ -260,42 +261,50 @@ void calculator::AddPredefined (void)
  add (tsIF, "if", nullptr);
 
  // Cartesian plots
- add (tsPLOT, pl_plot, "plot", nullptr);
- add (tsPLOT, pl_fplot, "fplot", nullptr);
- add (tsPLOT, pl_oplot, "oplot", nullptr);
+ add (tsPLOT, pl_plot, "plot", nullptr, true);
+ add (tsPLOT, pl_fplot, "fplot", nullptr, true);
+ add (tsPLOT, pl_oplot, "oplot", nullptr, true);
 
  // Polar plots
- add (tsPLOT, pl_plotpol, "plotpol", nullptr);
- add (tsPLOT, pl_fplotpol, "fplotpol", nullptr);
- add (tsPLOT, pl_oplotpol, "oplotpol", nullptr);
+ add (tsPLOT, pl_plotpol, "plotpol", nullptr, true);
+ add (tsPLOT, pl_fplotpol, "fplotpol", nullptr, true);
+ add (tsPLOT, pl_oplotpol, "oplotpol", nullptr, true);
 
  // Parametric plots
- add (tsPLOT, pl_xyplot, "plotxy", nullptr);
- add (tsPLOT, pl_fxyplot, "fplotxy", nullptr);
- add (tsPLOT, pl_oxyplot, "oplotxy", nullptr);
+ add (tsPLOT, pl_xyplot, "plotxy", nullptr, true);
+ add (tsPLOT, pl_fxyplot, "fplotxy", nullptr, true);
+ add (tsPLOT, pl_oxyplot, "oplotxy", nullptr, true);
 
  // Logarithmic plots
- add (tsPLOT, pl_plotlgx, "plotlgx", nullptr);
- add (tsPLOT, pl_fplotlgx, "fplotlgx", nullptr);
- add (tsPLOT, pl_oplotlgx, "oplotlgx", nullptr);
+ add (tsPLOT, pl_plotlgx, "plotlgx", nullptr, true);
+ add (tsPLOT, pl_fplotlgx, "fplotlgx", nullptr, true);
+ add (tsPLOT, pl_oplotlgx, "oplotlgx", nullptr, true);
 
- add (tsPLOT, pl_plotlgy, "plotlgy", nullptr);
- add (tsPLOT, pl_fplotlgy, "fplotlgy", nullptr);
- add (tsPLOT, pl_oplotlgy, "oplotlgy", nullptr);
-
- add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr);
- add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr);
- add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr);
+ add (tsPLOT, pl_plotlgy, "plotlgy", nullptr, true);
+ add (tsPLOT, pl_fplotlgy, "fplotlgy", nullptr, true);
+ add (tsPLOT, pl_oplotlgy, "oplotlgy", nullptr, true);
+ add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr, true);
+ add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr, true);
+ add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr, true);
 
  // Smith chart
- add (tsPLOT, pl_plotsmith, "plotsmith", nullptr);
- add (tsPLOT, pl_fplotsmith, "fplotsmith", nullptr);
- add (tsPLOT, pl_oplotsmith, "oplotsmith", nullptr);
+ add (tsPLOT, pl_plotsmith, "plotsmith", nullptr, true);
+ add (tsPLOT, pl_fplotsmith, "fplotsmith", nullptr, true);
+ add (tsPLOT, pl_oplotsmith, "oplotsmith", nullptr, true);
 
- add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr);
- add (tsPLOT, pl_fplotsmithz, "fplotsmithz", nullptr);
- add (tsPLOT, pl_oplotsmithz, "osmithz", nullptr);
+ add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr, true);
+ add (tsPLOT, pl_fplotsmithz, "fplotsmithz", nullptr, true);
+ add (tsPLOT, pl_oplotsmithz, "osmithz", nullptr, true);
 
+ // Data plots (points)
+ add (tsPLOT, pl_plotdata, "plotdata", nullptr, true);
+ add (tsPLOT, pl_fplotdata, "fplotdata", nullptr, true);
+ add (tsPLOT, pl_oplotdata, "oplotdata", nullptr, true);
+
+ // Data plots (lines)
+ add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, true);
+ add (tsPLOT, pl_fplotdatal, "fplotdatal", nullptr, true);
+ add (tsPLOT, pl_oplotdatal, "oplotdatal", nullptr, true);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -341,7 +350,7 @@ void calculator::AddPredefined (void)
  add (tsSTFUN, sfInvNorm, "invnorm", nullptr);
  add (tsSTFUN, sfNormPD, "normpd", nullptr);
 
- add (tsSFUNCS1, ssFdlg, "fdlg", nullptr);
+ add (tsSFUNCS1, ssFdlg, "fdlg", nullptr, true);
 
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
@@ -446,7 +455,7 @@ void calculator::AddPredefined (void)
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
- add (tsFPFUNCn, "prnf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf);
+ add (tsFPFUNCn, "prnf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf, true);
   
  add (tsSIFUNC1, "datatime", (void *)datatime);
  
@@ -1782,7 +1791,7 @@ unsigned calculator::string_hash_function (const char *p)
 }
 
 // Add a symbol to the hash table, or return the existing symbol if it already exists
-symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func)
+symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func, bool block)
 {
  symbol *sp;
  unsigned h = string_hash_function (name) % hash_table_size;
@@ -1801,6 +1810,7 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
  sp->tag       = tag;
  sp->fidx      = fidx;
  sp->func      = func;
+ sp->block     = block;
  strcpy (sp->name, name);
  sp->val.tag   = tvERR; // tvINT;
  sp->val.ival  = 0;
@@ -1817,7 +1827,7 @@ symbol *calculator::add (t_symbol tag, v_func fidx, const char *name, void *func
 
 // Add a symbol to the hash table, or return the existing symbol if it already exists (without
 // function index)
-symbol *calculator::add (t_symbol tag, const char *name, void *func)
+symbol *calculator::add (t_symbol tag, const char *name, void *func, bool block)
 {
  symbol *sp;
  unsigned h = string_hash_function (name) % hash_table_size;
@@ -1835,6 +1845,7 @@ symbol *calculator::add (t_symbol tag, const char *name, void *func)
  sp            = new symbol;
  sp->tag       = tag;
  sp->func      = func;
+ sp->block     = block; 
  strcpy (sp->name, name);
  sp->val.tag   = tvERR; // tvINT;
  sp->val.ival  = 0;
@@ -3284,6 +3295,23 @@ bool calculator::isChildResReal (calculator *child)
  return true;
 }
 
+
+void unquote_string (char *str)
+{
+ if (!str) return;
+ char *src = str, *dst = str;
+ while (*src)
+  {
+   if (*src == '"' || *src == '\'') // skip quotes
+    {
+     src++;
+     continue;
+    }
+   *dst++ = *src++;
+  }
+ *dst = '\0';
+}
+
 // Prepare data for plotting (common part)
 bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params)
 {
@@ -3354,6 +3382,22 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
                      sz0, MAXOP, nullptr, 0);
    break;
 
+  case pl_plotdata: // datafile, mask
+  case pl_plotdatal:
+   if (!ShowImageFn) return false;
+   split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);    // try get mask
+   if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, nullptr, 0);    // get datafile
+   //if (split_ok) Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0); //try get mask
+  break;
+
+  case pl_fplotdata: // bmpfile, datafile, mask
+  case pl_oplotdata:
+  case pl_fplotdatal:
+  case pl_oplotdatal:
+   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, nullptr, 0); //get bmp and datafile
+   if (split_ok) Split (expr, fname, STRBUF, sexpr, STRBUF, svar, STRBUF, nullptr, 0); //try get mask
+  break;
+
   default:
    errorf (pos, "Unknown plot function");
    return false;
@@ -3392,6 +3436,10 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   case pl_oplotsmith: 
   case pl_fplotsmithz:
   case pl_oplotsmithz: 
+  case pl_fplotdata: // bmpfile, datafile, mask
+  case pl_oplotdata:
+  case pl_fplotdatal:
+  case pl_oplotdatal:
    child->setFileDlgFn (FileDlgFn);
    child->evaluate_f (fname);
    if (child->err[0])
@@ -3413,72 +3461,64 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   break;
   }
 
- // Evaluate from/to parameters
- float__t vfrom = child->evaluate_f (sfrom);
- if (isnan (vfrom) || child->err[0])
+ if (fidx < pl_plotdata)
   {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
-
- float__t vto = child->evaluate_f (sto);
- if (isnan (vto) || child->err[0])
-  {
-   errorf (pos, "%s", child->err);
-   delete child;
-   result_fval = qnan;
-   return false;
-  }
-
- if (vfrom > vto)
-  {
-   float__t tmp = vfrom;
-   vfrom        = vto;
-   vto          = tmp;
-  }
-
- // Evaluate Z0 for Smith chart with explicit Z0
- float__t z0 = 50.0; // Default
- if (fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz)
-  {
-   z0 = child->evaluate_f (sz0);
-   if (isnan (z0) || child->err[0] || 
-       !CheckChildRes (child) || 
-       !isChildResReal (child) || z0 <= 0)
-    {
-     errorf (pos, "Invalid Z0 (must be positive real number)");
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-  }
-
-
- // Test evaluate first expression
- child->addfvar (svar, vfrom);
- float__t fvx = child->evaluate_f (sexpr);
-
- if (!(isnan (fvx) && child->errt () == teMath))
-  {
-   if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
+   // Evaluate from/to parameters
+   float__t vfrom = child->evaluate_f (sfrom);
+   if (isnan (vfrom) || child->err[0])
     {
      errorf (pos, "%s", child->err);
      delete child;
      result_fval = qnan;
      return false;
     }
-  }
- else fvx = 0;
 
- // For parametric plots, test second expression
- if (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
-  {
-   float__t fvy = child->evaluate_f (sexpr_y);
-   if (!(isnan (fvy) && child->errt () == teMath))
+   float__t vto = child->evaluate_f (sto);
+   if (isnan (vto) || child->err[0])
     {
-     if (isnan (fvy) || child->err[0] || !CheckChildRes (child))
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+
+   if (vfrom > vto)
+    {
+     float__t tmp = vfrom;
+     vfrom        = vto;
+     vto          = tmp;
+    }
+
+   // NEW: Check for zero range (prevent infinite loops)
+   if (Abs (vto - vfrom) < 1e-10)
+    {
+     errorf (pos, "Invalid range: from and to values must be different");
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   // Evaluate Z0 for Smith chart with explicit Z0
+   float__t z0 = 50.0; // Default
+   if (fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz)
+    {
+     z0 = child->evaluate_f (sz0);
+     if (isnan (z0) || child->err[0] || !CheckChildRes (child) || !isChildResReal (child)
+         || z0 <= 0)
+      {
+       errorf (pos, "Invalid Z0 (must be positive real number)");
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
+    }
+
+   // Test evaluate first expression
+   child->addfvar (svar, vfrom);
+   float__t fvx = child->evaluate_f (sexpr);
+
+   if (!(isnan (fvx) && child->errt () == teMath))
+    {
+     if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
       {
        errorf (pos, "%s", child->err);
        delete child;
@@ -3487,43 +3527,126 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
       }
     }
    else fvx = 0;
+
+   // For parametric plots, test second expression
+   if (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
+    {
+     float__t fvy = child->evaluate_f (sexpr_y);
+     if (!(isnan (fvy) && child->errt () == teMath))
+      {
+       if (isnan (fvy) || child->err[0] || !CheckChildRes (child))
+        {
+         errorf (pos, "%s", child->err);
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
+      }
+     else fvx = 0;
+    }
+
+   // Fill in the parameters
+   params.sexpr   = strdup (sexpr);
+   params.sexpr_y = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
+                        ? strdup (sexpr_y)
+                        : nullptr;
+   params.svar    = strdup (svar);
+   params.vfrom   = vfrom;
+   params.vto     = vto;
+   params.ymin    = fvx;
+   params.ymax    = fvx;
+
+   params.width = getivar ("plot_width");
+   if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
+
+   params.height = getivar ("plot_height");
+   if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
+
+   params.pxsize = getivar ("plot_dotsz");
+   if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
+
+   params.dot = false;
+
+   params.bgc     = getivar ("plot_bgc");
+   params.fgc     = getivar ("plot_fgc");
+   params.padding = 40;
+
+   params.grid_color = 0xC0C0C0;
+   params.axis_color = 0x808080;
+   params.text_color = ~params.bgc;
+
+   // Set logarithmic flags
+   params.log_x = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx
+                   || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+   params.log_y = (fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy
+                   || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+
+   // Set Z0 for Smith chart
+   params.z0 = z0;
+
+   params.child = child;
   }
+ else
+  {//for plotdata
 
- // Fill in the parameters
- params.sexpr = strdup (sexpr);
- params.sexpr_y = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot) 
-                  ? strdup (sexpr_y) : nullptr;
- params.svar  = strdup (svar);
- params.vfrom = vfrom;
- params.vto   = vto;
- params.ymin  = fvx;
- params.ymax  = fvx;
+   child->setFileDlgFn (FileDlgFn);
+   child->evaluate_f (sexpr);
+   if (child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   if (child->get_res_tag () != tvSTR)
+    {
+     errorf (pos, "First argument is not a file name");
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   strncpy (sexpr, child->get_str_res (), STRBUF - 1);
+   sexpr[STRBUF - 1] = '\0';
 
- params.width = getivar ("plot_width");
- if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
+   unquote_string (svar); // Remove quotes from mask if present
+   // Fill in the parameters
+   params.sexpr   = strdup (sexpr);
+   params.sexpr_y = nullptr;
+   params.svar    = strdup (svar);
+   params.vfrom   = 0;
+   params.vto     = 0;
+   params.ymin    = 0;
+   params.ymax    = 0;
 
- params.height = getivar ("plot_height");
- if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
+   params.width = getivar ("plot_width");
+   if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
 
- params.bgc     = getivar ("plot_bgc");
- params.fgc     = getivar ("plot_fgc");
- params.padding = 40;
+   params.height = getivar ("plot_height");
+   if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
 
- params.grid_color = 0xC0C0C0;
- params.axis_color = 0x808080;
- params.text_color = ~params.bgc;
+   params.pxsize = getivar ("plot_dotsz");
+   if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
 
-  // Set logarithmic flags
- params.log_x = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx
-                 || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
- params.log_y = (fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy
-                 || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+   params.dot = (fidx == pl_plotdata || fidx == pl_fplotdata || fidx == pl_oplotdata);
 
- // Set Z0 for Smith chart
- params.z0 = z0;
+   params.bgc     = getivar ("plot_bgc");
+   params.fgc     = getivar ("plot_fgc");
+   params.padding = 40;
 
- params.child = child;
+   params.grid_color = 0xC0C0C0;
+   params.axis_color = 0x808080;
+   params.text_color = ~params.bgc;
 
+   // Set logarithmic flags
+   params.log_x = false;
+   params.log_y = false;
+
+   // Set Z0 for Smith chart
+   params.z0 = 0;
+
+   params.child = child;
+
+  }
  return true;
 }
 
@@ -3849,7 +3972,7 @@ void calculator::PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params)
   {
    x_axis_pixel = padding + ((0.0 - vfrom) / x_range) * plot_width;
   }
-
+ 
  // Horizontal grid lines
  for (int offset = 0; offset <= plot_height; offset += grid_step_pixels)
   {
@@ -3859,15 +3982,33 @@ void calculator::PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params)
    if (y_up >= padding && y_up < height - padding)
     {
      for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_up, grid_color);
+
+     // NEW: Label first division above zero
+     if (offset == grid_step_pixels && y_up > padding + 15)
+      {
+       float__t y_val = ymin + ((height - padding - y_up) / (float__t)plot_height) * y_range;
+       char grid_label[32];
+       d2scistr (grid_label, (double)y_val);
+       bmp->drawString (5, y_up - 5, grid_label, text_color, 0, 1);
+      }
     }
 
    if (offset > 0 && y_down >= padding && y_down < height - padding)
     {
      for (int x = padding; x < width - padding; x += 4) bmp->drawPixel (x, y_down, grid_color);
+
+     // NEW: Label first division below zero
+     if (offset == grid_step_pixels && y_down < height - padding - 15)
+      {
+       float__t y_val = ymin + ((height - padding - y_down) / (float__t)plot_height) * y_range;
+       char grid_label[32];
+       d2scistr (grid_label, (double)y_val);
+       bmp->drawString (5, y_down - 5, grid_label, text_color, 0, 1);
+      }
     }
   }
 
- // Vertical grid lines
+ // Vertical grid lines (when x_axis exists)
  if (x_axis_pixel >= 0)
   {
    for (int offset = 0; offset <= plot_width; offset += grid_step_pixels)
@@ -3883,17 +4024,35 @@ void calculator::PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params)
      if (offset > 0 && x_right >= padding && x_right < width - padding)
       {
        for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x_right, y, grid_color);
+
+       // NEW: Label first division right of zero
+       if (offset == grid_step_pixels && x_right < width - padding - 30)
+        {
+         float__t x_val = vfrom + ((x_right - padding) / (float__t)plot_width) * (vto - vfrom);
+         char grid_label[32];
+         d2scistr (grid_label, (double)x_val);
+         bmp->drawString (x_right - 15, height - padding + 5, grid_label, text_color, 0, 1);
+        }
       }
     }
   }
  else
   {
+   // No zero axis - grid every N pixels
    for (int x = padding; x < width - padding; x += grid_step_pixels)
     {
      for (int y = padding; y < height - padding; y += 4) bmp->drawPixel (x, y, grid_color);
+
+     // NEW: Label first grid line
+     if (x == padding + grid_step_pixels && x < width - padding - 30)
+      {
+       float__t x_val = vfrom + ((x - padding) / (float__t)plot_width) * (vto - vfrom);
+       char grid_label[32];
+       d2scistr (grid_label, (double)x_val);
+       bmp->drawString (x - 15, height - padding + 5, grid_label, text_color, 0, 1);
+      }
     }
   }
-
  // Axes
  if (x_axis_pixel >= 0)
   {
@@ -4229,7 +4388,7 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
  bool log_y = params.log_y;
 
  // Calculate step
- float__t step = (vto - vfrom) / ((width - 2 * padding) * 2);
+ float__t step = (vto - vfrom) / ((width - 2 * padding) * 10);
 
  float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
  bool first_point        = true;
@@ -4448,11 +4607,19 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
        float__t log_norm = (Lg (base) - Lg (ymin)) / (Lg (ymax) - Lg (ymin));
        int y_screen      = height - padding - (int)(log_norm * plot_height);
 
+        // Draw major grid line
        if (y_screen >= padding && y_screen < height - padding)
         {
          for (int x = padding; x < width - padding; x++) bmp->drawPixel (x, y_screen, axis_color);
         }
-      }
+        // NEW: Add label on the left side (skip if too close to edges)
+        if (y_screen > padding + 15 && y_screen < height - padding - 15)
+         {
+          char grid_label[32];
+          d2scistr (grid_label, (double)base);
+          bmp->drawString (5, y_screen - 5, grid_label, text_color, 0, 1);
+         }
+       }
 
      // Minor grid lines (2, 3, 4, 5, 6, 7, 8, 9)
      for (int minor = 2; minor <= 9; minor++)
@@ -4518,8 +4685,18 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
 
        if (x_screen >= padding && x_screen < width - padding)
         {
+         // Draw major grid line
          for (int y = padding; y < height - padding; y++) bmp->drawPixel (x_screen, y, axis_color);
+
+         // NEW: Add label on the bottom (skip if too close to edges)
+         if (x_screen > padding + 30 && x_screen < width - padding - 30)
+          {
+           char grid_label[32];
+           d2scistr (grid_label, (double)base);
+           bmp->drawString (x_screen - 15, height - padding + 5, grid_label, text_color, 0, 1);
+          }
         }
+
       }
 
      // Minor grid lines
@@ -4625,6 +4802,7 @@ void calculator::PlotDrawAxesLog (bmpdraw *bmp, PlotParams &params)
  //bmp->drawString (width / 2 - 50, 5, title, text_color, 0, 2);
  bmp->drawString (10, 5, title, text_color, 0, 2);
 }
+
 // PlotSmith with frequency labels:
 bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 {
@@ -4823,7 +5001,13 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 
    // Adjust label position to avoid going off-screen
    if (label_x > width - 60) label_x = mx - 50;
-   if (label_y < 15) label_y = my + 8;
+   if (label_y < 20) label_y = my + 15;
+
+   // NEW: Avoid Z0 label area (top-right corner)
+   if (mx > center_x + radius - 70 && my > center_y - 40 && my < center_y - 5)
+    {
+     label_y = my + 15; // Move label below marker instead of above
+    }
 
    bmp->drawString (label_x, label_y, label, text_color, 0, 1);
   }
@@ -4833,6 +5017,7 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 
  return true;
 }
+
 //PlotDrawAxesSmith - drawing Smith chart grid:
 void calculator::PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params)
 {
@@ -4953,7 +5138,7 @@ void calculator::PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params)
 
  // Z0 label
  sprintf (label, "Z0=%.0fΩ", (double)z0);
- bmp->drawString (center_x + radius + 5, center_y - 10, label, text_color, 0, 1);
+ bmp->drawString (center_x + radius + 5, center_y - 30, label, text_color, 0, 1);
 
  // Open circuit (right edge)
  bmp->drawString (center_x + radius - 20, center_y + 5, "∞", text_color, 0, 1);
@@ -4973,6 +5158,222 @@ void calculator::PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params)
  // Parameter name
  bmp->drawString (width / 2 - 10, height - padding + 5, params.svar, text_color, 0, 2);
 }
+
+// Plot data from file (two-pass like PlotCartesian)
+bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
+{
+ const char *datafile = params.sexpr; // data file name
+ const char *mask     = params.svar;  // mask (can be empty or nullptr)
+
+ int width    = params.width;
+ int height   = params.height;
+ int padding  = params.padding;
+ uint32_t fgc = params.fgc;
+ bool dots    = params.dot; // points or lines
+
+ // Determine the number of parameters in the mask
+ int param_count = scanmasknum (mask);
+ if (param_count > 2)
+  {
+   errorf (pos, "Mask has more than 2 parameters (max is 2: x and y)");
+   return false;
+  }
+ if (param_count == 0) param_count = 1; // If no mask - one parameter
+
+ // Normalize file path
+ char fnamebuf[STRBUF];
+ NormalizePath (datafile, fnamebuf, STRBUF);
+
+ float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
+ bool first_point = true;
+ int line_number  = 0;
+
+ // First pass: find min/max
+ FILE *f = fopen (fnamebuf, "r");
+ if (!f)
+  {
+   errorf (pos, "Cannot open data file: %s", fnamebuf);
+   return false;
+  }
+
+ char line[1024];
+ while (fgets (line, sizeof (line), f))
+  {
+   line_number++;
+
+   float__t x, y;
+
+   if (param_count == 1)
+    {
+     // One parameter: X = line number, Y = value
+     double dy   = qnan;
+     int scanned = strscan (line, mask, 1, &dy);
+
+     if (scanned < 1) continue; // Not enough data in the line
+     x = (float__t)line_number;
+     y = (float__t)dy;
+    }
+   else // param_count == 2
+    {
+     // Two parameters: X = first value, Y = second value
+     double dx = qnan, dy = qnan;
+     int scanned = strscan (line, mask, 2, &dx, &dy);
+
+     if (scanned < 2) continue; // Not enough data in the line
+     x = (float__t)dx;
+     y = (float__t)dy;
+    }
+
+   // Update boundaries
+   if (first_point)
+    {
+     xmin = xmax = x;
+     ymin = ymax = y;
+     first_point = false;
+    }
+   else
+    {
+     if (x < xmin) xmin = x;
+     if (x > xmax) xmax = x;
+     if (y < ymin) ymin = y;
+     if (y > ymax) ymax = y;
+    }
+  }
+
+ fclose (f);
+
+ if (first_point)
+  {
+   errorf (pos, "No valid data points found in file");
+   return false;
+  }
+
+ // Add padding (as in PlotCartesian)
+ if (xmin == xmax)
+  {
+   xmin -= (float__t)1.0L;
+   xmax += (float__t)1.0L;
+  }
+ else
+  {
+   float__t xpad = (xmax - xmin) * (float__t)0.1L;
+   xmin -= xpad;
+   xmax += xpad;
+  }
+
+ if (ymin == ymax)
+  {
+   ymin -= (float__t)1.0L;
+   ymax += (float__t)1.0L;
+  }
+ else
+  {
+   float__t ypad = (ymax - ymin) * (float__t)0.1L;
+   ymin -= ypad;
+   ymax += ypad;
+  }
+
+ // Include zero in Y range
+ if (ymin > 0.0) ymin = 0.0;
+ if (ymax < 0.0) ymax = 0.0;
+
+ // Calculate ranges for screen mapping
+ float__t x_range = xmax - xmin;
+ float__t y_range = ymax - ymin;
+
+ int plot_width  = width - 2 * padding;
+ int plot_height = height - 2 * padding;
+
+ // Second pass: draw points/lines
+ f = fopen (fnamebuf, "r");
+ if (!f)
+  {
+   errorf (pos, "Cannot reopen data file");
+   return false;
+  }
+
+ line_number           = 0;
+ bool has_valid_points = false;
+
+ while (fgets (line, sizeof (line), f))
+  {
+   line_number++;
+
+   float__t x, y;
+
+   if (param_count == 1)
+    {
+     double dy   = qnan;
+     int scanned = strscan (line, mask, 1, &dy);
+
+     if (scanned < 1) continue;
+
+     x = (float__t)line_number;
+     y = (float__t)dy;
+    }
+   else // param_count == 2
+    {
+     double dx = qnan, dy = qnan;
+     int scanned = strscan (line, mask, 2, &dx, &dy);
+
+     if (scanned < 2) continue;
+
+     x = (float__t)dx;
+     y = (float__t)dy;
+    }
+
+   // Convert to screen coordinates
+   int x_screen = padding + (int)(((x - xmin) / x_range) * plot_width);
+   int y_screen = height - padding - (int)(((y - ymin) / y_range) * plot_height);
+
+   if (dots)
+    {
+     // Draw dot (circle)
+     int point_size = params.pxsize;
+     for (int dy = -point_size; dy <= point_size; dy++)
+      {
+       for (int dx = -point_size; dx <= point_size; dx++)
+        {
+         if (dx * dx + dy * dy <= point_size * point_size) // Circle
+          {
+           int px = x_screen + dx;
+           int py = y_screen + dy;
+           if (px >= padding && px < width - padding && py >= padding && py < height - padding)
+            {
+             bmp->drawPixel (px, py, fgc);
+            }
+          }
+        }
+      }
+    }
+   else
+    {
+     // Draw line
+     if (has_valid_points)
+      {
+       bmp->lineTo (x_screen, y_screen, 2, fgc);
+      }
+     else
+      {
+       bmp->moveTo (x_screen, y_screen);
+       has_valid_points = true;
+      }
+    }
+  }
+
+ fclose (f);
+
+ // Store parameters for grid drawing
+ params.xmin  = xmin;
+ params.xmax  = xmax;
+ params.ymin  = ymin;
+ params.ymax  = ymax;
+ params.vfrom = xmin;
+ params.vto   = xmax;
+
+ return true;
+}
+
 
 // Main plotting function
 bool calculator::Plot (const char *expr, v_func fidx)
@@ -4995,7 +5396,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
  bmpdraw *bmp    = new bmpdraw ();
  bool is_overlay     = ((fidx == pl_oplot || fidx == pl_oplotpol || fidx == pl_oxyplot
                      || fidx == pl_oplotlgx || fidx == pl_oplotlgy || fidx == pl_oplotlgxy
-                     || fidx == pl_oplotsmith || fidx == pl_oplotsmithz)
+                     || fidx == pl_oplotsmith || fidx == pl_oplotsmithz 
+                     || fidx == pl_oplotdata || fidx == pl_oplotdatal)
                     && fname[0]);
 
  bool is_polar       = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
@@ -5009,6 +5411,7 @@ bool calculator::Plot (const char *expr, v_func fidx)
  bool is_smith       = (fidx == pl_plotsmith || fidx == pl_fplotsmith || fidx == pl_oplotsmith
                   || fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz);
 
+ bool is_data = (fidx >= pl_plotdata && fidx <= pl_oplotdatal);
 
  if (is_overlay)
   {
@@ -5056,6 +5459,11 @@ bool calculator::Plot (const char *expr, v_func fidx)
 
  // 3. Draw plot (Cartesian or Polar coordinates)
  bool plot_success;
+ if (is_data)
+  {
+   plot_success = PlotData (bmp, params);
+  }
+ else
  if (is_smith)
   {
    plot_success = PlotSmith (bmp, params);
@@ -5084,9 +5492,9 @@ bool calculator::Plot (const char *expr, v_func fidx)
   {
    delete bmp;
    delete params.child;
-   free (params.sexpr);
+   if (params.sexpr) free (params.sexpr);
    if (params.sexpr_y) free (params.sexpr_y);
-   free (params.svar);
+   if (params.svar) free (params.svar);
    result_fval = qnan;
    return false;
   }
@@ -5138,6 +5546,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
   case pl_oplotsmith:
   case pl_fplotsmithz:
   case pl_oplotsmithz:
+  case pl_fplotdata:
+  case pl_oplotdata:
    // Already handled above with is_overlay logic
    bmp->save (fname);
   break;
@@ -5149,6 +5559,8 @@ bool calculator::Plot (const char *expr, v_func fidx)
   case pl_plotlgxy:
   case pl_plotsmith:
   case pl_plotsmithz:
+  case pl_plotdata:
+  case pl_plotdatal:
    // Show in GUI
    if (ShowImageFn)
     {
@@ -5161,9 +5573,9 @@ bool calculator::Plot (const char *expr, v_func fidx)
  delete bmp;
  fflags |= params.child->isfflags ();
  delete params.child;
- free (params.sexpr);
+ if (params.sexpr) free (params.sexpr);
  if (params.sexpr_y) free (params.sexpr_y);
- free (params.svar);
+ if (params.svar) free (params.svar);
 
  return true;
 }
@@ -5478,6 +5890,7 @@ t_operator calculator::sscan (symbol *sym)
 
  if (sym)
   {
+   blockflag |= sym->block;
    if ((sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
     || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
     {
@@ -5578,6 +5991,20 @@ t_operator calculator::sscan (symbol *sym)
       case pl_fplotsmithz: // fplotsmithz(file, expr, from, to, var, Z0)
       case pl_oplotsmithz: // oplotsmithz(file, expr, from, to, var, Z0)
        if (parenthesis_count == 0 && comma_count == 5) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+
+      case pl_plotdata:  // plotdata(datafile, mask)
+      case pl_plotdatal: // plotdatal(datafile, mask) - with lines
+       if (parenthesis_count == 0 && comma_count <= 1) v_stack[v_sp].tag = tvPLOT;
+       else error_in_args = true;
+      break;
+
+      case pl_fplotdata: // fplotdata(bmpfile, datafile, mask)
+      case pl_oplotdata: // oplotdata(bmpfile, datafile, mask)
+      case pl_fplotdatal: // fplotdatal(bmpfile, datafile, mask)
+      case pl_oplotdatal: // oplotdatal(bmpfile, datafile, mask)
+       if (parenthesis_count == 0 && comma_count <= 2) v_stack[v_sp].tag = tvPLOT;
        else error_in_args = true;
       break;
 
@@ -6095,6 +6522,18 @@ void calculator::isNRM(char* start, char* end)
     fflags |= NRM;
     return;
    }
+}
+
+int calculator::scanmasknum (const char *str)
+{
+ const char *cp = str;
+ int num  = 0;
+ while (*cp)
+  {
+   if (*cp >= '0' && *cp <= '9') num++;
+   cp++;
+  }
+ return num;
 }
 
 int calculator::strscan (const char *str, const char *msk, int n, double *v, ...)
@@ -6851,6 +7290,7 @@ t_operator calculator::scan (bool operand, bool percent)
 
    if (sym)
     {
+     blockflag |= sym->block;
      if (sym->tag == tsVARIABLE) strcpy (lastvar, sym->name);
      v_stack[v_sp] = sym->val;
      v_stack[v_sp].pos = pos;
@@ -8971,6 +9411,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  result_fval  = qnan;    // Clear the floating-point result
  result_imval = 0.0; // Clear the imaginary result
  result_ival = 0;   // Clear the integer result
+ //blockflag = false; // Clear the block flag
 
  if (deep > MAXSTK)
   {
@@ -9126,6 +9567,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        if (oper != toEND) error ("Unexpected end of input");
        if (v_sp == 1) // Final result should be on the stack
         {
+         blockflag = false; 
          if (scfg & UTMP)
           {
            sprintf (var_name, "@%d", ++tmp_var_count);
@@ -11008,7 +11450,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               filename[0] = '\0';
               if (FileDlgFn)
                {
-                strncpy (filename, filemask, STRBUF - 1);
+                if (filemask) strncpy (filename, filemask, STRBUF - 1);
                 filename[STRBUF - 1] = '\0';
                 if (!FileDlgFn (filename, STRBUF)) filename[0] = '\0';
                }

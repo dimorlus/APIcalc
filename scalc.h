@@ -564,6 +564,15 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_fplotsmithz, // fsmithz("file", expr, from, to, var, Z0)
  pl_oplotsmithz, // osmithz("file", expr, from, to, var, Z0)
 
+ // Data plot functions
+ pl_plotdata,  // plotdata(datafile, mask)
+ pl_fplotdata, // fplotdata(bmpfile, datafile, mask)
+ pl_oplotdata, // oplotdata(bmpfile, datafile, mask)
+
+ pl_plotdatal,  // plotdatal(datafile, mask) - with lines
+ pl_fplotdatal, // fplotdatal(bmpfile, datafile, mask)
+ pl_oplotdatal, // oplotdatal(bmpfile, datafile, mask)
+
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
  rtLg,   // Logarithmic regression (y = a + b * ln(x))
@@ -650,6 +659,7 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
  t_symbol tag; // Type of symbol
  v_func fidx;  // Function index
  void *func;   // Function pointer
+ bool block;   // true if the symbol is a block (e.g., for gui, longtime, etc.)
  value val;    // Value associated with the symbol
  char name[MAXNAME]; // Name of the symbol (fixed-size array to avoid dynamic memory allocation)
  symbol *next; // Next symbol in the hash table chain
@@ -659,6 +669,7 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
   tag  = tsVARIABLE;
   fidx = vf_num;
   func = nullptr;
+  block   = false;
   name[0] = '\0'; // Initialize name to an empty string
   next = nullptr;
  }
@@ -805,6 +816,8 @@ class calculator // calculator represents the main class for the expression calc
     int width;           // Image width
     int height;          // Image height
     int padding;         // Padding
+    bool dot;            // dot or line plotting.   
+    uint32_t pxsize;     // pixel size
     uint32_t bgc;        // Background color
     uint32_t fgc;        // Plot line color
     uint32_t grid_color; // Grid color
@@ -817,6 +830,7 @@ class calculator // calculator represents the main class for the expression calc
  int scfg; // Syntax configuration flags
  int fflags; // Founded format flags
  int deep; // Current stack depth
+ bool blockflag; // Flag to indicate if we are currently parsing a block (e.g., for GUI functions, loops, etc.)
  value v_stack[max_stack_size]; // Value stack for operands
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
@@ -870,9 +884,9 @@ class calculator // calculator represents the main class for the expression calc
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  void destroyvars (void); // Destroy all variables in the hash table
  inline unsigned string_hash_function (const char *p); // Hash function for strings
- symbol *add (t_symbol tag, const char *name, void *func = nullptr); // Add a symbol to the hash table
+ symbol *add (t_symbol tag, const char *name, void *func = nullptr, bool block = false); // Add a symbol to the hash table
  symbol *add (t_symbol tag, v_func fidx, const char *name,
-              void *func = nullptr); // Add a symbol with function index to the hash table
+              void *func = nullptr, bool block = false); // Add a symbol with function index to the hash table
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
@@ -929,6 +943,7 @@ class calculator // calculator represents the main class for the expression calc
  
  //
 
+ int scanmasknum (const char *str);
  int strscan (const char *str, const char *msk = nullptr, int n =0, double *v = nullptr, ...); 
 
  // Math for solving, integrating and differentiating
@@ -977,6 +992,8 @@ class calculator // calculator represents the main class for the expression calc
 
  bool PlotSmith (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesSmith (bmpdraw *bmp, PlotParams &params);
+
+ bool PlotData (bmpdraw *bmp, PlotParams &params);
 
  bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
 
@@ -1089,7 +1106,7 @@ class calculator // calculator represents the main class for the expression calc
  inline t_value get_res_tag () { return result_tag; };
  inline uint32_t get_res_info () { return result_info; };
  inline char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
- inline mxresult_t get_mx_res ()
+ inline mxresult_t get_mx_res () 
  {
   mxresult_t res;
   res.rows = res_rows;
@@ -1097,6 +1114,8 @@ class calculator // calculator represents the main class for the expression calc
   res.mval = res_mval;
   return res;
  };
+
+ inline bool block () { return blockflag; };  // Placeholder for block checking, can be implemented as needed
  ~calculator (void); // Destructor to clean up resources
 };
 

@@ -1,3 +1,38 @@
+28.04.26 (2.189)
++ Added follow functions:
+	plotdata("datafile"[,mask])                Display points in window 
+	plotdatal ("datafile"[,mask])              Display lines in window
+	fplotdata("datafile"[,mask])               Save points to BMP file
+	fplotdatal ("datafile"[,mask])             Save lines to BMP file
+	oplotdata("datafile"[,mask])               Overlay points on existing BMP
+	oplotdatal ("datafile"[,mask])             Overlay lines on existing BMP
+- Fixed a bug that caused the calculator to crash with an empty string in fdlg("")
+* Now, when you encounter functions that open modal windows (fdlg, plot) while entering an expression, after perhaps 
+  their first call, the computing core is blocked until Enter is pressed, so that the modal windows that pop up every 
+  time do not interfere with editing the expression.
+
+27.04.26 (2.188)
++ Added follow functions:
+	plotxy(exprX, exprY,from, to, t)           Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
+	fplotxy("fname",exprX, exprY,from, to, t)  Parametric plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
+	oplotxy("fname",exprX, exprY,from, to, t)  Overlay plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
+	plotlgx(expr,from,to,x)                    Plots with logarithmic scale on X axis.  
+	plotlgy(expr,from,to,x)                    Plots with logarithmic scale on Y axis.
+	plotlgxy(expr,from,to,x)                   Plots with logarithmic scale on both axes. 
+	fplotlgx("fname",expr,from,to,x)           Plots with logarithmic scale on X axis to the BMP file.
+	fplotlgy("fname",expr,from,to,x)           Plots with logarithmic scale on Y axis to the BMP file.
+	fplotlgxy("fname",expr,from,to,x)          Plots with logarithmic scale on both axes to the BMP file.
+	oplotlgx("fname",expr,from,to,x)           Overlay plot with logarithmic scale on X axis to the BMP file.
+	oplotlgy("fname",expr,from,to,x)           Overlay plot with logarithmic scale on Y axis to the BMP file.
+	oplotlgxy("fname",expr,from,to,x)          Overlay plot with logarithmic scale on both axes to the BMP file. 
+	plotsmith(expr,from,to,x)                  Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
+	fplotsmith("fname",expr,from,to,x)         Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
+	oplotsmith("fname",expr,from,to,x)         Overlay Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
+	plotsmithz(expr,from,to,x,z0)              Smith Chart plot for RF and microwave engineering.
+	fplotsmithz("fname",expr,from,to,x,z0)     Smith Chart plot to the BMP file for RF and microwave engineering.
+	oplotsmithz("fname",expr,from,to,x,z0)     Overlay Smith Chart plot to the BMP file for RF and microwave engineering.
+* Now arg(z) is synonym to poz(z) = atan(im(z)/re(z))
+
 26.04.26 (2.188)
 * Now integration works even when passing through a singularity, for example 
   integr((sin(x)/x), -10, 10, x) at x=0. The result is now 3.317, not an error.
@@ -22,10 +57,10 @@
   functions, which create a BMP file with a plot of the expr function in Cartesian coordinates. 
   The oplot (overlay plot) function can draw a graph over an existing one, but the user must ensure 
   that it aligns with the existing one on the same axes. The default image size is 800x600, but can 
-  be changed by setting the variables plot_width:=1024;plot_hegth:=768. The default background color 
+  be changed by setting the variables plot_width:=1024;plot_height:=768. The default background color 
   is white, changed by the variable plot_bgc:=0;;black. The graph color is determined by the variable 
   plot_fgc, by default black, but can be changed, for example: 
-    plot_width:=1024;plot_hegth:=768
+    plot_width:=1024;plot_height:=768
 	plot_bgc:=0;;black.
 	plot_fgc:=trgb(3000);;the color of an absolutely black body heated to 3000K.
 + Added the plot(expr, from, to, var) function, which opens a modal window with a plot (exactly the 
@@ -38,7 +73,7 @@
 	path:="%USERPROFILE%\Downloads"
 ~ It is convenient to define the above variables in the user.txt file.
 	path:="%USERPROFILE%\Downloads"	
-    plot_width:=1024;plot_hegth:=768
+    plot_width:=1024;plot_height:=768
 	plot_bgc:=0;;Black.
 	plot_fgc:=trgb(3000);;the color of an absolutely black body heated to 3000K.
 

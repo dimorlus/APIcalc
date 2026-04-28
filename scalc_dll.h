@@ -34,4 +34,5 @@ public:
  int issyntax() {return calc_get_syntax(h);}
  void addfn (const char *name, void *fn) { calc_addfn(h, name, fn); }
  int varlist (char *buf, int bsize, int *maxlen = nullptr) {return calc_varlist (h, buf, bsize, maxlen);}
+ bool block () { return calc_block (h); }
 };

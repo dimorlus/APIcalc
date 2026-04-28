@@ -31,7 +31,7 @@ private:
     HWND m_hComboBox;
     HWND m_hHelpWindow;   // HWND of the CHM help window (nullptr if closed)
     HMENU m_hMenu;
-    
+
     calculator* m_pCalculator;
     
     // Calculator state
@@ -187,4 +187,6 @@ public:
 
     // Show window with image from buffer
     bool ShowImageWindowFromBMP (void *bmpObject);
+    // Method to check if we should block evaluation:
+    bool ShouldBlockEvaluation ();
 };

@@ -91,5 +91,12 @@ void __cdecl calc_setShowImageFn (HCALC h, fnShowImage fn)
  c->setShowImageFn (fn);
 }
 
+bool __cdecl calc_block (HCALC h)
+{
+ calculator *c = (calculator *)h;
+ return c->block ();
+}
+
+
 
 } // extern "C"

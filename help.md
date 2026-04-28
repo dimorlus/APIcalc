@@ -129,9 +129,31 @@ polynom(M)                      Find roots of polynomial given coefficients in a
 
 fdlg(fmask)						Opens a file dialog to select a file. 
 
-fplot("fname",expr,from,to,x)   Plot of the expr function in Cartesian coordinates to the BMP file.
-oplot("fname",expr,from,to,x)   Overlay plot of the expr function in Cartesian coordinates to the BMP file. 
-plot(expr,from,to,x)            Plot of the expr function in Cartesian coordinates
+plot(expr,from,to,x)                       Plot of the expr function in Cartesian coordinates
+fplot("fname",expr,from,to,x)              Plot of the expr function in Cartesian coordinates to the BMP file.
+oplot("fname",expr,from,to,x)              Overlay plot of the expr function in Cartesian coordinates to the BMP file. 
+plotpol(expr,from, to, x)                  Plot of the expr function in Polar coordinates.
+fplotpol("fname",expr,from, to, x)         Plot of the expr function in Polar coordinates to the BMP file.
+oplotpol("fname",expr,from, to, x)         Overlay plot of the expr function in Cartesian coordinates to the BMP file.
+plotxy(exprX, exprY,from, to, t)           Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
+fplotxy("fname",exprX, exprY,from, to, t)  Parametric plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
+oplotxy("fname",exprX, exprY,from, to, t)  Overlay plot exprX(t), exprY(t) in Cartesian coordinates to the BMP file.
+plotlgx(expr,from,to,x)                    Plots with logarithmic scale on X axis.  
+plotlgy(expr,from,to,x)                    Plots with logarithmic scale on Y axis.
+plotlgxy(expr,from,to,x)                   Plots with logarithmic scale on both axes. 
+fplotlgx("fname",expr,from,to,x)           Plots with logarithmic scale on X axis to the BMP file.
+fplotlgy("fname",expr,from,to,x)           Plots with logarithmic scale on Y axis to the BMP file.
+fplotlgxy("fname",expr,from,to,x)          Plots with logarithmic scale on both axes to the BMP file.
+oplotlgx("fname",expr,from,to,x)           Overlay plot with logarithmic scale on X axis to the BMP file.
+oplotlgy("fname",expr,from,to,x)           Overlay plot with logarithmic scale on Y axis to the BMP file.
+oplotlgxy("fname",expr,from,to,x)          Overlay plot with logarithmic scale on both axes to the BMP file. 
+plotsmith(expr,from,to,x)                  Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
+fplotsmith("fname",expr,from,to,x)         Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
+oplotsmith("fname",expr,from,to,x)         Overlay Smith Chart plot (Z0=50Ω) to the BMP file for RF and microwave engineering.
+plotsmithz(expr,from,to,x,z0)              Smith Chart plot for RF and microwave engineering.
+fplotsmithz("fname",expr,from,to,x,z0)     Smith Chart plot to the BMP file for RF and microwave engineering.
+oplotsmithz("fname",expr,from,to,x,z0)     Overlay Smith Chart plot to the BMP file for RF and microwave engineering.
+
 
 	Variables
 plot_width                      Graph width (100..2000, default - 800)

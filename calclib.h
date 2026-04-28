@@ -71,6 +71,8 @@ CALCAPI int		__cdecl calc_varlist (HCALC h, char *buf, int bsize, int *maxlen);
 CALCAPI void    __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void));
 CALCAPI void __cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int));
 CALCAPI void __cdecl calc_setShowImageFn (HCALC h, fnShowImage fn);
+CALCAPI bool __cdecl calc_block (HCALC h);
+
 #ifdef __cplusplus
 }
 #endif

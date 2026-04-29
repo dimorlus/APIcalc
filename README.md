@@ -467,7 +467,7 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
 rand(zeros(3,3)+10) → [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
 round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 ```
-### Data Format & File Handling
+### Data Format and File Handling
 
 #### File Requirements
 * **Plain Text Only**: Data must be in a standard text format (e.g., .txt, .csv, .log, .dat). Binary formats like 

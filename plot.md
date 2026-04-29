@@ -627,7 +627,7 @@ oplotdatal(bmpfile, datafile [, mask]);; Overlay lines on existing BMP
 - **bmpfile** - Output bitmap file path (for `f*` and `o*` variants)
 
 
-### [Mask Format](README.md#Data-Format-&-File-Handling)
+### [Mask Format](README.md#Data-Format-and-File-Handling)
 
 ### File Format
 

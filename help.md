@@ -146,7 +146,7 @@ plotdata("datafile"[,"mask"])    Display points in window
 plotdatal ("datafile"[,"mask"])  Display lines in window
 ```
 
-####                       Related Variables
+#### Related Variables
 ```						   
 plot_width                      Graph width (100..2000, default - 800)
 plot_height                     Graph height (100..2000, default - 600)
@@ -155,7 +155,7 @@ plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"
 ```
 
-####                     Regression & Data Fitting
+#### [Regression & Data Fitting](README.md#Regression & Data Fitting)
 ```
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
 fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]

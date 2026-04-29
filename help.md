@@ -173,7 +173,7 @@ clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
 clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
 ```
 
-####                     Statistical Analysis
+#### [Statistical Analysis](README.md#Statistical-Analysis)
 ```
 erf(x)                          Error function
 erfc(x)                         Complementary error function
@@ -244,11 +244,11 @@ vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
 ```
-###        User defined functions:
+### User defined functions:
 ```
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
 ```
-###        Newton-Raphson solution of the equation:
+### Newton-Raphson solution of the equation:
 ```
 solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
 solve(z^2+z+1, z:=0+1i) (1)             |1|(120`0'0") -500m+866mi

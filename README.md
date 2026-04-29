@@ -272,7 +272,7 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
 ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
 ```  
-### Plotting
+### [Plotting](plot.md)
 The engine provides three distinct operators for visualization:
 * **plot(expr,from,to,var)**: Plot of the expr function in Cartesian coordinates and show graph in the modal window. 
 The window closes when you press any key or use the mouse.

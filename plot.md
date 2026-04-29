@@ -9,8 +9,9 @@ This document describes all plotting functions available in the calculator for v
 3. [Parametric Plots](#parametric-plots)
 4. [Logarithmic Plots](#logarithmic-plots)
 5. [Smith Chart](#smith-chart)
-6. [Common Parameters](#common-parameters)
-7. [Examples](#examples)
+6. [Data plot](#Data-Plot-Functions)
+7. [Common Parameters](#common-parameters)
+8. [Examples](#examples)
 
 ---
 
@@ -605,6 +606,26 @@ The calculator automatically generates enough points for smooth curves:
 - Center of chart = matched load (SWR=1:1)
 - Trajectory shows how impedance changes with frequency
 - Upper half = inductive, lower half = capacitive
+
+## Data Plot Functions
+
+Plot data points or lines from text files with flexible data extraction using masks.
+
+### Syntax
+```
+plotdata(datafile [, mask])           ;; Display points in window
+plotdatal(datafile [, mask])          ;; Display lines in window
+fplotdata(bmpfile, datafile [, mask]) ;; Save points to BMP file
+fplotdatal(bmpfile, datafile [, mask]);; Save lines to BMP file
+oplotdata(bmpfile, datafile [, mask]) ;; Overlay points on existing BMP
+oplotdatal(bmpfile, datafile [, mask]);; Overlay lines on existing BMP
+```
+### Parameters
+
+- **datafile** - Path to text file containing numerical data
+- **mask** - Optional string pattern for data extraction (default: first number in each line)
+- **bmpfile** - Output bitmap file path (for `f*` and `o*` variants)
+
 
 ### File Format
 

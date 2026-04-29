@@ -134,16 +134,16 @@ Each function in this group has three versions.
 * oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
 
 ```	   
-plot(expr,from,to,x)                       Plot of the expr function in Cartesian coordinates
-plotpol(expr,from, to, x)                  Plot of the expr function in Polar coordinates.
-plotxy(exprX, exprY,from, to, t)           Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
-plotlgx(expr,from,to,x)                    Plots with logarithmic scale on X axis.  
-plotlgy(expr,from,to,x)                    Plots with logarithmic scale on Y axis.
-plotlgxy(expr,from,to,x)                   Plots with logarithmic scale on both axes. 
-plotsmith(expr,from,to,x)                  Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
-plotsmithz(expr,from,to,x,z0)              Smith Chart plot for RF and microwave engineering.
-plotdata("datafile"[,"mask"])              Display points in window 
-plotdatal ("datafile"[,"mask"])            Display lines in window
+plot(expr,from,to,x)             Plot of the expr function in Cartesian coordinates
+plotpol(expr,from, to, x)        Plot of the expr function in Polar coordinates.
+plotxy(exprX, exprY,from, to, t) Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
+plotlgx(expr,from,to,x)          Plots with logarithmic scale on X axis.  
+plotlgy(expr,from,to,x)          Plots with logarithmic scale on Y axis.
+plotlgxy(expr,from,to,x)         Plots with logarithmic scale on both axes. 
+plotsmith(expr,from,to,x)        Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
+plotsmithz(expr,from,to,x,z0)    Smith Chart plot for RF and microwave engineering.
+plotdata("datafile"[,"mask"])    Display points in window 
+plotdatal ("datafile"[,"mask"])  Display lines in window
 ```
 
 ####                       Related Variables

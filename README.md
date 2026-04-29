@@ -549,7 +549,7 @@ Temp: 40.0    Res: 5.5k  -- sensor jitter here --
 ```
 The parser will cleanly extract pairs: `(25.0, 10000)`, `(30.5, 8200)`, and `(40.0, 5500)`.
 
-### Regression & Data Fitting
+### Regression and Data Fitting
 
 #### Overview
 The fit family of functions provides high-precision curve fitting using the Ordinary Least Squares (OLS) method. 

@@ -128,10 +128,11 @@ fdlg(fmask)						Opens a file dialog to select a file.
 ```
  
 ####                        Plot functions
-          Each function in this group has three versions.
-       *plot(...) - displays a plot in a pop-up modal window (does not work in the CLI version)
-       *fplot("bmpfile", ...) - places a plot in the specified BMP file (replaces an existing one or creates a new one)
-       *oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
+Each function in this group has three versions.
+*plot(...) - displays a plot in a pop-up modal window (does not work in the CLI version)
+*fplot("bmpfile", ...) - places a plot in the specified BMP file (replaces an existing one or creates a new one)
+*oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
+
 ```	   
 plot(expr,from,to,x)                       Plot of the expr function in Cartesian coordinates
 plotpol(expr,from, to, x)                  Plot of the expr function in Polar coordinates.

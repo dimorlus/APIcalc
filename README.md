@@ -686,7 +686,7 @@ Each function in this group has three versions.
 * **plotdata("datafile"[,"mask"])**: Display points in window 
 * **plotdatal ("datafile"[,"mask"])**: Display lines in window
 
-[Plotting Functions Reference](#plot.md)
+[Plotting Functions Reference](plot.md)
 
 ### Strings
 You can enter a string, assign a string value to a variable, and perform string concatenation.

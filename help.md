@@ -155,7 +155,7 @@ plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"
 ```
 
-#### [Regression & Data Fitting](README.md#Regression-and-Data-Fitting)
+#### [Regression and Data Fitting](README.md#Regression-and-Data-Fitting)
 ```
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
 fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]

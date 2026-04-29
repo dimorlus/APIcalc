@@ -626,8 +626,8 @@ All plotting functions save to BMP (bitmap) format:
 | **Log X** | `plotlgx` | `fplotlgx` | `oplotlgx` |
 | **Log Y** | `plotlgy` | `fplotlgy` | `oplotlgy` |
 | **Log XY** | `plotlgxy` | `fplotlgxy` | `oplotlgxy` |
-| **Smith (Z₀=50Ω)** | `plotsmith` | `fplotsmith` | `oplotsmith` |
-| **Smith (custom Z₀)** | `plotsmithz` | `fplotsmithz` | `osmithz` |
+| **Smith ($Z_0$=50Ω)** | `plotsmith` | `fplotsmith` | `oplotsmith` |
+| **Smith (custom $Z_0$)** | `plotsmithz` | `fplotsmithz` | `osmithz` |
 
 ---
 

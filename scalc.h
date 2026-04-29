@@ -60,6 +60,7 @@
 #define IMUL (1 << 28) // (WO) Implicit multiplication
 #define AUTO (1 << 29) // (UI) Auto output format
 #define FCTR (1 << 30) // (UI) Factorization output
+#define SNAN (1 << 31) // (RO) Silent NaN 
 
 
 #define STRBUF 256 // bufer size for string operations
@@ -509,6 +510,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  vf_re,    // Real part of a complex number function
  vf_im,    // Imaginary part of a complex number function
+ vf_isnan, // Check if value is NaN function
  vf_conj,  // Complex conjugate function
  vf_cplx,  // Complex number construction function
  vf_polar, // Polar coordinates construction function
@@ -1041,6 +1043,10 @@ class calculator // calculator represents the main class for the expression calc
  
  float__t StatFn (const char *fname, const char *msk, sfntype sfn, float__t x=qnan);
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
+
+
+ bool Run (const char *expr, value &res); // Run a script or expression and store the result in res
+                                          // return the result in res
 
  public:
  calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint64_t mask=(MASK_NONE),

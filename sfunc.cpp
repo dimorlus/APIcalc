@@ -3238,6 +3238,14 @@ void vfunc (value *res, value *arg, int idx)
       res->ival  = (int64_t)res->fval;
      }
      return;
+     case vf_isnan:
+     {
+      res->fval  = isnan (re) || isnan (im) || isinf (re) || isinf (im) ? (float__t)1.0L : (float__t)0.0L;
+      res->imval = (float__t)0.0L;
+      res->tag   = tvFLOAT;
+      res->ival  = (int64_t)res->fval;
+     }
+     return;
     case vf_conj:
      {
       res->fval  = re;  // argument
@@ -3420,6 +3428,11 @@ void vfunc (value *res, value *arg, int idx)
     case vf_im:
      {
       res->fval = (float__t)0.0L;
+     }
+     break;
+     case vf_isnan:
+     {
+       res->fval = isnan (arg->fval) || isinf (arg->fval) ? (float__t)1.0L : (float__t)0.0L;
      }
      break;
     case vf_conj:

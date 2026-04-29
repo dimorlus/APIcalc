@@ -114,6 +114,7 @@ polar(r,θ)                      Return complex value r*exp(iθ)
 cmplx(x,y), cplx(x,y) cpx(x,y)  Return complex value x+iy
 re(z)                     (1)   Return real part of complex
 im(z)                     (1)   Return imaginary part of complex
+isnan(x|z)                (1)   Return 1 if x or z is NaN or Inf
 conj(z)                   (1)   Complex conjugate  
 pol(z), arg(z)            (1)   atan(im(z)/re(z))
 min(x,y)                        Minimum of x, y
@@ -123,12 +124,15 @@ prime(n)                        Smallest prime number
 factorize(n)                    Prime factorization in to string
 polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
-fdlg(fmask)						Opens a file dialog to select a file. 
-                           Plot functions
+fdlg(fmask)						Opens a file dialog to select a file.
+```
+ 
+####                        Plot functions
           Each function in this group has three versions.
-       plot(...) - displays a plot in a pop-up modal window (does not work in the CLI version)
-       fplot("bmpfile", ...) - places a plot in the specified BMP file (replaces an existing one or creates a new one)
-       oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
+       *plot(...) - displays a plot in a pop-up modal window (does not work in the CLI version)
+       *fplot("bmpfile", ...) - places a plot in the specified BMP file (replaces an existing one or creates a new one)
+       *oplot("bmpfile", ...) - places a plot over an existing BMP file (preserving its size and background color).
+```	   
 plot(expr,from,to,x)                       Plot of the expr function in Cartesian coordinates
 plotpol(expr,from, to, x)                  Plot of the expr function in Polar coordinates.
 plotxy(exprX, exprY,from, to, t)           Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
@@ -139,25 +143,37 @@ plotsmith(expr,from,to,x)                  Smith Chart plot (Z0=50Ω) for RF and
 plotsmithz(expr,from,to,x,z0)              Smith Chart plot for RF and microwave engineering.
 plotdata("datafile"[,"mask"])              Display points in window 
 plotdatal ("datafile"[,"mask"])            Display lines in window
-	                       Related Variables
+```
+
+####                       Related Variables
+```						   
 plot_width                      Graph width (100..2000, default - 800)
 plot_height                     Graph height (100..2000, default - 600)
 plot_bgc                        Graph background color, default is white (0xFFFFFF)
 plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"
-                       Regression & Data Fitting
+```
+
+####                     Regression & Data Fitting
+```
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
 fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
 fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
 fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file data. Return [b, a]
 fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
-                       Regression Calculation
+```
+
+####                     Regression Calculation
+```
 clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
 clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].
 clclog(vector, x)               Evaluates y = a + b*ln(x). Expects vector [b, a].
 clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
 clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
-                       Statistical Analysis
+```
+
+####                     Statistical Analysis
+```
 erf(x)                          Error function
 erfc(x)                         Complementary error function
 aerf(x)                         Invert error function 

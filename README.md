@@ -668,8 +668,27 @@ These functions use mean and stddev calculated from the data file:
 * **normr("file", ["msk"], x)** Upper tail probability P(X > x).
 * **invnorm("file", ["msk"], p)** Inverse Normal: find x such that P(X <= x) = p.
 
-### Strings
+### Plot functions
+Each function in this group has three versions.
+* **plot(...)** Displays a plot in a pop-up modal window (does not work in the CLI version)
+* **fplot("bmpfile", ...)** Places a plot in the specified BMP file (replaces an existing one or creates a new one)
+* **oplot("bmpfile", ...)** Places a plot over an existing BMP file (preserving its size and background color).
 
+#### The following plot functions are available	   
+* **plot(expr,from,to,x)**: Plot of the expr function in Cartesian coordinates
+* **plotpol(expr,from, to, x)**: Plot of the expr function in Polar coordinates.
+* **plotxy(exprX, exprY,from, to, t)**: Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
+* **plotlgx(expr,from,to,x)**: Plots with logarithmic scale on X axis.  
+* **plotlgy(expr,from,to,x)**: Plots with logarithmic scale on Y axis.
+* **plotlgxy(expr,from,to,x)**: Plots with logarithmic scale on both axes. 
+* **plotsmith(expr,from,to,x)**: Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
+* **plotsmithz(expr,from,to,x,z0)**: Smith Chart plot for RF and microwave engineering.
+* **plotdata("datafile"[,"mask"])**: Display points in window 
+* **plotdatal ("datafile"[,"mask"])**: Display lines in window
+
+
+
+### Strings
 You can enter a string, assign a string value to a variable, and perform string concatenation.
 ```
 S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 

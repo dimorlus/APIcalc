@@ -264,6 +264,7 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
+ add (tsSFUNC, "run", nullptr, true);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, true);
@@ -438,6 +439,7 @@ void calculator::AddPredefined (void)
  add (tsVFUNC2, vf_polar, "rect", (void *)vfunc2);
  add (tsVFUNC1, vf_re, "re", (void *)vfunc);
  add (tsVFUNC1, vf_im, "im", (void *)vfunc);
+ add (tsVFUNC1, vf_isnan, "isnan", (void *)vfunc);
  add (tsVFUNC1, vf_conj, "conj", (void *)vfunc);
  add (tsVFUNC1, vf_factorial, "fact", (void *)vfunc);
  add (tsVFUNC2, vf_hypot, "hypot", (void *)vfunc2);
@@ -2625,6 +2627,7 @@ void calculator::errorf (int pos, const char *fmt, ...)
  vsprintf(err, fmt, args);
  va_end(args);
  errpos = pos;
+ errtype = teSyntax;
 }
 
 void calculator::mxerror (const char *msg)
@@ -3065,7 +3068,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    return false;
   }
 
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -5262,7 +5265,7 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    return false;
   }
 
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -5590,7 +5593,7 @@ bool calculator::For (const char *expr, value &res)
      return false;
     }
 
-   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
    if (!child)
     {
      errorf (pos, "Out of memory");
@@ -5743,7 +5746,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      return result_fval = qnan;
     }
 
-   calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
    if (!child)
     {
      errorf (pos, "Out of memory");
@@ -5897,7 +5900,7 @@ float__t calculator::Diff (const char *expr)
        return result_fval = qnan;
       }
 
-     calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+     calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
      if (!child)
       {
        errorf (pos, "Out of memory");
@@ -7782,6 +7785,75 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
 #pragma endregion
 //---------------------------------------------------------------------------
 
+#pragma region Scripts
+bool calculator::Run (const char *expr, value &res) // Run a script or expression and store the result in res
+{                                 // return the result in res
+ char filename[STRBUF];
+ char *buffer = nullptr;
+ if (!expr || !*expr)
+  {
+   res.tag = tvERR;
+   res.ival = 0;
+   res.fval = qnan;
+   error (pos, "Empty script name");
+   return false; // empty script name
+  }
+ NormalizePath (expr, filename, STRBUF);
+ FILE *f = fopen (filename, "rb");
+ if (f)
+  {
+   fseek (f, 0, SEEK_END);
+   long size = ftell (f); // Get the size of the file
+   fseek (f, 0, SEEK_SET);
+   if (size > 65535)
+    {
+     fclose (f);
+     error (pos, "Script file too large");
+     return false;
+    }
+   buffer = (char *)malloc (size + 1);
+   if (buffer)
+    {
+     fread (buffer, 1, size, f);
+     buffer[size] = 0; // Null terminator for safety
+    }
+   else
+    {
+     error (pos, "Out of memory");
+     return false; // empty script name
+    }
+   fclose (f);
+  }
+ //first pass, count lines and labels
+ int lines = 0;
+ int labels = 0;
+ char *cp    = buffer;
+ enum tstate
+ {
+  stNl,
+  stLbl,
+ } state = stNl;
+ while (*cp)
+ {
+   switch (state)
+    {
+     case stNl:
+      if (*cp == '\r')
+       {
+
+       }
+     break;
+    }
+ }
+
+ res.tag  = tvERR;
+ res.ival = 0;
+ res.fval = qnan;
+ return false;
+}
+#pragma endregion
+//---------------------------------------------------------------------------
+
 #pragma region Scan expression
 
 // M[row, col] matrix element access
@@ -7794,7 +7866,7 @@ int calculator::mx_idx (int &row, int &col)
  char *ipos = buf + pos;
  while (isspace (*ipos & 0x7f)) ipos++;
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -7890,7 +7962,7 @@ t_operator calculator::sqbraces (void)
  int curCols = 0;
 
  // one child calculator for all elements — new names stay local to matrix
- calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
@@ -9486,7 +9558,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  //int n = strscan ("2026-04-22 10:00:05 102.5 0.985", "* * * * * * 1 0", 2, &v1,&v2,&v3);
  //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
  //test_bmp ();
-
+  
  //init_mem_list ();
  clear_v_stack (); // Clear the value stack before evaluation
  res_cols = 0;       // Clear the result columns count
@@ -9974,8 +10046,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t denom = c * c + d * d;
           if (denom == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero");
-            return result_fval = qnan;
+            if ((scfg & SNAN) == 0)
+             {
+              error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+              return result_fval = qnan;
+             }
            }
           v_stack[v_sp - 2].fval  = (a * c + b * d) / denom;
           v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
@@ -9983,8 +10058,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-          return result_fval = qnan;
+          if ((scfg & SNAN) == 0)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+            return result_fval = qnan;
+           }
          }
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
@@ -10037,8 +10115,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if ((v_stack[v_sp - 1].get () == (float__t)0.0L)
                  || (v_stack[v_sp - 2].get () == (float__t)0.0L))
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-          return result_fval = qnan;
+          if ((scfg & SNAN) == 0)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+            return result_fval = qnan;
+           }
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
          {
@@ -10060,8 +10141,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t a_norm2 = ar * ar + ai * ai;
           if (a_norm2 == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero");
-            return result_fval = qnan;
+            if ((scfg & SNAN) == 0)
+             {
+              error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+              return result_fval = qnan;
+             }
            }
           float__t inv_a_r = ar / a_norm2;
           float__t inv_a_i = -ai / a_norm2;
@@ -10070,8 +10154,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t b_norm2 = br * br + bi * bi;
           if (b_norm2 == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-            return result_fval = qnan;
+            if ((scfg & SNAN) == 0)
+             {
+              error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+              return result_fval = qnan;
+             }
            }
           float__t inv_b_r = br / b_norm2;
           float__t inv_b_i = -bi / b_norm2;
@@ -10084,8 +10171,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           float__t sum_norm2 = sum_r * sum_r + sum_i * sum_i;
           if (sum_norm2 == (float__t)0.0L)
            {
-            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-            return result_fval = qnan;
+            if ((scfg & SNAN) == 0)
+             {
+              error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+              return result_fval = qnan;
+             }
            }
           v_stack[v_sp - 2].fval  = sum_r / sum_norm2;
           v_stack[v_sp - 2].imval = -sum_i / sum_norm2;
@@ -10119,8 +10209,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if ((v_stack[v_sp - 1].get () == 0.0) || (v_stack[v_sp - 2].get () == 0.0))
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-          return result_fval = qnan;
+          if ((scfg & SNAN) == 0)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+            return result_fval = qnan;
+           }
          }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
          {
@@ -10169,8 +10262,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if (v_stack[v_sp - 1].get () == 0.0)
          {
-          error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-          return result_fval = qnan;
+          if ((scfg & SNAN) == 0)
+           {
+            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+            return result_fval = qnan;
+           }
          }
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
@@ -11525,6 +11621,23 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
             break;
 
+            case tsSFUNC:
+            {
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (!CheckOperand (n_args, MSK_STR))
+               return result_fval = qnan; // file mask (1st argument should be string)
+              char *filename = v_stack[v_sp - n_args].get_str ();
+              filename[STRBUF - 1] = '\0';
+              if (!Run(filename, v_stack[v_sp - n_args - 1]))
+               {
+                error (v_stack[v_sp - 1].pos, "Error run script");
+                return result_fval = qnan;
+               }
+              v_sp -= n_args; 
+            }
+            break;
+
             case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
                             // prec() function)
              {
@@ -11792,7 +11905,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 		        //4. Push the result onto the stack.
 		        //5. Delete the previously created calculator.
 
-                calculator *child = new calculator (scfg, hash_table, (MASK_DEFAULT), deep);
+                calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT), deep);
                 if (!child)
                  {
                   errorf (pos, "Out of memory");

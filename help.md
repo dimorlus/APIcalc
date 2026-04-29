@@ -164,7 +164,7 @@ fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file d
 fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
 ```
 
-####                     Regression Calculation
+#### [Regression Calculation](README.md#Regression-Calculation)
 ```
 clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
 clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].

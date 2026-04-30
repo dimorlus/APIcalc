@@ -1,4 +1,5 @@
-Синтаксис:
+# Синтаксис:
+```
 ;;Comment
 JMP start
 
@@ -13,12 +14,13 @@ expession;expession;;comment
 expession
 CALL subpr
 JNZ loop
-
+```
 Операторы ':' - В начале строки перед меткой - первое слово за ним - метка (до 8 символов, остальные обрезаются), дальше игнорируется 
 (или, как вариант, выражение до конца строки). 'JMP', 'JZ', 'JNZ', 'CALL', 'CALLZ', 'CALLNZ', 'RET' (если стек возврата пуст - завершаем скрипт, 
 если переполнился - выходим с ошибкой).
 
 1 Загружаю весь файл как бинарник.
+```
 FILE* f = fopen("script.txt", "rb");
 if (f) {
     fseek(f, 0, SEEK_END);
@@ -32,7 +34,10 @@ if (f) {
     }
     fclose(f);
 }
+```
 
+### Winapi вариант (не используется)
+```
 HANDLE hFile = CreateFileA("script.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 if (hFile != INVALID_HANDLE_VALUE) {
     DWORD size = GetFileSize(hFile, NULL); // Для файлов < 4Гб этого достаточно
@@ -44,7 +49,7 @@ if (hFile != INVALID_HANDLE_VALUE) {
     
     CloseHandle(hFile);
 }
-
+```
 2 сканирую буфер первый раз, считаю число строк и число меток.
 3 выделяю массивы под индекс строк и метки.
 3 сканирую буфер второй раз, заполняю индексный массив и адреса меток (тут можно вместо JMP label 
@@ -53,3 +58,21 @@ if (hFile != INVALID_HANDLE_VALUE) {
   последнего выражения. 
 4 Можно выполнять. 
 5 Как индекс до последнего дошел - возвращаем результат последнего вычисления любого типа.  
+
+# Пример скрипта
+;; test script
+jmp start
+
+:sub1
+a:=a+1
+ret
+
+:start
+
+a:=0
+:loop
+call sub1
+if(a>10, 1, 0)
+jz loop
+ret;; exit from script 
+

@@ -1730,10 +1730,13 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
 
 int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
 {
+ FILE *f;
  char buf[256];
  int_t res = 0; 
  fprn (buf, sfmt, args, ic, v_stack);
- FILE *f = fopen (fname, "a");
+ if (buf[0] == '\0') return 0; // nothing to write
+ if (sfmt&&*sfmt) f = fopen (fname, "a");
+ else f = fopen (fname, "w");
  if (f)
   {
    res = fprintf (f, "%s\n", buf);

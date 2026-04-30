@@ -804,7 +804,6 @@ struct mxresult_t
 
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
 
-
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic
@@ -1147,6 +1146,5 @@ class calculator // calculator represents the main class for the expression calc
 #define isnan(a) IsNaNL (a)
 #define isinf(a) IsInfL (a)
 #endif
-
 
 #endif // scalcH

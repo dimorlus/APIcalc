@@ -1,0 +1,604 @@
+#pragma region Include Headers and Define Constants
+#include <windows.h>
+#ifdef __BORLANDC__
+#include <ctype.h>
+#include <errno.h>
+#include <float.h>
+#include <limits>
+#include <malloc.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#else //__BORLANDC__
+
+#define __USE_MINGW_ANSI_STDIO 1
+#include <cstdint>
+#include <ctime>
+#include <ctype.h>
+#include <errno.h>
+#include <float.h>
+#include <limits>
+#include <malloc.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#endif //__BORLANDC__
+
+
+#include "scalc.h"
+#include "sfmts.h"
+#include "sfunc.h"
+#include "script.h"
+
+#ifdef _float128_
+#include <quadmath.h>
+#endif
+
+script::script()
+{
+ buffer = nullptr;
+ int pass = 0;
+ LblTable = nullptr;
+ lineidx = nullptr;
+ label  = nullptr;
+ plb = label;
+ state = stNl;
+ num_labels = 0;
+ num_lines = 0;
+ child = nullptr;
+ debug = nullptr;
+}
+
+script::~script()
+{
+ if (buffer) free(buffer);
+ if (LblTable) free(LblTable);
+ if (lineidx) free(lineidx);
+ if (label) free (label);
+}
+
+bool script::load (const char *filename)
+{
+ FILE *f = fopen (filename, "rb");
+ if (!f) return false;
+ fseek (f, 0, SEEK_END);
+ long fsize = ftell (f);
+ fseek (f, 0, SEEK_SET);
+ if (fsize <= 0||fsize > 0x7FFF)
+  {
+   fclose (f);
+   return false;
+  }
+ buffer = (char *)malloc (fsize + 1);
+ if (!buffer)
+  {
+   fclose (f);
+   return false;
+  }
+ fread (buffer, 1, fsize, f);
+ buffer[fsize] = '\0';
+ fclose (f);
+
+ // Parse and compile
+ if (!pass_buf ()) return false;
+
+ if (!compile ()) return false;
+
+ return true;
+}
+
+
+bool script::pass_buf ()
+{
+ for (pass = 0; pass < 2; pass++)
+  {
+   char *cp         = buffer;
+   int lines        = 0;
+   int labels       = 0;
+   char *line_start = cp;
+
+   while (*cp)
+    {
+     if (*cp == '\t') *cp = ' ';
+     switch (state)
+      {
+      case stNl:
+       line_start = cp;
+
+       // Skip empty lines
+       while (*cp == '\r' || *cp == '\n' || *cp == ' ')
+        {
+         if (pass == 1 && (*cp == '\r' || *cp == '\n'))
+          {
+           *cp = '\0'; // Replace only on second pass
+          }
+         cp++;
+        }
+
+       if (!*cp) break; // End of buffer
+
+       // This is a non-empty line - record its position
+       if (pass == 1) 
+        lineidx[lines] = (uint16_t)(cp - buffer);
+
+       if (pass == 1 && LblTable && labels < num_labels)
+        plb = LblTable[labels].label;
+       else
+        plb = nullptr;
+
+       if (*cp == ':')
+        {
+         cp++;
+         state = stLbl;
+        }
+       else
+        {
+         state = stChr;
+        }
+       
+       lines++; // Increment after recording position
+       break;
+
+      case stLbl:
+       while (*cp == ':') cp++; // Skip multiple :::
+       while (*cp == ' ') cp++; // Skip spaces after :
+
+       if (pass == 1 && plb)
+        {
+         LblTable[labels].ptr = lines - 1;
+         int i                = 0;
+         while (i < 8 && isalnum (*cp & 0x7f))
+          {
+           plb[i++] = toupper (*cp++ & 0x7f);
+          }
+         while (i < 8) plb[i++] = '\0';
+        }
+       else
+        {
+         // First pass - just count
+         while (isalnum (*cp & 0x7f)) cp++;
+        }
+
+       labels++;
+
+       // Skip rest of label
+       while (*cp && *cp != '\r' && *cp != '\n' && *cp != ' ') cp++;
+       while (*cp == ' ') cp++;
+
+       if (*cp == '\r' || *cp == '\n' || *cp == '\0')
+        state = stNl;
+       else
+        state = stChr;
+       break;
+
+      case stChr:
+       if (*cp == '\r' || *cp == '\n')
+        state = stNl;
+       else
+        cp++;
+       break;
+      }
+    }
+
+   if (pass == 0)
+    {
+     num_labels = labels;
+     num_lines  = lines;
+
+     if (labels > 0) LblTable = (tLblTable *)malloc (labels * sizeof (tLblTable));
+     if (lines > 0) lineidx = (uint16_t *)malloc (lines * sizeof (uint16_t));
+
+     if ((labels > 0 && !LblTable) || (lines > 0 && !lineidx)) return false;
+
+     if (LblTable) memset (LblTable, 0, labels * sizeof (tLblTable));
+
+     // Reset for second pass
+     state = stNl;
+     cp    = buffer;
+    }
+  }
+ 
+ // Reset state after parsing complete
+ state = stNl;
+ return true;
+}
+
+bool script::compile ()
+{
+ // Third pass - replace opcodes and labels with bytecode
+ for (int i = 0; i < num_lines; i++)
+  {
+   char *line = buffer + lineidx[i];
+
+   // Skip leading spaces
+   while (*line == ' ') line++;
+
+   // Skip empty lines and comments
+   if (!*line || *line == ';' || *line == '\0') continue;
+
+   // Check if this is a label definition - mark it as empty
+   if (*line == ':')
+    {
+     // Replace label line with null to skip during execution
+     *(buffer + lineidx[i]) = '\0';
+     continue;
+    }
+
+   // Check each opcode (starting from 1, skipping placeholder at 0)
+   for (int op = 1; op < opNUM; op++)
+    {
+     const char *opcode = ops[op];
+     char *p = line;
+     bool match = true;
+     
+     // Compare opcode character by character, case-insensitive
+     while (*opcode)
+      {
+       if (toupper(*p & 0x7f) != *opcode)
+        {
+         match = false;
+         break;
+        }
+       p++;
+       opcode++;
+      }
+     
+     // Check that opcode ends with delimiter (space, null, semicolon)
+     if (match && (*p == ' ' || *p == '\0' || *p == ';'))
+      {
+       // Replace opcode with byte (1-7) - op is already 1-based
+       *line = (char)op;
+
+       // Find label argument (for all except RET)
+       if (op != opRET)
+        {
+         char *arg = p;
+         while (*arg == ' ') arg++;
+
+         if (*arg && *arg != ';')
+          {
+           // Find label
+           uint16_t target = find_label (arg);
+           if (target == 0xFFFF) return false; // Label not found
+
+           // Replace with target line pointer (2 bytes)
+           *(line + 1) = (char)(target & 0xFF);
+           *(line + 2) = (char)((target >> 8) & 0xFF);
+
+           // Null-terminate after opcode+arg
+           *(line + 3) = '\0';
+          }
+         else
+          {
+           // Opcode without argument
+           *(line + 1) = '\0';
+          }
+        }
+       else
+        {
+         // RET - just opcode
+         *(line + 1) = '\0';
+        }
+
+       break;
+      }
+    }
+  }
+
+ // Free label table - no longer needed
+ if (LblTable)
+  {
+   free (LblTable);
+   LblTable = nullptr;
+  }
+
+ return true;
+}
+
+bool script::is_zero (const value &v)
+{
+ switch (v.tag)
+  {
+  case tvINT:
+   return v.ival == 0;
+  case tvFLOAT:
+   return v.fval == (float__t)0.0L;
+  case tvCOMPLEX:
+   return v.fval == (float__t)0.0L && v.imval == (float__t)0.0L;
+  default:
+   return false;
+  }
+}
+
+
+
+bool script::execute ()
+{
+ if (!buffer || !lineidx) return false;
+
+ uint16_t ip = 0;     // instruction pointer
+ uint16_t stack[256]; // return stack
+ int sp = 0;          // stack pointer
+ value last_result;
+
+ last_result.tag  = tvINT;
+ last_result.ival = 0;
+ last_result.fval = 0.0;
+
+ if (!child) return false;
+
+ if (debug) debug("=== Script execution started, %d lines ===\n", num_lines);
+
+ while (ip < num_lines)
+  {
+   char *line = buffer + lineidx[ip];
+
+   // Skip leading spaces
+   while (*line == ' ') line++;
+
+   // Empty line or comment
+   if (!*line || *line == ';' || *line == '\0')
+    {
+     if (debug) debug("[%04d] <empty line>\n", ip);
+     ip++;
+     continue;
+    }
+
+   // Check if this is a compiled opcode (byte < 32)
+   if ((unsigned char)*line < 32)
+    {
+     unsigned char opcode = (unsigned char)*line;
+
+     switch (opcode)
+      {
+      case opRET:
+       if (debug) debug("[%04d] RET (sp=%d)\n", ip, sp);
+       if (sp == 0)
+        {
+         if (debug) debug("=== Script finished (RET from main) ===\n");
+         return true; // Exit script
+        }
+       ip = stack[--sp];
+       if (debug) debug("       Returned to line %d\n", ip + 1);
+       ip++;
+       break;
+
+      case opJMP:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        if (debug) debug("[%04d] JMP %d\n", ip, target);
+        ip = target;
+       }
+       break;
+
+      case opJZ:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        bool is_z = is_zero (last_result);
+        if (debug) debug("[%04d] JZ %d (condition=%s)\n", ip, target, is_z ? "true" : "false");
+        if (is_z)
+         ip = target;
+        else
+         ip++;
+       }
+       break;
+
+      case opJNZ:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        bool is_nz = !is_zero (last_result);
+        if (debug) debug("[%04d] JNZ %d (condition=%s)\n", ip, target, is_nz ? "true" : "false");
+        if (is_nz)
+         ip = target;
+        else
+         ip++;
+       }
+       break;
+
+      case opCALL:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        if (debug) debug("[%04d] CALL %d (sp=%d)\n", ip, target, sp);
+        if (sp >= 256)
+         {
+          if (debug) debug("ERROR: Stack overflow!\n");
+          return false; // Stack overflow
+         }
+        stack[sp++] = ip;
+        ip = target;
+       }
+       break;
+
+      case opCALLZ:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        bool is_z = is_zero (last_result);
+        if (debug) debug("[%04d] CALLZ %d (condition=%s, sp=%d)\n", ip, target, is_z ? "true" : "false", sp);
+        if (is_z)
+         {
+          if (sp >= 256)
+           {
+            if (debug) debug("ERROR: Stack overflow!\n");
+            return false;
+           }
+          stack[sp++] = ip;
+          ip = target;
+         }
+        else
+         ip++;
+       }
+       break;
+
+      case opCALLNZ:
+       {
+        uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
+        bool is_nz = !is_zero (last_result);
+        if (debug) debug("[%04d] CALLNZ %d (condition=%s, sp=%d)\n", ip, target, is_nz ? "true" : "false", sp);
+        if (is_nz)
+         {
+          if (sp >= 256)
+           {
+            if (debug) debug("ERROR: Stack overflow!\n");
+            return false;
+           }
+          stack[sp++] = ip;
+          ip = target;
+         }
+        else
+         ip++;
+       }
+       break;
+
+      default:
+       if (debug) debug("[%04d] ERROR: Unknown opcode %d\n", ip, opcode);
+       return false;
+      }
+    }
+   else
+    {
+     // Evaluate expression
+     if (debug) debug("[%04d] EVAL: %s\n", ip, line);
+     
+     double result = child->evaluate (line);
+     last_result.tag = child->get_res_tag ();
+     last_result.ival = child->get_int_res ();
+     last_result.fval = child->get_re_res ();
+     last_result.imval = child->get_im_res ();
+
+     if (debug)
+      {
+       switch (last_result.tag)
+        {
+        case tvINT:
+         debug("       Result: %lld (int)\n", last_result.ival);
+         break;
+        case tvFLOAT:
+         debug("       Result: %.15g (float)\n", (double)last_result.fval);
+         break;
+        case tvCOMPLEX:
+         debug("       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval, (double)last_result.imval);
+         break;
+        default:
+         debug("       Result: (other type %d)\n", last_result.tag);
+         break;
+        }
+      }
+
+     ip++;
+    }
+  }
+
+ if (debug) debug("=== Script finished (end of lines) ===\n");
+ return true;
+}
+
+uint16_t script::find_label (const char *lbl)
+{
+ char label_upper[9];
+ int i = 0;
+
+ while (i < 8 && lbl[i] && lbl[i] != ' ' && lbl[i] != ';')
+  {
+   label_upper[i] = toupper (lbl[i] & 0x7f);
+   i++;
+  }
+ label_upper[i] = '\0';
+
+ for (int j = 0; j < num_labels; j++)
+  {
+   if (strncmp (LblTable[j].label, label_upper, 8) == 0) return LblTable[j].ptr;
+  }
+
+ return 0xFFFF; // Not found
+}
+
+bool calculator::Run (const char *expr, value &res) // Run a script or expression and store the result in res
+{                                 // return the result in res
+ char filename[STRBUF];
+ char *buffer = nullptr;
+ res.tag      = tvERR;
+ res.ival     = 0;
+ res.fval     = qnan;
+
+ if (!expr || !*expr)
+  {
+   error (pos, "Empty script name");
+   return false; // empty script name
+  }
+
+ script *sct = new script ();
+ if (!sct)
+  {
+   error (pos, "Out of memory");
+   return false; // failed to create script object
+  }
+
+ NormalizePath (expr, filename, STRBUF);
+ if (!sct->load (filename))
+  {
+   errorf (pos, "Failed to load script: %s", filename);
+   return false; // failed to load script
+  }
+
+ calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   return result_fval = qnan;
+  }
+
+ sct->set_calculator (child);
+
+ bool success = sct->execute ();
+
+ res.tag = child->get_res_tag ();
+ res.ival = child->get_int_res ();
+ res.fval = child->get_re_res ();
+ res.imval = child->get_im_res ();
+ res.sval  = dupString (child->get_str_res ());
+ if (res.imval != (float__t)0.0L) res.tag = tvCOMPLEX; // Upgrade to complex if imaginary part is non-zero
+ else if (res.tag == tvFLOAT && res.fval == (float__t)(int64_t)res.fval)
+  res.tag = tvINT; // Downgrade to int if float is actually an integer
+ // copy string and matrix result if applicable
+
+ if (child->get_res_tag () == tvMATRIX)
+  {
+   mxresult_t mxr                   = child->get_mx_res ();
+   res.tag                          = tvMATRIX;
+   res.mcols                        = mxr.cols;
+   res.mrows                         = mxr.rows;
+   int msize                        = mxr.rows * mxr.cols * sizeof (float__t);
+   if (msize)
+    {
+     float__t *new_mval = (float__t *)sf_alloc (msize);
+     if (new_mval)
+      {
+       memcpy (new_mval, mxr.mval, msize);
+       res.mval = new_mval;
+      }
+     else
+      {
+       errorf (res.pos, "Out of memory");
+      }
+    }
+  }
+ else if (child->get_res_tag () == tvSTR)
+  {
+   res.tag = tvSTR;
+   fflags |= STR;
+  }
+
+ fflags |= child->isfflags ();
+
+ delete child;
+ delete sct;
+ return success;
+}

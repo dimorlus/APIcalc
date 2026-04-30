@@ -1,0 +1,156 @@
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: 'a'
+
+Line 12: 'ret;; exit from script '
+
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: 'a'
+
+Line 12: 'ret;; exit from script '
+
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: 'a'
+
+Line 12: 'ret;; exit from script '
+
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: 'a'
+
+Line 12: 'ret;; exit from script '
+
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: '2a'
+
+Line 12: 'ret;; exit from script '
+
+Line 0: ';; test script'
+
+Line 1: 'jmp start'
+
+Line 2: ':sub1'
+
+Line 3: 'a:=a+1'
+
+Line 4: 'ret'
+
+Line 5: ':start'
+
+Line 6: 'a:=0'
+
+Line 7: ':loop'
+
+Line 8: 'call sub1'
+
+Line 9: 'if(a>3, 1, 0)'
+
+Line 10: 'jz loop'
+
+Line 11: '2 a'
+
+Line 12: 'ret;; exit from script '
+

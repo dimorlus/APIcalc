@@ -40,6 +40,7 @@
 #include "scalc.h"
 #include "sfmts.h"
 #include "sfunc.h"
+#include "script.h"
 
 #include "ver.h"
 
@@ -7786,6 +7787,7 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
 //---------------------------------------------------------------------------
 
 #pragma region Scripts
+#ifdef _comment_
 bool calculator::Run (const char *expr, value &res) // Run a script or expression and store the result in res
 {                                 // return the result in res
  char filename[STRBUF];
@@ -7798,59 +7800,14 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
    error (pos, "Empty script name");
    return false; // empty script name
   }
+
  NormalizePath (expr, filename, STRBUF);
- FILE *f = fopen (filename, "rb");
- if (f)
-  {
-   fseek (f, 0, SEEK_END);
-   long size = ftell (f); // Get the size of the file
-   fseek (f, 0, SEEK_SET);
-   if (size > 65535)
-    {
-     fclose (f);
-     error (pos, "Script file too large");
-     return false;
-    }
-   buffer = (char *)malloc (size + 1);
-   if (buffer)
-    {
-     fread (buffer, 1, size, f);
-     buffer[size] = 0; // Null terminator for safety
-    }
-   else
-    {
-     error (pos, "Out of memory");
-     return false; // empty script name
-    }
-   fclose (f);
-  }
- //first pass, count lines and labels
- int lines = 0;
- int labels = 0;
- char *cp    = buffer;
- enum tstate
- {
-  stNl,
-  stLbl,
- } state = stNl;
- while (*cp)
- {
-   switch (state)
-    {
-     case stNl:
-      if (*cp == '\r')
-       {
-
-       }
-     break;
-    }
- }
-
  res.tag  = tvERR;
  res.ival = 0;
  res.fval = qnan;
  return false;
 }
+#endif 
 #pragma endregion
 //---------------------------------------------------------------------------
 

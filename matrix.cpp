@@ -95,6 +95,7 @@ int isinf_l(float__t x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 #pragma warning(disable : 4244) // 'argument': conversion from 'type1' to 'type2', possible loss of data
 #endif              //__GNUC__
 #endif //__BORLANDC__
+#pragma endregion
 
 #pragma region MATRIX OPERATIONS
 

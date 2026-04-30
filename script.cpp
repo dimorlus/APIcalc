@@ -1,4 +1,5 @@
 #pragma region Include Headers and Define Constants
+#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #ifdef __BORLANDC__
 #include <ctype.h>
@@ -12,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#pragma warn - 8004 // assigned a value that is never used
 
 #else //__BORLANDC__
 
@@ -55,6 +57,11 @@ script::script()
  num_lines = 0;
  child = nullptr;
  debug = nullptr;
+ EscFn = nullptr;
+ err[0] = '\0';
+ errln  = 0;
+ pass = 0;
+
 }
 
 script::~script()
@@ -75,13 +82,15 @@ bool script::load (const char *filename)
  if (fsize <= 0||fsize > 0x7FFF)
   {
    fclose (f);
+   sprintf (err, "File size error: %ld bytes", fsize);
+   errln = 0;
    return false;
   }
  buffer = (char *)malloc (fsize + 1);
  if (!buffer)
   {
    fclose (f);
-   return false;
+   sprintf (err, "Out of memory");
   }
  fread (buffer, 1, fsize, f);
  buffer[fsize] = '\0';
@@ -196,13 +205,18 @@ bool script::pass_buf ()
      if (labels > 0) LblTable = (tLblTable *)malloc (labels * sizeof (tLblTable));
      if (lines > 0) lineidx = (uint16_t *)malloc (lines * sizeof (uint16_t));
 
-     if ((labels > 0 && !LblTable) || (lines > 0 && !lineidx)) return false;
+     if ((labels > 0 && !LblTable) || (lines > 0 && !lineidx))
+      {
+       sprintf (err, "Out of memory");
+       errln = 0;
+       return false;
+      }
 
      if (LblTable) memset (LblTable, 0, labels * sizeof (tLblTable));
 
      // Reset for second pass
      state = stNl;
-     cp    = buffer;
+     cp = buffer;
     }
   }
  
@@ -267,7 +281,11 @@ bool script::compile ()
           {
            // Find label
            uint16_t target = find_label (arg);
-           if (target == 0xFFFF) return false; // Label not found
+           if (target == 0xFFFF)
+            {
+             sprintf (err, "Undefined label: %s", arg);
+             return false; // Label not found
+            }
 
            // Replace with target line pointer (2 bytes)
            *(line + 1) = (char)(target & 0xFF);
@@ -318,11 +336,50 @@ bool script::is_zero (const value &v)
   }
 }
 
+t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
+{
+#ifdef NDEBUG
+ uint64_t current_ms = GetTickCount64 ();
+
+ if (current_ms - init_ms > 1000)
+  {
+   if (!EscFn)
+    {
+     sprintf(err, "Operation took too long");
+     return brTIMEOUT;
+    }
+   if (EscFn && EscFn ())
+    {
+     sprintf (err, "Operation cancelled by user");
+     return brESC;
+    }
+   else
+    {
+     if (current_ms - last_gui_check > 100)
+      {
+       last_gui_check = current_ms;
+       Sleep (1); // Sleep briefly to allow GUI to remain responsive
+      }
+     if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+      {
+       sprintf (err, "Operation took too long");
+       return brTIMEOUT;
+      }
+    }
+  }
+#endif // NDEBUG
+ return brNONE;
+}
 
 
 bool script::execute ()
 {
- if (!buffer || !lineidx) return false;
+ if (!buffer || !lineidx)
+  {
+   if (debug) debug ("ERROR: No script loaded!\n");
+   sprintf (err, "No script loaded");
+   return false;
+  }
 
  uint16_t ip = 0;     // instruction pointer
  uint16_t stack[256]; // return stack
@@ -333,6 +390,10 @@ bool script::execute ()
  last_result.ival = 0;
  last_result.fval = 0.0;
 
+ uint64_t init_ms = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+
  if (!child) return false;
 
  if (debug) debug("=== Script execution started, %d lines ===\n", num_lines);
@@ -341,6 +402,8 @@ bool script::execute ()
   {
    char *line = buffer + lineidx[ip];
 
+   if (check_break (init_ms, last_gui_check) != brNONE) return false;
+  
    // Skip leading spaces
    while (*line == ' ') line++;
 
@@ -410,6 +473,7 @@ bool script::execute ()
         if (sp >= 256)
          {
           if (debug) debug("ERROR: Stack overflow!\n");
+          sprintf (err, "Stack overflow");
           return false; // Stack overflow
          }
         stack[sp++] = ip;
@@ -427,6 +491,7 @@ bool script::execute ()
           if (sp >= 256)
            {
             if (debug) debug("ERROR: Stack overflow!\n");
+            sprintf (err, "Stack overflow");
             return false;
            }
           stack[sp++] = ip;
@@ -447,6 +512,7 @@ bool script::execute ()
           if (sp >= 256)
            {
             if (debug) debug("ERROR: Stack overflow!\n");
+            sprintf (err, "Stack overflow");
             return false;
            }
           stack[sp++] = ip;
@@ -468,6 +534,12 @@ bool script::execute ()
      if (debug) debug("[%04d] EVAL: %s\n", ip, line);
      
      double result = child->evaluate (line);
+     if (child->error ()[0] && child->errt () == teSyntax)
+      {
+       if (debug) debug ("Evaluation error: %s\n", child->error ());
+       sprintf (err, "%s", child->error ());
+       return false;
+      }
      last_result.tag = child->get_res_tag ();
      last_result.ival = child->get_int_res ();
      last_result.fval = child->get_re_res ();
@@ -548,13 +620,15 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
    return false; // failed to load script
   }
 
- calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT), deep);
+ calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
   {
    errorf (pos, "Out of memory");
-   return result_fval = qnan;
+   return false;
   }
 
+ child->setEscFn (EscFn);
+ sct->setEscFn (EscFn);
  sct->set_calculator (child);
 
  bool success = sct->execute ();

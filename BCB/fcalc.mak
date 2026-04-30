@@ -15,7 +15,9 @@ VERSION = BCB.06.00
 # ---------------------------------------------------------------------------
 PROJECT = fcalc.exe
 OBJFILES = fcalc.obj ..\sfmts.obj ViewVars.obj ..\scalc.obj HTMLHelpViewer.obj \
-    UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj ..\bmp.obj
+    UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj ..\bmp.obj \
+	..\graphics.obj ..\matrix.obj ..\memmng.obj ..\output.obj ..\scanners.obj \
+	..\script.obj ..\solvers.obj ..\sym_vars.obj
 RESFILES = fcalc.res
 MAINSOURCE = fcalc.cpp
 RESDEPEN = $(RESFILES) fcalc.dfm ViewVars.dfm frcalc.dfm

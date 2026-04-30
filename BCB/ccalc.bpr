@@ -4,7 +4,8 @@
   <MACROS>
     <VERSION value="BCB.06.00"/>
     <PROJECT value="ccalc.exe"/>
-    <OBJFILES value="ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj ..\bmp.obj"/>
+    <OBJFILES value="ccalc.obj help.obj ..\scalc.obj ..\sfmts.obj ..\sfunc.obj ..\bmp.obj ..\graphics.obj ..\matrix.obj ..\memmng.obj ..\output.obj ..\scanners.obj \
+	..\script.obj ..\solvers.obj ..\sym_vars.obj"/>
     <RESFILES value="ccalc.res ccalc.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -54,6 +55,14 @@
       <FILE FILENAME="..\sfmts.cpp" FORMNAME="" UNITNAME="sfmts.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\sfunc.cpp" FORMNAME="" UNITNAME="sfunc.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\bmp.cpp" FORMNAME="" UNITNAME="bmp.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\graphics.cpp" FORMNAME="" UNITNAME="graphics" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\matrix.cpp" FORMNAME="" UNITNAME="matrix" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\memmng.cpp" FORMNAME="" UNITNAME="memmng" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\output.cpp" FORMNAME="" UNITNAME="output" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\scanners.cpp" FORMNAME="" UNITNAME="scanners" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\script.cpp" FORMNAME="" UNITNAME="script" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\solvers.cpp" FORMNAME="" UNITNAME="solvers" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\sym_vars.cpp" FORMNAME="" UNITNAME="sym_vars" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

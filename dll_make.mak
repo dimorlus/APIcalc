@@ -55,7 +55,8 @@ WINDRES  = c:/MinGW64-gcc14/mingw64/bin/windres.exe
 RCFILE   = calclib.rc
 RCOBJ    = $(OUTDIR)/calclib_res.o
 
-SRCS = scalc.cpp sfmts.cpp sfunc.cpp calclib.cpp bmp.cpp
+SRCS = scalc.cpp sfmts.cpp sfunc.cpp calclib.cpp bmp.cpp graphics.cpp matrix.cpp \
+memmng.cpp output.cpp scanners.cpp script.cpp solvers.cpp sym_vars.cpp
 OBJS = $(patsubst %.cpp,$(OUTDIR)/%.o,$(notdir $(SRCS)))
 
 VPATH = .

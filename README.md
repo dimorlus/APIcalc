@@ -205,7 +205,8 @@ x %% y  →  (x / y - 1) * 100
 * **wrgb, trgb**: Color-related utility functions
 * **winf**: Returns a string describing the portion of the spectrum of a given wavelength
 * **frh(x)**: Convert Fahrenheit to Celsius (e.g., `frh(75)` → 23.89°C)
-* **bind(x)**, **binf(x)**: Reinterpret a floating-point value as an integer by its raw bit pattern (the inverse of `floatd`/`floatf`). Useful for inspecting IEEE 754 representation:
+* **bind(x)**, **binf(x)**: Reinterpret a floating-point value as an integer by its raw bit pattern 
+(the inverse of `floatd`/`floatf`). Useful for inspecting IEEE 754 representation:
   ```
   bind(pi)   →  400921fb54442d18h   ;; double (64-bit) bit pattern of π
   binf(pi)   →  40490fdbh           ;; float (32-bit) bit pattern of π
@@ -218,15 +219,20 @@ x %% y  →  (x / y - 1) * 100
   ```
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
-* **prnf("filename", "format", ...)**: Works the same as prn, but appends the created string to the end of the file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file (0 if writing to the file is impossible).
-* **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using the `` degrees`minutes'seconds" `` format:
+* **prnf("filename", "format", ...)**: Works the same as prn, but appends the created string to the end of the 
+file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file 
+(0 if writing to the file is impossible). Calling prnf("filename", "") (with an empty format string) overwrites 
+an existing file or creates a new one.
+* **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using 
+the `` degrees`minutes'seconds" `` format:
   ```
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
   polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
   ```
   m and a also can be complex according formula   $$z = m \cdot e^{ia}$$.
   This function is built-in (previously defined in `consts.txt`).
-* **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. The last variable in the initial conditions is the one being solved for:
+* **solve(expr, var:=estimate)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. 
+The last variable in the initial conditions is the one being solved for:
   ```
   solve(x*(2x+2)-2, x:=0)   →  0.6180339887500326
   solve(x*(2x+2)-2, x:=-1)  →  -1.61803398875005

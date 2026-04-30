@@ -23,6 +23,31 @@ typedef unsigned __int64 uint64_t;
 // Debug callback function type
 typedef void (*debug_callback_t)(const char *fmt, ...);
 
+#ifdef __BORLANDC__
+enum opcodes
+{
+ opJMP = 1,
+ opJZ,
+ opJNZ,
+ opCALL,
+ opCALLZ,
+ opCALLNZ,
+ opRET,
+ opNUM // Total number of opcodes
+};
+
+const char *const ops[opNUM] = {
+ "",       // 0 - placeholder to align indices
+ "JMP",    // 1
+ "JZ",     // 2
+ "JNZ",    // 3
+ "CALL",   // 4
+ "CALLZ",  // 5
+ "CALLNZ", // 6
+ "RET",    // 7
+};
+#endif
+
 class script
 {
  private:
@@ -39,6 +64,7 @@ class script
     stChr,
    } state;
 
+#ifndef __BORLANDC__
   enum opcodes
    {
     opJMP = 1,
@@ -62,7 +88,8 @@ class script
     "CALLNZ", // 6
     "RET",    // 7
    };
-   
+#endif
+
    char *buffer;
    int pass;
    int num_labels;
@@ -71,15 +98,19 @@ class script
    uint16_t *lineidx;
    char *label;
    char *plb;
+   char err[80]; // Error message buffer
+   int errln;
 
    calculator *child;
    debug_callback_t debug;
+   int (*EscFn) (void);
+
 
    bool pass_buf ();
    bool compile ();
    uint16_t find_label (const char *lbl);
    bool is_zero (const value &v);
-
+   t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check);
  public:
 	script();
    ~script ();
@@ -87,6 +118,7 @@ class script
    bool execute ();
    void set_calculator (calculator *calc) { child = calc; }
    void set_debug_callback (debug_callback_t callback) { debug = callback; }
+   void setEscFn (int (__cdecl *fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
 };
 
 

@@ -12,6 +12,9 @@
 #include "../scalc_dll.h"
 #else
 #include "../scalc.h"
+#include "../script.h"
+#include "../sfmts.h"
+#include "../sfunc.h"
 #endif
 
 char errMsg[512] = { 0 };

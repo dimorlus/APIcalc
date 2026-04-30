@@ -105,6 +105,12 @@ typedef uint64_t unsigned_t;
 #include <process.h>
 #endif
 
+#define _WIN_
+#define _WCHAR_ // L'c' and 'c'W input format allow
+#define _ENABLE_PREIMAGINARY_
+
+
+
 #pragma region Floating-point 128-bit support
 
 #ifdef _float128_
@@ -803,6 +809,9 @@ struct mxresult_t
 };
 
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
+
+int32_t scan_opt (char *str, int &opts);
+
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and

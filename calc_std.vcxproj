@@ -187,10 +187,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bmp.cpp" />
+    <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="matrix.cpp" />
+    <ClCompile Include="memmng.cpp" />
+    <ClCompile Include="output.cpp" />
     <ClCompile Include="scalc.cpp" />
+    <ClCompile Include="scanners.cpp" />
     <ClCompile Include="script.cpp" />
     <ClCompile Include="sfmts.cpp" />
     <ClCompile Include="sfunc.cpp" />
+    <ClCompile Include="solvers.cpp" />
+    <ClCompile Include="sym_vars.cpp" />
     <!--<ClCompile Include="main.cpp" />-->
     <ClCompile Include="WinApiCalc.cpp" />
   </ItemGroup>

@@ -125,6 +125,7 @@ factorize(n)                    Prime factorization in to string
 polynom(M)                      Find roots of polynomial given coefficients in a matrix 
 
 fdlg(fmask)						Opens a file dialog to select a file.
+run("script.txt")               Run script.
 ```
  
 #### [Plot functions](plot.md)

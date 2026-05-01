@@ -91,6 +91,13 @@ void __cdecl calc_setShowImageFn (HCALC h, fnShowImage fn)
  c->setShowImageFn (fn);
 }
 
+void __cdecl calc_setDebugFn (HCALC h, debug_callback_t fn)
+{
+ calculator *c = (calculator *)h;
+ c->setDebugFn (fn);
+}
+
+
 bool __cdecl calc_block (HCALC h)
 {
  calculator *c = (calculator *)h;

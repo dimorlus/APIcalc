@@ -134,6 +134,7 @@ calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
  EscFn         = nullptr; // Clear the escape function pointer
  FileDlgFn     = nullptr; // Clear the file dialog function pointer
  ShowImageFn   = nullptr; // Clear the show image function pointer
+ debugFn       = nullptr; // Clear the debug callback function pointer
 
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count

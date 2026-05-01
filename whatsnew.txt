@@ -1,3 +1,16 @@
+01.05.26 (2.190)
++ Added the ability to run simple scripts containing expressions that the calculator sequentially evaluates and 
+  simple assembler-like control constructs—labels (starting with ':') and JMP, JZ, JNZ, CALL, CALLZ, CALLNZ, 
+  RET—using the run("script.txt") function. The function returns the result of the last expression evaluated by 
+  the calculator, of the type of that expression (number, complex number, string, matrix).
+* Calling prnf("filename", "") (with an empty format string) overwrites an existing file or creates a new one.
++ The isnan(x|z) function has been added. It returns 1 if the argument is NaN or Inf.
+* All child calculators created during solver calculations, graph plotting, scripts, etc. do not abort calculations 
+  on errors such as division by 0, but continue by returning NaN. Only the main (user) calculator aborts the calculation 
+  of such an expression with the appropriate diagnostic (Error: Division by zero). For example, in the GUI, isnan(1/0) 
+  shows Error: Division by zero, while {nan(x)x/0} isnan(nan(1))->1 — this is where the actual division occurs in the child 
+  calculator.
+
 28.04.26 (2.189)
 + Added follow functions:
 	plotdata("datafile"[,mask])                Display points in window 
@@ -11,7 +24,6 @@
   their first call, the computing core is blocked until Enter is pressed, so that the modal windows that pop up every 
   time do not interfere with editing the expression.
 - Fixed bug in the plotxy grid.
-
 
 27.04.26 (2.188)
 + Added follow functions:

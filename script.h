@@ -20,8 +20,8 @@ typedef unsigned __int64 uint64_t;
 #include <cstdint>
 #endif
 
-// Debug callback function type
-typedef void (*debug_callback_t)(const char *fmt, ...);
+//// Debug callback function type
+//typedef void (*debug_callback_t)(const char *fmt, ...);
 
 #ifdef __BORLANDC__
 enum opcodes

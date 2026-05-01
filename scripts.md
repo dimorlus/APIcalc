@@ -194,6 +194,50 @@ Compiled operators are stored as:
 6. CALLNZ
 7. RET
 
+## Script Purpose
+
+Scripts provide a way to automate complex calculations, implement algorithms with loops and conditional logic, and perform batch processing tasks. The assembly-like syntax with jumps and calls allows implementing iterative algorithms (factorial, Fibonacci, numerical methods, etc.) that would be cumbersome to write as single expressions.
+
+## Variable Scope and Isolation
+
+When a script is executed via run("script.txt"), it receives **copies** of all variables, constants, and functions declared in the parent calculator:
+- Built-in functions (mathematical, string, matrix operations)
+- User-defined functions
+- All declared variables and constants
+
+**Important limitations:**
+- GUI-dependent functions (plot, fdlg) are not available in scripts
+- Scripts can declare new variables and modify their local copies
+- All script-local changes are discarded when the script terminates
+- Only the final result (last evaluated expression) is returned to the parent calculator
+
+This isolation ensures that scripts cannot accidentally corrupt the parent calculator's state.
+
+## Error Handling
+
+Scripts handle errors differently depending on the error type:
+
+**Runtime errors** (division by zero, domain errors, etc.):
+- Return NaN (Not a Number) or error values
+- Do **not** interrupt script execution
+- Allow the script to continue running
+
+**Syntax errors** (invalid expressions, unknown functions, etc.):
+- Immediately terminate script execution
+- Return error status to the parent calculator
+
+Example of runtime error handling:
+```
+a := 10
+b := 0
+c := a / b  ; c becomes NaN, script continues
+if(isnan(c), 1, 0)
+JNZ error_handler
+:error_handler
+c := 0  ;; Handle the error
+c
+RET
+```
 ### Return Values
 
 Scripts return the result of the last evaluated expression to the parent calculator. All data types are supported:
@@ -211,9 +255,10 @@ To display or return a specific variable at the end, simply place it as the last
 ```
 a := 42
 b := a * 2
-a  ; This value will be returned
+a  ;; This value will be returned
 RET
 ```
+
 Example with complex number:
 ```
 z := 3 + 4i

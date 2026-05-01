@@ -629,6 +629,7 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
 
  child->setEscFn (EscFn);
  sct->setEscFn (EscFn);
+ sct->set_debug_callback (debugFn);
  sct->set_calculator (child);
 
  bool success = sct->execute ();

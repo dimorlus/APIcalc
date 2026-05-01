@@ -809,6 +809,7 @@ struct mxresult_t
 };
 
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
+typedef void (*debug_callback_t) (const char *fmt, ...);// Debug callback function type
 
 int32_t scan_opt (char *str, int &opts);
 
@@ -875,6 +876,7 @@ class calculator // calculator represents the main class for the expression calc
  int (*EscFn) (void);
  bool (*FileDlgFn) (char*, int);
  fnShowImage ShowImageFn;
+ debug_callback_t debugFn;
 
  uint8_t res_cols; // Number of columns in the matrix result
  uint8_t res_rows;   // Number of rows in the matrix result
@@ -1065,6 +1067,7 @@ class calculator // calculator represents the main class for the expression calc
  void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
  void setFileDlgFn (bool (*fn) (char*, int)) {FileDlgFn = fn;} // Set the file dialog callback
  void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
+ void setDebugFn (debug_callback_t fn) { debugFn = fn; }
 
  inline int isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration

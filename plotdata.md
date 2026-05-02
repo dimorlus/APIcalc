@@ -70,14 +70,14 @@ plotdata("test.txt", "10")  ;; X = Val1, Y = Val0 (reversed)
 2024-01-15, 11:00, 24.1, 44.8, OK
 2024-01-15, 11:30, 25.0, 43.9, OK
 ```
-Parsed as: `[2024, -1, -15, 10, 30, 23.5, 45.2, ...]`
+Parsed as: `[1705314600, 23.5, 45.2, ...]` (Unix time, seconds from 1970-01-01 00:00:00)
 
 > **Note**: The minus sign in dates (e.g., `01-15`) is treated as a separate number!
 ```
-plotdata("sensors.csv", "*****0")  ;; X = line number, Y = Val5 (temperature)
-                                   ;; Skip 5 values, capture 23.5, 24.1, 25.0
+plotdata("sensors.csv", "*0")  ;; X = line number, Y = Val5 (temperature)
+                                   ;; Skip 1 value, capture 23.5, 24.1, 25.0
 
-plotdata("sensors.csv", "*****01") ;; X = Val5 (temp), Y = Val6 (humidity)
+plotdata("sensors.csv", "*01") ;; X = Val5 (temp), Y = Val6 (humidity)
                                    ;; Points: (23.5,45.2), (24.1,44.8), (25.0,43.9)
 ```
 **Mixed delimiters** (`log.txt`):
@@ -129,16 +129,15 @@ fplotdatal("ntc_curve.bmp", "ntc.txt", "01")  ;; Save to file
 2026-04-22 10:05:10 104.2 0.990
 2026-04-22 10:10:15 103.8 0.987
 ```
-Parsed as: `[2026, -4, -22, 10, 0, 5, 102.5, 0.985]`
+Parsed as: `[1776848405, 102.5, 0.985]`
 
-> **Warning**: ISO date format contains minus signs! Use wildcards to skip date parts.
 ```
-plotdata("log.txt", "****** 01") ;; Skip entire timestamp (6 numbers)
-                                 ;; X = Val6 (value), Y = Val7 (quality)
-                                 ;; Points: (102.5,0.985), (104.2,0.990), ...
+plotdata("log.txt", "*01") ;; Skip entire timestamp 
+                           ;; X = Val6 (value), Y = Val7 (quality)
+                           ;; Points: (102.5,0.985), (104.2,0.990), ...
 
-plotdata("log.txt", "****** 0")  ;; Skip timestamp, plot value over line number
-                                 ;; X = line number, Y = Val6
+plotdata("log.txt", "* 0")  ;; Skip timestamp, plot value over line number
+                            ;; X = line number, Y = Val6
 ```
 #### Saving and Overlaying
 
@@ -203,7 +202,6 @@ Available spectrum colors: `red`, `orange`, `yellow`, `green`, `blue`, `indigo`,
 - Relative paths resolved from `path` variable if set
 - Maximum 10 numbers per line can be indexed (0-9)
 - Non-numeric text (units, labels) is automatically ignored during parsing
-- Minus signs in dates (ISO 8601 format) create separate negative numbers!
 
 ### Error Messages
 

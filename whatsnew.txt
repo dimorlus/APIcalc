@@ -1,3 +1,17 @@
+01.05.26 (2.191)
++ Added the dataf("filename", "mask", ...) function has been added for reading data from files. Each call to the 
+  function reads the next line from the file, extracts data from it using the mask, places it in the passed variable 
+  list, and returns the number of values read. A call with an empty mask closes the file; the next call with a mask 
+  will start reading from the beginning. When the entire file has been read, it closes and returns 0.
+	dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
++ Now, if data files contain an ISO 8601 timestamp, the parser perceives it as a single number—Unix time (the number 
+  of seconds since 1970-01-01 00:00:00). The following date separators are allowed: '-', '.', '/' (all must be the same) 
+  1970-01-01, 1970.01.01, 1970/01/01. The date and time can be separated by a space or a comma, the time can be with or 
+  without seconds, and the seconds can have a fractional part separated by a period 2026-04-22 10:00:05.1234. If the date 
+  is invalid, the parser returns NaN.
++ The error("message") function has been added. It displays message as an error message and, if used in a script, stops 
+  its execution.  
+	
 01.05.26 (2.190)
 + Added the ability to run simple scripts containing expressions that the calculator sequentially evaluates and 
   simple assembler-like control constructs—labels (starting with ':') and JMP, JZ, JNZ, CALL, CALLZ, CALLNZ, 

@@ -531,8 +531,9 @@ Assuming a data line contains 5 numeric values: `[Val0, Val1, Val2, Val3, Val4]`
 * **Specific Selection**: `fitpoly("data.log", "* 1 * 0", 2)` — Skips `Val0`, uses `Val1` as X, skips `Val2`, and uses `Val3` as Y.
 * **Single Column Selection**: `mean("data.log", "**0")` — Calculates the mean only for the 3rd numeric column (`Val2`).
 
-> **Tip**: Since engineering logs often contain dates (e.g., `2026-04-22`), the parser treats each part of the date as a separate number. 
-Use a mask like `*** 0 1` to skip the date and jump straight to your data columns.
+> **Tip**: Since engineering logs often contain dates in ISO 8601 format (e.g., 2026-04-22), the parser treats such dates as a 
+single value (returning Unix time—the number of seconds since January 1, 1970). If you only need the data, use a mask such 
+as "* 0 1" to skip the date and go directly to the data columns.
 
 > **Data Safety**: If a mask is invalid (e.g., `"1 1"` for two variables) or the data line is incomplete, the engine ensures integrity by 
 initializing results with `qnan`. These lines are automatically ignored during analysis, preventing corrupted calculations.

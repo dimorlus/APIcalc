@@ -5,8 +5,9 @@
     <VERSION value="BCB.06.00"/>
     <PROJECT value="fcalc.exe"/>
     <OBJFILES value="fcalc.obj ..\sfmts.obj ViewVars.obj ..\scalc.obj HTMLHelpViewer.obj 
-      UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj ..\bmp.obj ..\graphics.obj ..\matrix.obj ..\memmng.obj ..\output.obj ..\scanners.obj \
-	..\script.obj ..\solvers.obj ..\sym_vars.obj"/>
+      UseHTMLHelp.obj StrUtils.obj frcalc.obj ..\sfunc.obj ..\bmp.obj 
+      ..\graphics.obj ..\matrix.obj ..\memmng.obj ..\output.obj ..\scanners.obj 
+      ..\script.obj ..\solvers.obj ..\sym_vars.obj ..\files.obj"/>
     <RESFILES value="fcalc.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -17,7 +18,7 @@
     <SPARELIBS value="vcl.lib rtl.lib"/>
     <PACKAGES value="vcl.bpi rtl.bpi vclx.bpi BC100R61.bpi BCDB100R61.bpi bcqr100r61.bpi 
       aprdlgs60.bpi XLSRWII20_CPP6.bpi"/>
-    <PATHCPP value=".;..;..;..;.."/>
+    <PATHCPP value=".;..;..;..;..;..;..;..;..;..;..;..;..;.."/>
     <PATHPAS value=".;"/>
     <PATHRC value=".;"/>
     <PATHASM value=".;"/>
@@ -69,7 +70,8 @@
       <FILE FILENAME="..\script.cpp" FORMNAME="" UNITNAME="script" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\solvers.cpp" FORMNAME="" UNITNAME="solvers" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="..\sym_vars.cpp" FORMNAME="" UNITNAME="sym_vars" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
-
+      <FILE FILENAME="..\files.cpp" FORMNAME="" UNITNAME="files" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+  </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>
 

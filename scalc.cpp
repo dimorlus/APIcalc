@@ -164,6 +164,7 @@ calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
 
  init_mem_list ();
 
+
  if (symtab) copy_symbols (symtab, copyMask);
  else AddPredefined ();
 }
@@ -264,6 +265,8 @@ void calculator::AddPredefined (void)
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
  add (tsSFUNC, "run", nullptr, true);
+ add (tsDATAF, "dataf", nullptr);
+ add (tsERROR, "error", nullptr);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, true);
@@ -900,6 +903,7 @@ void calculator::NormalizePath (const char *input, char *output, int outSize)
 int calculator::scanmasknum (const char *str)
 {
  const char *cp = str;
+ if (!cp) return 0;
  int num        = 0;
  while (*cp)
   {
@@ -909,9 +913,9 @@ int calculator::scanmasknum (const char *str)
  return num;
 }
 
-int calculator::strscan (const char *str, const char *msk, int n, double *v, ...)
+int calculator::strscan (char *str, const char *msk, int n, double *v, ...)
 {
- const char *cp = str;
+ char *cp = str;
  const char *mp = msk;
  int num_count  = 0;
  double **vals  = &v;
@@ -934,9 +938,15 @@ int calculator::strscan (const char *str, const char *msk, int n, double *v, ...
     case '8':
     case '9':
      {
+      double val;
       char *fpos;
-      double val = strtod (cp, &fpos);
-      scientific (fpos, val);
+      //const char *endp;
+      val = scandatatime (cp, &fpos);
+      if (isnan (val))
+       {
+        val = strtod (cp, &fpos);
+        scientific (fpos, val);
+       }
       cp = fpos;
       if (mp && *mp) // if mask is provided, check if current character matches the mask
        {
@@ -1274,7 +1284,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
   }
 
  //double v1=0, v2=0, v3=0;
- //int n = strscan ("2026-04-22 10:00:05 102.5 0.985", "* * * * * * 1 0", 2, &v1,&v2,&v3);
+ //char tstr[] = "2026-04-22 10:00:05.123 102.5 0.985";
+ //int n = strscan (tstr, "0 * 1", 2, &v1,&v2,&v3);
  //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
  //test_bmp ();
   
@@ -3609,6 +3620,60 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= n_args;
             }
             break;
+
+            case tsDATAF: // dataf("filename", "mask", x1, x2, ...) function
+             {
+              if (n_args < 2)
+               {
+                error (v_stack[v_sp - n_args - 1].pos,
+                       "Function should take two or more arguments");
+                return result_fval = qnan;
+               }
+
+              if (!CheckOperand (n_args, MSK_STR))
+               return result_fval = qnan; // filename (1st argument)
+              if (!CheckOperand (n_args - 1, MSK_STR))
+               return result_fval = qnan; // format string (2nd argument)
+              char fnamebuf[STRBUF];
+              NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
+
+              int res = dataf (fnamebuf, 
+                              v_stack[v_sp - n_args + 1].get_str (), 
+                              n_args - 2, 
+                              &v_stack[v_sp - n_args + 2]);
+              if (res < 0)
+               {
+                if (res == da_FileErr)
+                  error (v_stack[v_sp - n_args - 1].pos, "Error in data file");
+                else
+                if (res == da_ArgNum)
+                 error (v_stack[v_sp - n_args - 1].pos, "Format does not match number of arguments");
+                else 
+                if (res < da_ArgNum)
+                 error (-(res - da_ArgNum), "Argument type mismatch");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - n_args - 1].ival = res;
+              v_stack[v_sp - n_args - 1].tag  = tvINT;
+
+              v_sp -= n_args;
+             }
+             break;
+
+            case tsERROR: // error(char *str)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+              char *errStr = v_stack[v_sp - 1].get_str ();
+
+              strncpy (err, errStr ? errStr : "", 80 - 1);
+              err[80 - 1] = '\0';
+              errpos  = 1;
+              errtype = teSyntax;
+              return result_fval = qnan;
+             }
+             break;
 
             case tsUFUNCT: // user defined function
               { 

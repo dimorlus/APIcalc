@@ -176,6 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bmp.h" />
+    <ClInclude Include="files.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="scalc.h" />
@@ -187,6 +188,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bmp.cpp" />
+    <ClCompile Include="files.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="matrix.cpp" />
     <ClCompile Include="memmng.cpp" />

@@ -144,6 +144,7 @@ int_t fprn(char *dest, char *sfmt, int args, char ic, value* v_stack);
 int_t fprnf (char *fname, char *sfmt, int args, char ic, value *v_stack);
 
 int_t datatime(char *tstr);
+double scandatatime (char *tstr, char **endp);
 
 // Color functions
 const char* wavelength_info(float__t wavelength_m);

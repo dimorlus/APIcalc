@@ -17,6 +17,7 @@
 #include <cstdlib> // for free() function
 #include <limits>
 #include "bmp.h"
+#include "files.h"
 #pragma endregion
 
 // RW - set both by calc engine and application
@@ -415,7 +416,9 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsPLOT,     // 32  plot operator for plotting data (plot)
  tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
  tsSFUNC,    // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
- tsNUM       // 35  Total number of symbol types, must be the last in the list
+ tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
+ tsERROR,    // 36  error("message") operator for reporting errors
+ tsNUM       // 37  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -474,6 +477,8 @@ enum t_br_result
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 #define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
 #define MASK_SFUNCS1    (1ULL << tsSFUNCS1)     // char* f(char *s) (fdlg("*.bmp"))
+#define MASK_SFUNC      (1ULL << tsSFUNC)       // value f(char *s) run("script.txt") run calculator's script. Return any type.
+#define MASK_DATAF      (1ULL << tsDATAF) // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -813,7 +818,6 @@ typedef void (*debug_callback_t) (const char *fmt, ...);// Debug callback functi
 
 int32_t scan_opt (char *str, int &opts);
 
-
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic
@@ -857,6 +861,7 @@ class calculator // calculator represents the main class for the expression calc
  symbol *hash_table[hash_table_size]; // Hash table for variables and functions
  t_operator o_stack[max_stack_size]; // Operator stack
  MemList mem_list; // Memory list for temporary strings used during expression parsing and evaluation
+ filesystem fs; // Filesystem object for file reading
 
  int v_sp; // Value stack pointer
  int o_sp; // Operator stack pointer
@@ -967,7 +972,7 @@ class calculator // calculator represents the main class for the expression calc
  //
 
  int scanmasknum (const char *str);
- int strscan (const char *str, const char *msk = nullptr, int n =0, double *v = nullptr, ...); 
+ int strscan (char *str, const char *msk = nullptr, int n =0, double *v = nullptr, ...); 
 
  // Math for solving, integrating and differentiating
  
@@ -1057,6 +1062,7 @@ class calculator // calculator represents the main class for the expression calc
 
  bool Run (const char *expr, value &res); // Run a script or expression and store the result in res
                                           // return the result in res
+ int dataf (char *fname, char *sfmt, int args, value *v_stack);
 
  public:
  calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint64_t mask=(MASK_NONE),

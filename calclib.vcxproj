@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bmp.h" />
+    <ClInclude Include="files.h" />
     <ClInclude Include="scalc.h" />
     <ClInclude Include="script.h" />
     <ClInclude Include="sfmts.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bmp.cpp" />
+    <ClCompile Include="files.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="matrix.cpp" />
     <ClCompile Include="memmng.cpp" />

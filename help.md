@@ -126,6 +126,8 @@ polynom(M)                      Find roots of polynomial given coefficients in a
 
 fdlg(fmask)						Opens a file dialog to select a file.
 run("script.txt")               Run script.
+error("message")                Put message as error, stop script.
+
 ```
  
 #### [Plot functions](plot.md)
@@ -193,6 +195,12 @@ normq("fname","msk", x)         Probability of falling within |x - mean| range.
 normr("fname","msk", x)         Probability that a value is > x (upper tail).
 normpd("fname","msk", x)        Probability Density Function at point x.
 invnorm("fname","msk", p)       Inverse Normal: find x such that P(X <= x) = p.
+```
+
+### Data file
+```
+prnf("file", "fmt", ...)        Print line to file.
+dataf("file","msk",...)         Read data from file.
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
@@ -235,6 +243,7 @@ tick(n)							Current system milliseconds.
 "fname" - data file name. "msk" - optional column mask.<br>
 (1) *Also for complex operands.*<br>
 (3) *Also for matrix operands.*<br>
+
 ### Special:
 ```
 help(0)                         Call help
@@ -245,10 +254,12 @@ vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
 ```
+
 ### User defined functions:
 ```
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
 ```
+
 ### Newton-Raphson solution of the equation:
 ```
 solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
@@ -259,6 +270,7 @@ calc(z^2+z+1, z:=0+1i)  (1)             |1|(90`0'0") 0+1i
 solve(expr, var:=est) expr is the left side of the equation, 
 expr(var)=0, est is the first approximation of the root.
 ```
+
 ##        Data formats:
 ```
 Hex                 0x1000, $1000               4096

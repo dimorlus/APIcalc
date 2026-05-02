@@ -199,7 +199,7 @@ x %% y  →  (x / y - 1) * 100
 
 ### Utility Functions and solvers
 
-* **pol**: Convert to polar coordinates
+* **pol, arg**: atan(im(z)/re(z)) Angle of a complex number in radians
 * **const("name", value)**: Define a named constant programmatically
 * **var("name", value)**: Define a named variable programmatically
 * **wrgb, trgb**: Color-related utility functions
@@ -223,6 +223,13 @@ x %% y  →  (x / y - 1) * 100
 file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file 
 (0 if writing to the file is impossible). Calling prnf("filename", "") (with an empty format string) overwrites 
 an existing file or creates a new one.
+* **dataf("filename", "mask", ...)**: function for reading data from files. Each call to the  function reads the 
+next line from the file, extracts data from it using the mask, places it in the passed variable list, and returns 
+the number of values read. A call with an empty mask closes the file; the next call with a mask  will start reading 
+from the beginning. When the entire file has been read, it closes and returns 0.
+```
+dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
+```
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using 
 the `` degrees`minutes'seconds" `` format:
   ```
@@ -530,6 +537,11 @@ Assuming a data line contains 5 numeric values: `[Val0, Val1, Val2, Val3, Val4]`
 * **Column Swapping**: `fitpoly("data.log", "1 0", 2)` — Uses `Val1` as X and `Val0` as Y.
 * **Specific Selection**: `fitpoly("data.log", "* 1 * 0", 2)` — Skips `Val0`, uses `Val1` as X, skips `Val2`, and uses `Val3` as Y.
 * **Single Column Selection**: `mean("data.log", "**0")` — Calculates the mean only for the 3rd numeric column (`Val2`).
+* **Time stamp parsing**: if data files contain an ISO 8601 timestamp, the parser perceives it as a single number—Unix time 
+(the number   of seconds since 1970-01-01 00:00:00). The following date separators are allowed: '-', '.', '/' (all must be the same)
+`1970-01-01`, `1970.01.01`, `1970/01/01`. The date and time can be separated by a space or a comma, the time can be with or  without 
+seconds, and the seconds can have a fractional part separated by a period `2026-04-22 10:00:05.1234`. If the date is invalid, the 
+parser returns `NaN`.
 
 > **Tip**: Since engineering logs often contain dates in ISO 8601 format (e.g., 2026-04-22), the parser treats such dates as a 
 single value (returning Unix time—the number of seconds since January 1, 1970). If you only need the data, use a mask such 

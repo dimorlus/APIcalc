@@ -969,8 +969,7 @@ class calculator // calculator represents the main class for the expression calc
  void clear_v_stack (); // Clear the value stack
  void addim (void); // Add imaginary unit
  
- //
-
+ //scan data from string with mask
  int scanmasknum (const char *str);
  int strscan (char *str, const char *msk = nullptr, int n =0, double *v = nullptr, ...); 
 
@@ -993,17 +992,17 @@ class calculator // calculator represents the main class for the expression calc
                      int maxDepth, 
                      int &callCount, 
                      int maxCalls);
-
+ //Helpers
  bool Split (const char *expr, ...);
  t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
                                                                       //during long calculations
- bool For (const char *expr, value &res); //Operator 'for' (loop).
 
  void NormalizePath (const char *input, char *output, int outSize);
 
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
 
+ // Plotting functions
  bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
 
  bool PlotCartesian (bmpdraw *bmp, PlotParams &params);
@@ -1028,6 +1027,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
+ bool For (const char *expr, value &res); // Operator 'for' (loop).
 
  // Matrix operations
  float__t *mxAlloc (int rows, int cols);

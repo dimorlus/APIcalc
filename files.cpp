@@ -164,12 +164,12 @@
          v_stack[n].var->val.tag  == tvFLOAT)))
      {
       v_stack[n].tag  = tvFLOAT;
-      v_stack[n].fval = vals[n];
+      v_stack[n].fval = (float__t)vals[n];
       v_stack[n].ival = (int_t)vals[n];
       if (v_stack[n].var)
        {
         v_stack[n].var->val.tag  = tvFLOAT;
-        v_stack[n].var->val.fval = vals[n];
+        v_stack[n].var->val.fval = (float__t)vals[n];
         v_stack[n].var->val.ival = (int_t)vals[n];
        }
      }

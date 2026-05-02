@@ -942,7 +942,7 @@ int calculator::strscan (char *str, const char *msk, int n, double *v, ...)
       char *fpos;
       //const char *endp;
       val = scandatatime (cp, &fpos);
-      if (isnan (val))
+      if (cp == fpos)
        {
         val = strtod (cp, &fpos);
         scientific (fpos, val);
@@ -1284,8 +1284,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
   }
 
  //double v1=0, v2=0, v3=0;
- //char tstr[] = "2026-04-22 10:00:05.123 102.5 0.985";
+ //char tstr[] = "12k4 2026-04-22 10:00:05.123 102.5 0.985";
+ //
  //int n = strscan (tstr, "0 * 1", 2, &v1,&v2,&v3);
+
+ //v1 = 0;
  //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
  //test_bmp ();
   

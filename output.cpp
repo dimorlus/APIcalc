@@ -170,12 +170,12 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
 }
 
 #define OPTS sizeof (all_options) / sizeof (option_def)
-int32_t scan_opt (char *str, int &opts)
+int_t scan_opt (char *str, int_t &opts)
 {
  struct option_def
  {
   char name[4]; // Option name
-  int flag;     // Bit mask
+  int_t flag;     // Bit mask
  };
 
  // All supported options definitions
@@ -279,7 +279,7 @@ bool is_integer (float__t val)
 }
 
 // Print the result string to the input
-int calculator::printres(char* str, int options, int binwide)
+int calculator::printres(char* str, int_t options, int binwide)
 {
  if (isnan (result_fval) || err[0])
   {
@@ -559,7 +559,7 @@ int calculator::printres(char* str, int options, int binwide)
 }
 
 // Print the result of the calculation into the provided string buffer with formatting options
-int calculator::print (char *str, int Options, int binwide, int *size)
+int calculator::print (char *str, int_t Options, int binwide, int *size)
 {
  int n     = 0;
  int bsize = 0;

@@ -266,6 +266,7 @@ magnitude := abs(z)
 z  ; Returns 3+4i to parent calculator
 RET
 ```
+
 Example with matrix:
 ```
 m := [[1, 2], [3, 4]]
@@ -275,9 +276,13 @@ RET
 ```
 
 ## Debug Mode (CLI only)
-
+There are two ways to debug: step-by-step and stream (redirecting the debug trace to a file):
+```
+ccalc run("test.txt") /DEBUG+
+ccalc run("test.txt") /DEBUG+ > trace.txt
+```
 When debug callback is set, execution produces detailed output:
-
+```
 [0000] JMP 7
 [0007] EVAL: a := 0
        Result: 0 (int)
@@ -286,7 +291,7 @@ When debug callback is set, execution produces detailed output:
        Result: 1 (int)
 [0002] RET (sp=1)
        Returned to line 9
-
+```
 Debug output includes:
 - Line numbers in [0000] format
 - Operator names and arguments

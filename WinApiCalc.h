@@ -35,7 +35,7 @@ private:
     calculator* m_pCalculator;
     
     // Calculator state
-    int m_options;
+    uint64_t m_options;
     int m_binWidth;
     int m_fontSize;
     int m_opacity;

@@ -29,9 +29,9 @@
 
 char errMsg[512] = { 0 };
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename);
+int_t scan_opt (char *str, int_t initial_opts, int *binwide, char *filename);
 
-ccalc_config::ccalc_config (uint32_t dconf)
+ccalc_config::ccalc_config (int_t dconf)
 {
  opts.calc_flags = dconf;
  opts.binary_width = 64;
@@ -65,12 +65,9 @@ bool ccalc_config::parse_single_option (const char *opt)
 
  // Determine action (+/-)
  bool enable = true;
- if (*opt == '+')
-  enable = true;
- else if (*opt == '-')
-  enable = false;
- else
-  return false;
+ if (*opt == '+') enable = true;
+ else if (*opt == '-') enable = false;
+ else return false;
 
  // Search for the option in the table
  for (int j = 0; all_options[j].name != NULL; j++)
@@ -96,7 +93,7 @@ bool ccalc_config::parse_single_option (const char *opt)
  return false;
 }
 
-int ccalc_config::parse_cmdline_options (char *cmdline)
+int_t ccalc_config::parse_cmdline_options (char *cmdline)
 {
  int first_option_pos = -1;
  char *p              = cmdline;
@@ -138,12 +135,12 @@ int ccalc_config::parse_cmdline_options (char *cmdline)
  return first_option_pos;
 }
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename)
+int_t scan_opt (char *str, int_t initial_opts, int *binwide, char *filename)
 {
  int i, j, k, l;
  char c, cc;
  bool cmnt    = false;
- int32_t opts = initial_opts;
+ int_t opts = initial_opts;
 
  l = 0;
  while (str[l])
@@ -262,7 +259,7 @@ bool ccalc_config::load_config (const char *filename)
  return true;
 }
 
-void print_options (int32_t flags, int binary_width)
+void print_options (int_t flags, int binary_width)
 {
  int count = 0;
 

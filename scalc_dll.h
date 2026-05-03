@@ -7,7 +7,7 @@ class calculator
 {
  HCALC h;
 public:
- calculator (int options = PAS + SCI + UPCASE) { h = calc_create(options); }
+ calculator (int_t options = PAS + SCI + UPCASE) { h = calc_create(options); }
  ~calculator () { calc_destroy(h); }
 
  // non-copyable — like the original
@@ -17,21 +17,22 @@ public:
  void setEscFn (int (__cdecl *fn) (void)) { calc_setEscFn (h, fn); }
  void setFileDlgFn (bool (__cdecl *fn) (char *, int)) { calc_setFileDlgFn (h, fn); }
  void setShowImageFn (fnShowImage fn) { calc_setShowImageFn (h, fn); }
+ void setDebugFn (debug_callback_t fn) { calc_setDebugFn (h, fn); }
 
  double evaluate (char *expr)  { return calc_evaluate(h, expr); } 
  char *error() {return calc_error(h);}
- int print (char *str, int options, int binw, int *size = nullptr)
+ int print (char *str, int_t options, int binw, int *size = nullptr)
  {
   return calc_print (h, str, options, binw, size);
  }
- int printres (char *str, int options = FFLOAT, int binw = 64)
+ int printres (char *str, int_t options = FFLOAT, int binw = 64)
  {
   return calc_print_res (h, str, options, binw);
  }
- int  isfflags () { return calc_get_flags(h); }
+ int_t  isfflags () { return calc_get_flags(h); }
  void clrfflags() { calc_clr_flags(h); }
- void syntax (int s) { calc_set_syntax(h, s); }
- int issyntax() {return calc_get_syntax(h);}
+ void syntax (int_t s) { calc_set_syntax(h, s); }
+ int_t issyntax() {return calc_get_syntax(h);}
  void addfn (const char *name, void *fn) { calc_addfn(h, name, fn); }
  int varlist (char *buf, int bsize, int *maxlen = nullptr) {return calc_varlist (h, buf, bsize, maxlen);}
  bool block () { return calc_block (h); }

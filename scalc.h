@@ -24,44 +24,45 @@
 // WO - set only from application
 // RO - set only by calc engine
 // UI - set and used only from application
-#define PAS    (1 << 0) // (RW) Pascal assingment and comparison style (:= =) <-> (= ==)
-#define SCI    (1 << 1) // (WO) Scientific numbers format (2k == 2000)
-#define UPCASE (1 << 2) // (WO) Case insensetive variables
-#define UTMP   (1 << 3) // (WO) Using $n for temp
-#define FFLOAT (1 << 4) // (WO) Forced float
+#define PAS    (1ULL << 0) // (RW) Pascal assingment and comparison style (:= =) <-> (= ==)
+#define SCI    (1ULL << 1) // (WO) Scientific numbers format (2k == 2000)
+#define UPCASE (1ULL << 2) // (WO) Case insensetive variables
+#define UTMP   (1ULL << 3) // (WO) Using $n for temp
+#define FFLOAT (1ULL << 4) // (WO) Forced float
 
-#define DEG  (1 << 5)  // (RO) Degrees format found
-#define CPX  (1 << 6)  // (RO) Complex format found
-#define ENG  (1 << 7)  // (RO) Engineering (6k8) format found
-#define STR  (1 << 8)  // (RO) String format found
-#define HEX  (1 << 9)  // (RO) Hex format found
-#define OCT  (1 << 10) // (RO) Octal format found
-#define fBIN (1 << 11) // (RO) Binary format found
-#define FBIN (1 << 11) // (RO) Binary format found
-#define DAT  (1 << 12) // (RO) Date time format found
-#define CHR  (1 << 13) // (RO) Char format found
-#define WCH  (1 << 14) // (RO) WChar format found
-#define ESC  (1 << 15) // (RO) Escape format found
-#define CMP  (1 << 16) // (RO) Computing format found
+#define DEG  (1ULL << 5)  // (RO) Degrees format found
+#define CPX  (1ULL << 6)  // (RO) Complex format found
+#define ENG  (1ULL << 7)  // (RO) Engineering (6k8) format found
+#define STR  (1ULL << 8)  // (RO) String format found
+#define HEX  (1ULL << 9)  // (RO) Hex format found
+#define OCT  (1ULL << 10) // (RO) Octal format found
+#define fBIN (1ULL << 11) // (RO) Binary format found
+#define FBIN (1ULL << 11) // (RO) Binary format found
+#define DAT  (1ULL << 12) // (RO) Date time format found
+#define CHR  (1ULL << 13) // (RO) Char format found
+#define WCH  (1ULL << 14) // (RO) WChar format found
+#define ESC  (1ULL << 15) // (RO) Escape format found
+#define CMP  (1ULL << 16) // (RO) Computing format found
 
-#define NRM  (1 << 17) // (UI) Normalized output
-#define IGR  (1 << 18) // (UI) Integer output
-#define UNS  (1 << 19) // (UI) Unsigned output
-#define ALL  (1 << 20) // (UI) All outputs
-#define MIN  (1 << 21) // (UI) Esc minimized feature (GUI only)
-#define OPT  (1 << 21) // (UI) Print options (CLI only)
-#define MNU  (1 << 22) // (UI) Show/hide menu feature (GUI only)
-#define SRC  (1 << 22) // (UI) Print source expression (CLI only)
-#define UTM  (1 << 23) // (UI) Unix time
-#define FRC  (1 << 24) // (UI) Fraction output
-#define FRI  (1 << 25) // (UI) Fraction inch output
-#define FRH  (1 << 26) // (UI) Farenheit input/output
-#define TOP  (1 << 27) // (UI) Always on top (GUI only)
-#define FLT  (1 << 27) // (UI) Floating point output (CLI only)
-#define IMUL (1 << 28) // (WO) Implicit multiplication
-#define AUTO (1 << 29) // (UI) Auto output format
-#define FCTR (1 << 30) // (UI) Factorization output
-#define SNAN (1 << 31) // (RO) Silent NaN 
+#define NRM  (1ULL << 17) // (UI) Normalized output
+#define IGR  (1ULL << 18) // (UI) Integer output
+#define UNS  (1ULL << 19) // (UI) Unsigned output
+#define ALL  (1ULL << 20) // (UI) All outputs
+#define MIN  (1ULL << 21) // (UI) Esc minimized feature (GUI only)
+#define OPT  (1ULL << 21) // (UI) Print options (CLI only)
+#define MNU  (1ULL << 22) // (UI) Show/hide menu feature (GUI only)
+#define SRC  (1ULL << 22) // (UI) Print source expression (CLI only)
+#define UTM  (1ULL << 23) // (UI) Unix time
+#define FRC  (1ULL << 24) // (UI) Fraction output
+#define FRI  (1ULL << 25) // (UI) Fraction inch output
+#define FRH  (1ULL << 26) // (UI) Farenheit input/output
+#define TOP  (1ULL << 27) // (UI) Always on top (GUI only)
+#define FLT  (1ULL << 27) // (UI) Floating point output (CLI only)
+#define IMUL (1ULL << 28) // (WO) Implicit multiplication
+#define AUTO (1ULL << 29) // (UI) Auto output format
+#define FCTR (1ULL << 30) // (UI) Factorization output
+#define SNAN (1ULL << 31) // (RO) Silent NaN
+#define DBG  (1ULL << 32) // (WO) Debug mode (prints internal details)
 
 
 #define STRBUF 256 // bufer size for string operations
@@ -415,7 +416,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
  tsPLOT,     // 32  plot operator for plotting data (plot)
  tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
- tsSFUNC,    // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
+ tsRUN,    // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
  tsNUM       // 37  Total number of symbol types, must be the last in the list
@@ -477,7 +478,7 @@ enum t_br_result
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 #define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
 #define MASK_SFUNCS1    (1ULL << tsSFUNCS1)     // char* f(char *s) (fdlg("*.bmp"))
-#define MASK_SFUNC      (1ULL << tsSFUNC)       // value f(char *s) run("script.txt") run calculator's script. Return any type.
+#define MASK_SFUNC      (1ULL << tsRUN)       // value f(char *s) run("script.txt") run calculator's script. Return any type.
 #define MASK_DATAF      (1ULL << tsDATAF) // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
@@ -816,7 +817,7 @@ struct mxresult_t
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
 typedef void (*debug_callback_t) (const char *fmt, ...);// Debug callback function type
 
-int32_t scan_opt (char *str, int &opts);
+int_t scan_opt (char *str, int_t &opts);
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
@@ -853,8 +854,8 @@ class calculator // calculator represents the main class for the expression calc
     calculator *child;   // Calculator for computations
    };
          
- int scfg; // Syntax configuration flags
- int fflags; // Founded format flags
+ int_t scfg;      // Syntax configuration flags
+ int_t fflags;   // Founded format flags
  int deep; // Current stack depth
  bool blockflag; // Flag to indicate if we are currently parsing a block (e.g., for GUI functions, loops, etc.)
  value v_stack[max_stack_size]; // Value stack for operands
@@ -1065,17 +1066,17 @@ class calculator // calculator represents the main class for the expression calc
  int dataf (char *fname, char *sfmt, int args, value *v_stack);
 
  public:
- calculator (int cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, uint64_t mask=(MASK_NONE),
+ calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration
- inline void syntax (int cfg = PAS + SCI + UPCASE + FFLOAT)  { scfg = cfg; } // Set syntax configuration
- inline int issyntax (void) { return scfg; } // Get current syntax configuration
+ inline void syntax (int_t cfg = PAS + SCI + UPCASE + FFLOAT) {scfg = cfg;}  // Set syntax configuration
+ inline int_t issyntax (void) { return scfg; } // Get current syntax configuration
 
  void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
  void setFileDlgFn (bool (*fn) (char*, int)) {FileDlgFn = fn;} // Set the file dialog callback
  void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
  void setDebugFn (debug_callback_t fn) { debugFn = fn; }
 
- inline int isfflags (void) { return fflags; } // Get current flags configuration
+ inline int_t isfflags (void) { return fflags; } // Get current flags configuration
  inline void clrfflags (void) { fflags = 0; } // Clear flags configuration
 
  inline char *error (void) { return err; }   // Get error message
@@ -1113,7 +1114,8 @@ class calculator // calculator represents the main class for the expression calc
 
  inline void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
  inline int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
- int print (char *str, int Options, int binwide, // Print a string representation of the result with specified
+ int print (char *str, int_t Options,
+            int binwide,          // Print a string representation of the result with specified
             int *size = nullptr); // options and binary width,
  
  int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
@@ -1122,7 +1124,7 @@ class calculator // calculator represents the main class for the expression calc
    return mxprint (res_rows, res_cols, res_mval, str, nl, size);
   }
 
- int printres (char *str, int options = FFLOAT, int binwide = 64);
+ int printres (char *str, int_t options = FFLOAT, int binwide = 64);
 
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 

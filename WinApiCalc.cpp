@@ -499,8 +499,8 @@ LRESULT CALLBACK WinApiCalc::ResultEditSubclassProc (HWND hWnd, UINT message, WP
  if (message == WM_CONTEXTMENU && pThis)
   {
    // Build Format submenu (mirrors the main menu's Format popup, with checkmarks)
-   int opts = pThis->m_options;
-   auto fmtFlag = [&](int flag) -> UINT { return MF_STRING | (opts & flag ? MF_CHECKED : MF_UNCHECKED); };
+   uint64_t opts = pThis->m_options;
+   auto fmtFlag = [&](uint64_t flag) -> UINT { return MF_STRING | (opts & flag ? MF_CHECKED : MF_UNCHECKED); };
 
    HMENU hFmtSub = CreatePopupMenu ();
    AppendMenuA (hFmtSub, fmtFlag (SCI),  ID_FORMAT_SCIENTIFIC, "Scientific");
@@ -1312,7 +1312,7 @@ void WinApiCalc::EvaluateExpression (bool block)
    m_pCalculator->evaluate (exprBuf); //EvaluateExpression
 
    // Get syntax flags from calculator
-   int scfg = m_pCalculator->issyntax ();
+   uint64_t scfg = m_pCalculator->issyntax ();
 
    char printBuf[2048];
    int lineCount = 0;

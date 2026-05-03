@@ -1,5 +1,11 @@
+02.05.26 (2.192)
++ Added script tracing (for debugging) to the CLI version. There are two debugging methods: single-step debugging 
+  and stream debugging (redirecting the debug trace to a file).
+	ccalc run("test.txt") /DEBUG+
+	ccalc run("test.txt") /DEBUG+ > trace.txt
+
 01.05.26 (2.191)
-+ Added the dataf("filename", "mask", ...) function has been added for reading data from files. Each call to the 
++ The the dataf("filename", "mask", ...) function has been added for reading data from files. Each call to the 
   function reads the next line from the file, extracts data from it using the mask, places it in the passed variable 
   list, and returns the number of values read. A call with an empty mask closes the file; the next call with a mask 
   will start reading from the beginning. When the entire file has been read, it closes and returns 0.

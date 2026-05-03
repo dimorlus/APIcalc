@@ -340,7 +340,7 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
 {
 #ifdef NDEBUG
  uint64_t current_ms = GetTickCount64 ();
-
+ if (debug) return brNONE;
  if (current_ms - init_ms > 1000)
   {
    if (!EscFn)
@@ -410,7 +410,7 @@ bool script::execute ()
    // Empty line or comment
    if (!*line || *line == ';' || *line == '\0')
     {
-     if (debug) debug("[%04d] <empty line>\n", ip);
+     if (debug) debug ("[%04d]\n", ip);
      ip++;
      continue;
     }
@@ -558,6 +558,12 @@ bool script::execute ()
         case tvCOMPLEX:
          debug("       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval, (double)last_result.imval);
          break;
+        case tvSTR:
+         debug("       Result: \"%s\" (string)\n", child->get_str_res ());
+         break;
+        case tvMATRIX:
+         debug("       Result: %d x %d matrix\n", child->get_mx_res ().rows, child->get_mx_res ().cols);
+         break;
         default:
          debug("       Result: (other type %d)\n", last_result.tag);
          break;
@@ -634,6 +640,7 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
 
  bool success = sct->execute ();
 
+ strcpy (err, child->error ());
  res.tag = child->get_res_tag ();
  res.ival = child->get_int_res ();
  res.fval = child->get_re_res ();

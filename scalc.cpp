@@ -124,7 +124,7 @@ void DebugLog (const char *format, ...)
 //---------------------------------------------------------------------------
 
 #pragma region Calculator Class constructor and destructor
-calculator::calculator (int cfg, symbol **symtab, uint64_t copyMask, int deep)
+calculator::calculator (int_t cfg, symbol **symtab, int_t copyMask, int deep)
 {
  this->deep  = deep + 1; // Set the current stack depth (incremented by 1 to account for the new instance)
  v_sp         = 0;    // Clear the value stack pointer
@@ -264,7 +264,7 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
- add (tsSFUNC, "run", nullptr, true);
+ add (tsRUN, "run", nullptr, true);
  add (tsDATAF, "dataf", nullptr);
  add (tsERROR, "error", nullptr);
 
@@ -3354,7 +3354,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
             break;
 
-            case tsSFUNC:
+            case tsRUN:
             {
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
@@ -3364,7 +3364,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               filename[STRBUF - 1] = '\0';
               if (!Run(filename, v_stack[v_sp - n_args - 1]))
                {
-                error (v_stack[v_sp - 1].pos, "Error run script");
+                if (!err[0]) error (v_stack[v_sp - 1].pos, "Error run script");
                 return result_fval = qnan;
                }
               v_sp -= n_args; 

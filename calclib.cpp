@@ -4,8 +4,8 @@
 
 extern "C" {
 
-HCALC __cdecl calc_create (int cfg)
-{
+HCALC __cdecl calc_create (int_t cfg)
+ {
  return new calculator(cfg);
 }
 
@@ -19,12 +19,12 @@ double __cdecl calc_evaluate(HCALC h, char* expr)
  calculator* c = (calculator*)h;
  return c->evaluate(expr);
 }
-int __cdecl calc_print (HCALC h, char* str, int options, int binw, int *size)
+int __cdecl calc_print (HCALC h, char *str, int_t options, int binw, int *size)
 {
  calculator* c = (calculator*)h;
  return c->print(str, options, binw, size);
 }	
-int __cdecl calc_print_res (HCALC h, char* str, int options, int binw)
+int __cdecl calc_print_res (HCALC h, char *str, int_t options, int binw)
 {
  calculator* c = (calculator*)h;
  return c->printres(str, options, binw);
@@ -36,7 +36,7 @@ void __cdecl calc_addfn (HCALC h, const char* name, void *fn)
  c->addfn (name, fn);
 }	
 
-int  __cdecl calc_get_flags(HCALC h)
+int_t __cdecl calc_get_flags (HCALC h)
 {
  calculator* c = (calculator*)h;
  return c->isfflags();
@@ -48,13 +48,13 @@ void  __cdecl calc_clr_flags(HCALC h)
  c->clrfflags();
 }
 
-void __cdecl calc_set_syntax(HCALC h, int syntax)
+void __cdecl calc_set_syntax (HCALC h, int_t syntax)
 {
  calculator* c = (calculator*)h;
  c->syntax(syntax);
 }
 
-int __cdecl calc_get_syntax (HCALC h)
+int_t __cdecl calc_get_syntax (HCALC h)
 {
  calculator *c = (calculator *)h;
  return c->issyntax ();

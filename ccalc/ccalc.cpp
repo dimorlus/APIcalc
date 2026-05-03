@@ -6,6 +6,7 @@
 #include <string>
 #include <stdio.h>
 #include <io.h>
+#include <conio.h>
 #include "ccalc.h"
 
 #ifdef USE_DLL
@@ -19,9 +20,9 @@
 
 char errMsg[512] = { 0 };
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename);
+int_t scan_opt (char *str, int_t initial_opts, int *binwide, char *filename);
 
-ccalc_config::ccalc_config (uint32_t dconf)
+ccalc_config::ccalc_config (int_t dconf)
 {
  opts.calc_flags = dconf;
  opts.binary_width = 64;
@@ -55,29 +56,20 @@ bool ccalc_config::parse_single_option (const char *opt)
 
  // Determine action (+/-)
  bool enable = true;
- if (*opt == '+')
-  enable = true;
- else if (*opt == '-')
-  enable = false;
- else
-  return false;
+ if (*opt == '+') enable = true;
+ else if (*opt == '-') enable = false;
+ else return false;
 
  // Search for the option in the table
  for (int j = 0; all_options[j].name != NULL; j++)
   {
    if (strcmp (name, all_options[j].name) == 0)
     {
-     int flag = all_options[j].flag;
+     int_t flag = all_options[j].flag;
 
      // Apply the flag
-     if (enable)
-      {
-       opts.calc_flags |= flag;
-      }
-     else
-      {
-       opts.calc_flags &= ~flag;
-      }
+     if (enable) opts.calc_flags |= flag;
+     else opts.calc_flags &= ~flag;
 
      return true;
     }
@@ -89,7 +81,7 @@ bool ccalc_config::parse_single_option (const char *opt)
 int ccalc_config::parse_cmdline_options (char *cmdline)
 {
  int first_option_pos = -1;
- char *p              = cmdline;
+ char *p = cmdline;
 
  // Search for the first option (starts with /)
  while (*p)
@@ -128,12 +120,12 @@ int ccalc_config::parse_cmdline_options (char *cmdline)
  return first_option_pos;
 }
 
-int32_t scan_opt (char *str, int32_t initial_opts, int *binwide, char *filename)
+int_t scan_opt (char *str, int_t initial_opts, int *binwide, char *filename)
 {
  int i, j, k, l;
  char c, cc;
  bool cmnt    = false;
- int32_t opts = initial_opts;
+ int_t opts = initial_opts;
 
  l = 0;
  while (str[l])
@@ -252,7 +244,7 @@ bool ccalc_config::load_config (const char *filename)
  return true;
 }
 
-void print_options (int32_t flags, int binary_width)
+void print_options (int_t flags, int binary_width)
 {
  int count = 0;
 
@@ -374,6 +366,15 @@ void load_user_constants (calculator &calc, const char *Fname)
 }
 
 
+void debug (const char *fmt, ...)
+{
+ va_list args;
+ va_start (args, fmt);
+ vprintf (fmt, args);
+ if (_isatty (_fileno (stdout))) (void) _getch (); // Wait for key press
+ va_end (args);
+}
+
 int main ()
 {
  // Get the original command line
@@ -463,6 +464,11 @@ int main ()
 
  load_user_constants (calc, "consts.txt");
  load_user_constants (calc, "user.txt");
+
+ if (config.get_options ().calc_flags & DBG)
+  {
+   calc.setDebugFn (debug);
+  }
 
  if (errMsg[0] != '\0')
   {

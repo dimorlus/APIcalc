@@ -2,8 +2,8 @@
 
 [Setup]
 AppName=fcalc
-AppVerName=fcalc (Scientific formula calculator) 2.191 files
-VersionInfoVersion=2.191
+AppVerName=fcalc (Scientific formula calculator) 2.192 files
+VersionInfoVersion=2.192
 AppContact=http://dorlov.no-ip.com
 DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc

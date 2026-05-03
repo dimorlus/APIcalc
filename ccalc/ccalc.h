@@ -12,7 +12,7 @@ struct option_def
 {
   //const char* name;    // Option name 
  const char name[8]; // Option name (макс 7 символов + null-терминатор)
- int flag;            // Битовая маска
+ int_t flag;            // Битовая маска
 };
 
 
@@ -48,6 +48,7 @@ static const option_def all_options[] =
 	{ "OPT",    OPT    },
     { "SRC",    SRC    },
     { "AUTO",   AUTO   },
+    { "DEBUG",  DBG    },    
     { "", 0 } // Sentinel
 };
 
@@ -55,7 +56,7 @@ static const option_def all_options[] =
 
 struct ccalc_options
 {
-    int calc_flags;     // Flags for calculator and output
+    int_t calc_flags;     // Flags for calculator and output
     int binary_width;   // Width for binary format
     char filename[256]; // Optional source filename
     
@@ -77,7 +78,7 @@ private:
 public:
     ccalc_options opts;
 
-    ccalc_config(uint32_t dconf);
+    ccalc_config(int_t dconf);
     
     bool load_config(const char* filename = "ccalc.cfg");
     int parse_cmdline_options(char* cmdline);

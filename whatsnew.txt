@@ -1,9 +1,23 @@
+02.05.26 (2.193)
++ Added opt(n), opton(n), and optoff(n) functions that set, enable, and disable the option specified by 
+  the bits of the integer n. Returns the set options.
++ Now dataf("file","mask", ...) can read data into a pre-created matrix of a suitable size, with up to 10 
+  entries, and a mask of "0123456789." Let's say the line in the file is "1, 2, 3, 4, 5, 6, 7, 8, 9"
+	A:=zeros(3, 3);dataf("mx.txt","012345678", A);A ->[(1, 2, 3);(4, 5, 6);(7, 8, 9)]
+  The line "[(1, 2, 3);(4, 5, 6);(7, 8, 9)]" will be read the same way; the parser will extract only the 
+  numbers.
++ Now the prn and prnf commands in %S format can output the matrix value (to a string or to a file).
+   prn("%S",[(1, 2, 3); (4, 5, 6); (7, 8, 9)]) -> '[(1, 2, 3); (4, 5, 6); (7, 8, 9)]' 
++ Added function datas("str","mask", ...), works like dataf, but reads data from a string.   
+   datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A->[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
+
 02.05.26 (2.192)
 + Added script tracing (for debugging) to the CLI version. There are two debugging methods: single-step debugging 
   and stream debugging (redirecting the debug trace to a file).
 	ccalc run("test.txt") /DEBUG+
 	ccalc run("test.txt") /DEBUG+ > trace.txt
-
+  Pressing any key is the next step, Ctrl+C exits debugging.
+  
 01.05.26 (2.191)
 + The the dataf("filename", "mask", ...) function has been added for reading data from files. Each call to the 
   function reads the next line from the file, extracts data from it using the mask, places it in the passed variable 

@@ -1583,17 +1583,26 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
        break;
       case tSci:
        {
-        double dd = (double)v_stack[n].get ();
-        double di = (double)v_stack[n].imval;
-        normz (dd, di);
-        if (dst < dst_end) dst += fmtc (dst, pfmt);
-        if (dst < dst_end) dst += d2scistr (dst, dd);
-        if (di != 0.0)
+        if (v_stack[n].tag == tvMATRIX)
          {
-          *dst++ = (di > 0.0) ? '+' : '-';
-          di = fabs (di);
-          if (dst < dst_end) dst += d2scistr (dst, di);
-          if (dst < dst_end) *dst++ = ic;
+          int size=0;
+          Mxprint (v_stack[n].tag, v_stack[n].mrows, v_stack[n].mcols, v_stack[n].mval, dst, false, &size);
+          dst += size;
+         }
+        else
+         {
+          double dd = (double)v_stack[n].get ();
+          double di = (double)v_stack[n].imval;
+          normz (dd, di);
+          if (dst < dst_end) dst += fmtc (dst, pfmt);
+          if (dst < dst_end) dst += d2scistr (dst, dd);
+          if (di != 0.0)
+           {
+            *dst++ = (di > 0.0) ? '+' : '-';
+            di     = fabs (di);
+            if (dst < dst_end) dst += d2scistr (dst, di);
+            if (dst < dst_end) *dst++ = ic;
+           }
          }
        }
        break;
@@ -1711,7 +1720,9 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
        }
        break;
       case tString:
-       if (dst < dst_end) dst += sprintf (dst, pfmt, v_stack[n].sval);
+       {
+         if (v_stack[n].sval && dst < dst_end) dst += sprintf (dst, pfmt, v_stack[n].sval);
+       }
        break;
       }
      n++;
@@ -1731,7 +1742,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
 int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
 {
  FILE *f;
- char buf[256];
+ char buf[2048];
  int_t res = 0; 
  fprn (buf, sfmt, args, ic, v_stack);
  if (buf[0] == '\0') return 0; // nothing to write

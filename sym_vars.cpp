@@ -236,8 +236,8 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
           }
          else if (sp->val.tag == tvMATRIX)
           {
-           char mstr[256];
-           mxprint (sp->val.mrows, sp->val.mcols, sp->val.mval, mstr, false);
+           char mstr[1024];
+           Mxprint (sp->val.tag, sp->val.mrows, sp->val.mcols, sp->val.mval, mstr, false, nullptr);
            written = snprintf (cp, bsize - (cp - buf), "%-10s = %s\r\n", sp->name, mstr);
 
           }

@@ -62,7 +62,7 @@
 #define AUTO (1ULL << 29) // (UI) Auto output format
 #define FCTR (1ULL << 30) // (UI) Factorization output
 #define SNAN (1ULL << 31) // (RO) Silent NaN
-#define DBG  (1ULL << 32) // (WO) Debug mode (prints internal details)
+#define DBG  (1ULL << 32) // (WO) Debug mode (prints internal details) (CLI only)
 
 
 #define STRBUF 256 // bufer size for string operations
@@ -618,6 +618,14 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  ssFdlg,    // File dialog function for selecting files (e.g., for plotting)
 
+ dfDataf,
+ dfDatas,
+
+ ccPrec,    // Set or get the calculator's precision for floating-point calculations
+ ccOpt,     // Set the calculator's options (e.g., output format, angle mode, etc.)
+ ccOptOn,   // Set specific options (e.g., enable/disable features) without affecting other options
+ ccOptOff,  // Clear specific options without affecting other options
+
  vf_num
 };
 
@@ -815,9 +823,11 @@ struct mxresult_t
 };
 
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
-typedef void (*debug_callback_t) (const char *fmt, ...);// Debug callback function type
+typedef int (*debug_callback_t) (const char *fmt, ...);// Debug callback function type
 
 int_t scan_opt (char *str, int_t &opts);
+int Mxprint (t_value tag, int8_t res_rows, int8_t res_cols, 
+             float__t *res_mval, char *str, bool nl, int *size);
 
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
@@ -1053,9 +1063,9 @@ class calculator // calculator represents the main class for the expression calc
  t_mresult matrixuno (value &res, value &left, t_operator cop);
  void mxerror (const char *msg);
 
- int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
-              bool nl, // Print matrix in a formatted way, with an option for a new line
-              int *size = nullptr); // and an optional pointer to store the size of the output
+ //int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
+ //             bool nl, // Print matrix in a formatted way, with an option for a new line
+ //             int *size = nullptr); // and an optional pointer to store the size of the output
  
  float__t StatFn (const char *fname, const char *msk, sfntype sfn, float__t x=qnan);
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
@@ -1064,6 +1074,7 @@ class calculator // calculator represents the main class for the expression calc
  bool Run (const char *expr, value &res); // Run a script or expression and store the result in res
                                           // return the result in res
  int dataf (char *fname, char *sfmt, int args, value *v_stack);
+ int datas (char *str, char *sfmt, int args, value *v_stack);
 
  public:
  calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
@@ -1121,7 +1132,7 @@ class calculator // calculator represents the main class for the expression calc
  int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
               int *size = nullptr) // and an optional pointer to store the size of the output
   {
-   return mxprint (res_rows, res_cols, res_mval, str, nl, size);
+   return Mxprint (result_tag, res_rows, res_cols, res_mval, str, nl, size);
   }
 
  int printres (char *str, int_t options = FFLOAT, int binwide = 64);

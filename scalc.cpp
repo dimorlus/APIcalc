@@ -240,13 +240,43 @@ float__t Size (void *clc, value &M)
  return ((calculator *)clc)->mxDim (M, mxSize);
 }
 
-int_t SetPrecision (void *clc, int_t prec)
+int_t CalcSrv (void *clc, v_func fn, int_t prec)
 {
  calculator *calc = (calculator *)clc;
- if (prec < 0) prec = 0;
- if (prec > MAX_PREC) prec = MAX_PREC;
- calc->set_fprec (prec);
- return prec;
+ switch (fn)
+  {
+     case ccPrec:
+      if (prec < 0) prec = 0;
+      if (prec > MAX_PREC) prec = MAX_PREC;
+      calc->set_fprec (prec);
+      return prec;
+
+     case ccOpt:
+      {
+       // Handle option setting
+       int_t opt = calc->issyntax ();
+       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
+       calc->syntax (prec);
+       return opt;
+      }
+     case ccOptOn:
+      {
+       // Handle option enabling
+       int_t opt = calc->issyntax ();
+       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
+       calc->syntax (opt | prec);
+       return calc->issyntax ();
+      }
+     case ccOptOff:
+      {
+       // Handle option disabling
+       int_t opt = calc->issyntax ();
+       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
+       calc->syntax (opt & ~prec);
+       return calc->issyntax ();
+      }
+     }
+ return 0;
 }
 #pragma endregion
 //---------------------------------------------------------------------------
@@ -265,7 +295,8 @@ void calculator::AddPredefined (void)
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
  add (tsRUN, "run", nullptr, true);
- add (tsDATAF, "dataf", nullptr);
+ add (tsDATAF, dfDataf, "dataf", nullptr);
+ add (tsDATAF, dfDatas, "datas", nullptr);
  add (tsERROR, "error", nullptr);
 
  // Cartesian plots
@@ -365,7 +396,10 @@ void calculator::AddPredefined (void)
  add (tsSFUNCF2, "const", (void *)Const);
  add (tsSFUNCF2, "var", (void *)Var);
 
- add (tsCIFUNC1, "prec", (void *)SetPrecision);
+ add (tsCIFUNC1, ccPrec, "prec", (void *)CalcSrv);
+ add (tsCIFUNC1, ccOpt, "opt", (void *)CalcSrv);
+ add (tsCIFUNC1, ccOptOn, "opton", (void *)CalcSrv);
+ add (tsCIFUNC1, ccOptOff, "optoff", (void *)CalcSrv);
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
@@ -3283,28 +3317,36 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              break;
 
             case tsPFUNCn: // f(str, ...) ( prn(...) function)
-             if (n_args < 1)
-              {
-               error (v_stack[v_sp - n_args - 1].pos, "Function should take one or more arguments");
-               return result_fval = qnan;
-              }
+             {
+              char strres[2048];
+              strres[0] = '\0';
+              if (n_args < 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos,
+                       "Function should take one or more arguments");
+                return result_fval = qnan;
+               }
 
-             (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prn(...)
-                 (sres, // put result string in sres first
-                  v_stack[v_sp - n_args].get_str (), n_args - 1,
-                  c_imaginary, & v_stack[v_sp - n_args + 1]);
+              (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prn(...)
+                  (strres, // put result string in sres first
+                   v_stack[v_sp - n_args].get_str (), n_args - 1, c_imaginary,
+                   &v_stack[v_sp - n_args + 1]);
 
-             v_stack[v_sp - n_args - 1].sval = dupString(sres);
-             v_stack[v_sp - n_args - 1].ival = 0;
-             v_stack[v_sp - n_args - 1].tag  = tvSTR;
+              strncpy (sres, strres, STRBUF - 1);
+              sres[STRBUF - 1] = '\0';
 
-             if (n_args > 1) // if there are arguments other than the first string argument, return
-                             // the value of the first argument as well
-              {
-               v_stack[v_sp - n_args - 1].ival = v_stack[v_sp - n_args + 1].ival;
-               v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
-              }
-             v_sp -= n_args;
+              v_stack[v_sp - n_args - 1].sval = dupString (strres);
+              v_stack[v_sp - n_args - 1].ival = 0;
+              v_stack[v_sp - n_args - 1].tag  = tvSTR;
+
+              if (n_args > 1) // if there are arguments other than the first string argument, return
+                              // the value of the first argument as well
+               {
+                v_stack[v_sp - n_args - 1].ival = v_stack[v_sp - n_args + 1].ival;
+                v_stack[v_sp - n_args - 1].fval = v_stack[v_sp - n_args + 1].fval;
+               }
+              v_sp -= n_args;
+             }
              break;
 
             case tsFPFUNCn: // prnf("filename", "fmt", ...) function
@@ -3371,14 +3413,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
-            case tsCIFUNC1: // int f(this, int x) (method of calculator class with int argument,
+            case tsCIFUNC1: // int f(this, int fn, int x) (method of calculator class with int argument,
                             // prec() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
-              v_stack[v_sp - 2].ival = (*(int_t (*) (void *, int_t))sym->func) (
-                  (void *)this, v_stack[v_sp - 1].get_int ());
+              v_stack[v_sp - 2].ival = (*(int_t (*) (void *, v_func, int_t))sym->func) (
+                  (void *)this, sym->fidx, v_stack[v_sp - 1].get_int ());
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
              }
@@ -3626,6 +3668,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsDATAF: // dataf("filename", "mask", x1, x2, ...) function
              {
+              int res = 0;
               if (n_args < 2)
                {
                 error (v_stack[v_sp - n_args - 1].pos,
@@ -3637,25 +3680,38 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                return result_fval = qnan; // filename (1st argument)
               if (!CheckOperand (n_args - 1, MSK_STR))
                return result_fval = qnan; // format string (2nd argument)
-              char fnamebuf[STRBUF];
-              NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
+              if (sym->fidx == dfDataf)
+               {
+                char fnamebuf[STRBUF];
+                NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
 
-              int res = dataf (fnamebuf, 
-                              v_stack[v_sp - n_args + 1].get_str (), 
-                              n_args - 2, 
-                              &v_stack[v_sp - n_args + 2]);
+                res = dataf (fnamebuf, v_stack[v_sp - n_args + 1].get_str (), n_args - 2,
+                                 &v_stack[v_sp - n_args + 2]);
+               }
+              else 
+              if (sym->fidx == dfDatas)
+               {
+                res = datas (v_stack[v_sp - n_args].get_str (), v_stack[v_sp - n_args + 1].get_str (), n_args - 2,
+                             &v_stack[v_sp - n_args + 2]);
+               }
+              else
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Unknown function");
+                return result_fval = qnan;
+               }
+
               if (res < 0)
                {
                 if (res == da_FileErr)
-                  error (v_stack[v_sp - n_args - 1].pos, "Error in data file");
-                else
-                if (res == da_ArgNum)
-                 error (v_stack[v_sp - n_args - 1].pos, "Format does not match number of arguments");
-                else 
-                if (res < da_ArgNum)
+                 error (v_stack[v_sp - n_args - 1].pos, "Error in data file");
+                else if (res == da_ArgNum)
+                 error (v_stack[v_sp - n_args - 1].pos,
+                        "Format does not match number of arguments");
+                else if (res < da_ArgNum)
                  error (-(res - da_ArgNum), "Argument type mismatch");
                 return result_fval = qnan;
                }
+
               v_stack[v_sp - n_args - 1].ival = res;
               v_stack[v_sp - n_args - 1].tag  = tvINT;
 

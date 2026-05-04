@@ -366,13 +366,16 @@ void load_user_constants (calculator &calc, const char *Fname)
 }
 
 
-void debug (const char *fmt, ...)
+int debug (const char *fmt, ...)
 {
+ int ch;
  va_list args;
  va_start (args, fmt);
  vprintf (fmt, args);
- if (_isatty (_fileno (stdout))) (void) _getch (); // Wait for key press
+ if (_isatty (_fileno (stdout))) ch = _getch (); // Wait for key press
  va_end (args);
+ if (ch == 3) return 1; // Ctrl-C pressed
+ return 0;
 }
 
 int main ()

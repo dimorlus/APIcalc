@@ -99,21 +99,21 @@ int isinf_l(float__t x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 //---------------------------------------------------------------------------
 
 #pragma region Output Formatting
-  //---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
 // Print matrix result in a formatted way, with an option for a new line
 // and an optional pointer to store the size of the output
-int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, 
-                         char *str, bool nl, int *size)
+int Mxprint (t_value tag, int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str, bool nl,
+                         int *size)
 {
  int n     = 0;
  int bsize = 0;
- if (result_tag == tvMATRIX)
+ if (tag == tvMATRIX)
   {
    // compute Frobenius norm (RMS) for threshold
    double norm = 0.0L;
-   int nm = res_rows * res_cols;
+   int nm      = res_rows * res_cols;
    for (int i = 0; i < nm; i++) norm += (double)res_mval[i] * (double)res_mval[i];
-   norm = sqrt (norm);
+   norm             = sqrt (norm);
    double threshold = norm * 1e-9L;
 
    char mstr[80];
@@ -122,29 +122,36 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
      char *cp = mstr;
      if (nl)
       {
-       if (i > 0) cp += sprintf (cp, " (");
-       else cp += sprintf (cp, "[(");
+       if (i > 0)
+        cp += sprintf (cp, " (");
+       else
+        cp += sprintf (cp, "[(");
        for (int j = 0; j < res_cols; j++)
         {
          char elemstr[20];
          double elem = (double)res_mval[i * res_cols + j];
          if (fabs (elem) < threshold) elem = 0.0L; // suppress numerical noise
          d2scistr (elemstr, elem);
-         if (j < res_cols - 1) cp += sprintf (cp, "%7.7s, ", elemstr);
+         if (j < res_cols - 1)
+          cp += sprintf (cp, "%7.7s, ", elemstr);
          else
           {
-           if (i == res_rows - 1) cp += sprintf (cp, "%7.7s)]", elemstr);
-           else cp += sprintf (cp, "%7.7s); ", elemstr);
+           if (i == res_rows - 1)
+            cp += sprintf (cp, "%7.7s)]", elemstr);
+           else
+            cp += sprintf (cp, "%7.7s); ", elemstr);
           }
         }
        if (i == res_rows - 1) cp += sprintf (cp, " ");
-       bsize += sprintf (str + bsize, "%65.64s\r\n", mstr);
+       bsize += sprintf (str + bsize, "%67.66s\r\n", mstr);
        n++;
       }
      else
       {
-       if (i > 0) cp += sprintf (cp, "(");
-       else cp += sprintf (cp, "[(");
+       if (i > 0)
+        cp += sprintf (cp, "(");
+       else
+        cp += sprintf (cp, "[(");
        for (int j = 0; j < res_cols; j++)
         {
          char elemstr[20];
@@ -155,8 +162,10 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
           cp += sprintf (cp, "%s, ", elemstr);
          else
           {
-           if (i == res_rows - 1) cp += sprintf (cp, "%s)]", elemstr);
-           else cp += sprintf (cp, "%s); ", elemstr);
+           if (i == res_rows - 1)
+            cp += sprintf (cp, "%s)]", elemstr);
+           else
+            cp += sprintf (cp, "%s); ", elemstr);
           }
         }
        bsize += sprintf (str + bsize, "%s", mstr);
@@ -168,6 +177,8 @@ int calculator::mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval,
   }
  return n;
 }
+//---------------------------------------------------------------------------
+
 
 #define OPTS sizeof (all_options) / sizeof (option_def)
 int_t scan_opt (char *str, int_t &opts)
@@ -247,6 +258,7 @@ int_t scan_opt (char *str, int_t &opts)
   }
  return opts;
 }
+//---------------------------------------------------------------------------
 
 int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary)
 {
@@ -270,6 +282,7 @@ int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary)
   return sprintf (str, "%.*Lg%+.*Lg%c", prec, re, prec, im, c_imaginary);
 #endif
 }
+//---------------------------------------------------------------------------
 
 bool is_integer (float__t val)
 {
@@ -277,6 +290,8 @@ bool is_integer (float__t val)
  if (val > (float__t)INT64_MAX || val < (float__t)INT64_MIN) return false;
  return true;
 }
+//---------------------------------------------------------------------------
+
 
 // Print the result string to the input
 int calculator::printres(char* str, int_t options, int binwide)
@@ -294,7 +309,10 @@ int calculator::printres(char* str, int_t options, int binwide)
    if (options & AUTO)
     {
      if (sres[0])
-      return sprintf (str, "%s", sres);
+      {
+       if (strlen (sres) > 64) sres[64] = '\0';
+       return sprintf (str, "%s", sres);
+      }
      else
       {
 /*
@@ -553,7 +571,11 @@ int calculator::printres(char* str, int_t options, int binwide)
      return sprintf (str, "%s", frhstr);
     }
 
-   if (options & STR) return sprintf (str, "'%s'", sres);
+   if (options & STR)
+    {
+     if (strlen (sres) > 250) sres[250] = '\0';
+     return sprintf (str, "'%s'", sres);
+    }
   }
  return sprintf (str, "%s", "");
 }
@@ -614,6 +636,7 @@ int calculator::print (char *str, int_t Options, int binwide, int *size)
          if (sres[0])
           {
            char strcstr[80];
+           if (strlen (sres) > 64) sres[64] = '\0';
            sprintf (strcstr, "'%s'", sres);
            bsize += sprintf (str + bsize, "%65.64s\r\n", strcstr);
            n++;
@@ -631,7 +654,7 @@ int calculator::print (char *str, int_t Options, int binwide, int *size)
   {
    if (result_tag == tvMATRIX)
     {
-     n += mxprint (res_rows, res_cols, res_mval, str, true, &bsize);
+     n += Mxprint (result_tag, res_rows, res_cols, res_mval, str, true, &bsize);
      if (size) *size = bsize;
      return n;
     }
@@ -956,6 +979,7 @@ int calculator::print (char *str, int_t Options, int binwide, int *size)
        if (sres[0])
         {
          char strcstr[80];
+         if (strlen (sres) > 64) sres[64] = '\0';
          sprintf (strcstr, "'%.64s'", sres);
          bsize += sprintf (str + bsize, "%65.64s S\r\n", strcstr);
          n++;

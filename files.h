@@ -31,8 +31,9 @@ enum da_error
 {
  da_ok = 0,
  da_FileErr = -1,
- da_ArgNum = -2,
- da_ArgType = -3,
+ da_NoData  = -2,
+ da_ArgNum = -3,
+ da_ArgType = -4,
 };
 
 class filesystem

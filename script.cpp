@@ -381,6 +381,7 @@ bool script::execute ()
    return false;
   }
 
+ int br      = 0;
  uint16_t ip = 0;     // instruction pointer
  uint16_t stack[256]; // return stack
  int sp = 0;          // stack pointer
@@ -396,21 +397,22 @@ bool script::execute ()
 
  if (!child) return false;
 
- if (debug) debug("=== Script execution started, %d lines ===\n", num_lines);
+ if (debug) br = debug("=== Script started, %d lines. Press any key for the next step, Ctrl+C for exit ===\n", num_lines);
 
  while (ip < num_lines)
   {
    char *line = buffer + lineidx[ip];
 
    if (check_break (init_ms, last_gui_check) != brNONE) return false;
-  
+   if (br) return false;
+
    // Skip leading spaces
    while (*line == ' ') line++;
 
    // Empty line or comment
    if (!*line || *line == ';' || *line == '\0')
     {
-     if (debug) debug ("[%04d]\n", ip);
+     if (debug) br = debug ("[%04d]\n", ip);
      ip++;
      continue;
     }
@@ -423,21 +425,21 @@ bool script::execute ()
      switch (opcode)
       {
       case opRET:
-       if (debug) debug("[%04d] RET (sp=%d)\n", ip, sp);
+       if (debug) br = debug("[%04d] RET (sp=%d)\n", ip, sp);
        if (sp == 0)
         {
-         if (debug) debug("=== Script finished (RET from main) ===\n");
+         if (debug) br = debug("=== Script finished (RET from main) ===\n");
          return true; // Exit script
         }
        ip = stack[--sp];
-       if (debug) debug("       Returned to line %d\n", ip + 1);
+       if (debug) br = debug("       Returned to line %d\n", ip + 1);
        ip++;
        break;
 
       case opJMP:
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
-        if (debug) debug("[%04d] JMP %d\n", ip, target);
+        if (debug) br = debug("[%04d] JMP %d\n", ip, target);
         ip = target;
        }
        break;
@@ -446,7 +448,7 @@ bool script::execute ()
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_z = is_zero (last_result);
-        if (debug) debug("[%04d] JZ %d (condition=%s)\n", ip, target, is_z ? "true" : "false");
+        if (debug) br = debug("[%04d] JZ %d (condition=%s)\n", ip, target, is_z ? "true" : "false");
         if (is_z)
          ip = target;
         else
@@ -458,7 +460,7 @@ bool script::execute ()
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_nz = !is_zero (last_result);
-        if (debug) debug("[%04d] JNZ %d (condition=%s)\n", ip, target, is_nz ? "true" : "false");
+        if (debug) br = debug("[%04d] JNZ %d (condition=%s)\n", ip, target, is_nz ? "true" : "false");
         if (is_nz)
          ip = target;
         else
@@ -469,10 +471,10 @@ bool script::execute ()
       case opCALL:
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
-        if (debug) debug("[%04d] CALL %d (sp=%d)\n", ip, target, sp);
+        if (debug) br = debug("[%04d] CALL %d (sp=%d)\n", ip, target, sp);
         if (sp >= 256)
          {
-          if (debug) debug("ERROR: Stack overflow!\n");
+          if (debug) br = debug("ERROR: Stack overflow!\n");
           sprintf (err, "Stack overflow");
           return false; // Stack overflow
          }
@@ -490,7 +492,7 @@ bool script::execute ()
          {
           if (sp >= 256)
            {
-            if (debug) debug("ERROR: Stack overflow!\n");
+            if (debug) br = debug("ERROR: Stack overflow!\n");
             sprintf (err, "Stack overflow");
             return false;
            }
@@ -506,12 +508,12 @@ bool script::execute ()
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_nz = !is_zero (last_result);
-        if (debug) debug("[%04d] CALLNZ %d (condition=%s, sp=%d)\n", ip, target, is_nz ? "true" : "false", sp);
+        if (debug) br = debug("[%04d] CALLNZ %d (condition=%s, sp=%d)\n", ip, target, is_nz ? "true" : "false", sp);
         if (is_nz)
          {
           if (sp >= 256)
            {
-            if (debug) debug("ERROR: Stack overflow!\n");
+            if (debug) br = debug("ERROR: Stack overflow!\n");
             sprintf (err, "Stack overflow");
             return false;
            }
@@ -524,19 +526,19 @@ bool script::execute ()
        break;
 
       default:
-       if (debug) debug("[%04d] ERROR: Unknown opcode %d\n", ip, opcode);
+       if (debug) br = debug("[%04d] ERROR: Unknown opcode %d\n", ip, opcode);
        return false;
       }
     }
    else
     {
      // Evaluate expression
-     if (debug) debug("[%04d] EVAL: %s\n", ip, line);
+     if (debug) br = debug("[%04d] EVAL: %s\n", ip, line);
      
      double result = child->evaluate (line);
      if (child->error ()[0] && child->errt () == teSyntax)
       {
-       if (debug) debug ("Evaluation error: %s\n", child->error ());
+       if (debug) br = debug ("Evaluation error: %s\n", child->error ());
        sprintf (err, "%s", child->error ());
        return false;
       }
@@ -550,22 +552,22 @@ bool script::execute ()
        switch (last_result.tag)
         {
         case tvINT:
-         debug("       Result: %lld (int)\n", last_result.ival);
+         br = debug("       Result: %lld (int)\n", last_result.ival);
          break;
         case tvFLOAT:
-         debug("       Result: %.15g (float)\n", (double)last_result.fval);
+         br = debug("       Result: %.15g (float)\n", (double)last_result.fval);
          break;
         case tvCOMPLEX:
-         debug("       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval, (double)last_result.imval);
+         br = debug("       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval, (double)last_result.imval);
          break;
         case tvSTR:
-         debug("       Result: \"%s\" (string)\n", child->get_str_res ());
+         br = debug("       Result: \"%s\" (string)\n", child->get_str_res ());
          break;
         case tvMATRIX:
-         debug("       Result: %d x %d matrix\n", child->get_mx_res ().rows, child->get_mx_res ().cols);
+         br = debug("       Result: %d x %d matrix\n", child->get_mx_res ().rows, child->get_mx_res ().cols);
          break;
         default:
-         debug("       Result: (other type %d)\n", last_result.tag);
+         br = debug("       Result: (other type %d)\n", last_result.tag);
          break;
         }
       }

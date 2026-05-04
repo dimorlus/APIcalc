@@ -138,11 +138,10 @@
 
  int calculator::dataf(char* fname, char* sfmt, int args, value* v_stack)
  {
-  int nr;
-  char str[STRBUF];
-  double vals[10];
+  int nr = 0;
+  char str[2048];
    
-  if (sfmt && sfmt[0]) nr = fs.readstring(fname, str, STRBUF);
+  if (sfmt && sfmt[0]) nr = fs.readstring(fname, str, 2048);
   else
    {
     nr = fs.readstring (fname, str, 0); // Reset file pointer if no format provided
@@ -150,31 +149,56 @@
    }
   if (str[0] == '\0') return da_FileErr; // Error reading file
   if (nr == -1) return da_FileErr; // Error reading file
+
+  return datas (str, sfmt, args, v_stack);
+ }
+
+ int calculator::datas (char *str, char *sfmt, int args, value *v_stack)
+ {
+  int ns = 0;
+  double vals[10];
   int mn = scanmasknum (sfmt);
-  if (mn != args) return da_ArgNum; // Format does not match number of arguments
 
-  int ns = strscan (str, sfmt, args, &vals[0], &vals[1], &vals[2], &vals[3], &vals[4], 
-                                     &vals[5], &vals[6], &vals[7], &vals[8], &vals[9]);
-
-  for (int n = 0; n < ns; n++)
+ if (str[0] == '\0') return da_NoData; 
+ if (args == 1 && v_stack[0].tag == tvMATRIX && v_stack[0].var
+      && (v_stack[0].var->val.tag == tvMATRIX))
    {
-    if ((v_stack[n].tag == tvERR || v_stack[n].tag == tvFLOAT) &&
-        (v_stack[n].var && 
-         (v_stack[n].var->val.tag  == tvERR ||
-         v_stack[n].var->val.tag  == tvFLOAT)))
+    int msize = v_stack[0].mrows * v_stack[0].mcols;
+    if (mn > msize) return da_ArgNum; // Format does not match matrix size
+    ns = strscan (str, sfmt, mn, &vals[0], &vals[1], &vals[2], &vals[3], &vals[4], &vals[5],
+                  &vals[6], &vals[7], &vals[8], &vals[9]);
+    for (int n = 0; n < ns; n++)
      {
-      v_stack[n].tag  = tvFLOAT;
-      v_stack[n].fval = (float__t)vals[n];
-      v_stack[n].ival = (int_t)vals[n];
-      if (v_stack[n].var)
-       {
-        v_stack[n].var->val.tag  = tvFLOAT;
-        v_stack[n].var->val.fval = (float__t)vals[n];
-        v_stack[n].var->val.ival = (int_t)vals[n];
-       }
+      if (v_stack[0].mval) v_stack[0].mval[n] = (float__t)vals[n];
+      else return da_ArgType - v_stack[0].pos; // Argument type mismatch
      }
-    else return da_ArgType - v_stack[n].pos; // Argument type mismatch
    }
- 
+  else
+   {
+    if (mn != args) return da_ArgNum; // Format does not match number of arguments
+
+    ns = strscan (str, sfmt, args, &vals[0], &vals[1], &vals[2], &vals[3], &vals[4], &vals[5],
+                  &vals[6], &vals[7], &vals[8], &vals[9]);
+
+    for (int n = 0; n < ns; n++)
+     {
+      if ((v_stack[n].tag == tvERR || v_stack[n].tag == tvFLOAT)
+          && (v_stack[n].var
+          && (v_stack[n].var->val.tag == tvERR || v_stack[n].var->val.tag == tvFLOAT)))
+       {
+        v_stack[n].tag  = tvFLOAT;
+        v_stack[n].fval = (float__t)vals[n];
+        v_stack[n].ival = (int_t)vals[n];
+        if (v_stack[n].var)
+         {
+          v_stack[n].var->val.tag  = tvFLOAT;
+          v_stack[n].var->val.fval = (float__t)vals[n];
+          v_stack[n].var->val.ival = (int_t)vals[n];
+         }
+       }
+      else return da_ArgType - v_stack[n].pos; // Argument type mismatch
+     }
+   }
   return ns;
+
  }

@@ -766,7 +766,7 @@ if (GetModuleFileNameA (nullptr, exePath, MAX_PATH))
         if (!hasContent) continue;
 
         // Evaluate line
-        double result = m_pCalculator->evaluate (line);
+        double result = m_pCalculator->evaluate (line); // load consts.txt
         if (isnan (result))
          {
           // Error
@@ -836,6 +836,14 @@ void WinApiCalc::OnCreate ()
  int lineNum      = 0;
  LoadConts (errMsg, lineNum , "consts.txt");
  LoadConts (errMsg, lineNum, "user.txt");
+
+ int_t opt = m_pCalculator->issyntax ();
+ if (opt != m_options)
+  {
+   m_options = opt; // Update options if changed by expression
+   UpdateMenuChecks ();
+  }
+
 
  // Get internal Edit control from ComboBox
  COMBOBOXINFO cbi = { sizeof (COMBOBOXINFO) };
@@ -1245,6 +1253,12 @@ void WinApiCalc::OnEnterPressed ()
 
      m_pCalculator->evaluate (exprBuf); //OnEnterPressed
 
+     int_t opt = m_pCalculator->issyntax ();
+     if (opt != m_options)
+      {
+       m_options = opt; // Update options if changed by expression
+       UpdateMenuChecks ();
+      }
      // Check for errors
      char *error = m_pCalculator->error ();
      if (error && strlen (error) > 0)
@@ -1269,7 +1283,7 @@ void WinApiCalc::OnEnterPressed ()
       }
      else
       {
-       char resultStr[256];
+       char resultStr[2048];
        m_pCalculator->printres (resultStr);
        // Put result in expression field
        SetWindowTextA (m_hExpressionEdit, resultStr);
@@ -1311,8 +1325,12 @@ void WinApiCalc::EvaluateExpression (bool block)
 
    m_pCalculator->evaluate (exprBuf); //EvaluateExpression
 
-   // Get syntax flags from calculator
-   uint64_t scfg = m_pCalculator->issyntax ();
+   int_t opt = m_pCalculator->issyntax ();
+   if (opt != m_options)
+    {
+     m_options = opt; // Update options if changed by expression
+     UpdateMenuChecks ();
+    }
 
    char printBuf[2048];
    int lineCount = 0;
@@ -2445,12 +2463,20 @@ void WinApiCalc::LoadSettings ()
    DWORD dwOptions = (FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT
                       + DEG + STR + ALL + MNU + FRC + FRI);
    DWORD dwSize    = sizeof (dwOptions);
+   DWORD dwOptionsH = 0;
    dwOptions       = 0x0bcf7f37; // Default options if not found
    if (RegQueryValueExA (hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize)
        == ERROR_SUCCESS)
     {
      m_options = dwOptions;
     }
+
+   if (RegQueryValueExA (hKey, "OptionsH", nullptr, nullptr, (LPBYTE)&dwOptionsH, &dwSize)
+       == ERROR_SUCCESS)
+    {
+     m_options = (static_cast<uint64_t>(dwOptionsH) << 32) | dwOptions;
+    }
+
 
    DWORD dwBinWidth = 32;
    dwSize           = sizeof (dwBinWidth);
@@ -2512,7 +2538,11 @@ void WinApiCalc::SaveSettings ()
                       &hKey, nullptr)
      == ERROR_SUCCESS)
   {
-   RegSetValueExA (hKey, "Options", 0, REG_DWORD, (LPBYTE)&m_options, sizeof (m_options));
+   uint32_t optionsLow = m_options & 0xffffffff; // Save only the lower 32 bits of options
+   uint32_t optionsHigh = (m_options >> 32) & 0xffffffff; // Save the upper 32 bits of options
+
+   RegSetValueExA (hKey, "Options", 0, REG_DWORD, (LPBYTE)&optionsLow, sizeof (optionsLow));
+   RegSetValueExA (hKey, "OptionsH", 0, REG_DWORD, (LPBYTE)&optionsHigh, sizeof (optionsHigh));
    RegSetValueExA (hKey, "BinaryWidth", 0, REG_DWORD, (LPBYTE)&m_binWidth, sizeof (m_binWidth));
    RegSetValueExA (hKey, "FontSize", 0, REG_DWORD, (LPBYTE)&m_fontSize, sizeof (m_fontSize));
    RegSetValueExA (hKey, "Opacity", 0, REG_DWORD, (LPBYTE)&m_opacity, sizeof (m_opacity));

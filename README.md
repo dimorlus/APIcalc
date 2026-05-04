@@ -52,7 +52,7 @@ Command-line calculator for scripts, automation, and terminal use.
 * **Multiple Output Formats**: Display results in decimal, hexadecimal, octal, binary, scientific notation, etc.
 * **Configurable Binary Width**: Choose binary display width from 8 to 64 bits
 * **Variables Dialog**: View and manage calculation variables
-* **Customizable Options**: Case sensitivity, forced float mode, ESC minimization, opacity control
+* **Customizable [Options](options.md)**: Case sensitivity, forced float mode, ESC minimization, opacity control
 * **Implicit Multiplication**: Optionally omit multiplication operator in common cases
 * **User-Defined Functions**: Define and nest custom functions (up to 10 levels deep)
 * **Custom Constants File**: Load user-defined constants and functions from `consts.txt` and `user.txt`

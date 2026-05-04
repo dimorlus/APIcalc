@@ -76,6 +76,8 @@ class bmpdraw
  public:
  int width;
  int height;
+ int top;
+ int left;
  uint8_t *data;
  int rowSize; // Size of the row with alignment
 

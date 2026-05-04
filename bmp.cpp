@@ -131,6 +131,8 @@ bmpdraw::bmpdraw (void)
 {
  width   = 0;
  height  = 0;
+ top     = 0;
+ left    = 0;
  rowSize = 0;
  data    = nullptr;
  curX    = 0;

@@ -47,6 +47,11 @@ private:
     bool m_suppressInteractive; // Flag to suppress interactive features (like color popup) during startup
     bool m_isWine;          // Flag indicating if running under Wine
     
+    int m_lastImageWindowX;
+    int m_lastImageWindowY;
+    bool m_hasImageWindowPos;
+
+
     std::vector<std::string> m_history;
     std::string m_currentExpression;
 
@@ -189,4 +194,7 @@ public:
     bool ShowImageWindowFromBMP (void *bmpObject);
     // Method to check if we should block evaluation:
     bool ShouldBlockEvaluation ();
+
+    void SetLastImageWindowPos (LONG x, LONG y);
+    void GetLastImageWindowPos (LONG &x, LONG &y, bool &hasPos);
 };

@@ -167,7 +167,8 @@ WinApiCalc::WinApiCalc ()
       m_originalComboBoxProc (nullptr), m_isUpdatingHistory (false),
       m_suppressInteractive (true) // Default to suppressed until InitInstance finishes
       ,
-      m_isWine (false), m_pendingColor (0), m_hasPendingColor (false), m_isColorWindowOpen (false)
+      m_isWine (false), m_pendingColor (0), m_hasPendingColor (false), m_isColorWindowOpen (false),
+      m_lastImageWindowX (0), m_lastImageWindowY (0), m_hasImageWindowPos (false)
 {
 #ifdef _DEBUG_MEMORY_
 // _CrtMemCheckpoint (&s1);
@@ -3410,6 +3411,20 @@ LRESULT CALLBACK WinApiCalc::ColorWndProc (HWND hWnd, UINT message, WPARAM wPara
  return 0;
 }
 
+void WinApiCalc::SetLastImageWindowPos (LONG x, LONG y)
+{
+ m_lastImageWindowX  = x;
+ m_lastImageWindowY  = y;
+ m_hasImageWindowPos = true;
+}
+
+void WinApiCalc::GetLastImageWindowPos (LONG &x, LONG &y, bool &hasPos)
+{
+ x      = m_lastImageWindowX;
+ y      = m_lastImageWindowY;
+ hasPos = m_hasImageWindowPos;
+}
+
 // Window proc для окна с изображением
 LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -3452,8 +3467,23 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
    }
    break;
 
+  case WM_DESTROY:
+   {
+    // Сохраняем позицию окна перед закрытием
+    RECT rc;
+    if (GetWindowRect (hWnd, &rc) && g_pCalcInstance)
+     {
+      g_pCalcInstance->SetLastImageWindowPos (rc.left, rc.top);
+     }
+
+    HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
+    if (hBitmap) DeleteObject (hBitmap);
+   }
+   break;
+
   case WM_CLOSE:
    {
+    // WM_CLOSE приведёт к WM_DESTROY, где позиция будет сохранена
     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
     if (hBitmap) DeleteObject (hBitmap);
     DestroyWindow (hWnd);
@@ -3475,6 +3505,9 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 
  int width  = bmp->width;
  int height = bmp->height;
+ int top    = bmp->top;
+ int left   = bmp->left;
+
 
  const char *pClassName = "WinApiCalcImageWindow";
 
@@ -3530,18 +3563,39 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
     }
   }
 
- // --- Создание окна ---
+ // --- Создание окна plot (на 10 px ниже и правее окна калькулятора),  ---
+ // с учётом размера клиентской области,
+ // чтобы изображение не обрезалось рамкой и заголовком окна-- -
+ // Можно добавить положение в ксласс bmp для управления его положением.
+
+ // Используем сохранённую позицию, если она есть
  RECT rc;
- if (GetWindowRect (m_hWnd, &rc))
+
+ if (top + left == 0)
   {
-   rc.left += 10;
-   rc.top += 10;
+   bool hasPos;
+   GetLastImageWindowPos (rc.left, rc.top, hasPos);
+
+   if (!hasPos)
+    {
+     // Если позиции нет, используем позицию относительно главного окна
+     if (GetWindowRect (m_hWnd, &rc))
+      {
+       rc.left += 10;
+       rc.top += 10;
+      }
+     else
+      {
+       rc.left = 100;
+       rc.top  = 100;
+      }
+    }
   }
  else
-  {
-   rc.left = 100;
-   rc.top  = 100;
-  }
+ {
+  rc.left = left;
+  rc.top  = top;
+ }
 
  RECT clientRect = { 0, 0, width, height };
  DWORD dwStyle   = WS_POPUP | WS_VISIBLE | WS_BORDER | WS_CAPTION | WS_SYSMENU;

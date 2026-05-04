@@ -853,6 +853,8 @@ class calculator // calculator represents the main class for the expression calc
     bool log_y;          // logarithmic Y axis
     int width;           // Image width
     int height;          // Image height
+    int top;
+    int left;
     int padding;         // Padding
     bool dot;            // dot or line plotting.   
     uint32_t pxsize;     // pixel size

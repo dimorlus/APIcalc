@@ -396,6 +396,12 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    params.height = getivar ("plot_height");
    if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
 
+   params.top = getivar ("plot_top");
+   if (params.top < 0 || params.top > 2000) params.top = 0;
+
+   params.left = getivar ("plot_left");
+   if (params.left < 0 || params.left > 2000) params.left = 0;
+
    params.pxsize = getivar ("plot_dotsz");
    if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
 
@@ -2288,6 +2294,9 @@ bool calculator::Plot (const char *expr, v_func fidx)
      return false;
     }
   }
+
+ bmp->top = params.top;
+ bmp->left = params.left;
 
  // 3. Draw plot (Cartesian or Polar coordinates)
  bool plot_success;

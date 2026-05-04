@@ -720,6 +720,8 @@ void calculator::AddPredefined (void)
  addsvar ("path", ""); // Add a string variable to hold the file path for file operations)
  addivar ("plot_width", 800); // Default plot width in pixels)
  addivar ("plot_height", 600); // Default plot height in pixels)
+ addivar ("plot_top", 0); // Default plot top position in pixels)
+ addivar ("plot_left", 0); // Default plot left position in pixels)
  addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
  addivar ("plot_fgc", 0x00000000); // Default plot foreground color (black)
 }

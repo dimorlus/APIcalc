@@ -201,6 +201,8 @@ invnorm("fname","msk", p)       Inverse Normal: find x such that P(X <= x) = p.
 ```
 prnf("file", "fmt", ...)        Print line to file.
 dataf("file","msk",...)         Read data from file.
+prn("fmt",...)                  Format print to string.
+datas("str","msk",...)          Extract data from string.
 
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
@@ -253,6 +255,10 @@ menu(0)                         Hide (0) or show (1) menu.
 vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
+opt(n)                          Set calculator options.
+opton(n)                        On calculator options.
+optoff(n)                       Off calculator options.
+
 ```
 
 ### User defined functions:

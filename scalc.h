@@ -63,7 +63,7 @@
 #define FCTR (1ULL << 30) // (UI) Factorization output
 #define SNAN (1ULL << 31) // (RO) Silent NaN
 #define DBG  (1ULL << 32) // (WO) Debug mode (prints internal details) (CLI only)
-
+#define NBLK (1ULL << 33) // (WO) No block operators (GUI only)
 
 #define STRBUF 256 // bufer size for string operations
 #define MAXOP  64  // maximum length of operator or function name
@@ -1164,7 +1164,7 @@ class calculator // calculator represents the main class for the expression calc
   return res;
  };
 
- inline bool block () { return blockflag; };  // Placeholder for block checking, can be implemented as needed
+ inline bool block () { return (scfg & NBLK)?false:blockflag; };  // Block GUI
  ~calculator (void); // Destructor to clean up resources
 };
 

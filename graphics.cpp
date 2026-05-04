@@ -295,6 +295,20 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   break;
   }
 
+ params.bgc = getivar ("plot_bgc");
+ params.fgc = getivar ("plot_fgc");
+ params.width = getivar ("plot_width");
+ if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
+ params.height = getivar ("plot_height");
+ if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
+ params.top = getivar ("plot_top");
+ if (params.top < 0 || params.top > 2000) params.top = 0;
+ params.left = getivar ("plot_left");
+ if (params.left < 0 || params.left > 2000) params.left = 0;
+ params.pxsize = getivar ("plot_dotsz");
+ if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
+
+
  if (fidx < pl_plotdata)
   {
    // Evaluate from/to parameters
@@ -389,26 +403,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    params.vto     = vto;
    params.ymin    = fvx;
    params.ymax    = fvx;
-
-   params.width = getivar ("plot_width");
-   if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
-
-   params.height = getivar ("plot_height");
-   if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
-
-   params.top = getivar ("plot_top");
-   if (params.top < 0 || params.top > 2000) params.top = 0;
-
-   params.left = getivar ("plot_left");
-   if (params.left < 0 || params.left > 2000) params.left = 0;
-
-   params.pxsize = getivar ("plot_dotsz");
-   if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
-
    params.dot = false;
-
-   params.bgc     = getivar ("plot_bgc");
-   params.fgc     = getivar ("plot_fgc");
    params.padding = 40;
 
    params.grid_color = 0xC0C0C0;
@@ -458,21 +453,8 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    params.ymin    = 0;
    params.ymax    = 0;
 
-   params.width = getivar ("plot_width");
-   if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
-
-   params.height = getivar ("plot_height");
-   if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
-
-   params.pxsize = getivar ("plot_dotsz");
-   if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
-
    params.dot = (fidx == pl_plotdata || fidx == pl_fplotdata || fidx == pl_oplotdata);
-
-   params.bgc     = getivar ("plot_bgc");
-   params.fgc     = getivar ("plot_fgc");
    params.padding = 40;
-
    params.grid_color = 0xC0C0C0;
    params.axis_color = 0x808080;
    params.text_color = ~params.bgc;

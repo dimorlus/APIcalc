@@ -58,4 +58,5 @@ AUTO 	 :=	(1 << 29) ;; (UI) Auto output format
 FCTR 	 :=	(1 << 30) ;; (UI) Factorization output
 SNAN 	 :=	(1 << 31) ;; (RO) Silent NaN
 DBG  	 :=	(1 << 32) ;; (WO) Debug mode (prints internal details) (CLI only)
+NBLK 	 := (1 << 33) ;; (WO) No block operators (GUI only)
 ```

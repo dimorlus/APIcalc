@@ -2,6 +2,9 @@
 + The position of a graph on the screen can now be specified using the plot_top and plot_left variables 
   (in pixels). If they are not set (set to zero), the graph is drawn next to the calculator's upper-left 
   corner. If the calculator is moved, the next graph is drawn in the same location.
++ Added option NBLK :=(1 << 33) ;; (WO) No block operators (GUI only), which disables recalculation 
+  blocking when changing the input line when functions interacting with the GUI (fdlg, plot) appear in it.  
+	opton(1<<33) ;; No block operators
 
 03.05.26 (2.193)
 + Added opt(n), opton(n), and optoff(n) functions that set, enable, and disable the option specified by 

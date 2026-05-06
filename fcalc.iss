@@ -39,7 +39,13 @@ Source: ".\fcalc.chm"; DestDir: "{app}"; Components: program; Flags: ignoreversi
 Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\help.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
-Source: ".\README.pdf"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\README.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\help.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\matrix.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\options.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\plot.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\plotdata.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\scripts.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 ; Visual C++ Redistributables

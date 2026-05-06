@@ -2,4 +2,9 @@
 ;; It contains declarations of user-defined constants and functions and is loaded during 
 ;; calculator startup. This file can be freely edited to add new constants and functions 
 ;; or remove existing ones. It not change when a new version is installed.
+path:="%userprofile%\Documents"
+plot_top := 10; plot_left := 10
+plot_width := 1024; plot_height := 768
+plot_bgc:=0; plot_fgc:=trgb(2700) 
+
 

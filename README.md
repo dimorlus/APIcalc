@@ -243,6 +243,7 @@ dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
 ```
 A:=zeros(3,3); datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A->[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
 datas("1.5k: 2.2n","01",x, y);prn("%S; %S", x, y) → '1.5k; 2.2n'
+s:="s";datas("string","0",s) → 'string'
 ```
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using 
 the `` degrees`minutes'seconds" `` format:

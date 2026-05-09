@@ -416,7 +416,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
  tsPLOT,     // 32  plot operator for plotting data (plot)
  tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
- tsRUN,    // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
+ tsRUN,      // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
  tsNUM       // 37  Total number of symbol types, must be the last in the list
@@ -625,6 +625,9 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  ccOpt,     // Set the calculator's options (e.g., output format, angle mode, etc.)
  ccOptOn,   // Set specific options (e.g., enable/disable features) without affecting other options
  ccOptOff,  // Clear specific options without affecting other options
+
+ scRun,    // Run a script file containing calculator commands
+ scEval,   // Evaluate an expression from a string
 
  vf_num
 };
@@ -1073,7 +1076,7 @@ class calculator // calculator represents the main class for the expression calc
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
 
 
- bool Run (const char *expr, value &res); // Run a script or expression and store the result in res
+ bool Run (const char *expr, v_func fidx, value &res); // Run a script or expression and store the result in res
                                           // return the result in res
  int dataf (char *fname, char *sfmt, int args, value *v_stack);
  int datas (char *str, char *sfmt, int args, value *v_stack);

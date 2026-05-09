@@ -600,32 +600,20 @@ uint16_t script::find_label (const char *lbl)
  return 0xFFFF; // Not found
 }
 
-bool calculator::Run (const char *expr, value &res) // Run a script or expression and store the result in res
+bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script or expression and store the result in res
 {                                 // return the result in res
- char filename[STRBUF];
+ char filename[2048];
  char *buffer = nullptr;
+ script *sct  = nullptr;
  res.tag      = tvERR;
  res.ival     = 0;
  res.fval     = qnan;
+ bool success = true;
 
  if (!expr || !*expr)
   {
    error (pos, "Empty script name");
    return false; // empty script name
-  }
-
- script *sct = new script ();
- if (!sct)
-  {
-   error (pos, "Out of memory");
-   return false; // failed to create script object
-  }
-
- NormalizePath (expr, filename, STRBUF);
- if (!sct->load (filename))
-  {
-   errorf (pos, "Failed to load script: %s", filename);
-   return false; // failed to load script
   }
 
  calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
@@ -635,12 +623,41 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
    return false;
   }
 
- child->setEscFn (EscFn);
- sct->setEscFn (EscFn);
- sct->set_debug_callback (debugFn);
- sct->set_calculator (child);
+ if (fidx == scRun)
+  {
+   sct = new script ();
+   if (!sct)
+    {
+     error (pos, "Out of memory");
+     return false; // failed to create script object
+    }
 
- bool success = sct->execute ();
+   NormalizePath (expr, filename, STRBUF);
+   if (!sct->load (filename))
+    {
+     errorf (pos, "Failed to load script: %s", filename);
+     return false; // failed to load script
+    }
+
+   child->setEscFn (EscFn);
+   sct->setEscFn (EscFn);
+   sct->set_debug_callback (debugFn);
+   sct->set_calculator (child);
+
+   success = sct->execute ();
+  }
+ else if (fidx == scEval)
+  {
+   strncpy (filename, expr, sizeof(filename) - 1);
+   filename[sizeof(filename) - 1] = '\0';
+   child->evaluate (filename);
+  }
+ else
+  {
+   error (pos, "Invalid function index");
+   delete child;
+   return false; // invalid function index
+  }
 
  strcpy (err, child->error ());
  res.tag = child->get_res_tag ();
@@ -655,11 +672,11 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
 
  if (child->get_res_tag () == tvMATRIX)
   {
-   mxresult_t mxr                   = child->get_mx_res ();
-   res.tag                          = tvMATRIX;
-   res.mcols                        = mxr.cols;
-   res.mrows                         = mxr.rows;
-   int msize                        = mxr.rows * mxr.cols * sizeof (float__t);
+   mxresult_t mxr = child->get_mx_res ();
+   res.tag = tvMATRIX;
+   res.mcols = mxr.cols;
+   res.mrows = mxr.rows;
+   int msize = mxr.rows * mxr.cols * sizeof (float__t);
    if (msize)
     {
      float__t *new_mval = (float__t *)sf_alloc (msize);
@@ -683,6 +700,6 @@ bool calculator::Run (const char *expr, value &res) // Run a script or expressio
  fflags |= child->isfflags ();
 
  delete child;
- delete sct;
+ if (fidx == scRun && sct) delete sct;
  return success;
 }

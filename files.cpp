@@ -159,7 +159,17 @@
   double vals[10];
   int mn = scanmasknum (sfmt);
 
- if (str[0] == '\0') return da_NoData; 
+ if (str[0] == '\0') return da_NoData;
+
+ if (args == 1 && v_stack[0].tag == tvSTR && v_stack[0].var
+     && (v_stack[0].var->val.tag == tvSTR))
+  {
+   if (mn != 1) return da_ArgNum; // Format does not match number of arguments
+   sf_free (v_stack[0].var->val.sval);
+   v_stack[0].var->val.sval = dupString (str);
+   v_stack[0].sval = v_stack[0].var->val.sval;
+  }
+ else
  if (args == 1 && v_stack[0].tag == tvMATRIX && v_stack[0].var
       && (v_stack[0].var->val.tag == tvMATRIX))
    {

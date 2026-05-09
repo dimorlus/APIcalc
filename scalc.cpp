@@ -294,7 +294,8 @@ void calculator::AddPredefined (void)
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
  add (tsIF, "if", nullptr);
- add (tsRUN, "run", nullptr, true);
+ add (tsRUN, scRun, "run", nullptr, true);
+ add (tsRUN, scEval, "eval", nullptr, true);
  add (tsDATAF, dfDataf, "dataf", nullptr);
  add (tsDATAF, dfDatas, "datas", nullptr);
  add (tsERROR, "error", nullptr);
@@ -3405,8 +3406,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (!CheckOperand (n_args, MSK_STR))
                return result_fval = qnan; // file mask (1st argument should be string)
               char *filename = v_stack[v_sp - n_args].get_str ();
-              filename[STRBUF - 1] = '\0';
-              if (!Run(filename, v_stack[v_sp - n_args - 1]))
+              if (!Run (filename, sym->fidx, v_stack[v_sp - n_args - 1]))
                {
                 if (!err[0]) error (v_stack[v_sp - 1].pos, "Error run script");
                 return result_fval = qnan;

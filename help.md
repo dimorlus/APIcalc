@@ -126,6 +126,7 @@ polynom(M)                      Find roots of polynomial given coefficients in a
 
 fdlg(fmask)						Opens a file dialog to select a file.
 run("script.txt")               Run script.
+eval("expr")                    Evaluate string as expression.
 error("message")                Put message as error, stop script.
 
 ```

@@ -300,6 +300,7 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
 ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
 ```  
+
 ### [Plotting](plot.md)
 The engine provides three distinct operators for visualization:
 * **plot(expr,from,to,var)**: Plot of the expr function in Cartesian coordinates and show graph in the modal window. 
@@ -309,6 +310,7 @@ It initializes the background, draws the grid/axes based on the calculated range
 it will be overwritten.
 * **oplot("fname",expr,from,to,var)**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
 for comparing multiple functions on the same scale.
+
 #### Handling Special Values
 The engine is designed for robust engineering calculations:
 * **Division by Zero**: Handled gracefully. If an expression results in a singularity (like $$sin(x)/x$$ at $$x=0$$), 
@@ -317,11 +319,13 @@ the parser maintains stability and continues rendering.
 when real values are returned.
 * **Engineering Suffixes on Axes**: Labels automatically use standard notation (e.g., `m` for milli, `k` for kilo) to 
 keep the display concise.
+
 #### Complex Values & Continuity
 * **Real-only Rendering**: The `plot` operator automatically detects complex results. If the imaginary part exceeds a negligible 
 threshold ($$10^{-12}$$), the drawing "pen" is lifted.
 * **Automatic Resumption**: Plotting resumes with a `moveTo` command as soon as the expression returns to the real plane, ensuring 
 no false lines connect disconnected real branches (e.g., in $$ln(x)$$ or $$\sqrt{x}$$).
+
 #### Related variables
 * **plot_width**: Graph width (100..2000, default - 800) `plot_width:=1024`
 * **plot_height**: Graph width (100..2000, default - 600) `plot_height:=768`

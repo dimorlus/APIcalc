@@ -1,7 +1,7 @@
 09.05.26 (2.195)
 + Added function eval("expr") Evaluate string as expression. Return result of evaluation.
 	eval("2+2") -> 4
-+ Now the functions datas("str", "msk", ...) and dataа("fname", "msk", ...) can read a string (must be 
++ Now the functions datas("str", "msk", ...) and dataf("fname", "msk", ...) can read a string (must be 
   defined as a string before calling) from a string or file. The mask must be "0" (the entire string is 
   read into a string variable).	
 	s:="s";datas("string","0",s) -> 'string'

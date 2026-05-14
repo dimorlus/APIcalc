@@ -1,3 +1,6 @@
+14.05.26 (2.196)
+- Fixed bug with cos from complex argument.
+
 09.05.26 (2.195)
 + Added function eval("expr") Evaluate string as expression. Return result of evaluation.
 	eval("2+2") -> 4

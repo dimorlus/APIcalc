@@ -3300,7 +3300,7 @@ void vfunc (value *res, value *arg, int idx)
      {
       CosC (re, im, out_re, out_im);
      }
-     return;
+     break;
     case vf_tan:
      {
       TanC (re, im, out_re, out_im);

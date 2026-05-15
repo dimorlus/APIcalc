@@ -3258,13 +3258,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                v_stack[v_sp - 2].tag  = tvFLOAT;
                v_sp -= 1;
               }
-              break;
+             break;
 
-            case tsIFUNCF1: // int f(float x) (wrgb() function)
+             case tsIFUNCF1: // int f(float x) (wrgb() function)
               {
                const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                v_stack[v_sp - 2].ival = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
+               v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 2].ival;
                v_stack[v_sp - 2].tag = tvINT;
                v_sp -= 1;
               }

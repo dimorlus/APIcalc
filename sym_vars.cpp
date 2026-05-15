@@ -241,10 +241,15 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
            written = snprintf (cp, bsize - (cp - buf), "%-10s = %s\r\n", sp->name, mstr);
 
           }
+         else if (sp->val.tag == tvINT)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %lld\r\n", sp->name,
+                               (long long)sp->val.ival);
+          }
          else
           {
            written = snprintf (cp, bsize - (cp - buf), "%-10s = %-.5g\r\n", sp->name,
-                               (double)sp->val.fval);
+                               (double)sp->val.get());
           }
          if (written > localMax) localMax = written;
          cp += written;

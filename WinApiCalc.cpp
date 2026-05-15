@@ -78,14 +78,14 @@ static HWND g_hVariablesEdit = nullptr;
 
 // Forward declarations for pseudo-functions
 static BOOL CALLBACK FindHtmlServerProc (HWND hwnd, LPARAM lParam); // CHM content pane finder
-static int MenuFunction (int x);
-static int HelpFunction (int x);
-static int OpacityFunction (int x);
-static int BinwideFunction (int x);
-static int HomeFunction (int x);
-static int FontFunction (int x);
-static int VarsFunction (int x);
-static int ColorFunction (int x);
+static int_t MenuFunction (int_t x);
+static int_t HelpFunction (int_t x);
+static int_t OpacityFunction (int_t x);
+static int_t BinwideFunction (int_t x);
+static int_t HomeFunction (int_t x);
+static int_t FontFunction (int_t x);
+static int_t VarsFunction (int_t x);
+static int_t ColorFunction (int_t x);
 
 int EscFn ()
 {
@@ -2990,7 +2990,7 @@ void WinApiCalc::SetFontSize (int size)
 }
 
 // Pseudo-functions implementation - static C-functions
-static int MenuFunction (int x)
+static int_t MenuFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady () || !g_pCalcInstance->GetWindowMenu ())
@@ -3015,7 +3015,7 @@ static int MenuFunction (int x)
  return x;
 }
 
-static int HelpFunction (int x)
+static int_t HelpFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady ())
@@ -3027,7 +3027,7 @@ static int HelpFunction (int x)
  return x;
 }
 
-static int OpacityFunction (int x)
+static int_t OpacityFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady ())
@@ -3048,7 +3048,7 @@ static int OpacityFunction (int x)
  return x;
 }
 
-static int BinwideFunction (int x)
+static int_t BinwideFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady ())
@@ -3065,7 +3065,7 @@ static int BinwideFunction (int x)
  return x;
 }
 
-static int HomeFunction (int x)
+static int_t HomeFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady () || !g_pCalcInstance->GetWindow ())
@@ -3078,7 +3078,7 @@ static int HomeFunction (int x)
  return x;
 }
 
-static int FontFunction (int x)
+static int_t FontFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady ())
@@ -3098,7 +3098,7 @@ static int FontFunction (int x)
  return x;
 }
 
-static int VarsFunction (int x)
+static int_t VarsFunction (int_t x)
 {
  // Safety check: ensure UI is fully initialized
  if (!g_pCalcInstance || !g_pCalcInstance->IsUIReady () || !g_pCalcInstance->GetCalculator ())
@@ -3196,7 +3196,7 @@ int WinApiCalc::MeasureTextHeightForWidth (const std::string &text, int width)
  return height + ScaleDPI (2);
 }
 
-static int ColorFunction (int x)
+static int_t ColorFunction (int_t x)
 {
  if (g_pCalcInstance && !g_pCalcInstance->IsInteractiveSuppressed ())
   {

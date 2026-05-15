@@ -236,15 +236,15 @@ an existing file or creates a new one.
 next line from the file, extracts data from it using the mask, places it in the passed variable list, and returns 
 the number of values read. A call with an empty mask closes the file; the next call with a mask  will start reading 
 from the beginning. When the entire file has been read, it closes and returns 0.
-```
-dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
-```
+  ```
+  dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
+  ```
 * **datas("str", "msk", ...)**: Extract data from string.
-```
-A:=zeros(3,3); datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A->[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
-datas("1.5k: 2.2n","01",x, y);prn("%S; %S", x, y) → '1.5k; 2.2n'
-s:="s";datas("string","0",s) → 'string'
-```
+  ```
+  A:=zeros(3,3); datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A->[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
+  datas("1.5k: 2.2n","01",x, y);prn("%S; %S", x, y) → '1.5k; 2.2n'
+  s:="s";datas("string","0",s) → 'string'
+  ```
 * **polar(m, a)**: Construct a complex number from magnitude and angle in radians, or in degrees using 
 the `` degrees`minutes'seconds" `` format:
   ```
@@ -279,9 +279,9 @@ The last variable in the initial conditions is the one being solved for:
   diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
   ```
 * **extremum/extr(expr, est, x)**: Find extremum using Golden Section Search (derivative-free):
-```
-	extr(x^(1/x),2,x) → 2.718281828459045 ;; e
-```	
+  ```
+  extr(x^(1/x),2,x) → 2.718281828459045 ;; e
+  ```	
 * **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
@@ -301,9 +301,9 @@ to constant: <br>$$[a_n, a_{n-1}, \dots, a_1, a_0]$$ for polynomial: $$a_nx^{n} 
 Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). Supports polynomials up to degree 4 having an analytical 
 solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
    The quadratic equation: $$x^2 + 2x + 3 = 0$$. Roots: $$-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$$.
-```
+  ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
-```  
+  ```  
 
 ### [Plotting](plot.md)
 The engine provides three distinct operators for visualization:

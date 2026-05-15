@@ -807,4 +807,340 @@ float__t calculator::Diff (const char *expr)
     }
   return result_fval = qnan; 
 }
+
+// Find extremum using Golden Section Search (derivative-free)
+// extr(expr(x), initial, x) -> extr(x^(1/x), 2, x)
+float__t calculator::Extremum (const char *expr)
+{
+ if (!expr || !*expr)
+  {
+   errorf (pos, "empty expression");
+   return result_fval = qnan;
+  }
+
+ char sexpr[STRBUF], svar[STRBUF], sinit[MAXOP];
+
+ if (!Split (expr, sexpr, STRBUF, sinit, MAXOP, svar, STRBUF, NULL, 0))
+  {
+   errorf (pos, "extremum: invalid expression");
+   return result_fval = qnan;
+  }
+
+ calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   return result_fval = qnan;
+  }
+
+ float__t x0 = child->evaluate_f (sinit);
+ if (isnan (x0) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+#ifdef _float128_
+ const float__t tol     = 1e-32Q;
+ const float__t phi_inv = 0.6180339887498948482045868343656Q;
+#else
+ const float__t tol     = 1e-15L;
+ const float__t phi_inv = 0.6180339887498948482045868343656L;
+#endif
+
+ // Helper: evaluate function
+ //float__t eval_at_x;
+ bool eval_ok;
+
+#define EVAL_F(xval, result)                                                                       \
+ do                                                                                                \
+  {                                                                                                \
+   eval_ok = true;                                                                                 \
+   child->addfvar (svar, xval);                                                                    \
+   result = child->evaluate_f (sexpr);                                                             \
+   if (isnan (result) && child->errt () != teMath)                                                 \
+    {                                                                                              \
+     if (child->err[0]) eval_ok = false;                                                           \
+    }                                                                                              \
+   if (isnan (result)) result = 0;                                                                 \
+  }                                                                                                \
+ while (0)
+
+ // Step 1: Initial bracket around x0
+ float__t step = (float__t)0.5;
+ float__t xa   = x0 - step;
+ float__t xb   = x0;
+ float__t xc   = x0 + step;
+
+ float__t fa, fb, fc;
+ EVAL_F (xa, fa);
+ if (!eval_ok)
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+ EVAL_F (xb, fb);
+ if (!eval_ok)
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+ EVAL_F (xc, fc);
+ if (!eval_ok)
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+ // Determine if seeking max or min
+ bool seeking_max = true;
+ if ((fb < fa && fb < fc)) seeking_max = false;
+
+ // Step 2: Expand bracket until we have proper containment
+ // For max: need fb > fa and fb > fc
+ // For min: need fb < fa and fb < fc
+ int i;
+ for (i = 0; i < 30; i++)
+  {
+   bool bracketed;
+   if (seeking_max)
+    bracketed = (fb > fa && fb > fc);
+   else
+    bracketed = (fb < fa && fb < fc);
+
+   if (bracketed) break;
+
+   // Move in direction of improvement
+   if (seeking_max)
+    {
+     // Move towards higher value
+     if (fa > fc)
+      {
+       // Shift right side to center, expand left
+       xc = xb;
+       fc = fb;
+       xb = xa;
+       fb = fa;
+       xa = xb - step;
+       EVAL_F (xa, fa);
+      }
+     else
+      {
+       // Shift left side to center, expand right
+       xa = xb;
+       fa = fb;
+       xb = xc;
+       fb = fc;
+       xc = xb + step;
+       EVAL_F (xc, fc);
+      }
+    }
+   else
+    {
+     // Move towards lower value
+     if (fa < fc)
+      {
+       xc = xb;
+       fc = fb;
+       xb = xa;
+       fb = fa;
+       xa = xb - step;
+       EVAL_F (xa, fa);
+      }
+     else
+      {
+       xa = xb;
+       fa = fb;
+       xb = xc;
+       fb = fc;
+       xc = xb + step;
+       EVAL_F (xc, fc);
+      }
+    }
+
+   if (!eval_ok)
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     return result_fval = qnan;
+    }
+
+   step *= (float__t)1.2;
+  }
+
+ // Now [xa, xc] brackets the extremum with xb inside
+ // Use Golden Section Search on [xa, xc]
+ float__t a = xa;
+ float__t b = xc;
+ float__t x1, x2, f1, f2;
+
+ // Initial golden points
+ x1 = b - (b - a) * phi_inv;
+ x2 = a + (b - a) * phi_inv;
+
+ EVAL_F (x1, f1);
+ if (!eval_ok)
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+ EVAL_F (x2, f2);
+ if (!eval_ok)
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+ // Golden section iterations
+ for (i = 0; i < 200; i++)
+  {
+   if (fabsl (b - a) < tol * ((float__t)1.0 + fabsl (a) + fabsl (b))) break;
+
+   bool condition = seeking_max ? (f1 > f2) : (f1 < f2);
+
+   if (condition)
+    {
+     // Narrow to [a, x2]
+     b  = x2;
+     x2 = x1;
+     f2 = f1;
+     x1 = b - (b - a) * phi_inv;
+     EVAL_F (x1, f1);
+    }
+   else
+    {
+     // Narrow to [x1, b]
+     a  = x1;
+     x1 = x2;
+     f1 = f2;
+     x2 = a + (b - a) * phi_inv;
+     EVAL_F (x2, f2);
+    }
+
+   if (!eval_ok)
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     return result_fval = qnan;
+    }
+  }
+
+ float__t x_result = (a + b) * (float__t)0.5;
+
+ // Step 4: Brent's parabolic interpolation polish
+ float__t x = x_result;
+ float__t w = x_result;
+ float__t v = x_result;
+ float__t fx, fw, fv;
+
+ EVAL_F (x, fx);
+ fw = fx;
+ fv = fx;
+
+ float__t d_brent = 0;
+ float__t e_brent = 0;
+
+ for (i = 0; i < 50; i++)
+  {
+   float__t xm   = (float__t)0.5 * (a + b);
+   float__t tol1 = tol * fabsl (x) + tol;
+   float__t tol2 = (float__t)2.0 * tol1;
+
+   if (fabsl (x - xm) <= tol2 - (float__t)0.5 * (b - a)) break;
+
+   bool do_golden = true;
+
+   if (fabsl (e_brent) > tol1)
+    {
+     // Try parabolic fit
+     float__t r = (x - w) * (fx - fv);
+     float__t q = (x - v) * (fx - fw);
+     float__t p = (x - v) * q - (x - w) * r;
+     q          = (float__t)2.0 * (q - r);
+
+     if (q > 0)
+      p = -p;
+     else
+      q = -q;
+
+     float__t e_tmp = e_brent;
+     e_brent        = d_brent;
+
+     if (fabsl (p) < fabsl ((float__t)0.5 * q * e_tmp) && p > q * (a - x) && p < q * (b - x))
+      {
+       d_brent    = p / q;
+       float__t u = x + d_brent;
+
+       if ((u - a) < tol2 || (b - u) < tol2) d_brent = (xm > x) ? tol1 : -tol1;
+
+       do_golden = false;
+      }
+    }
+
+   if (do_golden)
+    {
+     e_brent = (x >= xm) ? a - x : b - x;
+     d_brent = phi_inv * e_brent;
+    }
+
+   float__t u = x + ((fabsl (d_brent) >= tol1) ? d_brent : ((d_brent > 0) ? tol1 : -tol1));
+   float__t fu;
+   EVAL_F (u, fu);
+
+   bool better = seeking_max ? (fu > fx) : (fu < fx);
+
+   if (better)
+    {
+     if (u >= x)
+      a = x;
+     else
+      b = x;
+
+     v  = w;
+     fv = fw;
+     w  = x;
+     fw = fx;
+     x  = u;
+     fx = fu;
+    }
+   else
+    {
+     if (u < x)
+      a = u;
+     else
+      b = u;
+
+     bool w_better = seeking_max ? (fu > fw || w == x) : (fu < fw || w == x);
+     bool v_better = seeking_max ? (fu > fv || v == x || v == w) : (fu < fv || v == x || v == w);
+
+     if (w_better)
+      {
+       v  = w;
+       fv = fw;
+       w  = u;
+       fw = fu;
+      }
+     else if (v_better)
+      {
+       v  = u;
+       fv = fu;
+      }
+    }
+  }
+
+#undef EVAL_F
+
+ fflags |= child->isfflags ();
+ delete child;
+ return x;
+}
 #pragma endregion

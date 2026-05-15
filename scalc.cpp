@@ -293,6 +293,12 @@ void calculator::AddPredefined (void)
  add (tsINTEGR, "integral", nullptr);
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
+ add (tsDIFF, "diff", nullptr);
+ add (tsDIFF, "derivative", nullptr);
+ add (tsEXTR, "extremum", nullptr);
+ add (tsEXTR, "extr", nullptr);
+
+
  add (tsIF, "if", nullptr);
  add (tsRUN, scRun, "run", nullptr, true);
  add (tsRUN, scEval, "eval", nullptr, true);
@@ -3071,6 +3077,30 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
              }
              break;
+
+            case tsEXTR: // float f(str equation)
+             {
+              const uint32_t masks[] = { 0, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (v_stack[v_sp - 1].tag == tvEXTR)
+               {
+                const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result = Extremum (equation);
+                v_stack[v_sp - 2].fval  = result;
+                v_stack[v_sp - 2].imval = 0.0;
+                v_stack[v_sp - 2].ival  = (int_t)result;
+                v_stack[v_sp - 2].tag   = tvFLOAT;
+                v_sp -= 1;
+               }
+              else
+               {
+                error (v_stack[v_sp - 1].pos, "Expression expected");
+                return result_fval = qnan;
+               }
+             }
+             break;
+
+
             }
            o_sp -= 1;
            n_args = 1;

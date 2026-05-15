@@ -266,7 +266,7 @@ The last variable in the initial conditions is the one being solved for:
   calc(x*(2x+2)-2, x:=-1)  →  -2
   calc(z^2+z+1, z:=0+1i)   →  |1|(90`0'0") 0+1i
   ```
-* **integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
+* **integral/integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
   $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
   ```
   integr(exp(-(x^2)), -5, 5, x)  →  1.772453850902790   ;; sqrt(pi)
@@ -274,10 +274,14 @@ The last variable in the initial conditions is the one being solved for:
   integr(sin(x)/x, 0.001, pi, x) →  1.850937052038021
   ```
   Can be used as operand: `sqrt(integr(sin(x)^2, 0, 2*pi, x))`.
-* **diff(expr, point, var)**: Numerical differentiation using central difference method:
+* **derivative/diff(expr, point, var)**: Numerical differentiation using central difference method:
   ```
   diff(sin(x), pi/4, x)  →  0.7071...   ;; cos(pi/4)
   ```
+* **extremum/extr(expr, est, x)**: Find extremum using Golden Section Search (derivative-free):
+```
+	extr(x^(1/x),2,x) → 2.718281828459045 ;; e
+```	
 * **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e

@@ -22,6 +22,7 @@ cd BCB
 "C:\Program Files (x86)\Borland\CBuilder6\Bin\make.exe" -ffcalc.mak -B
 call clean.bat
 cd ..
+call clean.bat
 echo "Compile setup packages"
 pause
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" fcalc_w10+64_std_dll.iss

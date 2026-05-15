@@ -1,3 +1,8 @@
+15.05.26 (2.197)
++ Added the extremum function extr(expr, est, var) to find the extremum using Golden Section Search 
+  (derivative-free) of the function expr(var) in the neighborhood of the specified est.
+	extr(x^(1/x),2,x) -> 2.718281828459045
+	
 14.05.26 (2.196)
 - Fixed bug with cos from complex argument.
 

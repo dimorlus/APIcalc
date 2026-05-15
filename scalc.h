@@ -295,6 +295,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvSOLVE,
  tvINTEGR,
  tvDIFF,
+ tvEXTR,
  tvFOR,
  tvPLOT,
 };
@@ -311,6 +312,7 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_SOLVE   (1 << tvSOLVE)   // Mask for solve operator values
 #define MSK_INTEGR  (1 << tvINTEGR)  // Mask for integration operator values
 #define MSK_DIFF    (1 << tvDIFF)    // Mask for differentiation operator values
+#define MSK_EXTR    (1 << tvEXTR)    // Mask for extremum operator values
 #define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
@@ -419,7 +421,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsRUN,      // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
- tsNUM       // 37  Total number of symbol types, must be the last in the list
+ tsEXTR,     // 37  extremum operator for finding local minima and maxima (extr)
+ tsNUM       // 38  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -478,8 +481,9 @@ enum t_br_result
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 #define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
 #define MASK_SFUNCS1    (1ULL << tsSFUNCS1)     // char* f(char *s) (fdlg("*.bmp"))
-#define MASK_SFUNC      (1ULL << tsRUN)       // value f(char *s) run("script.txt") run calculator's script. Return any type.
-#define MASK_DATAF      (1ULL << tsDATAF) // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
+#define MASK_SFUNC      (1ULL << tsRUN)         // value f(char *s) run("script.txt") run calculator's script. Return any type.
+#define MASK_DATAF      (1ULL << tsDATAF)       // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
+#define MASK_EXTR       (1ULL << tsEXTR)        // extremum operator for finding local minima and maxima (extr)
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -1043,6 +1047,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
+ float__t Extremum (const char *expr);
  bool For (const char *expr, value &res); // Operator 'for' (loop).
 
  // Matrix operations

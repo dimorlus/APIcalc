@@ -1,3 +1,7 @@
+15.05.26 (2.198)
+- Several minor UI fixes. 
+* Handling inf as NaN in *plot* functions.
+
 15.05.26 (2.197)
 + Added the extremum function extr(expr, est, var) to find the extremum using Golden Section Search 
   (derivative-free) of the function expr(var) in the neighborhood of the specified est.

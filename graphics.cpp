@@ -122,7 +122,7 @@ bool calculator::isChildResReal (calculator *child)
 {
  float__t re = child->get_re_res ();
  float__t im = child->get_im_res ();
- if (isnan (re) || Abs (im) / AbsC (re, im) > (float__t)1e-12L)
+ if (isnan (re) || isinf(re) || Abs (im) / AbsC (re, im) > (float__t)1e-12L)
   {
    return false; // treat very small real part with large relative imaginary part as non-real
   }
@@ -364,7 +364,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    child->addfvar (svar, vfrom);
    float__t fvx = child->evaluate_f (sexpr);
 
-   if (!(isnan (fvx) && child->errt () == teMath))
+   if (!((isnan (fvx)|| isinf(fvx)) && child->errt () == teMath))
     {
      if (isnan (fvx) || child->err[0] || !CheckChildRes (child))
       {
@@ -380,7 +380,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    if (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
     {
      float__t fvy = child->evaluate_f (sexpr_y);
-     if (!(isnan (fvy) && child->errt () == teMath))
+     if (!((isnan (fvx) || isinf (fvx)) && child->errt () == teMath))
       {
        if (isnan (fvy) || child->err[0] || !CheckChildRes (child))
         {

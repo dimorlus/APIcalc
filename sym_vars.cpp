@@ -243,8 +243,8 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
           }
          else if (sp->val.tag == tvINT)
           {
-           written = snprintf (cp, bsize - (cp - buf), "%-10s = %lld\r\n", sp->name,
-                               (long long)sp->val.ival);
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %lld (%llX)\r\n", sp->name,
+                               (long long)sp->val.ival, (long long)sp->val.ival);
           }
          else
           {

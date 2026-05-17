@@ -330,7 +330,7 @@ float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, f
 {
  pCalc->addfvar (svar, x);
  float__t val = pCalc->evaluate_f (sexpr);
- if (isnan (val) && pCalc->errt () == teMath) return (float__t)0.0L;
+ if ((isnan (val) || isinf (val)) && pCalc->errt () == teMath) return (float__t)0.0L;
 
  if (pCalc->err[0]) return qnan;
  return val;
@@ -680,7 +680,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
 
          child->addfvar (svar, vfrom);
          fvx += child->evaluate_f (sexpr); 
-         if (isnan (fvx) && child->errt () == teMath)
+         if ((isnan (fvx) || isinf (fvx)) && child->errt () == teMath)
           {
            fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
           }
@@ -708,7 +708,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
 
          child->addfvar (svar, vfrom);
          fvx += child->evaluate_f (sexpr); 
-         if (isnan (fvx) && child->errt () == teMath)
+         if ((isnan (fvx) || isinf (fvx)) && child->errt () == teMath)
           {
            fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
           }

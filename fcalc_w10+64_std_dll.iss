@@ -15,8 +15,9 @@ OutputBaseFilename=fcalc_w10+64_std_dll_setup
 CreateUninstallRegKey=yes
 PrivilegesRequired=admin
 UsedUserAreasWarning=no
-ArchitecturesAllowed=x86 x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x86 x64os
+ArchitecturesInstallIn64BitMode=x64os
+WizardStyle=classic
 
 [Types]
 Name: "std";    Description: "Standard (built-in calculator engine)"

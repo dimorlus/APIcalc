@@ -426,7 +426,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
  tsEXTR,     // 37  extremum operator for finding local minima and maxima (extr)
- tsNUM       // 38  Total number of symbol types, must be the last in the list
+ tsSVBMP,    // 38  save operator for saving bitmap to file (svbmp("file.bmp", data))
+ tsNUM       // 39  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -450,8 +451,8 @@ enum t_br_result
  brESC,     // Indicates that an ESC key was pressed
 };
 
-#define MASK_ALL        (uint64_t)~0ULL        // 64bit mask with all symbol types included
-#define MASK_NONE       0ULL                   // represents an empty mask with no symbol types included
+#define MASK_ALL        (uint64_t)~0ULL         // 64bit mask with all symbol types included
+#define MASK_NONE       0ULL                    // represents an empty mask with no symbol types included
 #define MASK_VARIABLE   (1ULL << tsVARIABLE)    // represents a variable symbol
 #define MASK_CONSTANT   (1ULL << tsCONSTANT)    // represents a constant symbol
 #define MASK_FFUNCI1    (1ULL << tsFFUNCI1)     // float f(int x)
@@ -488,6 +489,7 @@ enum t_br_result
 #define MASK_SFUNC      (1ULL << tsRUN)         // value f(char *s) run("script.txt") run calculator's script. Return any type.
 #define MASK_DATAF      (1ULL << tsDATAF)       // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 #define MASK_EXTR       (1ULL << tsEXTR)        // extremum operator for finding local minima and maxima (extr)
+#define MASK_SVBMP      (1ULL << tsSVBMP)       // save operator for saving bitmap to file (svbmp("file.bmp", data))
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -600,6 +602,8 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_plotdatal,  // plotdatal(datafile, mask) - with lines
  pl_fplotdatal, // fplotdatal(bmpfile, datafile, mask)
  pl_oplotdatal, // oplotdatal(bmpfile, datafile, mask)
+
+ pl_savebmp, // savebmp(bmpfile) - save current plot to bmp file
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
@@ -999,8 +1003,15 @@ class calculator // calculator represents the main class for the expression calc
 
  // Math for solving, integrating and differentiating
  
+ // Solvers
  // Solve an equation given by the expression and return the solution as a complex value
  bool Solve (const char *expr, t_value ttag, t_symbol tag, float__t &re_res, float__t &im_res);
+ float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
+ float__t Extremum (const char *expr);
+ bool For (const char *expr, value &res); // Operator 'for' (loop).
+
+ float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
+                  t_symbol tag);    // result as a floating-point value
 
  float__t gkEval (calculator *pCalc, char *sexpr, // Evaluate a function for a given expression, variable name, and
                   const char *svar, float__t x); // variable value, and return the result as a floating-point value
@@ -1020,7 +1031,6 @@ class calculator // calculator represents the main class for the expression calc
  bool Split (const char *expr, ...);
  t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check); // Check for a break condition 
                                                                       //during long calculations
-
  void NormalizePath (const char *input, char *output, int outSize);
 
  bool isChildResReal (calculator *child);
@@ -1046,13 +1056,9 @@ class calculator // calculator represents the main class for the expression calc
 
  bool PlotData (bmpdraw *bmp, PlotParams &params);
 
- bool Plot (const char *expr, v_func fidx); // Operator 'plot' for plotting data points or functions
+ bool Plot (const char *expr, v_func fidx, value &res); // Operator 'plot' for plotting data points or functions
+ bool AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color);
 
- float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
-                  t_symbol tag);    // result as a floating-point value
- float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
- float__t Extremum (const char *expr);
- bool For (const char *expr, value &res); // Operator 'for' (loop).
 
  // Matrix operations
  float__t *mxAlloc (int rows, int cols);
@@ -1077,14 +1083,11 @@ class calculator // calculator represents the main class for the expression calc
  t_mresult matrixuno (value &res, value &left, t_operator cop);
  void mxerror (const char *msg);
 
- //int mxprint (int8_t res_rows, int8_t res_cols, float__t *res_mval, char *str,
- //             bool nl, // Print matrix in a formatted way, with an option for a new line
- //             int *size = nullptr); // and an optional pointer to store the size of the output
- 
+// Statistical functions 
  float__t StatFn (const char *fname, const char *msk, sfntype sfn, float__t x=qnan);
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
 
-
+ // Script execution
  bool Run (const char *expr, v_func fidx, value &res); // Run a script or expression and store the result in res
                                           // return the result in res
  int dataf (char *fname, char *sfmt, int args, value *v_stack);

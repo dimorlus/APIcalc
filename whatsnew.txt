@@ -1,3 +1,16 @@
+22.05.26 (2.199)
+* Now calc/solve(expr, est, var) works the same as calc/solve(expr, var:=est) for compatibility with 
+  other solvers.
++ Now the plot* functions return the BMP type, and the + and | operations are defined on this type, 
+  working in such a way that the second image (graph) is drawn on top of the first. You can write 
+	plot(x, -1,1,x)+plot(-x,-1,1,x) 
+  or 
+	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B  
+  Both graphs will appear in the same grid (the first one).
++ Added function svbmp("filename", bmp) for save BMP type to the file
+	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)
+  The fplot* and oplot* functions are no longer needed, but are retained for compatibility.	
+
 15.05.26 (2.198)
 - Several minor UI fixes. 
 * Handling inf as NaN in *plot* functions.

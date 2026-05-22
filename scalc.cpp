@@ -307,50 +307,53 @@ void calculator::AddPredefined (void)
  add (tsERROR, "error", nullptr);
 
  // Cartesian plots
- add (tsPLOT, pl_plot, "plot", nullptr, true);
+ add (tsPLOT, pl_plot, "plot", nullptr, false);
  add (tsPLOT, pl_fplot, "fplot", nullptr, true);
  add (tsPLOT, pl_oplot, "oplot", nullptr, true);
 
  // Polar plots
- add (tsPLOT, pl_plotpol, "plotpol", nullptr, true);
+ add (tsPLOT, pl_plotpol, "plotpol", nullptr, false);
  add (tsPLOT, pl_fplotpol, "fplotpol", nullptr, true);
  add (tsPLOT, pl_oplotpol, "oplotpol", nullptr, true);
 
  // Parametric plots
- add (tsPLOT, pl_xyplot, "plotxy", nullptr, true);
+ add (tsPLOT, pl_xyplot, "plotxy", nullptr, false);
  add (tsPLOT, pl_fxyplot, "fplotxy", nullptr, true);
  add (tsPLOT, pl_oxyplot, "oplotxy", nullptr, true);
 
  // Logarithmic plots
- add (tsPLOT, pl_plotlgx, "plotlgx", nullptr, true);
+ add (tsPLOT, pl_plotlgx, "plotlgx", nullptr, false);
  add (tsPLOT, pl_fplotlgx, "fplotlgx", nullptr, true);
  add (tsPLOT, pl_oplotlgx, "oplotlgx", nullptr, true);
 
- add (tsPLOT, pl_plotlgy, "plotlgy", nullptr, true);
+ add (tsPLOT, pl_plotlgy, "plotlgy", nullptr, false);
  add (tsPLOT, pl_fplotlgy, "fplotlgy", nullptr, true);
  add (tsPLOT, pl_oplotlgy, "oplotlgy", nullptr, true);
- add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr, true);
+
+ add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr, false);
  add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr, true);
  add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr, true);
 
  // Smith chart
- add (tsPLOT, pl_plotsmith, "plotsmith", nullptr, true);
+ add (tsPLOT, pl_plotsmith, "plotsmith", nullptr, false);
  add (tsPLOT, pl_fplotsmith, "fplotsmith", nullptr, true);
  add (tsPLOT, pl_oplotsmith, "oplotsmith", nullptr, true);
 
- add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr, true);
+ add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr, false);
  add (tsPLOT, pl_fplotsmithz, "fplotsmithz", nullptr, true);
  add (tsPLOT, pl_oplotsmithz, "osmithz", nullptr, true);
 
  // Data plots (points)
- add (tsPLOT, pl_plotdata, "plotdata", nullptr, true);
+ add (tsPLOT, pl_plotdata, "plotdata", nullptr, false);
  add (tsPLOT, pl_fplotdata, "fplotdata", nullptr, true);
  add (tsPLOT, pl_oplotdata, "oplotdata", nullptr, true);
 
  // Data plots (lines)
- add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, true);
+ add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, false);
  add (tsPLOT, pl_fplotdatal, "fplotdatal", nullptr, true);
  add (tsPLOT, pl_oplotdatal, "oplotdatal", nullptr, true);
+
+ add (tsSVBMP, pl_savebmp, "svbmp", nullptr, false);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -1495,6 +1498,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          if (piVal) *piVal = v_stack[0].ival;
          if (pimval) *pimval = v_stack[0].imval;
 
+         if (v_stack[0].tag == tvBMP)
+         {
+           if (v_stack[0].sval && ShowImageFn) ShowImageFn ((void *)v_stack[0].sval);
+           else 
+           if (!v_stack[0].sval) error ("Invalid bitmap data");
+           v_stack[0].sval = nullptr; // Prevent freeing the bitmap data in clear_v_stack
+         }
+
          if (v_stack[0].tag == tvMATRIX)
           {
            res_cols = v_stack[0].mcols;
@@ -1599,6 +1610,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_sp -= 1;
           v_stack[v_sp - 1].var = nullptr;
           break;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvBMP) && (v_stack[v_sp - 2].tag == tvBMP))
+         {
+          uint32_t fgc = getivar ("plot_fgc");
+          bmpdraw *bmp1 = (bmpdraw *)v_stack[v_sp - 2].sval; 
+          bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
+          AddBmp (bmp1, bmp2, fgc);
          }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
@@ -2187,6 +2205,13 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          {
           error (v_stack[v_sp - 1].pos, "Illegal matrix operation");
           return result_fval = qnan;
+         }
+        else if ((v_stack[v_sp - 1].tag == tvBMP) && (v_stack[v_sp - 2].tag == tvBMP))
+         {
+          uint32_t fgc  = getivar ("plot_fgc");
+          bmpdraw *bmp1 = (bmpdraw *)v_stack[v_sp - 2].sval;
+          bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
+          AddBmp (bmp1, bmp2, fgc);
          }
         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
@@ -3048,10 +3073,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (v_stack[v_sp - 1].tag == tvPLOT)
                {
                 const char *fname_expr = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                if (!Plot (fname_expr, sym->fidx)) return result_fval = qnan;
+                if (!Plot (fname_expr, sym->fidx, v_stack[v_sp - 2])) return result_fval = qnan;
                }
               v_stack[v_sp - 2].ival = 1;
-              v_stack[v_sp - 2].tag  = tvINT;
+              v_stack[v_sp - 2].fval = (float__t)1.0L;
               v_sp -= 1;
              }
              break;
@@ -3695,6 +3720,29 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
               v_stack[v_sp - n_args - 1].ival = res;
               v_stack[v_sp - n_args - 1].tag  = tvFLOAT;
+              v_sp -= n_args;
+            }
+            break;
+
+            case tsSVBMP: // svbmp("filename", bmp) function
+            {
+              const uint32_t masks[] = {(uint32_t)~MSK_BMP,           // bmp
+                                        (uint32_t)~MSK_STR, 0, 0 }; // filename
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_BMP)) return result_fval = qnan;
+              char *filename = v_stack[v_sp - 2].get_str ();
+              bmpdraw *bmp   = (bmpdraw *) v_stack[v_sp - 1].sval;
+              char fnamebuf[STRBUF];
+              NormalizePath (filename, fnamebuf, STRBUF);
+              if (!bmp->save (fnamebuf))
+               {
+                error (v_stack[v_sp - 1].pos, "Error saving bitmap");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - n_args - 1].ival = 1;
+              v_stack[v_sp - n_args - 1].fval = (float__t)1.0L;
+              v_stack[v_sp - n_args - 1].tag  = tvINT;
               v_sp -= n_args;
             }
             break;

@@ -2195,11 +2195,12 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
 
 
 // Main plotting function
-bool calculator::Plot (const char *expr, v_func fidx)
+bool calculator::Plot (const char *expr, v_func fidx, value &res)
 {
  char fname[STRBUF];
  fname[0] = '\0';
 
+ res.sval = nullptr;
  PlotParams params;
  memset (&params, 0, sizeof (params));
 
@@ -2386,18 +2387,82 @@ bool calculator::Plot (const char *expr, v_func fidx)
    // Show in GUI
    if (ShowImageFn)
     {
-     ShowImageFn ((void *)bmp);
+     //ShowImageFn ((void *)bmp);
+     res.tag = tvBMP;
+     res.sval = (char *)bmp; // Pass bitmap pointer to GUI for display
+     register_mem (res.sval);
     }
   break;
   }
 
  // 6. Cleanup
- delete bmp;
+ if (!res.sval) delete bmp;
  fflags |= params.child->isfflags ();
  delete params.child;
  if (params.sexpr) free (params.sexpr);
  if (params.sexpr_y) free (params.sexpr_y);
  if (params.svar) free (params.svar);
+
+ return true;
+}
+
+// Overlay two bitmaps: copy only specified color from bmp2 to bmp1
+// This preserves grid and axes from bmp1, overlaying only the plot curve
+bool calculator::AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color)
+{
+ if (!bmp1 || !bmp2)
+  {
+   errorf (pos, "AddBmp: null bitmap pointer");
+   return false;
+  }
+
+ if (!bmp1->data || !bmp2->data)
+  {
+   errorf (pos, "AddBmp: bitmap data is null");
+   return false;
+  }
+
+ // Check dimensions
+ if (bmp1->width != bmp2->width || bmp1->height != bmp2->height)
+  {
+   errorf (pos, "AddBmp: bitmap dimensions mismatch (%dx%d vs %dx%d)", bmp1->width, bmp1->height,
+           bmp2->width, bmp2->height);
+   return false;
+  }
+
+ // Check row sizes
+ if (bmp1->rowSize != bmp2->rowSize)
+  {
+   errorf (pos, "AddBmp: bitmap row sizes mismatch");
+   return false;
+  }
+
+ // Extract RGB components from fg_color
+ uint8_t fg_r = (fg_color >> 16) & 0xFF;
+ uint8_t fg_g = (fg_color >> 8) & 0xFF;
+ uint8_t fg_b = fg_color & 0xFF;
+
+ // Overlay only pixels matching fg_color from bmp2 to bmp1
+ for (int y = 0; y < bmp1->height; y++)
+  {
+   for (int x = 0; x < bmp1->width; x++)
+    {
+     int offset = y * bmp1->rowSize + x * 3;
+
+     // Read pixel from bmp2
+     uint8_t b2 = bmp2->data[offset];
+     uint8_t g2 = bmp2->data[offset + 1];
+     uint8_t r2 = bmp2->data[offset + 2];
+
+     // If pixel matches fg_color, copy it to bmp1
+     if (r2 == fg_r && g2 == fg_g && b2 == fg_b)
+      {
+       bmp1->data[offset]     = b2;
+       bmp1->data[offset + 1] = g2;
+       bmp1->data[offset + 2] = r2;
+      }
+    }
+  }
 
  return true;
 }

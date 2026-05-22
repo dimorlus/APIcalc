@@ -1,6 +1,17 @@
 # Plotting Functions Reference
 
 This document describes all plotting functions available in the calculator for visualizing mathematical functions and circuit characteristics.
+The **plot*** functions return the BMP type, and the + and | operators are defined for this type,  working in such a way that the second image (graph) is drawn on top of the first. You can write 
+	```plot(x, -1,1,x)+plot(-x,-1,1,x)``` 
+or 
+	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```  
+
+Both graphs will appear in the same grid (the first one). The operation A+B is equivalent to A+=B (A:=A+B).
+
+* **svbmp("filename", bmp)**: Function  for save BMP type to the file
+	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
+
+>**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
 
 ## Table of Contents
 

@@ -324,6 +324,18 @@ when real values are returned.
 * **Engineering Suffixes on Axes**: Labels automatically use standard notation (e.g., `m` for milli, `k` for kilo) to 
 keep the display concise.
 
+The **plot*** functions return the BMP type, and the + and | operators are defined for this type,  working in such a way that the second image (graph) is drawn on top of the first. You can write 
+	<br>```plot(x, -1,1,x)+plot(-x,-1,1,x)```<br> 
+or 
+	<br>```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```<br>
+
+Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)`.
+
+* **svbmp("filename", bmp)**: Function  for save BMP type to the file<br>
+	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
+
+>**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
+
 #### Complex Values & Continuity
 * **Real-only Rendering**: The `plot` operator automatically detects complex results. If the imaginary part exceeds a negligible 
 threshold ($$10^{-12}$$), the drawing "pen" is lifted.
@@ -729,13 +741,13 @@ Each function in this group has three versions.
 * **plotdatal ("datafile"[,"mask"])**: Display lines in window
 
 The **plot*** functions return the BMP type, and the + and | operators are defined for this type,  working in such a way that the second image (graph) is drawn on top of the first. You can write 
-	```plot(x, -1,1,x)+plot(-x,-1,1,x)``` 
+	<br>```plot(x, -1,1,x)+plot(-x,-1,1,x)```<br> 
 or 
-	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```  
+	<br>```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```<br>
 
-Both graphs will appear in the same grid (the first one). The operation A+B is equivalent to A+=B (A:=A+B).
+Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)`.
 
-* **svbmp("filename", bmp)**: Function  for save BMP type to the file
+* **svbmp("filename", bmp)**: Function  for save BMP type to the file<br>
 	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
 
 >**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	

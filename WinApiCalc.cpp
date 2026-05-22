@@ -2466,8 +2466,7 @@ void WinApiCalc::LoadSettings ()
    DWORD dwSize    = sizeof (dwOptions);
    DWORD dwOptionsH = 0;
    dwOptions       = 0x0bcf7f37; // Default options if not found
-   if (RegQueryValueExA (hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize)
-       == ERROR_SUCCESS)
+   if (RegQueryValueExA (hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize) == ERROR_SUCCESS)
     {
      m_options = dwOptions;
     }

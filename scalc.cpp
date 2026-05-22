@@ -2977,10 +2977,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
                 return result_fval = qnan;
                }
-              if (v_stack[v_sp - 1].tag == tvSOLVE)
+              if ((v_stack[v_sp - 1].tag == tvSOLVE) || (v_stack[v_sp - 1].tag == tvSOLVEA))
                {
                 const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
-                Solve (equation, sym->tag, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
+                Solve (equation, v_stack[v_sp - 1].tag, sym->tag, v_stack[v_sp - 2].fval, v_stack[v_sp - 2].imval);
                 if (v_stack[v_sp - 2].imval == (float__t)0.0L) v_stack[v_sp - 2].tag = tvFLOAT;
                 else v_stack[v_sp - 2].tag = tvCOMPLEX;
                 v_sp -= 1;

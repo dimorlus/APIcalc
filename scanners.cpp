@@ -1297,12 +1297,16 @@ t_operator calculator::sscan (symbol *sym)
  if (sym)
   {
    blockflag |= sym->block;
-   if ((sym->tag == tsSOLVE)    // solve (x(2x+2)-2,x:=0)
-       || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
+   if ((sym->tag == tsSOLVE) // solve (x(2x+2)-2,x:=0)
+    || (sym->tag == tsCALC)) // calc (x(2x+2)-2,x:=0)
     {
      if (parenthesis_count == 0 && comma_count == 1)
       {
        v_stack[v_sp].tag = tvSOLVE;
+      }
+     else if (parenthesis_count == 0 && comma_count == 2)
+      {
+       v_stack[v_sp].tag  = tvSOLVEA; // Alternative form for calc/solve solve(x(2x+2)-2, 0, x)
       }
      else
       {

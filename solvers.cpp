@@ -102,7 +102,8 @@ int isinf_l(float__t x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 // expr -> x(2x+2)-2, x:=0
 // Complex support
 // #define _DAMPED_
-bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res)
+bool calculator::Solve (const char *expr, t_value ttag, t_symbol tag, float__t &re_res,
+                        float__t &im_res)
 {
  if (!expr || !*expr)
   {
@@ -113,8 +114,13 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
   }
 
  char sexpr[STRBUF], svar[STRBUF], nvar[MAXOP];
+ bool split_ok = false;
 
- if (!Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0))
+ if (ttag == tvSOLVE)
+  split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);
+ else
+  split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nvar, MAXOP, nullptr, 0);
+ if (!split_ok)
   {
    errorf (pos, "solve: invalid expression");
    re_res = qnan;
@@ -140,9 +146,13 @@ bool calculator::Solve (const char *expr, t_symbol tag, float__t &re_res, float_
    im_res = qnan;
    return false;
   }
- strcpy (nvar, (char *)child->get_last_var ());
- float__t xr = child->get_re_res ();
- float__t xi = child->get_im_res (); // 0 if real initial approximation
+
+ if (ttag == tvSOLVE)
+  {
+   strcpy (nvar, (char *)child->get_last_var ());
+  }
+float__t xr = child->get_re_res ();
+float__t xi = child->get_im_res (); // 0 if real initial approximation
 
  if (tag == tsCALC)
   {
@@ -820,7 +830,7 @@ float__t calculator::Extremum (const char *expr)
 
  char sexpr[STRBUF], svar[STRBUF], sinit[MAXOP];
 
- if (!Split (expr, sexpr, STRBUF, sinit, MAXOP, svar, STRBUF, NULL, 0))
+ if (!Split (expr, sexpr, STRBUF, sinit, MAXOP, svar, STRBUF, nullptr, 0))
   {
    errorf (pos, "extremum: invalid expression");
    return result_fval = qnan;

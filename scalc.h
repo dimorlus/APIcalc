@@ -293,11 +293,13 @@ enum t_value // t_value represents the type of a value in the calculator
  tvMX_ELEM,
  tvUFUNCT,
  tvSOLVE,
+ tvSOLVEA,
  tvINTEGR,
  tvDIFF,
  tvEXTR,
  tvFOR,
  tvPLOT,
+ tvBMP,
 };
 
 #define MSK_ERR     (1 << tvERR)     // Mask for error values
@@ -310,10 +312,12 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_MX_ELEM (1 << tvMX_ELEM) // Mask for matrix element values
 #define MSK_UFUNCT  (1 << tvUFUNCT)  // Mask for user-defined function values
 #define MSK_SOLVE   (1 << tvSOLVE)   // Mask for solve operator values
+#define MSK_SOLVEA  (1 << tvSOLVEA)  // Mask for alternative solve operator values
 #define MSK_INTEGR  (1 << tvINTEGR)  // Mask for integration operator values
 #define MSK_DIFF    (1 << tvDIFF)    // Mask for differentiation operator values
 #define MSK_EXTR    (1 << tvEXTR)    // Mask for extremum operator values
 #define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
+#define MSK_BMP     (1 << tvBMP)     // Mask for bitmap operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
 
@@ -665,7 +669,7 @@ class value // value represents a value in the calculator, which can be an integ
  uint8_t mcols;  // Number of columns in matrix
  uint8_t irows;  // Number of rows in matrix
  uint8_t icols;  // Number of columns in matrix
-  float__t *mval; // Matrix value (pointer to array of floats)
+ float__t *mval; // Matrix value (pointer to array of floats)
 
  inline value ()
  {
@@ -996,7 +1000,7 @@ class calculator // calculator represents the main class for the expression calc
  // Math for solving, integrating and differentiating
  
  // Solve an equation given by the expression and return the solution as a complex value
- bool Solve (const char *expr, t_symbol tag, float__t &re_res, float__t &im_res);
+ bool Solve (const char *expr, t_value ttag, t_symbol tag, float__t &re_res, float__t &im_res);
 
  float__t gkEval (calculator *pCalc, char *sexpr, // Evaluate a function for a given expression, variable name, and
                   const char *svar, float__t x); // variable value, and return the result as a floating-point value

@@ -221,7 +221,6 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    if (!ShowImageFn) return false;
    split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);    // try get mask
    if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, nullptr, 0);    // get datafile
-   //if (split_ok) Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0); //try get mask
   break;
 
   case pl_fplotdata: // bmpfile, datafile, mask

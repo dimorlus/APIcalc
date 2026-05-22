@@ -148,6 +148,8 @@ plotsmith(expr,from,to,x)        Smith Chart plot (Z0=50Ω) for RF and microwave
 plotsmithz(expr,from,to,x,z0)    Smith Chart plot for RF and microwave engineering.
 plotdata("datafile"[,"mask"])    Display points in window 
 plotdatal ("datafile"[,"mask"])  Display lines in window
+svbmp("bmpfile", bmp)            Save result of plot* functions to the specified BMP file. 
+
 ```
 
 #### Related Variables

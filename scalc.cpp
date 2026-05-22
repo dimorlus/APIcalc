@@ -3725,8 +3725,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             break;
 
             case tsSVBMP: // svbmp("filename", bmp) function
-            {
-              const uint32_t masks[] = {(uint32_t)~MSK_BMP,           // bmp
+             {
+              const uint32_t masks[] = {(uint32_t)~MSK_BMP,         // bmp
                                         (uint32_t)~MSK_STR, 0, 0 }; // filename
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
@@ -3744,7 +3744,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_stack[v_sp - n_args - 1].fval = (float__t)1.0L;
               v_stack[v_sp - n_args - 1].tag  = tvINT;
               v_sp -= n_args;
-            }
+             }
             break;
 
             case tsDATAF: // dataf("filename", "mask", x1, x2, ...) function

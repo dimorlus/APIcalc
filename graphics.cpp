@@ -2385,9 +2385,7 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
   case pl_plotdata:
   case pl_plotdatal:
    // Show in GUI
-   if (ShowImageFn)
     {
-     //ShowImageFn ((void *)bmp);
      res.tag = tvBMP;
      res.sval = (char *)bmp; // Pass bitmap pointer to GUI for display
      register_mem (res.sval);

@@ -31,7 +31,7 @@ or 128-bit versions. However, you can enter 1.234*10^1234.
 
 ## Variable types.
 * Numbers: 
-* *Scalar: 
+* * Scalar: 
 * * *integers, 
 real numbers, 
 complex numbers.

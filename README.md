@@ -31,17 +31,17 @@ or 128-bit versions. However, you can enter 1.234*10^1234.
 
 ## Variable types.
 * Numbers: 
-* * Scalar: 
-* * *integers, 
-real numbers, 
-complex numbers.
+	* Scalar: 
+		* integers, 
+		* real numbers, 
+	* complex numbers.
  All operations and mathematical functions are possible with numbers, in any combination.
-Matrices
+* Matrices
   Two-dimensional arrays up to 7x7 of scalar numbers.
-Creation: Built-in functions like zeros(r,c), eye(r,c), or direct input: [(1,2);(3,4)].
-Operations: Matrix addition (+), subtraction (-), multiplication (*), and element-by-element operations.
-Data I/O: Can be serialized to/from strings or files using dataf() and datas() functions.
-Output: Supported by prn/prnf commands via the %S format specifier.
+	* Creation: Built-in functions like zeros(r,c), eye(r,c), or direct input: [(1,2);(3,4)].
+	* Operations: Matrix addition (+), subtraction (-), multiplication (*), and element-by-element operations.
+	* Data I/O: Can be serialized to/from strings or files using dataf() and datas() functions.
+	* Output: Supported by prn/prnf commands via the %S format specifier.
 Strings
   Text data enclosed in quotes (e.g., "string" or 'string').
 Operations: String concatenation using the "+" operator is supported (e.g., "file" + ".txt"). No other direct mathematical operations are allowed.

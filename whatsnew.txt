@@ -1,5 +1,6 @@
 23.05.26 (2.200)
-- Fixed a memory leak when working with BMP.
+- Fixed a memory leak when working with BMP. Memory management has been updated. Some common code 
+  has been moved into functions.
 + Added save("file", var)/load("file") functions for saving and loading to file any variable type 
   including BMP.
 	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)
@@ -7,6 +8,7 @@
 	save("line.bmp",plot(x,-1,1,x))
 	save("eye",eye(3,3))
 	load("eye") -> [(1, 0, 0); (0, 1, 0); (0, 0, 1)]
+	A:=load("cross.bmp")
 	
 22.05.26 (2.199)
 * Now calc/solve(expr, est, var) works the same as calc/solve(expr, var:=est) for compatibility with 

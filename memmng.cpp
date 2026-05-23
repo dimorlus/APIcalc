@@ -152,5 +152,33 @@ void calculator::save_vars_mem (void)
     }
    return nullptr;
   }
+
+ // Duplicate a bitmap and register it for cleanup
+  bmpdraw *calculator::dupBMP (bmpdraw *src)
+  {
+   if (!src || !src->data) return nullptr;
+
+   bmpdraw *dup = new bmpdraw ();
+   if (!dup) return nullptr;
+
+   // Copy bitmap data
+   if (!dup->newbmp (src->width, src->height, 0xFFFFFF))
+    {
+     delete dup;
+     return nullptr;
+    }
+
+   // Copy pixel data
+   memcpy (dup->data, src->data, src->height * src->rowSize);
+
+   // Copy positioning
+   dup->top  = src->top;
+   dup->left = src->left;
+
+   // Register for cleanup
+   register_mem (dup, ptBMP);
+
+   return dup;
+  }
 #pragma endregion
 //---------------------------------------------------------------------------

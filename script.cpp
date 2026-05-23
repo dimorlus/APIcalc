@@ -605,67 +605,77 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
  char filename[2048];
  char *buffer = nullptr;
  script *sct  = nullptr;
- res.tag      = tvERR;
- res.ival     = 0;
- res.fval     = qnan;
+ res.tag = tvERR;
+ res.ival = 0;
+ res.fval = qnan;
  bool success = true;
 
  if (!expr || !*expr)
-  {
-   error (pos, "Empty script name");
-   return false; // empty script name
-  }
+ {
+     error(pos, "Empty script name");
+     return false; // empty script name
+ }
 
- calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator* child = new calculator(scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
  if (!child)
-  {
-   errorf (pos, "Out of memory");
-   return false;
-  }
+ {
+     errorf(pos, "Out of memory");
+     return false;
+ }
 
  if (fidx == scRun)
-  {
-   sct = new script ();
-   if (!sct)
-    {
-     error (pos, "Out of memory");
-     return false; // failed to create script object
-    }
+ {
+     sct = new script();
+     if (!sct)
+     {
+         error(pos, "Out of memory");
+         return false; // failed to create script object
+     }
 
-   NormalizePath (expr, filename, STRBUF);
-   if (!sct->load (filename))
-    {
-     errorf (pos, "Failed to load script: %s", filename);
-     return false; // failed to load script
-    }
+     NormalizePath(expr, filename, STRBUF);
+     if (!sct->load(filename))
+     {
+         errorf(pos, "Failed to load script: %s", filename);
+         return false; // failed to load script
+     }
 
-   child->setEscFn (EscFn);
-   sct->setEscFn (EscFn);
-   sct->set_debug_callback (debugFn);
-   sct->set_calculator (child);
+     child->setEscFn(EscFn);
+     sct->setEscFn(EscFn);
+     sct->set_debug_callback(debugFn);
+     sct->set_calculator(child);
 
-   success = sct->execute ();
-  }
+     success = sct->execute();
+ }
  else if (fidx == scEval)
-  {
-   strncpy (filename, expr, sizeof(filename) - 1);
-   filename[sizeof(filename) - 1] = '\0';
-   child->evaluate (filename);
-  }
+ {
+     strncpy(filename, expr, sizeof(filename) - 1);
+     filename[sizeof(filename) - 1] = '\0';
+     child->evaluate(filename);
+ }
  else
-  {
-   error (pos, "Invalid function index");
-   delete child;
-   return false; // invalid function index
-  }
+ {
+     error(pos, "Invalid function index");
+     delete child;
+     return false; // invalid function index
+ }
 
+ GetChildRes (child, res);
+  
+ delete child;
+ if (fidx == scRun && sct) delete sct;
+ return success;
+}
+
+void calculator::GetChildRes(calculator *child, value &res)
+{
  strcpy (err, child->error ());
- res.tag = child->get_res_tag ();
- res.ival = child->get_int_res ();
- res.fval = child->get_re_res ();
+ res.tag   = child->get_res_tag ();
+ res.ival  = child->get_int_res ();
+ res.fval  = child->get_re_res ();
  res.imval = child->get_im_res ();
  res.sval  = dupString (child->get_str_res ());
- if (res.imval != (float__t)0.0L) res.tag = tvCOMPLEX; // Upgrade to complex if imaginary part is non-zero
+ if (res.imval != (float__t)0.0L)
+  res.tag = tvCOMPLEX; // Upgrade to complex if imaginary part is non-zero
  else if (res.tag == tvFLOAT && res.fval == (float__t)(int64_t)res.fval)
   res.tag = tvINT; // Downgrade to int if float is actually an integer
  // copy string and matrix result if applicable
@@ -673,10 +683,10 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
  if (child->get_res_tag () == tvMATRIX)
   {
    mxresult_t mxr = child->get_mx_res ();
-   res.tag = tvMATRIX;
-   res.mcols = mxr.cols;
-   res.mrows = mxr.rows;
-   int msize = mxr.rows * mxr.cols * sizeof (float__t);
+   res.tag        = tvMATRIX;
+   res.mcols      = mxr.cols;
+   res.mrows      = mxr.rows;
+   int msize      = mxr.rows * mxr.cols * sizeof (float__t);
    if (msize)
     {
      float__t *new_mval = (float__t *)sf_alloc (msize);
@@ -687,6 +697,8 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
       }
      else
       {
+       res.tag  = tvERR;
+       res.fval = qnan;
        errorf (res.pos, "Out of memory");
       }
     }
@@ -696,10 +708,11 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
    res.tag = tvSTR;
    fflags |= STR;
   }
-
+  else if (child->get_res_tag () == tvBMP)
+  {
+   res.tag = tvERR;
+   res.fval = qnan;
+   errorf (res.pos, "Cannot return bitmap result");
+  }
  fflags |= child->isfflags ();
-
- delete child;
- if (fidx == scRun && sct) delete sct;
- return success;
 }

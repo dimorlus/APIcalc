@@ -426,7 +426,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
  tsEXTR,     // 37  extremum operator for finding local minima and maxima (extr)
- tsSVBMP,    // 38  save operator for saving bitmap to file (svbmp("file.bmp", data))
+ tsLDSV,     // 38  load/save operator for loading and saving variables.
  tsNUM       // 39  Total number of symbol types, must be the last in the list
 };
 
@@ -489,7 +489,7 @@ enum t_br_result
 #define MASK_SFUNC      (1ULL << tsRUN)         // value f(char *s) run("script.txt") run calculator's script. Return any type.
 #define MASK_DATAF      (1ULL << tsDATAF)       // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 #define MASK_EXTR       (1ULL << tsEXTR)        // extremum operator for finding local minima and maxima (extr)
-#define MASK_SVBMP      (1ULL << tsSVBMP)       // save operator for saving bitmap to file (svbmp("file.bmp", data))
+#define MASK_LDSV       (1ULL << tsLDSV)        // load/save operator for loading and saving variables
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -603,8 +603,6 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_fplotdatal, // fplotdatal(bmpfile, datafile, mask)
  pl_oplotdatal, // oplotdatal(bmpfile, datafile, mask)
 
- pl_savebmp, // savebmp(bmpfile) - save current plot to bmp file
-
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
  rtLg,   // Logarithmic regression (y = a + b * ln(x))
@@ -640,6 +638,9 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  scRun,    // Run a script file containing calculator commands
  scEval,   // Evaluate an expression from a string
+
+ vrLoad,   // Load variable from a file
+ vrSave,   // Save variable to a file
 
  vf_num
 };
@@ -722,6 +723,7 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
 };
 #pragma endregion
 
+#ifdef _comment_
 #pragma region Memory management class
 class MemList
 {
@@ -818,7 +820,157 @@ void *register_mem (void *mem)
  int size () const { return count; }
 };
 #pragma endregion
+#endif
 
+#pragma region Memory management class
+
+enum ptr_type
+{
+ ptMALLOC = 0, // Default: C-style malloc/free
+ ptBMP    = 1  // C++ bmpdraw* objects (new/delete)
+};
+
+struct mem_entry
+{
+ void *ptr;
+ ptr_type type;
+};
+
+class MemList
+{
+ mem_entry *list;
+ int capacity;
+ int count;
+
+ public:
+ MemList (int initial = 256) : capacity (initial), count (0)
+ {
+  list = (mem_entry *)malloc (capacity * sizeof (mem_entry));
+  if (list) memset (list, 0, capacity * sizeof (mem_entry));
+ }
+
+ ~MemList () { free (list); }
+
+ void init_mem_list ()
+ {
+  if (list) memset (list, 0, capacity * sizeof (mem_entry));
+  count = 0;
+ }
+
+ int search_mem (void *mem)
+ {
+  for (int i = 0; i < count; i++)
+   if (list[i].ptr == mem) return i;
+  return -1;
+ }
+
+ void *register_mem (void *mem, ptr_type type = ptMALLOC)
+ {
+  if (!mem) return nullptr;
+  int idx = search_mem (mem);
+  if (idx != -1) return mem; // already registered
+
+  // fill holes first
+  for (int i = 0; i < count; i++)
+   if (!list[i].ptr)
+    {
+     list[i].ptr  = mem;
+     list[i].type = type;
+     return mem;
+    }
+
+  // no holes - append
+  if (count < capacity)
+   {
+    list[count].ptr  = mem;
+    list[count].type = type;
+    count++;
+    return mem;
+   }
+
+  // grow
+  int newcap         = capacity * 2;
+  mem_entry *newlist = (mem_entry *)realloc (list, newcap * sizeof (mem_entry));
+  if (!newlist) return nullptr;
+  list = newlist;
+  memset (list + capacity, 0, (newcap - capacity) * sizeof (mem_entry));
+  capacity         = newcap;
+  list[count].ptr  = mem;
+  list[count].type = type;
+  count++;
+  return mem;
+ }
+
+ void *unregister_mem (void *mem)
+ {
+  if (!mem) return nullptr;
+  int idx = search_mem (mem);
+  if (idx != -1)
+   {
+    list[idx].ptr  = nullptr;
+    list[idx].type = ptMALLOC;
+   }
+  return mem;
+ }
+
+ void *sf_alloc (int size, ptr_type type = ptMALLOC)
+ {
+  if (!size) return nullptr;
+  void *mem = malloc (size);
+  if (mem) register_mem (mem, type);
+  return mem;
+ }
+
+ void sf_free (void *dat)
+ {
+  if (dat)
+   {
+    int idx = search_mem (dat);
+    if (idx != -1)
+     {
+      switch (list[idx].type)
+       {
+       case ptBMP:
+        delete (bmpdraw *)dat;
+        break;
+       case ptMALLOC:
+       default:
+        free (dat);
+        break;
+       }
+      list[idx].ptr  = nullptr;
+      list[idx].type = ptMALLOC;
+     }
+    else free (dat); // Not found in list, free anyway (should not happen)
+   }
+ }
+
+ void free_all ()
+ {
+  for (int i = 0; i < count; i++)
+   {
+    if (list[i].ptr)
+     {
+      switch (list[i].type)
+       {
+       case ptBMP:
+        delete (bmpdraw *)list[i].ptr;
+        break;
+
+       case ptMALLOC:
+       default:
+        free (list[i].ptr);
+        break;
+       }
+      list[i].ptr = nullptr;
+     }
+   }
+  count = 0;
+ }
+
+ int size () const { return count; }
+};
+#pragma endregion
 const int max_stack_size        = 256;  // Maximum size of value and operator stacks
 const int max_expression_length = 1024; // Maximum length of expression
 const int hash_table_size = 1013; // Size of hash table for variables and functions
@@ -928,9 +1080,9 @@ class calculator // calculator represents the main class for the expression calc
  //memory management
  void init_mem_list () { mem_list.init_mem_list (); }
  int search_mem (void *mem) { return mem_list.search_mem (mem); }
- void *register_mem (void *mem) { return mem_list.register_mem (mem); }
+ void *register_mem (void *mem, ptr_type type = ptMALLOC) { return mem_list.register_mem (mem, type); }
  void *unregister_mem (void *mem) { return mem_list.unregister_mem (mem); }
- void *sf_alloc (int size) { return mem_list.sf_alloc (size); }
+ void *sf_alloc (int size, ptr_type type = ptMALLOC) { return mem_list.sf_alloc (size, type); }
  void sf_free (void *dat) { mem_list.sf_free (dat); }
  void clear_mem_list (void) { mem_list.free_all (); }
 
@@ -938,6 +1090,7 @@ class calculator // calculator represents the main class for the expression calc
  void save_vars_mem (void); // Save the current variables in the hash table to the mem array for
                             // memory management
  char *dupString (const char *src); // Duplicate a string and register it in the string list
+ bmpdraw *dupBMP (bmpdraw *src); // Duplicate a bitmap and register it in the memory list
  void destroyvars (void); // Destroy all variables in the hash table
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, void *func = nullptr, bool block = false); // Add a symbol to the hash table
@@ -1035,6 +1188,7 @@ class calculator // calculator represents the main class for the expression calc
 
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
+ void GetChildRes (calculator *child, value &res);
 
  // Plotting functions
  bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
@@ -1092,6 +1246,9 @@ class calculator // calculator represents the main class for the expression calc
                                           // return the result in res
  int dataf (char *fname, char *sfmt, int args, value *v_stack);
  int datas (char *str, char *sfmt, int args, value *v_stack);
+
+ bool Load (char *fname, value &res);
+ bool Save (char *fname, value &val);
 
  public:
  calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),

@@ -298,6 +298,9 @@ void calculator::AddPredefined (void)
  add (tsEXTR, "extremum", nullptr);
  add (tsEXTR, "extr", nullptr);
 
+ add (tsLDSV, vrLoad, "load", nullptr);
+ add (tsLDSV, vrSave, "save", nullptr);
+
 
  add (tsIF, "if", nullptr);
  add (tsRUN, scRun, "run", nullptr, true);
@@ -352,8 +355,6 @@ void calculator::AddPredefined (void)
  add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, false);
  add (tsPLOT, pl_fplotdatal, "fplotdatal", nullptr, true);
  add (tsPLOT, pl_oplotdatal, "oplotdatal", nullptr, true);
-
- add (tsSVBMP, pl_savebmp, "svbmp", nullptr, false);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -1613,7 +1614,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if ((v_stack[v_sp - 1].tag == tvBMP) && (v_stack[v_sp - 2].tag == tvBMP))
          {
-          uint32_t fgc = getivar ("plot_fgc");
+          uint32_t fgc = (uint32_t)getivar ("plot_fgc");
           bmpdraw *bmp1 = (bmpdraw *)v_stack[v_sp - 2].sval; 
           bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
           AddBmp (bmp1, bmp2, fgc);
@@ -2208,7 +2209,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          }
         else if ((v_stack[v_sp - 1].tag == tvBMP) && (v_stack[v_sp - 2].tag == tvBMP))
          {
-          uint32_t fgc  = getivar ("plot_fgc");
+          uint32_t fgc  = (uint32_t)getivar ("plot_fgc");
           bmpdraw *bmp1 = (bmpdraw *)v_stack[v_sp - 2].sval;
           bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
           AddBmp (bmp1, bmp2, fgc);
@@ -3724,26 +3725,38 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
-            case tsSVBMP: // svbmp("filename", bmp) function
+            case tsLDSV:
              {
-              const uint32_t masks[] = {(uint32_t)~MSK_BMP,         // bmp
-                                        (uint32_t)~MSK_STR, 0, 0 }; // filename
-              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-              if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
-              if (!CheckOperand (1, MSK_BMP)) return result_fval = qnan;
-              char *filename = v_stack[v_sp - 2].get_str ();
-              bmpdraw *bmp   = (bmpdraw *) v_stack[v_sp - 1].sval;
-              char fnamebuf[STRBUF];
-              NormalizePath (filename, fnamebuf, STRBUF);
-              if (!bmp->save (fnamebuf))
-               {
-                error (v_stack[v_sp - 1].pos, "Error saving bitmap");
-                return result_fval = qnan;
-               }
-              v_stack[v_sp - n_args - 1].ival = 1;
-              v_stack[v_sp - n_args - 1].fval = (float__t)1.0L;
-              v_stack[v_sp - n_args - 1].tag  = tvINT;
-              v_sp -= n_args;
+               if (sym->fidx == vrLoad)
+                {
+                 const uint32_t masks[] = { (uint32_t)~MSK_STR, 0, 0 }; // filename
+                 if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+                 if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
+                 char *filename = v_stack[v_sp - 1].get_str ();
+                 if (!Load (filename, v_stack[v_sp - n_args - 1]))
+                  {
+                   error (v_stack[v_sp - n_args - 1].pos, "Error loading variable");
+                   return result_fval = qnan;
+                  }
+                }
+               else 
+               if (sym->fidx == vrSave)
+                {
+                 const uint32_t masks[] = { MSK_ERR,                    // variable to save
+                                            (uint32_t)~MSK_STR, 0, 0 }; // filename
+                 if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                 if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
+                 char *filename = v_stack[v_sp - 2].get_str ();
+                 if (!Save (filename, v_stack[v_sp - 1]))
+                  {
+                   error (v_stack[v_sp - 1].pos, "Error saving variable");
+                   return result_fval = qnan;
+                  }
+                 v_stack[v_sp - n_args - 1].tag  = tvINT;
+                 v_stack[v_sp - n_args - 1].ival = 1;
+                 v_stack[v_sp - n_args - 1].fval = (float__t)1.0L;
+                }
+               v_sp -= n_args;
              }
             break;
 
@@ -3932,49 +3945,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   delete child;
                   return result_fval = qnan;
                  }
-                errtype = child->errt(); 
-                v_stack[v_sp - n_args - 1].tag = tvFLOAT;
-                v_stack[v_sp - n_args - 1].fval  = child->get_re_res ();
-                v_stack[v_sp - n_args - 1].imval = child->get_im_res ();
-                v_stack[v_sp - n_args - 1].ival  = child->get_int_res ();
-                v_stack[v_sp - n_args - 1].sval  = dupString (child->get_str_res ());
+                errtype = child->errt();
 
-                if (v_stack[v_sp - n_args - 1].imval != 0.0)
-                 v_stack[v_sp - n_args - 1].tag = tvCOMPLEX;
-                else 
-                if ((float__t)v_stack[v_sp - n_args - 1].ival == v_stack[v_sp - n_args - 1].fval)
-                 v_stack[v_sp - n_args - 1].tag = tvINT;
-               if (child->get_res_tag () == tvMATRIX)
-                 {
-                  mxresult_t mxr = child->get_mx_res ();
-                  v_stack[v_sp - n_args - 1].tag = tvMATRIX;
-                  v_stack[v_sp - n_args - 1].mcols = mxr.cols;
-                  v_stack[v_sp - n_args - 1].mrows = mxr.rows;
-                  int msize = mxr.rows * mxr.cols * sizeof (float__t);
-                  if (msize)
-                   {
-                    float__t *new_mval = (float__t *)sf_alloc (msize); 
-                    if (new_mval)
-                     {
-                      memcpy (new_mval, mxr.mval, msize);
-                      v_stack[v_sp - n_args - 1].mval = new_mval;
-                     }
-                    else
-                     {
-                      errorf (v_stack[v_sp - n_args - 1].pos, "Out of memory");
-                      delete child;
-                      return result_fval = qnan;
-                     }
-                   }
-                 }
-               else
-                if (child->get_res_tag() == tvSTR)
-                 {
-                  v_stack[v_sp - n_args - 1].tag  = tvSTR;
-                  fflags |= STR;
-                 }
-
-               fflags |= child->isfflags ();
+               GetChildRes (child, v_stack[v_sp - n_args - 1]);
                delete child;
                v_sp -= n_args; // pop arguments
              }

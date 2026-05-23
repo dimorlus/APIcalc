@@ -1,3 +1,7 @@
+23.05.26 (2.200)
+- Fixed a memory leak when working with BMP.
++ Added the ldbmp("bmpfile") function for loading files previously saved with the svbmp function.
+
 22.05.26 (2.199)
 * Now calc/solve(expr, est, var) works the same as calc/solve(expr, var:=est) for compatibility with 
   other solvers.
@@ -6,7 +10,9 @@
 	plot(x, -1,1,x)+plot(-x,-1,1,x) 
   or 
 	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B  
-  Both graphs will appear in the same grid (the first one).
+  Both graphs will appear in the same grid (the first one). The operation A+B is equivalent to 
+  A+=B (A:=A+B) to save memory. Each BMP object takes up 1.4–2.4 MB of memory, depending on the 
+  selected size.
 + Added function svbmp("filename", bmp) for save BMP type to the file
 	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)
   The fplot* and oplot* functions are no longer needed, but are retained for compatibility.	

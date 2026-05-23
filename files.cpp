@@ -82,7 +82,7 @@
     if (files[i].name && strcmp (files[i].name, filename) == 0)
      {
       file_idx = i;
-      fp       = files[i].fp;
+      fp = files[i].fp;
       break;
      }
    }
@@ -112,7 +112,7 @@
 
     strcpy (files[file_count].name, filename);
     files[file_count].fp = fp;
-    file_idx             = file_count;
+    file_idx = file_count;
     file_count++;
    }
 
@@ -211,4 +211,107 @@
    }
   return ns;
 
+ }
+
+ bool calculator::Load (char *fname, value &res)
+ {
+  char fnamebuf[STRBUF];
+  NormalizePath (fname, fnamebuf, STRBUF);
+  // try to load as bitmap first, if fails, try to load as text
+  bmpdraw *bmp = new bmpdraw ();
+  if (bmp->load (fnamebuf))
+   {
+    int top = (int)getivar ("plot_top");
+    if (top < 0 || top > 2000) top = 0;
+    int left = (int)getivar ("plot_left");
+    if (left < 0 || left > 2000) left = 0;
+    bmp->left = left;
+    bmp->top = top;
+    res.sval = (char *)bmp;
+    register_mem (res.sval, ptBMP);
+    res.ival = 1;
+    res.fval = (float__t)1.0L;
+    res.tag = tvBMP;
+   }
+  else
+   {
+    delete bmp;
+    char line[2048];
+    FILE *f = fopen (fnamebuf, "r");
+    if (f)
+     {
+      fgets (line, sizeof (line), f);
+      fclose (f);
+     }
+    else return false;
+    if (line[0] == '\0') return false;
+    calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+    if (!child)
+     {
+      errorf (pos, "Out of memory");
+      return false;
+     }
+    child->evaluate (line);
+    GetChildRes (child, res);
+    delete child;
+   }
+  return true;
+ }
+
+ extern int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary);
+
+ bool calculator::Save(char* fname, value& val)
+ {
+  char fnamebuf[STRBUF];
+  NormalizePath (fname, fnamebuf, STRBUF);
+  switch (val.tag)
+   {
+    case tvBMP:
+     {
+      bmpdraw *bmp = (bmpdraw *)val.sval;
+      if (!bmp) return false;
+      bool r = bmp->save(fnamebuf);
+      //val.tag = tvINT;
+      return r;
+     }
+    case tvSTR:
+     {
+      FILE *f = fopen(fnamebuf, "w");
+      if (!f) return false;
+      fprintf(f, "'%s'", val.sval ? val.sval : "");
+      fclose(f);
+      return true;
+     }
+    case tvMATRIX:
+     {
+      char dst[2048];
+      FILE *f = fopen(fnamebuf, "w");
+      if (!f) return false;
+      Mxprint (val.tag, val.mrows, val.mcols, val.mval, dst, false, nullptr);
+      fprintf (f, "%s", dst);
+      fclose (f);
+      return true;
+     }
+    case tvINT:
+     {
+      FILE *f = fopen(fnamebuf, "w");
+      if (!f) return false;
+      fprintf(f, "%lld", val.ival);
+      fclose(f);
+      return true;
+     }
+    case tvFLOAT:
+    case tvCOMPLEX: 
+     {
+      char str[2048];
+      FILE *f = fopen(fnamebuf, "w");
+      if (!f) return false;
+      qprint (str, val.fval, val.imval, fprec, c_imaginary);
+      fprintf(f, "%s", str);
+      fclose(f);
+      return true;
+     }
+    default:
+     return false; // Unsupported type for saving
+    } 
  }

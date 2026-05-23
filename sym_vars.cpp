@@ -179,6 +179,11 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
        nsp = sp->next;
        if (sp->name[0])
         {
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvBMP))
+          {
+           sf_free (sp->val.sval); // Free BMP value using sf_free to ensure it's unregistered
+           sp->val.sval = nullptr;
+          }
          if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
           {
            sf_free (sp->val.sval); // Free string value using sf_free to ensure it's unregistered

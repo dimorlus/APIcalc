@@ -115,6 +115,11 @@ bool calculator::CheckChildRes (calculator *child)
    errorf (pos, "Result is a string, expected a scalar");
    return false;
   }
+ if (child->get_res_tag () == tvBMP)
+  {
+   errorf (pos, "Result is a bitmap, expected a scalar");
+   return false;
+  }
  return true;
 }
 
@@ -173,12 +178,12 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   case pl_plotlgy:
   case pl_plotlgxy:
   case pl_plotsmith:
-   if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
+   //if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
    break;
 
   case pl_xyplot:  // x_expr, y_expr, from, to, var
-   if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
+   //if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
                      nullptr, 0);
   break;
@@ -218,7 +223,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
 
   case pl_plotdata: // datafile, mask
   case pl_plotdatal:
-   if (!ShowImageFn) return false;
+   //if (!ShowImageFn) return false;
    split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);    // try get mask
    if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, nullptr, 0);    // get datafile
   break;
@@ -294,17 +299,17 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   break;
   }
 
- params.bgc = getivar ("plot_bgc");
- params.fgc = getivar ("plot_fgc");
- params.width = getivar ("plot_width");
+ params.bgc = (int)getivar ("plot_bgc");
+ params.fgc = (int)getivar ("plot_fgc");
+ params.width = (int)getivar ("plot_width");
  if ((params.width <= 100) || (params.width > 2000)) params.width = 800;
- params.height = getivar ("plot_height");
+ params.height = (int)getivar ("plot_height");
  if ((params.height <= 100) || (params.height > 2000)) params.height = 600;
- params.top = getivar ("plot_top");
+ params.top = (int)getivar ("plot_top");
  if (params.top < 0 || params.top > 2000) params.top = 0;
- params.left = getivar ("plot_left");
+ params.left = (int)getivar ("plot_left");
  if (params.left < 0 || params.left > 2000) params.left = 0;
- params.pxsize = getivar ("plot_dotsz");
+ params.pxsize = (int)getivar ("plot_dotsz");
  if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
 
 
@@ -2388,7 +2393,7 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
     {
      res.tag = tvBMP;
      res.sval = (char *)bmp; // Pass bitmap pointer to GUI for display
-     register_mem (res.sval);
+     register_mem (res.sval, ptBMP);
     }
   break;
   }

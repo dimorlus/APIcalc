@@ -4,7 +4,7 @@
   including BMP.
 	A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)
 	save("pi",pi)
-	save("line.bmp",plot(x,-1,1,x)
+	save("line.bmp",plot(x,-1,1,x))
 	save("eye",eye(3,3))
 	load("eye") -> [(1, 0, 0); (0, 1, 0); (0, 0, 1)]
 	

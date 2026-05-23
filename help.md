@@ -148,8 +148,6 @@ plotsmith(expr,from,to,x)        Smith Chart plot (Z0=50Ω) for RF and microwave
 plotsmithz(expr,from,to,x,z0)    Smith Chart plot for RF and microwave engineering.
 plotdata("datafile"[,"mask"])    Display points in window 
 plotdatal ("datafile"[,"mask"])  Display lines in window
-svbmp("bmpfile", bmp)            Save result of plot* functions to the specified BMP file. 
-
 ```
 
 #### Related Variables
@@ -206,22 +204,30 @@ prnf("file", "fmt", ...)        Print line to file.
 dataf("file","msk",...)         Read data from file.
 prn("fmt",...)                  Format print to string.
 datas("str","msk",...)          Extract data from string.
+save("file", var)               Save a variable of any type to a file.
+load("file)                     Load a variable of any type from a file.
+```
 
+### Color related
+```
 winf(x)                         Returns a string describing the portion of the spectrum of a given wavelength.
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
 trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
 color(n)                        Shows a color (colored square on top of the application in 0xRRGGBB format)
-
+```
+```
 const("name",x|z|M)     (1,3)   Add (declare) constant 
 var("name",x|z|M)       (1,3)   Add (declare) variable
-
+```
+```
 integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation
 extr(expr, est, x)              Find extemum
 sum(expr, from, to, x)          ∑expr(x)
 for(expr, from, to, x)  (1,3)   Repeat expr calculations for x and return last expr value.
 if(cond, true, false)   (1,3)   Return true if cond!=0 else return false.
-
+```
+```
 tr(A)                     (3)   trace = sum of diagonal
 det(A)                    (3)   Determinant of matrix
 norm(A)                   (3)   Frobenius norm
@@ -233,12 +239,14 @@ size(A)                   (3)   Return matrix rows*columns
 zeros(r,c|M)              (3)   Return zero matrix with r rows and c columns
 diag(r,c|M), eye(r,c|M)   (3)   Return zero matrix with r rows and c columns with 1 diagonal
 A[r, c] , A[i]            (3)   Matrix element access (both read and write) to the matrix element 
-
+```
+```
 bind(x)                         Reinterpret a floating-point value as an integer 64
 floatd(i)                       Reinterpret an integer as a floating-point 64
 binf(x)                         Reinterpret a floating-point value as an integer 32
 floatf(i)                       Reinterpret an integer as a floating-point 32
-
+```
+```
 printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
 prnf(filename, fmt, ...)        Works the same as prn, but print to the filename.
 datatime("2017.11.23 22:00:20") Return Unix time.

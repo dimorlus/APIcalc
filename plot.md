@@ -8,9 +8,11 @@ or
 
 Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)` to save memory. Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size.
 
-* **svbmp("filename", bmp)**: Function  for save BMP type to the file<br>
+* **save("filename", bmp)**: Function  for save BMP (and any other) type to the file<br>
 	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
-
+* **load("bmpfile")**:  Function  for load BMP (and any other) type from the file<br>
+	```A:=load("cross.bmp")```
+	
 >**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
 
 ## Table of Contents

@@ -3719,7 +3719,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  error (v_stack[v_sp - 1].pos, "Error in statistical function");
                 return result_fval = qnan;
                }
-              v_stack[v_sp - n_args - 1].ival = res;
+              v_stack[v_sp - n_args - 1].ival = (int)res;
+              v_stack[v_sp - n_args - 1].fval = res;
               v_stack[v_sp - n_args - 1].tag  = tvFLOAT;
               v_sp -= n_args;
             }

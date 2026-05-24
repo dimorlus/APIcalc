@@ -735,6 +735,8 @@ void calculator::AddPredefined (void)
  addivar ("plot_left", 0); // Default plot left position in pixels)
  addivar ("plot_bgc", 0x00FFFFFF); // Default plot background color (white)
  addivar ("plot_fgc", 0x00000000); // Default plot foreground color (black)
+ //addfvar ("plot_ymin", 0.0L);       // Default plot y-axis minimum value)
+ //addfvar ("plot_ymax", 0.0L);      // Default plot y-axis maximum value)
 }
 #pragma endregion
 //---------------------------------------------------------------------------
@@ -1338,14 +1340,21 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  //v1 = 0;
  //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
  //test_bmp ();
-  
+ 
+
+
+
  //init_mem_list ();
+
  clear_v_stack (); // Clear the value stack before evaluation
  res_cols = 0;       // Clear the result columns count
  res_rows = 0;       // Clear the result rows count
  if (res_mval) free (res_mval); // Free any previously allocated matrix result
  res_mval = nullptr; // Clear the matrix result pointer
-
+ Plot_Ymax = (float__t)0.0L; // Reset the maximum Y value for plotting
+ Plot_Ymin = (float__t)0.0L; // Reset the minimum Y value for plotting
+ Plot_Xmax = (float__t)0.0L; // Reset the maximum X value for plotting
+ Plot_Xmin = (float__t)0.0L; // Reset the minimum X value for plotting
  if (!expr) return qnan;
 
  o_stack[o_sp++] = toBEGIN;

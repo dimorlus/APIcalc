@@ -1054,6 +1054,11 @@ class calculator // calculator represents the main class for the expression calc
  terr errtype;
  int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
+ float__t Plot_Ymax; // Maximum Y value for plotting, used for autoscaling
+ float__t Plot_Ymin; // Minimum Y value for plotting, used for autoscaling
+ float__t Plot_Xmax; // Maximum X value for plotting, used for autoscaling
+ float__t Plot_Xmin; // Minimum X value for plotting, used for autoscaling
+
  bool expr;    // Expression flag
  char sres[STRBUF]; // String result buffer
  char lastvar[MAXOP];  // Last variable name used in the expression, if it is a string
@@ -1291,6 +1296,7 @@ class calculator // calculator represents the main class for the expression calc
  void addivar (const char *name, int_t ival);
  void addsvar (const char *name, const char *svar);
  int_t getivar (const char *name);
+ float__t getfvar (const char *name);
  char *getsvar (const char *name);
  void addiconst (const char *name, int_t val); // Add an integer variable to the calculator
  void addlconst (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator

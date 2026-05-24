@@ -1,3 +1,13 @@
+24.05.26 (2.201)
+* Now, if multiple plots appear in a single expression, the first plot uses the specified from and 
+  to ranges along the X axis and the Y scale is determined automatically, while all subsequent plots 
+  use the first defined range. The from and to ranges specified in these plots are ignored.
+	plot(2x^2+3x-4,-5,4,x)+plot(2x+3,0,0,x) 
++ Two variables, plot_ymax and plot_ymin, have been added. If they are non-zero, plot plots the 
+  graph using these fixed values, rather than the values automatically generated for the specified 
+  from and to parameters. This is necessary to overlay graphs at the same scale.
+	plot_ymax:=11;plot_ymin:=-16;plot(0.25(x+2)(2x+1)(2x-5),-3,3,x)+plot(2x-3,-3,3,x)
+  
 24.05.26 (2.200)
 - Fixed error in statistical functions.
 - Fixed a memory leak when working with BMP. Memory management has been updated. Some common code 

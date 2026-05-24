@@ -315,25 +315,35 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
 
  if (fidx < pl_plotdata)
   {
+   float__t vfrom, vto;
+   
    // Evaluate from/to parameters
-   float__t vfrom = child->evaluate_f (sfrom);
-   if (isnan (vfrom) || child->err[0])
+   if (Plot_Xmin != (float__t)0.0L) vfrom = Plot_Xmin; // Use previous Xmin if set
+   else
     {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
+     vfrom = child->evaluate_f (sfrom);
+     if (isnan (vfrom) || child->err[0])
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
     }
-
-   float__t vto = child->evaluate_f (sto);
-   if (isnan (vto) || child->err[0])
+   if (Plot_Xmax != (float__t)0.0L) vto = Plot_Xmax; // Use previous Xmax if set
+   else
     {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
+     vto = child->evaluate_f (sto);
+     if (isnan (vto) || child->err[0])
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
     }
-
+   Plot_Xmin = vfrom;
+   Plot_Xmax = vto;
    if (vfrom > vto)
     {
      float__t tmp = vfrom;
@@ -744,6 +754,13 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
 
    if (pass == 0)
     {
+     if (Plot_Ymin != (float__t)0.0L) ymin = Plot_Ymin; // Use previous values if set
+     if (Plot_Ymax != (float__t)0.0L) ymax = Plot_Ymax;
+     float__t plot_ymax = getfvar ("plot_ymax");
+     float__t plot_ymin = getfvar ("plot_ymin");
+     if (plot_ymax != (float__t)0.0L) ymax = plot_ymax;
+     if (plot_ymin != (float__t)0.0L) ymin = plot_ymin;
+
      // Include zero in the range
      if (ymin > 0.0) ymin = 0.0;
      if (ymax < 0.0) ymax = 0.0;
@@ -766,6 +783,8 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
  // Update parameters for drawing axes and grid
  params.ymin = ymin;
  params.ymax = ymax;
+ Plot_Ymax   = ymax; // Store for use in next drawing
+ Plot_Ymin   = ymin; // Store for use in next drawing
 
  return true;
 }
@@ -2065,6 +2084,10 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
   }
 
  fclose (f);
+ float__t plot_ymax = getfvar ("plot_ymax");
+ float__t plot_ymin = getfvar ("plot_ymin");
+ if (plot_ymax != (float__t)0.0L) ymax = plot_ymax;
+ if (plot_ymin != (float__t)0.0L) ymin = plot_ymin;
 
  if (first_point)
   {
@@ -2194,6 +2217,10 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
  params.ymax  = ymax;
  params.vfrom = xmin;
  params.vto   = xmax;
+ Plot_Xmax    = xmax; // For use in next drawing
+ Plot_Xmin    = xmin;
+ Plot_Ymax    = ymax;
+ Plot_Ymin    = ymin;
 
  return true;
 }

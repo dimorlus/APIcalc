@@ -354,6 +354,19 @@ it will be overwritten.
 * **oplot("fname",expr,from,to,var)**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
 for comparing multiple functions on the same scale.
 
+#### The following plot functions are available	   
+* **plot(expr,from,to,x)**: Plot of the expr function in Cartesian coordinates
+* **plotpol(expr,from, to, x)**: Plot of the expr function in Polar coordinates.
+* **plotxy(exprX, exprY,from, to, t)**: Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
+* **plotlgx(expr,from,to,x)**: Plots with logarithmic scale on X axis.  
+* **plotlgy(expr,from,to,x)**: Plots with logarithmic scale on Y axis.
+* **plotlgxy(expr,from,to,x)**: Plots with logarithmic scale on both axes. 
+* **plotsmith(expr,from,to,x)**: Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
+* **plotsmithz(expr,from,to,x,z0)**: Smith Chart plot for RF and microwave engineering.
+* **plotdata("datafile"[,"mask"])**: Display points in window 
+* **plotdatal ("datafile"[,"mask"])**: Display lines in window
+
+
 #### Handling Special Values
 The engine is designed for robust engineering calculations:
 * **Division by Zero**: Handled gracefully. If an expression results in a singularity (like $$sin(x)/x$$ at $$x=0$$), 
@@ -368,12 +381,54 @@ The **plot*** functions return the BMP type, and the `+` and `|` operators are d
 or 
 	<br>```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```<br>
 
-Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)` to save memory. Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size.
+Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)` to save memory. 
+Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size.
 
-* **svbmp("filename", bmp)**: Function  for save BMP type to the file<br>
+* **save("filename", bmp)**: Function  for save BMP type to the file<br>
 	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
+* **load("bmpfile")**:  Function  for load BMP (and any other) type from the file<br>
+	```A:=load("cross.bmp")```
 
 >**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
+
+When overlaying multiple graphs using the + or | operators, managing the coordinate axes and scales is crucial for accurate visual analysis. 
+The engine provides two distinct mechanisms for scale management: Automatic Expression-Bound Scaling and Global Fixed Scaling.
+
+* Automatic Expression-Bound Scaling (Single Expression)
+When multiple plot() functions are combined within a single command line or expression, the engine automatically synchronizes 
+their X-ranges and Y-scales based on the first plot:
+
+_X-Axis_: The from and to ranges specified in the first plot() function dictate the horizontal scale. Any X-ranges specified 
+in subsequent plot() calls within the same expression are ignored.
+_Y-Axis_: The vertical scale is calculated automatically to perfectly fit the data of the first plot. Subsequent curves are 
+drawn onto this established grid.
+
+Example:
+```
+;; The second plot ignores "0,0" and conforms to the "-5,4" range of the first plot
+plot(2x^2+3x-4, -5,4, x) + plot(2x+3, 0,0, x) 
+```
+* Global Fixed Scaling (State Variables)
+To enforce an absolute vertical scale across different expressions, or to clip the view to a specific region of interest, use 
+the global state variables: plot_ymin and plot_ymax.
+
+_Behavior_: If these variables are set to non-zero values, the automatic Y-scale generation is bypassed. The engine strictly 
+locks the vertical axes to the specified limits.
+
+_Lifespan_: These settings operate globally. Once defined, they remain active for all subsequent plotting operations until 
+modified or until the calculator instance is closed. To return to full auto-scaling, reset both variables to 0.
+
+Example:
+```
+;; Manually defining the viewport limits for perfect geometric alignment
+plot_ymax := 11 
+plot_ymin := -16
+plot(0.25(x+2)(2x+1)(2x-5), -3,3, x) + plot(2x-3, -3,3, x)
+
+;; Resetting back to automatic scaling mode
+plot_ymax := 0; plot_ymin := 0;
+```
+[Plotting Functions Reference](plot.md)
 
 #### Complex Values & Continuity
 * **Real-only Rendering**: The `plot` operator automatically detects complex results. If the imaginary part exceeds a negligible 
@@ -390,7 +445,7 @@ no false lines connect disconnected real branches (e.g., in $$ln(x)$$ or $$\sqrt
 
 > **Technical Note**: To ensure accuracy, the engine monitors the ratio of the imaginary part to the total magnitude. If $Abs(im) / |z| > 10^{-12}$, the point is considered undefined in the real plane, and the line is broken.
 
-### **Complex Number Support**
+### Complex Number Support
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
 * Functions like `sqrt`, `log`, `ln`, `asin`, `acos`, `pow` and operator `^` automatically switch to the complex version when the real result is undefined — for example `sqrt(-1)` returns ```|1|(90`0'0") 0+1i``` instead of NaN.
@@ -760,40 +815,6 @@ These functions use mean and stddev calculated from the data file:
 * **normq("file", ["msk"], x)** Probability of falling within |x - mean| range.
 * **normr("file", ["msk"], x)** Upper tail probability P(X > x).
 * **invnorm("file", ["msk"], p)** Inverse Normal: find x such that P(X <= x) = p.
-
-### Plot functions
-Each function in this group has three versions.
-* **plot(...)** Displays a plot in a pop-up modal window (does not work in the CLI version)
-* **fplot("bmpfile", ...)** Places a plot in the specified BMP file (replaces an existing one or creates a new one)
-* **oplot("bmpfile", ...)** Places a plot over an existing BMP file (preserving its size and background color).
-
-#### The following plot functions are available	   
-* **plot(expr,from,to,x)**: Plot of the expr function in Cartesian coordinates
-* **plotpol(expr,from, to, x)**: Plot of the expr function in Polar coordinates.
-* **plotxy(exprX, exprY,from, to, t)**: Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
-* **plotlgx(expr,from,to,x)**: Plots with logarithmic scale on X axis.  
-* **plotlgy(expr,from,to,x)**: Plots with logarithmic scale on Y axis.
-* **plotlgxy(expr,from,to,x)**: Plots with logarithmic scale on both axes. 
-* **plotsmith(expr,from,to,x)**: Smith Chart plot (Z0=50Ω) for RF and microwave engineering.
-* **plotsmithz(expr,from,to,x,z0)**: Smith Chart plot for RF and microwave engineering.
-* **plotdata("datafile"[,"mask"])**: Display points in window 
-* **plotdatal ("datafile"[,"mask"])**: Display lines in window
-
-The **plot*** functions return the BMP type, and the `+` and `|` operators are defined for this type,  working in such a way that the second image (graph) is drawn on top of the first. You can write 
-	<br>```plot(x, -1,1,x)+plot(-x,-1,1,x)```<br> 
-or 
-	<br>```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```<br>
-
-Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)` to save memory. Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size.
-
-* **save("filename", bmp)**: Function  for save BMP (and any other) type to the file<br>
-	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
-* **load("bmpfile")**:  Function  for load BMP (and any other) type from the file<br>
-	```A:=load("cross.bmp")```
-
->**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
-
-[Plotting Functions Reference](plot.md)
 
 ### Strings
 You can enter a string, assign a string value to a variable, and perform string concatenation.

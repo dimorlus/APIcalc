@@ -517,6 +517,16 @@ int_t calculator::getivar (const char *name)
  return 0;
 }
 
+float__t calculator::getfvar (const char *name)
+{
+ symbol *sp = find (name);
+ if (sp && ((sp->val.tag == tvINT) || (sp->val.tag == tvFLOAT)))
+  {
+   return sp->val.get ();
+  }
+ return (float__t)0.0L;
+}
+
 char *calculator::getsvar (const char *name)
 {
  symbol *sp = find (name);

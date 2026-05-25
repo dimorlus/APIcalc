@@ -311,50 +311,30 @@ void calculator::AddPredefined (void)
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
- add (tsPLOT, pl_fplot, "fplot", nullptr, true);
- add (tsPLOT, pl_oplot, "oplot", nullptr, true);
 
  // Polar plots
  add (tsPLOT, pl_plotpol, "plotpol", nullptr, false);
- add (tsPLOT, pl_fplotpol, "fplotpol", nullptr, true);
- add (tsPLOT, pl_oplotpol, "oplotpol", nullptr, true);
 
  // Parametric plots
  add (tsPLOT, pl_xyplot, "plotxy", nullptr, false);
- add (tsPLOT, pl_fxyplot, "fplotxy", nullptr, true);
- add (tsPLOT, pl_oxyplot, "oplotxy", nullptr, true);
 
  // Logarithmic plots
  add (tsPLOT, pl_plotlgx, "plotlgx", nullptr, false);
- add (tsPLOT, pl_fplotlgx, "fplotlgx", nullptr, true);
- add (tsPLOT, pl_oplotlgx, "oplotlgx", nullptr, true);
 
  add (tsPLOT, pl_plotlgy, "plotlgy", nullptr, false);
- add (tsPLOT, pl_fplotlgy, "fplotlgy", nullptr, true);
- add (tsPLOT, pl_oplotlgy, "oplotlgy", nullptr, true);
 
  add (tsPLOT, pl_plotlgxy, "plotlgxy", nullptr, false);
- add (tsPLOT, pl_fplotlgxy, "fplotlgxy", nullptr, true);
- add (tsPLOT, pl_oplotlgxy, "oplotlgxy", nullptr, true);
 
  // Smith chart
  add (tsPLOT, pl_plotsmith, "plotsmith", nullptr, false);
- add (tsPLOT, pl_fplotsmith, "fplotsmith", nullptr, true);
- add (tsPLOT, pl_oplotsmith, "oplotsmith", nullptr, true);
 
  add (tsPLOT, pl_plotsmithz, "plotsmithz", nullptr, false);
- add (tsPLOT, pl_fplotsmithz, "fplotsmithz", nullptr, true);
- add (tsPLOT, pl_oplotsmithz, "osmithz", nullptr, true);
 
  // Data plots (points)
  add (tsPLOT, pl_plotdata, "plotdata", nullptr, false);
- add (tsPLOT, pl_fplotdata, "fplotdata", nullptr, true);
- add (tsPLOT, pl_oplotdata, "oplotdata", nullptr, true);
 
  // Data plots (lines)
  add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, false);
- add (tsPLOT, pl_fplotdatal, "fplotdatal", nullptr, true);
- add (tsPLOT, pl_oplotdatal, "oplotdatal", nullptr, true);
 
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
@@ -1355,6 +1335,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  Plot_Ymin = (float__t)0.0L; // Reset the minimum Y value for plotting
  Plot_Xmax = (float__t)0.0L; // Reset the maximum X value for plotting
  Plot_Xmin = (float__t)0.0L; // Reset the minimum X value for plotting
+ Plot_Tmax = (float__t)0.0L; // Reset the maximum T value for plotting
+ Plot_Tmin = (float__t)0.0L; // Reset the minimum T value for plotting
+ 
  if (!expr) return qnan;
 
  o_stack[o_sp++] = toBEGIN;

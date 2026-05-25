@@ -1,4 +1,9 @@
 24.05.26 (2.201)
+* All fplot* and oplot* functions have been deprecated. For plotting, use the + or | operator, and 
+  for saving, use the save operator (function).
+  
+24.05.26 (2.201)
+- Fixed error in statistical functions.
 * Now, if multiple plots appear in a single expression, the first plot uses the specified from and 
   to ranges along the X axis and the Y scale is determined automatically, while all subsequent plots 
   use the first defined range. The from and to ranges specified in these plots are ignored.
@@ -9,7 +14,6 @@
 	plot_ymax:=11;plot_ymin:=-16;plot(0.25(x+2)(2x+1)(2x-5),-3,3,x)+plot(2x-3,-3,3,x)
   
 24.05.26 (2.200)
-- Fixed error in statistical functions.
 - Fixed a memory leak when working with BMP. Memory management has been updated. Some common code 
   has been moved into functions.
 + Added save("file", var)/load("file") functions for saving and loading to file any variable type 

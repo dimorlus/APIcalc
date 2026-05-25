@@ -559,49 +559,25 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  // Cartesian coordinates
  pl_plot,       // plot plot Cartesian to screen
- pl_fplot,      // fplot plot Cartesian to file
- pl_oplot,      // oplot plot Cartesian overlay to file
 
  // Polar coordinates
  pl_plotpol,    // plotpol polar plot to screen
- pl_fplotpol,   // fplotpol polar plot to file
- pl_oplotpol,   // oplotpol polar plot overlay to file
 
  // Parametric (X-Y) plot
  pl_xyplot,     // xyplot xy plot to screen
- pl_fxyplot,    // fxyplot xy plot to file
- pl_oxyplot,    // oxyplot xy plot overlay to file
 
  // Logarithmic plots
  pl_plotlgx, // log X axis, linear Y
- pl_fplotlgx,
- pl_oplotlgx,
-
  pl_plotlgy, // linear X, log Y axis
- pl_fplotlgy,
- pl_oplotlgy,
-
  pl_plotlgxy, // log both X and Y axes
- pl_fplotlgxy,
- pl_oplotlgxy,
 
  // Smith chart
  pl_plotsmith,  // smith(expr, from, to, var) - Z0=50Ω
- pl_fplotsmith, // fsmith("file", expr, from, to, var)
- pl_oplotsmith, // osmith("file", expr, from, to, var)
-
  pl_plotsmithz,  // smithz(expr, from, to, var, Z0)
- pl_fplotsmithz, // fsmithz("file", expr, from, to, var, Z0)
- pl_oplotsmithz, // osmithz("file", expr, from, to, var, Z0)
 
  // Data plot functions
  pl_plotdata,  // plotdata(datafile, mask)
- pl_fplotdata, // fplotdata(bmpfile, datafile, mask)
- pl_oplotdata, // oplotdata(bmpfile, datafile, mask)
-
  pl_plotdatal,  // plotdatal(datafile, mask) - with lines
- pl_fplotdatal, // fplotdatal(bmpfile, datafile, mask)
- pl_oplotdatal, // oplotdatal(bmpfile, datafile, mask)
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
@@ -1058,6 +1034,8 @@ class calculator // calculator represents the main class for the expression calc
  float__t Plot_Ymin; // Minimum Y value for plotting, used for autoscaling
  float__t Plot_Xmax; // Maximum X value for plotting, used for autoscaling
  float__t Plot_Xmin; // Minimum X value for plotting, used for autoscaling
+ float__t Plot_Tmax; // Maximum T value for plotting, used for autoscaling
+ float__t Plot_Tmin; // Minimum T value for plotting, used for autoscaling
 
  bool expr;    // Expression flag
  char sres[STRBUF]; // String result buffer

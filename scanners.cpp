@@ -1368,24 +1368,6 @@ t_operator calculator::sscan (symbol *sym)
      bool error_in_args = false;
      switch (sym->fidx)
       {
-      case pl_fplot:    // fplot(file, expr, from, to, var)
-      case pl_oplot:    // oplot(file, expr, from, to, var)
-      case pl_fplotpol: // fplotpol(file, expr, from, to, var)
-      case pl_oplotpol: // oplotpol(file, expr, from, to, var)
-      case pl_fplotlgx:
-      case pl_oplotlgx:
-      case pl_fplotlgy:
-      case pl_oplotlgy:
-      case pl_fplotlgxy:
-      case pl_oplotlgxy:
-      case pl_fplotsmith: // fplotsmith(file, expr, from, to, var)
-      case pl_oplotsmith: // oplotsmith(file, expr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 4)
-        v_stack[v_sp].tag = tvPLOT;
-       else
-        error_in_args = true;
-       break;
-
       case pl_plot:    // plot(expr, from, to, var)
       case pl_plotpol: // plotpol(expr, from, to, var)
       case pl_plotlgx:
@@ -1405,24 +1387,8 @@ t_operator calculator::sscan (symbol *sym)
         error_in_args = true;
        break;
 
-      case pl_fxyplot: // fxyplot(file, xexpr, yexpr, from, to, var)
-      case pl_oxyplot: // oxyplot(file, xexpr, yexpr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 5)
-        v_stack[v_sp].tag = tvPLOT;
-       else
-        error_in_args = true;
-       break;
-
       case pl_plotsmithz: // plotsmithz(expr, from, to, var, Z0)
        if (parenthesis_count == 0 && comma_count == 4)
-        v_stack[v_sp].tag = tvPLOT;
-       else
-        error_in_args = true;
-       break;
-
-      case pl_fplotsmithz: // fplotsmithz(file, expr, from, to, var, Z0)
-      case pl_oplotsmithz: // oplotsmithz(file, expr, from, to, var, Z0)
-       if (parenthesis_count == 0 && comma_count == 5)
         v_stack[v_sp].tag = tvPLOT;
        else
         error_in_args = true;
@@ -1431,16 +1397,6 @@ t_operator calculator::sscan (symbol *sym)
       case pl_plotdata:  // plotdata(datafile, mask)
       case pl_plotdatal: // plotdatal(datafile, mask) - with lines
        if (parenthesis_count == 0 && comma_count <= 1)
-        v_stack[v_sp].tag = tvPLOT;
-       else
-        error_in_args = true;
-       break;
-
-      case pl_fplotdata:  // fplotdata(bmpfile, datafile, mask)
-      case pl_oplotdata:  // oplotdata(bmpfile, datafile, mask)
-      case pl_fplotdatal: // fplotdatal(bmpfile, datafile, mask)
-      case pl_oplotdatal: // oplotdatal(bmpfile, datafile, mask)
-       if (parenthesis_count == 0 && comma_count <= 2)
         v_stack[v_sp].tag = tvPLOT;
        else
         error_in_args = true;

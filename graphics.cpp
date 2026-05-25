@@ -188,37 +188,9 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
                      nullptr, 0);
   break;
 
-  case pl_fplot:    // fname, expr, from, to, var
-  case pl_oplot:
-  case pl_fplotpol:
-  case pl_oplotpol:
-  case pl_fplotlgx:
-  case pl_oplotlgx:
-  case pl_fplotlgy:
-  case pl_oplotlgy:
-  case pl_fplotlgxy:
-  case pl_oplotlgxy:
-  case pl_fplotsmith:
-  case pl_oplotsmith:
-   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, 
-                     sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
-  break;
-
-  case pl_fxyplot: // fname, x_expr, y_expr, from, to, var
-  case pl_oxyplot:
-   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP,
-                     svar, STRBUF, nullptr, 0);
-  break;
-
   case pl_plotsmithz: // expr, from, to, var, z0
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, sz0, MAXOP,
                      nullptr, 0);
-   break;
-
-  case pl_fplotsmithz: // file, expr, from, to, var, z0
-  case pl_oplotsmithz:
-   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
-                     sz0, MAXOP, nullptr, 0);
    break;
 
   case pl_plotdata: // datafile, mask
@@ -226,14 +198,6 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    //if (!ShowImageFn) return false;
    split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);    // try get mask
    if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, nullptr, 0);    // get datafile
-  break;
-
-  case pl_fplotdata: // bmpfile, datafile, mask
-  case pl_oplotdata:
-  case pl_fplotdatal:
-  case pl_oplotdatal:
-   split_ok = Split (expr, fname, STRBUF, sexpr, STRBUF, nullptr, 0); //get bmp and datafile
-   if (split_ok) Split (expr, fname, STRBUF, sexpr, STRBUF, svar, STRBUF, nullptr, 0); //try get mask
   break;
 
   default:
@@ -255,50 +219,6 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    return false;
   }
 
-// Process filename for file-based functions
- switch (fidx)
- {
-  case pl_fplot:
-  case pl_oplot:
-  case pl_fplotpol:
-  case pl_oplotpol:
-  case pl_fxyplot:     
-  case pl_oxyplot: 
-  case pl_fplotlgx:
-  case pl_oplotlgx:
-  case pl_fplotlgy:
-  case pl_oplotlgy:
-  case pl_fplotlgxy:
-  case pl_oplotlgxy:
-  case pl_fplotsmith: 
-  case pl_oplotsmith: 
-  case pl_fplotsmithz:
-  case pl_oplotsmithz: 
-  case pl_fplotdata: // bmpfile, datafile, mask
-  case pl_oplotdata:
-  case pl_fplotdatal:
-  case pl_oplotdatal:
-   child->setFileDlgFn (FileDlgFn);
-   child->evaluate_f (fname);
-   if (child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   if (child->get_res_tag () != tvSTR)
-    {
-     errorf (pos, "First argument is not a file name");
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   strncpy (fname, child->get_str_res (), STRBUF - 1);
-   fname[STRBUF - 1] = '\0';
-  break;
-  }
-
  params.bgc = (int)getivar ("plot_bgc");
  params.fgc = (int)getivar ("plot_fgc");
  params.width = (int)getivar ("plot_width");
@@ -317,33 +237,67 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   {
    float__t vfrom, vto;
    
-   // Evaluate from/to parameters
-   if (Plot_Xmin != (float__t)0.0L) vfrom = Plot_Xmin; // Use previous Xmin if set
+   if (fidx == pl_plotlgxy)
+     {
+     // Evaluate from/to parameters
+     if (Plot_Tmin != (float__t)0.0L) vfrom = Plot_Tmin; // Use previous Tmin if set
+     else
+      {
+       vfrom = child->evaluate_f (sfrom);
+       if (isnan (vfrom) || child->err[0])
+        {
+         errorf (pos, "%s", child->err);
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
+      }
+     if (Plot_Tmax != (float__t)0.0L) vto = Plot_Tmax; // Use previous Tmax if set
+     else
+      {
+       vto = child->evaluate_f (sto);
+       if (isnan (vto) || child->err[0])
+        {
+         errorf (pos, "%s", child->err);
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
+      }
+     Plot_Tmin = vfrom;
+     Plot_Tmax = vto;
+    }
    else
     {
-     vfrom = child->evaluate_f (sfrom);
-     if (isnan (vfrom) || child->err[0])
+     // Evaluate from/to parameters
+     if (Plot_Xmin != (float__t)0.0L) vfrom = Plot_Xmin; // Use previous Xmin if set
+     else
       {
-       errorf (pos, "%s", child->err);
-       delete child;
-       result_fval = qnan;
-       return false;
+       vfrom = child->evaluate_f (sfrom);
+       if (isnan (vfrom) || child->err[0])
+        {
+         errorf (pos, "%s", child->err);
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
       }
-    }
-   if (Plot_Xmax != (float__t)0.0L) vto = Plot_Xmax; // Use previous Xmax if set
-   else
-    {
-     vto = child->evaluate_f (sto);
-     if (isnan (vto) || child->err[0])
+     if (Plot_Xmax != (float__t)0.0L) vto = Plot_Xmax; // Use previous Xmax if set
+     else
       {
-       errorf (pos, "%s", child->err);
-       delete child;
-       result_fval = qnan;
-       return false;
+       vto = child->evaluate_f (sto);
+       if (isnan (vto) || child->err[0])
+        {
+         errorf (pos, "%s", child->err);
+         delete child;
+         result_fval = qnan;
+         return false;
+        }
       }
+     Plot_Xmin = vfrom;
+     Plot_Xmax = vto;
     }
-   Plot_Xmin = vfrom;
-   Plot_Xmax = vto;
+
    if (vfrom > vto)
     {
      float__t tmp = vfrom;
@@ -361,7 +315,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
     }
    // Evaluate Z0 for Smith chart with explicit Z0
    float__t z0 = 50.0; // Default
-   if (fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz)
+   if (fidx == pl_plotsmithz)
     {
      z0 = child->evaluate_f (sz0);
      if (isnan (z0) || child->err[0] || !CheckChildRes (child) || !isChildResReal (child)
@@ -391,7 +345,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    else fvx = 0;
 
    // For parametric plots, test second expression
-   if (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
+   if (fidx == pl_xyplot)
     {
      float__t fvy = child->evaluate_f (sexpr_y);
      if (!((isnan (fvx) || isinf (fvx)) && child->errt () == teMath))
@@ -409,9 +363,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
 
    // Fill in the parameters
    params.sexpr   = strdup (sexpr);
-   params.sexpr_y = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot)
-                        ? strdup (sexpr_y)
-                        : nullptr;
+   params.sexpr_y = (fidx == pl_xyplot) ? strdup (sexpr_y) : nullptr;
    params.svar    = strdup (svar);
    params.vfrom   = vfrom;
    params.vto     = vto;
@@ -425,10 +377,8 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    params.text_color = ~params.bgc;
 
    // Set logarithmic flags
-   params.log_x = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx
-                   || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
-   params.log_y = (fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy
-                   || fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
+   params.log_x = (fidx == pl_plotlgx || fidx == pl_plotlgxy);
+   params.log_y = (fidx == pl_plotlgy || fidx == pl_plotlgxy);
 
    // Set Z0 for Smith chart
    params.z0 = z0;
@@ -467,7 +417,7 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    params.ymin    = 0;
    params.ymax    = 0;
 
-   params.dot = (fidx == pl_plotdata || fidx == pl_fplotdata || fidx == pl_oplotdata);
+   params.dot = (fidx == pl_plotdata);
    params.padding = 40;
    params.grid_color = 0xC0C0C0;
    params.axis_color = 0x808080;
@@ -1001,6 +951,17 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
    t += step;
   }
  while (t <= t_to);
+
+ if (Plot_Xmax != (float__t)0.0L) xmax = Plot_Xmax; // Use previous values if set
+ if (Plot_Xmin != (float__t)0.0L) xmin = Plot_Xmin;
+ if (Plot_Ymax != (float__t)0.0L) ymax = Plot_Ymax;
+ if (Plot_Ymin != (float__t)0.0L) ymin = Plot_Ymin;
+
+ Plot_Xmax = xmax; // For use in next drawing
+ Plot_Xmin = xmin;
+ Plot_Ymax = ymax;
+ Plot_Ymin = ymin;
+
 
  // Add padding
  if (xmin == xmax)
@@ -2246,67 +2207,24 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
  
   // 2. Create or load bitmap
  bmpdraw *bmp    = new bmpdraw ();
- bool is_overlay     = ((fidx == pl_oplot || fidx == pl_oplotpol || fidx == pl_oxyplot
-                     || fidx == pl_oplotlgx || fidx == pl_oplotlgy || fidx == pl_oplotlgxy
-                     || fidx == pl_oplotsmith || fidx == pl_oplotsmithz 
-                     || fidx == pl_oplotdata || fidx == pl_oplotdatal)
-                    && fname[0]);
+  bool is_polar       = (fidx == pl_plotpol);
 
- bool is_polar       = (fidx == pl_plotpol || fidx == pl_fplotpol || fidx == pl_oplotpol);
+ bool is_parametric = (fidx == pl_xyplot);
+ bool is_logarithmic = (fidx == pl_plotlgx ||  fidx == pl_plotlgy || fidx == pl_plotlgxy);
+ bool is_smith = (fidx == pl_plotsmith || fidx == pl_plotsmithz);
+ bool is_data = (fidx == pl_plotdata || fidx == pl_plotdatal);
 
- bool is_parametric = (fidx == pl_xyplot || fidx == pl_fxyplot || fidx == pl_oxyplot);
-
- bool is_logarithmic = (fidx == pl_plotlgx || fidx == pl_fplotlgx || fidx == pl_oplotlgx ||
-                        fidx == pl_plotlgy || fidx == pl_fplotlgy || fidx == pl_oplotlgy ||
-                        fidx == pl_plotlgxy || fidx == pl_fplotlgxy || fidx == pl_oplotlgxy);
-
- bool is_smith       = (fidx == pl_plotsmith || fidx == pl_fplotsmith || fidx == pl_oplotsmith
-                  || fidx == pl_plotsmithz || fidx == pl_fplotsmithz || fidx == pl_oplotsmithz);
-
- bool is_data = (fidx >= pl_plotdata && fidx <= pl_oplotdatal);
-
- if (is_overlay)
-  {
-   // Try to load existing image for overlay
-   if (bmp->load (fname))
-    {
-     // Successfully loaded — get dimensions and dominant background color
-     params.width      = bmp->getWidth ();
-     params.height     = bmp->getHeight ();
-     params.bgc        = bmp->getDominantColor ();
-     params.text_color = ~params.bgc;
-    }
-   else
-    {
-     // Failed to load — create new bitmap (fallback to fplot behavior)
-     is_overlay = false;
-     if (!bmp->newbmp (params.width, params.height, params.bgc))
-      {
-       errorf (pos, "Failed to create bitmap for plotting");
-       delete bmp;
-       if (params.child) delete params.child;
-       if (params.sexpr) free (params.sexpr);
-       if (params.sexpr_y) free (params.sexpr_y);
-       if (params.svar) free (params.svar);
-       result_fval = qnan;
-       return false;
-      }
-    }
-  }
- else
-  {
    // Normal plot or fplot — create new bitmap
-   if (!bmp->newbmp (params.width, params.height, params.bgc))
-    {
-     errorf (pos, "Failed to create bitmap for plotting");
-     delete bmp;
-     if (params.child) delete params.child;
-     if (params.sexpr) free (params.sexpr);
-     if (params.sexpr_y) free (params.sexpr_y);
-     if (params.svar) free (params.svar);
-     result_fval = qnan;
-     return false;
-    }
+ if (!bmp->newbmp (params.width, params.height, params.bgc))
+  {
+   errorf (pos, "Failed to create bitmap for plotting");
+   delete bmp;
+   if (params.child) delete params.child;
+   if (params.sexpr) free (params.sexpr);
+   if (params.sexpr_y) free (params.sexpr_y);
+   if (params.svar) free (params.svar);
+   result_fval = qnan;
+   return false;
   }
 
  bmp->top = params.top;
@@ -2355,7 +2273,7 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
   }
 
  // 4. Draw axes and grid (skip for overlay mode)
- if (!is_overlay)
+ // 
   {
    if (is_smith)
     {
@@ -2383,47 +2301,12 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
   }
 
 // 5. Save or display
- switch (fidx)
+// Show in GUI
  {
-  case pl_fplot:
-  case pl_oplot:
-  case pl_fplotpol:
-  case pl_oplotpol:
-  case pl_fxyplot:
-  case pl_oxyplot:
-  case pl_fplotlgx:
-  case pl_oplotlgx:
-  case pl_fplotlgy:
-  case pl_oplotlgy:
-  case pl_fplotlgxy:
-  case pl_oplotlgxy:
-  case pl_fplotsmith:
-  case pl_oplotsmith:
-  case pl_fplotsmithz:
-  case pl_oplotsmithz:
-  case pl_fplotdata:
-  case pl_oplotdata:
-   // Already handled above with is_overlay logic
-   bmp->save (fname);
-  break;
-  case pl_plot:
-  case pl_plotpol:
-  case pl_xyplot:
-  case pl_plotlgx:
-  case pl_plotlgy:
-  case pl_plotlgxy:
-  case pl_plotsmith:
-  case pl_plotsmithz:
-  case pl_plotdata:
-  case pl_plotdatal:
-   // Show in GUI
-    {
-     res.tag = tvBMP;
-     res.sval = (char *)bmp; // Pass bitmap pointer to GUI for display
-     register_mem (res.sval, ptBMP);
-    }
-  break;
-  }
+  res.tag = tvBMP;
+  res.sval = (char *)bmp; // Pass bitmap pointer to GUI for display
+  register_mem (res.sval, ptBMP);
+ }
 
  // 6. Cleanup
  if (!res.sval) delete bmp;

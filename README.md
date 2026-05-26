@@ -321,6 +321,10 @@ The last variable in the initial conditions is the one being solved for:
   ```
   extr(x^(1/x),2,x) → 2.718281828459045 ;; e
   ```	
+* **inverse/inv(expr, point, var)**: Inverse using Brent's method
+  ```
+  inv(sin(x),1/sqrt(2), x) → 0.7853981633974483 (45`)
+  ```  
 * **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e

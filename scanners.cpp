@@ -1363,6 +1363,21 @@ t_operator calculator::sscan (symbol *sym)
        return toERROR;
       }
     }
+   else if (sym->tag == tsINVERSE) // inverse (x(2x+2)-2, 0, x)
+    {
+     if (parenthesis_count == 0 && comma_count == 2)
+      {
+       v_stack[v_sp].tag = tvINVERSE;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in inverse");
+       else
+        error ("wrong number of arguments in inverse");
+       return toERROR;
+      }
+    }
    else if (sym->tag == tsPLOT) // plot(fname, expr)
     {
      bool error_in_args = false;
@@ -1994,6 +2009,8 @@ t_operator calculator::scan (bool operand, bool percent)
      else if (sym->tag == tsDIFF)
       return toSOLVE;
      else if (sym->tag == tsEXTR)
+      return toSOLVE;
+     else if (sym->tag == tsINVERSE)
       return toSOLVE;
      else if (sym->tag == tsSOLVE)
       return toSOLVE;

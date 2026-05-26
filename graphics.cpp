@@ -544,7 +544,7 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
 
  if (!isnan (Plot_Rmax) && PlotFunc == pl_plotpol) rmax = Plot_Rmax; // Use previous Rmax if set
  float__t plot_rmax = getfvar ("plot_ymax");
- if (!isnan (plot_rmax)) rmax = plot_rmax;
+ if (!isnan (plot_rmax) && plot_rmax != 0) rmax = plot_rmax;
  Plot_Rmax = rmax; // Store Rmax for future use
 
  // Calculate scale: how many pixels per unit radius
@@ -767,8 +767,8 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
       }
      float__t plot_ymax = getfvar ("plot_ymax");
      float__t plot_ymin = getfvar ("plot_ymin");
-     if (!isnan(plot_ymax)) ymax = plot_ymax;
-     if (!isnan(plot_ymin)) ymin = plot_ymin;
+     if (!isnan(plot_ymax) && plot_ymax != 0) ymax = plot_ymax;
+     if (!isnan(plot_ymin) && plot_ymin != 0) ymin = plot_ymin;
      Plot_Ymax = ymax; // Store for use in next drawing
      Plot_Ymin = ymin; // Store for use in next drawing
 
@@ -1373,8 +1373,8 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
   }
  float__t plot_ymax = getfvar ("plot_ymax");
  float__t plot_ymin = getfvar ("plot_ymin");
- if (!isnan (plot_ymax)) ymax = plot_ymax;
- if (!isnan (plot_ymin)) ymin = plot_ymin;
+ if (!isnan (plot_ymax) && plot_ymax != 0) ymax = plot_ymax;
+ if (!isnan (plot_ymin) && plot_ymin != 0) ymin = plot_ymin;
  Plot_Ymin = ymin; // Store for use in next drawing
  Plot_Ymax = ymax;
 
@@ -2131,8 +2131,8 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
   }
  float__t plot_ymax = getfvar ("plot_ymax");
  float__t plot_ymin = getfvar ("plot_ymin");
- if (!isnan(plot_ymax)) ymax = plot_ymax;
- if (!isnan(plot_ymin)) ymin = plot_ymin;
+ if (!isnan(plot_ymax) && plot_ymax != 0) ymax = plot_ymax;
+ if (!isnan(plot_ymin) && plot_ymin != 0) ymin = plot_ymin;
  Plot_Xmax = xmax; // For use in next drawing
  Plot_Xmin = xmin;
  Plot_Ymax = ymax;

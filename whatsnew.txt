@@ -1,4 +1,9 @@
 26.05.26 (2.202)
++ Added function inverse/inv(expr, point, var) which returns the inverse expr function at the specified 
+  point using Brent's method.
+  inv(sin(x),1/sqrt(2), x) → 0.7853981633974483 (45`)
+  
+26.05.26 (2.202)
 + Now plotreg(xmin, xmax, ymin,ymax) sets the ymin..ymax range for the entire session (as plot_ymin and 
   plot_ymax do, in fact) and the from..to range for the current expression. In the current expression, 
   the first use of plot(expr, from, to, var) sets the from..to range for all subsequent compatible plots 

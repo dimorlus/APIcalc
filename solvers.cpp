@@ -1153,4 +1153,265 @@ float__t calculator::Extremum (const char *expr)
  delete child;
  return x;
 }
+
+// Inverse using Brent's method (robust root finding for f(x) - y = 0)
+float__t calculator::Inverse (const char *expr)
+{
+ if (!expr || !*expr)
+  {
+   errorf (pos, "empty expression");
+   return result_fval = qnan;
+  }
+
+ char sexpr[STRBUF], svar[STRBUF], spoint[MAXOP];
+
+ if (!Split (expr, sexpr, STRBUF, spoint, MAXOP, svar, STRBUF, nullptr, 0))
+  {
+   errorf (pos, "inverse: invalid expression");
+   return result_fval = qnan;
+  }
+
+ calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   return result_fval = qnan;
+  }
+
+ float__t y = child->evaluate_f (spoint);
+ if (isnan (y) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+
+#ifdef _float128_
+ const float__t tol = 1e-28Q;
+#else
+ const float__t tol = 1e-12L;
+#endif
+
+ // Step 1: Find bracket [a, b] where f(a)-y and f(b)-y have opposite signs
+ float__t a, b, fa, fb;
+
+ // Try initial bracket around y
+ a = y - (float__t)1.0;
+ b = y + (float__t)1.0;
+
+ // Eval f(a) - y
+ child->addfvar (svar, a);
+ fa = child->evaluate_f (sexpr);
+ if (child->err[0] && !isnan (fa))
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+ if (isnan (fa) && child->errt () == teMath) fa = 0;
+ if (isnan (fa))
+  {
+   errorf (pos, "Cannot evaluate function at bracket point");
+   delete child;
+   return result_fval = qnan;
+  }
+ fa = fa - y;
+
+ // Eval f(b) - y
+ child->addfvar (svar, b);
+ fb = child->evaluate_f (sexpr);
+ if (child->err[0] && !isnan (fb))
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   return result_fval = qnan;
+  }
+ if (isnan (fb) && child->errt () == teMath) fb = 0;
+ if (isnan (fb))
+  {
+   errorf (pos, "Cannot evaluate function at bracket point");
+   delete child;
+   return result_fval = qnan;
+  }
+ fb = fb - y;
+
+ // Expand bracket if needed
+ int bracket_iter = 0;
+ while (fa * fb > 0 && bracket_iter++ < 50)
+  {
+   float__t range = b - a;
+   a -= range;
+   b += range;
+
+   // Eval f(a) - y
+   child->addfvar (svar, a);
+   float__t fxa = child->evaluate_f (sexpr);
+   if (child->err[0] && !isnan (fxa))
+    {
+     errorf (pos, "Cannot bracket inverse function");
+     delete child;
+     return result_fval = qnan;
+    }
+   if (isnan (fxa) && child->errt () == teMath) fxa = 0;
+   if (isnan (fxa))
+    {
+     errorf (pos, "Cannot bracket inverse function");
+     delete child;
+     return result_fval = qnan;
+    }
+   fa = fxa - y;
+
+   // Eval f(b) - y
+   child->addfvar (svar, b);
+   float__t fxb = child->evaluate_f (sexpr);
+   if (child->err[0] && !isnan (fxb))
+    {
+     errorf (pos, "Cannot bracket inverse function");
+     delete child;
+     return result_fval = qnan;
+    }
+   if (isnan (fxb) && child->errt () == teMath) fxb = 0;
+   if (isnan (fxb))
+    {
+     errorf (pos, "Cannot bracket inverse function");
+     delete child;
+     return result_fval = qnan;
+    }
+   fb = fxb - y;
+  }
+
+ if (fa * fb > 0)
+  {
+   errorf (pos, "Function may not be invertible (no sign change found)");
+   delete child;
+   return result_fval = qnan;
+  }
+
+ // Ensure fa < 0, fb > 0
+ if (fa > 0)
+  {
+   float__t tmp = a;
+   a            = b;
+   b            = tmp;
+   tmp          = fa;
+   fa           = fb;
+   fb           = tmp;
+  }
+
+ // Step 2: Brent's method
+ float__t c = a, fc = fa;
+ float__t d = b - a, e = d;
+ const int maxIter = 100;
+
+ for (int i = 0; i < maxIter; i++)
+  {
+   if (fabsl (fb) < fabsl (fc))
+    {
+     a  = b;
+     b  = c;
+     c  = a;
+     fa = fb;
+     fb = fc;
+     fc = fa;
+    }
+
+   float__t tol1 = (float__t)2.0 * tol * fabsl (b) + (float__t)0.5 * tol;
+   float__t xm   = (float__t)0.5 * (c - b);
+
+   if (fabsl (xm) <= tol1 || fb == 0)
+    {
+     fflags |= child->isfflags ();
+     delete child;
+     return b;
+    }
+
+   if (fabsl (e) >= tol1 && fabsl (fa) > fabsl (fb))
+    {
+     // Try interpolation
+     float__t s, p, q;
+     float__t r = fb / fa;
+
+     if (a == c)
+      {
+       // Linear interpolation
+       s = r * (b - a);
+       p = (float__t)2.0 * xm * r;
+       q = (float__t)1.0 - r;
+      }
+     else
+      {
+       // Inverse quadratic interpolation
+       q          = fa / fc;
+       float__t t = fb / fc;
+       s          = r * ((float__t)2.0 * xm * q * (q - t) - (b - a) * (t - (float__t)1.0));
+       p          = (q - (float__t)1.0) * (r - (float__t)1.0) * (t - (float__t)1.0);
+      }
+
+     if (p > 0)
+      q = -q;
+     else
+      p = -p;
+
+     float__t min1 = (float__t)3.0 * xm * q - fabsl (tol1 * q);
+     float__t min2 = fabsl (e * q);
+
+     if ((float__t)2.0 * p < (min1 < min2 ? min1 : min2))
+      {
+       e = d;
+       d = p / q;
+      }
+     else
+      {
+       // Interpolation failed, use bisection
+       d = xm;
+       e = d;
+      }
+    }
+   else
+    {
+     // Use bisection
+     d = xm;
+     e = d;
+    }
+
+   a  = b;
+   fa = fb;
+
+   if (fabsl (d) > tol1)
+    b += d;
+   else
+    b += (xm > 0 ? tol1 : -tol1);
+
+   // Eval f(b) - y
+   child->addfvar (svar, b);
+   float__t fxb = child->evaluate_f (sexpr);
+   if (child->err[0] && !isnan (fxb))
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     return result_fval = qnan;
+    }
+   if (isnan (fxb) && child->errt () == teMath) fxb = 0;
+   if (isnan (fxb))
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     return result_fval = qnan;
+    }
+   fb = fxb - y;
+
+   if ((fb > 0 && fc > 0) || (fb < 0 && fc < 0))
+    {
+     c  = a;
+     fc = fa;
+     d  = b - a;
+     e  = d;
+    }
+  }
+
+ errorf (pos, "Inverse: maximum iterations reached");
+ fflags |= child->isfflags ();
+ delete child;
+ return b;
+}
 #pragma endregion

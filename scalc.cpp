@@ -297,6 +297,9 @@ void calculator::AddPredefined (void)
  add (tsDIFF, "derivative", nullptr);
  add (tsEXTR, "extremum", nullptr);
  add (tsEXTR, "extr", nullptr);
+ add (tsINVERSE, "inverse", nullptr);
+ add (tsINVERSE, "inv", nullptr);
+
 
  add (tsLDSV, vrLoad, "load", nullptr);
  add (tsLDSV, vrSave, "save", nullptr);
@@ -3089,6 +3092,28 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                {
                 const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
                 float__t result = Extremum (equation);
+                v_stack[v_sp - 2].fval  = result;
+                v_stack[v_sp - 2].imval = 0.0;
+                v_stack[v_sp - 2].ival  = (int_t)result;
+                v_stack[v_sp - 2].tag   = tvFLOAT;
+                v_sp -= 1;
+               }
+              else
+               {
+                error (v_stack[v_sp - 1].pos, "Expression expected");
+                return result_fval = qnan;
+               }
+             }
+             break;
+
+            case tsINVERSE: // float f(str equation)
+             {
+              const uint32_t masks[] = { 0, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (v_stack[v_sp - 1].tag == tvINVERSE)
+               {
+                const char *equation    = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                float__t result         = Inverse (equation);
                 v_stack[v_sp - 2].fval  = result;
                 v_stack[v_sp - 2].imval = 0.0;
                 v_stack[v_sp - 2].ival  = (int_t)result;

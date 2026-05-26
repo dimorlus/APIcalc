@@ -221,6 +221,7 @@ var("name",x|z|M)       (1,3)   Add (declare) variable
 integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
 diff(expr, point, x)            Numeric differentiation
 extr(expr, est, x)              Find extemum
+inv(expr, point, var)           Inverse using Brent's method
 sum(expr, from, to, x)          ∑expr(x)
 for(expr, from, to, x)  (1,3)   Repeat expr calculations for x and return last expr value.
 if(cond, true, false)   (1,3)   Return true if cond!=0 else return false.

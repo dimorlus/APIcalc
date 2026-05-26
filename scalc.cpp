@@ -336,6 +336,9 @@ void calculator::AddPredefined (void)
  // Data plots (lines)
  add (tsPLOT, pl_plotdatal, "plotdatal", nullptr, false);
 
+ add (tsPLOTREG, fn_plotreg, "plotreg", nullptr, false);
+ add (tsPLOTREG, fn_plotreg, "plotregion", nullptr, false);
+
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
 
@@ -1122,7 +1125,7 @@ bool calculator::CheckOperand (int sp, uint32_t mask)
 // string is not allowed for the first argument.
 // First mask is for the last argument (top of stack), second mask for the previous argument down,
 // etc.
-bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3])
+bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask[])
 {
  if (n_args != expected_args)
   {
@@ -1174,7 +1177,7 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask
 // Check that the number of arguments on the stack matches the expected count for an operator, and
 // that their types are valid according to the provided mask. Returns true if checks pass, false if
 // there's an error (with error message set).
-bool calculator::CheckOpArgs (int n_args, const uint32_t mask[2])
+bool calculator::CheckOpArgs (int n_args, const uint32_t mask[])
 {
  for (int i = 0; i < n_args; i++)
   {
@@ -1299,11 +1302,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  pos = 0; // Reset the input buffer position
  t_mresult mr = mrERROR; // Initialize matrix result to error
  err[0] = '\0'; // Clear the error buffer
- errtype = teMath;
+ errtype = teMath;  // Reset error type to math error
  mxerr[0] = '\0';    // Clear the error buffer
- result_fval  = qnan;    // Clear the floating-point result
- result_imval = 0.0; // Clear the imaginary result
- result_ival = 0;   // Clear the integer result
  //blockflag = false; // Clear the block flag
 
  if (deep > MAXSTK)
@@ -1312,31 +1312,16 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
    return qnan;
   }
 
- //double v1=0, v2=0, v3=0;
- //char tstr[] = "12k4 2026-04-22 10:00:05.123 102.5 0.985";
- //
- //int n = strscan (tstr, "0 * 1", 2, &v1,&v2,&v3);
-
- //v1 = 0;
- //n = strscan ("20`C, 125.4k", "01", 2, &v1, &v2, &v3);
- //test_bmp ();
- 
-
-
-
- //init_mem_list ();
-
- clear_v_stack (); // Clear the value stack before evaluation
- res_cols = 0;       // Clear the result columns count
- res_rows = 0;       // Clear the result rows count
+ result_fval  = qnan;           // Clear the floating-point result
+ result_imval = 0.0;            // Clear the imaginary result
+ result_ival  = 0;              // Clear the integer result
+ res_cols     = 0;              // Clear the result columns count
+ res_rows = 0;                  // Clear the result rows count
  if (res_mval) free (res_mval); // Free any previously allocated matrix result
- res_mval = nullptr; // Clear the matrix result pointer
- Plot_Ymax = (float__t)0.0L; // Reset the maximum Y value for plotting
- Plot_Ymin = (float__t)0.0L; // Reset the minimum Y value for plotting
- Plot_Xmax = (float__t)0.0L; // Reset the maximum X value for plotting
- Plot_Xmin = (float__t)0.0L; // Reset the minimum X value for plotting
- Plot_Tmax = (float__t)0.0L; // Reset the maximum T value for plotting
- Plot_Tmin = (float__t)0.0L; // Reset the minimum T value for plotting
+ res_mval = nullptr;            // Clear the matrix result pointer
+
+ PlotReset ();
+ clear_v_stack (); // Clear the value stack before evaluation
  
  if (!expr) return qnan;
 
@@ -3072,7 +3057,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_stack[v_sp - 2].fval = (float__t)1.0L;
               v_sp -= 1;
              }
-             break;
+            break;
 
             case tsDIFF: // float f(str equation)
              {
@@ -3366,7 +3351,21 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_stack[v_sp - 4].tag = tvFLOAT;
               v_sp -= 3;
              }
-             break;
+            break;
+
+            case tsPLOTREG: // plotreg(xmin, xmax, ymin, ymax)
+             {
+              const uint32_t masks[] = { (uint32_t)~MSK_SCALAR, (uint32_t)~MSK_SCALAR,
+                                         (uint32_t)~MSK_SCALAR, (uint32_t)~MSK_SCALAR };
+              if (!CheckFnArgs (n_args, 4, masks)) return result_fval = qnan;
+              PlotRegion (v_stack[v_sp - 4].get (), v_stack[v_sp - 3].get (),
+                          v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
+              v_stack[v_sp - n_args - 1].ival = 0;
+              v_stack[v_sp - n_args - 1].fval = 0;
+              v_stack[v_sp - n_args - 1].tag = tvINT;
+              v_sp -= n_args;
+             }
+            break;
 
             case tsPFUNCn: // f(str, ...) ( prn(...) function)
              {

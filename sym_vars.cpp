@@ -524,7 +524,7 @@ float__t calculator::getfvar (const char *name)
   {
    return sp->val.get ();
   }
- return (float__t)0.0L;
+ return qnan;
 }
 
 char *calculator::getsvar (const char *name)

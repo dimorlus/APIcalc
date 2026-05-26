@@ -152,7 +152,7 @@ void unquote_string (char *str)
 }
 
 // Prepare data for plotting (common part)
-bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params)
+bool calculator::PlotPrepare (const char *expr, v_func fidx, PlotParams &params)
 {
  if (!expr || !*expr)
   {
@@ -160,14 +160,15 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
    return false;
   }
 
- char sexpr[STRBUF];
- char sexpr_y[STRBUF];
- char sfrom[MAXOP];
- char sto[MAXOP];
- char svar[STRBUF];
- char sz0[MAXOP];
+ char sexpr[STRBUF]   = { '\0' };
+ char sexpr_y[STRBUF] = { '\0' };
+ char sfrom[MAXOP]    = { '\0' };
+ char sto[MAXOP]      = { '\0' };
+ char svar[STRBUF]    = { '\0' };
+ char sz0[MAXOP]      = { '\0' };
 
  bool split_ok = false;
+ bool UsePrevRange = false;
  
  // Determine which split pattern to use
  switch (fidx)
@@ -177,17 +178,19 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   case pl_plotlgx:
   case pl_plotlgy:
   case pl_plotlgxy:
-  case pl_plotsmith:
-   //if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+   if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);
    break;
 
   case pl_xyplot:  // x_expr, y_expr, from, to, var
-   //if (!ShowImageFn) return false; // ShowImageFn must be set for non-file plotting (NULL for CLI)
    split_ok = Split (expr, sexpr, STRBUF, sexpr_y, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF,
                      nullptr, 0);
+   if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, sexpr_y, STRBUF, svar, STRBUF, nullptr, 0);
   break;
 
+  case pl_plotsmith:
+   split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+   break;
   case pl_plotsmithz: // expr, from, to, var, z0
    split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, sz0, MAXOP,
                      nullptr, 0);
@@ -195,7 +198,6 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
 
   case pl_plotdata: // datafile, mask
   case pl_plotdatal:
-   //if (!ShowImageFn) return false;
    split_ok = Split (expr, sexpr, STRBUF, svar, STRBUF, nullptr, 0);    // try get mask
    if (!split_ok) split_ok = Split (expr, sexpr, STRBUF, nullptr, 0);    // get datafile
   break;
@@ -209,6 +211,36 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
   {
    result_fval = qnan;
    return false;
+  }
+
+ switch (fidx)
+  {
+  case pl_plot: // expr, from, to, var
+  case pl_plotdata: // datafile, mask
+  case pl_plotdatal:
+   UsePrevRange = (PlotFunc == pl_plot) || (PlotFunc == pl_plotdata) || (PlotFunc == pl_plotdatal) || (PlotFunc == pl_any);
+   break;
+  case pl_plotpol:
+   UsePrevRange = (PlotFunc == pl_plotpol) || (PlotFunc == pl_any);
+   break;
+  case pl_plotlgx:
+   UsePrevRange = (PlotFunc == pl_plotlgx) || (PlotFunc == pl_any);
+   break;
+  case pl_plotlgy:
+   UsePrevRange = (PlotFunc == pl_plotlgy) || (PlotFunc == pl_any);
+   break;
+  case pl_plotlgxy:
+   UsePrevRange = (PlotFunc == pl_plotlgxy) || (PlotFunc == pl_any);
+   break;
+  case pl_xyplot: // x_expr, y_expr, from, to, var
+   UsePrevRange = (PlotFunc == pl_xyplot) || (PlotFunc == pl_any);
+   break;
+  case pl_plotsmith:
+  case pl_plotsmithz: // expr, from, to, var, z0
+   UsePrevRange = false;
+   break;
+  default:
+   UsePrevRange = false;
   }
 
  calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
@@ -232,71 +264,89 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, char *fname, PlotPa
  params.pxsize = (int)getivar ("plot_dotsz");
  if (params.pxsize < 1 || params.pxsize > 4) params.pxsize = 4;
 
-
  if (fidx < pl_plotdata)
   {
-   float__t vfrom, vto;
-   
-   if (fidx == pl_plotlgxy)
-     {
-     // Evaluate from/to parameters
-     if (Plot_Tmin != (float__t)0.0L) vfrom = Plot_Tmin; // Use previous Tmin if set
-     else
-      {
-       vfrom = child->evaluate_f (sfrom);
-       if (isnan (vfrom) || child->err[0])
-        {
-         errorf (pos, "%s", child->err);
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
-     if (Plot_Tmax != (float__t)0.0L) vto = Plot_Tmax; // Use previous Tmax if set
-     else
-      {
-       vto = child->evaluate_f (sto);
-       if (isnan (vto) || child->err[0])
-        {
-         errorf (pos, "%s", child->err);
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
-     Plot_Tmin = vfrom;
-     Plot_Tmax = vto;
-    }
-   else
+   float__t vfrom = qnan, vto = qnan;
+
+   switch (fidx)
     {
-     // Evaluate from/to parameters
-     if (Plot_Xmin != (float__t)0.0L) vfrom = Plot_Xmin; // Use previous Xmin if set
-     else
-      {
-       vfrom = child->evaluate_f (sfrom);
-       if (isnan (vfrom) || child->err[0])
-        {
-         errorf (pos, "%s", child->err);
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
-     if (Plot_Xmax != (float__t)0.0L) vto = Plot_Xmax; // Use previous Xmax if set
-     else
-      {
-       vto = child->evaluate_f (sto);
-       if (isnan (vto) || child->err[0])
-        {
-         errorf (pos, "%s", child->err);
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
+    case pl_plot: // expr, from, to, var
+    case pl_plotlgx:
+    case pl_plotlgy:
+    case pl_plotlgxy:
+     {
+      // Evaluate from/to parameters
+      // Non-parametric plot should use previous range for X, if they are set, otherwise evaluate
+      // from/to
+      if (!isnan (Plot_Xmin) && UsePrevRange)
+       vfrom = Plot_Xmin; // Use previous Xmin if set
+      else
+       {
+        if (sfrom[0]) vfrom = child->evaluate_f (sfrom);
+       }
+      if (!isnan (Plot_Xmax) && UsePrevRange)
+       vto = Plot_Xmax; // Use previous Xmax if set
+      else
+       {
+        if (sto[0]) vto = child->evaluate_f (sto);
+       }
+     }
+    break;
+
+    case pl_plotsmith:
+    case pl_plotsmithz: // expr, from, to, var, z0
+    case pl_plotpol:
+    case pl_xyplot: // x_expr, y_expr, from, to, var
+     {
+      // Evaluate from/to parameters
+      // Parametric plot may use previous range for parameter, otherwise evaluate from/to
+      if (!isnan (Plot_Tmin) && UsePrevRange) vfrom = Plot_Tmin; // Use previous Tmin if set
+      if (sfrom[0]) vfrom = child->evaluate_f (sfrom);
+      if (!isnan (Plot_Tmax) && UsePrevRange) vto = Plot_Tmax; // Use previous Tmax if set
+      if (sto[0]) vto = child->evaluate_f (sto);
+     }
+    break;
+    case pl_plotdata: // datafile, mask
+    case pl_plotdatal:
+    default:
+     break;
+    }
+
+   switch (fidx)
+    {
+    case pl_plot: // expr, from, to, var
+    case pl_plotlgx:
+    case pl_plotlgy:
+    case pl_plotlgxy:
+    case pl_plotsmith:
+    case pl_plotsmithz: // expr, from, to, var, z0
      Plot_Xmin = vfrom;
      Plot_Xmax = vto;
+    break;
+    case pl_plotpol:
+    case pl_xyplot: // x_expr, y_expr, from, to, var
+     Plot_Tmin = vfrom;
+     Plot_Tmax = vto;
+    break;
+    case pl_plotdata: // datafile, mask
+    case pl_plotdatal:
+    default:
+     break;
     }
+
+   if (isnan (vfrom) || isnan (vto) || child->err[0])
+    {
+     if (child->err[0])
+      errorf (pos, "%s", child->err);
+     else
+      errorf (pos, "Invalid range values");
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+
+   Plot_Xmin = vfrom;
+   Plot_Xmax = vto;
 
    if (vfrom > vto)
     {
@@ -492,12 +542,17 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
  // Add 10% padding to radius
  rmax *= 1.1;
 
+ if (!isnan (Plot_Rmax) && PlotFunc == pl_plotpol) rmax = Plot_Rmax; // Use previous Rmax if set
+ float__t plot_rmax = getfvar ("plot_ymax");
+ if (!isnan (plot_rmax)) rmax = plot_rmax;
+ Plot_Rmax = rmax; // Store Rmax for future use
+
  // Calculate scale: how many pixels per unit radius
  int plot_size  = (width < height ? width : height) - 2 * padding;
  float__t scale = plot_size / (2.0 * rmax);
 
  // Second pass: draw the curve
- angle                 = angle_from;
+ angle = angle_from;
  bool has_valid_points = false;
 
  do
@@ -704,12 +759,18 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
 
    if (pass == 0)
     {
-     if (Plot_Ymin != (float__t)0.0L) ymin = Plot_Ymin; // Use previous values if set
-     if (Plot_Ymax != (float__t)0.0L) ymax = Plot_Ymax;
+     if (PlotFunc == pl_plot || PlotFunc == pl_plotdata || PlotFunc == pl_plotdatal)
+      {
+       // For non-parametric plots, allow user to set Y range via plot_ymin/plot_ymax variables
+       if (!isnan (Plot_Ymin)) ymin = Plot_Ymin; // Use previous values if set
+       if (!isnan (Plot_Ymax)) ymax = Plot_Ymax;
+      }
      float__t plot_ymax = getfvar ("plot_ymax");
      float__t plot_ymin = getfvar ("plot_ymin");
-     if (plot_ymax != (float__t)0.0L) ymax = plot_ymax;
-     if (plot_ymin != (float__t)0.0L) ymin = plot_ymin;
+     if (!isnan(plot_ymax)) ymax = plot_ymax;
+     if (!isnan(plot_ymin)) ymin = plot_ymin;
+     Plot_Ymax = ymax; // Store for use in next drawing
+     Plot_Ymin = ymin; // Store for use in next drawing
 
      // Include zero in the range
      if (ymin > 0.0) ymin = 0.0;
@@ -733,9 +794,6 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
  // Update parameters for drawing axes and grid
  params.ymin = ymin;
  params.ymax = ymax;
- Plot_Ymax   = ymax; // Store for use in next drawing
- Plot_Ymin   = ymin; // Store for use in next drawing
-
  return true;
 }
 
@@ -952,10 +1010,15 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
   }
  while (t <= t_to);
 
- if (Plot_Xmax != (float__t)0.0L) xmax = Plot_Xmax; // Use previous values if set
- if (Plot_Xmin != (float__t)0.0L) xmin = Plot_Xmin;
- if (Plot_Ymax != (float__t)0.0L) ymax = Plot_Ymax;
- if (Plot_Ymin != (float__t)0.0L) ymin = Plot_Ymin;
+ if (PlotFunc == pl_xyplot)
+  {
+   // For parametric plots, allow user to set X/Y range via plot_xmin/plot_xmax and
+   // plot_ymin/plot_ymax variables
+   if (!isnan (Plot_Xmax)) xmax = Plot_Xmax; // Use previous values if set
+   if (!isnan (Plot_Xmin)) xmin = Plot_Xmin;
+   if (!isnan (Plot_Ymax)) ymax = Plot_Ymax;
+   if (!isnan (Plot_Ymin)) ymin = Plot_Ymin;
+  }
 
  Plot_Xmax = xmax; // For use in next drawing
  Plot_Xmin = xmin;
@@ -1302,8 +1365,22 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
    if (ymax < 0.0) ymax = 0.0;
   }
 
+ if (PlotFunc == pl_plotlgx || PlotFunc == pl_plotlgy || PlotFunc == pl_plotlgxy)
+  {
+   // For non-parametric plots, allow user to set Y range via plot_ymin/plot_ymax variables
+   if (!isnan (Plot_Ymin)) ymin = Plot_Ymin; // Use previous values if set
+   if (!isnan (Plot_Ymax)) ymax = Plot_Ymax;
+  }
+ float__t plot_ymax = getfvar ("plot_ymax");
+ float__t plot_ymin = getfvar ("plot_ymin");
+ if (!isnan (plot_ymax)) ymax = plot_ymax;
+ if (!isnan (plot_ymin)) ymin = plot_ymin;
+ Plot_Ymin = ymin; // Store for use in next drawing
+ Plot_Ymax = ymax;
+
+
  // Second pass: draw the curve
- x                     = vfrom;
+ x = vfrom;
  bool has_valid_points = false;
 
  do
@@ -2045,10 +2122,22 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
   }
 
  fclose (f);
+
+
+ if (PlotFunc == pl_plotdatal || PlotFunc == pl_plotdata || PlotFunc == pl_plot)
+  {
+   if (!isnan (Plot_Ymin)) ymin = Plot_Ymin; // Use previous values if set
+   if (!isnan (Plot_Ymax)) ymax = Plot_Ymax;
+  }
  float__t plot_ymax = getfvar ("plot_ymax");
  float__t plot_ymin = getfvar ("plot_ymin");
- if (plot_ymax != (float__t)0.0L) ymax = plot_ymax;
- if (plot_ymin != (float__t)0.0L) ymin = plot_ymin;
+ if (!isnan(plot_ymax)) ymax = plot_ymax;
+ if (!isnan(plot_ymin)) ymin = plot_ymin;
+ Plot_Xmax = xmax; // For use in next drawing
+ Plot_Xmin = xmin;
+ Plot_Ymax = ymax;
+ Plot_Ymin = ymin;
+
 
  if (first_point)
   {
@@ -2178,10 +2267,6 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
  params.ymax  = ymax;
  params.vfrom = xmin;
  params.vto   = xmax;
- Plot_Xmax    = xmax; // For use in next drawing
- Plot_Xmin    = xmin;
- Plot_Ymax    = ymax;
- Plot_Ymin    = ymin;
 
  return true;
 }
@@ -2190,31 +2275,26 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
 // Main plotting function
 bool calculator::Plot (const char *expr, v_func fidx, value &res)
 {
- char fname[STRBUF];
- fname[0] = '\0';
-
  res.sval = nullptr;
  PlotParams params;
  memset (&params, 0, sizeof (params));
 
  // 1. Prepare data
- if (!PlotPrepare (expr, fidx, fname, params))
+ if (!PlotPrepare (expr, fidx, params))
   {
    return false;
   }
 
- NormalizePath (fname, fname, STRBUF);
- 
-  // 2. Create or load bitmap
- bmpdraw *bmp    = new bmpdraw ();
-  bool is_polar       = (fidx == pl_plotpol);
 
+  // 2. Create or load bitmap
+ bmpdraw *bmp = new bmpdraw ();
+ bool is_polar = (fidx == pl_plotpol);
  bool is_parametric = (fidx == pl_xyplot);
  bool is_logarithmic = (fidx == pl_plotlgx ||  fidx == pl_plotlgy || fidx == pl_plotlgxy);
  bool is_smith = (fidx == pl_plotsmith || fidx == pl_plotsmithz);
  bool is_data = (fidx == pl_plotdata || fidx == pl_plotdatal);
 
-   // Normal plot or fplot — create new bitmap
+ // Normal plot or fplot — create new bitmap
  if (!bmp->newbmp (params.width, params.height, params.bgc))
   {
    errorf (pos, "Failed to create bitmap for plotting");
@@ -2316,7 +2396,36 @@ bool calculator::Plot (const char *expr, v_func fidx, value &res)
  if (params.sexpr_y) free (params.sexpr_y);
  if (params.svar) free (params.svar);
 
+ if (PlotFunc == vf_num) PlotFunc = fidx;
+
  return true;
+}
+
+
+void calculator::PlotRegion(float__t x_min, float__t x_max, float__t y_min,
+    float__t y_max) // Set the plotting region for the plot operator
+{
+ Plot_Xmin = x_min;
+ Plot_Xmax = x_max;
+ Plot_Ymin = y_min;
+ Plot_Ymax = y_max;
+ Plot_Tmin = x_min;
+ Plot_Tmax = x_max;
+ PlotFunc  = pl_any; // Reset plot function to allow new plot type
+ addfvar ("plot_ymax", y_max);
+ addfvar ("plot_ymin", y_min);
+}
+
+void calculator::PlotReset() // Reset plot settings to defaults
+{
+ Plot_Ymax = qnan;   // Reset the maximum Y value for plotting
+ Plot_Ymin = qnan;   // Reset the minimum Y value for plotting
+ Plot_Xmax = qnan;   // Reset the maximum X value for plotting
+ Plot_Xmin = qnan;   // Reset the minimum X value for plotting
+ Plot_Tmax = qnan;   // Reset the maximum T value for plotting
+ Plot_Tmin = qnan;   // Reset the minimum T value for plotting
+ Plot_Rmax = qnan;   // Reset the maximum R value for plotting
+ PlotFunc  = vf_num; // Reset the plotting function
 }
 
 // Overlay two bitmaps: copy only specified color from bmp2 to bmp1

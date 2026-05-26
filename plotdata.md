@@ -72,7 +72,6 @@ plotdata("test.txt", "10")  ;; X = Val1, Y = Val0 (reversed)
 ```
 Parsed as: `[1705314600, 23.5, 45.2, ...]` (Unix time, seconds from 1970-01-01 00:00:00)
 
-> **Note**: The minus sign in dates (e.g., `01-15`) is treated as a separate number!
 ```
 plotdata("sensors.csv", "*0")  ;; X = line number, Y = Val5 (temperature)
                                    ;; Skip 1 value, capture 23.5, 24.1, 25.0

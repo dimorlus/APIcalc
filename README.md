@@ -343,6 +343,17 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
   ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
   ```  
+* **run("script.txt")**: Run script. Can be used as operand: 
+```
+	plot(run("sin.txt"), 0, 2 pi, x)
+```	
+	sin.txt:
+```	
+	sin(x)
+	RET
+```	
+* **eval("expr")**: Evaluate string as expression.
+
 
 ### [Plotting](plot.md)
 The engine provides three distinct operators for visualization:

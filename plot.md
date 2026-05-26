@@ -14,60 +14,55 @@ This document describes all plotting functions available in the calculator for v
 8. [Examples](#examples)
 
 ---
-
-The **plot*** functions return the BMP type, and the `+` and `|` operators are defined for this type,  working in such a way that the second image (graph) is drawn on top of the first. You can write 
-	<br>```plot(x, -1,1,x)+plot(-x,-1,1,x)```<br> 
+#### Saving, loading and overlaying
+The **plot*** functions return the BMP type, and the `+` and `|` operators are defined for this type,  working in such a way that the second image (graph) 
+is drawn on top of the first. You can write 
+	```plot(x, -1,1,x)+plot(-x,-1,1,x)``` 
 or 
-	<br>```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```<br>  
+	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);A+B```  
 
-Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)` to save memory. Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size.
+Both graphs will appear in the same grid (the first one). The operation `A+B` is equivalent to `A+=B (A:=A+B)`.
 
-* **save("filename", bmp)**: Function  for save BMP (and any other) type to the file<br>
+* **save("bmpfile", bmp)**: Function  for save BMP (and any other) type to the file
 	```A:=plot(x, -1,1,x);B:=plot(-x,-1,1,x);save("cross.bmp",A+B)```
-* **load("bmpfile")**:  Function  for load BMP (and any other) type from the file<br>
+* **load("bmpfile")**:  Function  for load BMP (and any other) type from the file
 	```A:=load("cross.bmp")```
-	
->**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
 
-#### Advanced Plot Scaling and Graph Overlaying
-When overlaying multiple graphs using the `+` or `|` operators, managing the coordinate axes and scales is crucial for accurate 
-visual analysis. The engine provides two distinct mechanisms for scale management: Automatic Expression-Bound Scaling and 
-Global Fixed Scaling.
+#### Plot Scaling, Layouts and Graph Overlaying
+When combining multiple graphs using the `+` or `|` operators, the engine alignment depends on two distinct scope mechanisms: Expression-Bound Auto-Scaling (default) 
+and Session-Bound Fixed Scaling (via **plotreg**).
 
-* Automatic Expression-Bound Scaling (Single Expression)
-When multiple plot() functions are combined within a single command line or expression, the engine automatically synchronizes 
-their X-ranges and Y-scales based on the first plot:
+* Expression-Bound Auto-Scaling (Recommended)
+  If no fixed boundaries are set, the first plotting function inside a single expression establishes the entire coordinate grid framework for that line:
 
-_X-Axis_: The from and to ranges specified in the first plot() function dictate the horizontal scale. Any X-ranges specified in 
-subsequent plot() calls within the same expression are ignored.
-_Y-Axis_: The vertical scale is calculated automatically to perfectly fit the data of the first plot. Subsequent curves are 
-drawn onto this established grid.
+_X-Axis Range_: The from and to parameters of the first plot() define the horizontal viewport.
+_Y-Axis Scale:_ The vertical scale is calculated automatically to perfectly fit the first curve.
+
+* Subsequent Plots: All subsequent compatible plotting functions within the same expression automatically inherit the X-range and Y-scale from the first one. Their from, to, and var parameters can be completely omitted, or will be safely ignored if specified.
 
 Example:
 ```
-;; The second plot ignores "0,0" and conforms to the "-5,4" range of the first plot
-plot(2x^2+3x-4, -5,4, x) + plot(2x+3, 0,0, x) 
+;; The first plot auto-scales; the second plot automatically inherits boundaries and the 'x' variable
+plot(0.25(x+2)(2x+1)(2x-5), -3,3, x) + plot(2x-3, x)
 ```
+* Session-Bound Fixed Scaling (plotreg)
+For advanced multi-expression analysis or fixed-viewport rendering, use the plotreg() configuration function:
+```
+plotreg(xmin, xmax, ymin, ymax)
+```
+This function coordinates boundaries with different lifespans:
+	* _Horizontal Scope_ (Current Expression Only): The xmin and xmax parameters act as temporary from and to overrides only for the current line of code. In the very next command, the horizontal auto-scale resets to default behavior.
+	* _Vertical Scope_ (Session-Long Global State): The ymin and ymax parameters modify the global state variables (plot_ymin and plot_ymax). They lock the vertical axis to these fixed limits across all subsequent expressions until the calculator is closed or reset.
+
 * Global Fixed Scaling (State Variables)
-To enforce an absolute vertical scale across different expressions, or to clip the view to a specific region 
-of interest, use the global state variables: **plot_ymin** and **plot_ymax**.
+To enforce an absolute vertical scale across different expressions, or to clip the view to a specific region of interest, use the global state variables: **plot_ymin** and **plot_ymax**.
 
-_Behavior_: If these variables are set to non-zero values, the automatic Y-scale generation is bypassed. The engine strictly locks the 
-vertical axes to the specified limits.
+_Behavior_: If these variables are set to non-zero values, the automatic Y-scale generation is bypassed. The engine strictly locks the vertical axes to the specified limits.
+_Lifespan_: These settings operate globally. Once defined, they remain active for all subsequent plotting operations until modified or until the calculator instance is closed. To return to full auto-scaling, reset both variables to 0.
 
-_Lifespan_: These settings operate globally. Once defined, they remain active for all subsequent plotting operations until modified 
-or until the calculator instance is closed. To return to full auto-scaling, reset both variables to 0.
+To reset back to full automatic scaling mode, clear the global bounds:
+```plot_ymax := 0; plot_ymin := 0;```
 
-Example:
-```
-;; Manually defining the viewport limits for perfect geometric alignment
-plot_ymax := 11 
-plot_ymin := -16
-plot(0.25(x+2)(2x+1)(2x-5), -3,3, x) + plot(2x-3, -3,3, x)
-
-;; Resetting back to automatic scaling mode
-plot_ymax := 0; plot_ymin := 0;
-```
 
 ## Cartesian Plots
 
@@ -78,8 +73,6 @@ Standard $y = f(x)$ plots in Cartesian coordinates.
 | Function | Description |
 |----------|-------------|
 | `plot(expr, from, to, var)` | Display plot on screen |
-| `fplot(filename, expr, from, to, var)` | Save plot to file |
-| `oplot(filename, expr, from, to, var)` | Overlay plot on existing file |
 
 ### Syntax
 `plot(expression, start_value, end_value, variable_name)`
@@ -125,8 +118,6 @@ Plots in polar coordinates where $r = f(\theta)$.
 | Function | Description |
 |----------|-------------|
 | `plotpol(expr, from, to, var)` | Display polar plot on screen |
-| `fplotpol(filename, expr, from, to, var)` | Save polar plot to file |
-| `oplotpol(filename, expr, from, to, var)` | Overlay polar plot on existing file |
 
 ### Syntax
 
@@ -181,8 +172,6 @@ Plots where both $x$ and $y$ are functions of a parameter: $x = f(t)$, $y = g(t)
 | Function | Description |
 |----------|-------------|
 | `plotxy(x_expr, y_expr, from, to, var)` | Display parametric plot on screen |
-| `fplotxy(filename, x_expr, y_expr, from, to, var)` | Save parametric plot to file |
-| `oplotxy(filename, x_expr, y_expr, from, to, var)` | Overlay parametric plot on existing file |
 
 ### Syntax
 `plotxy(x_expression, y_expression, param_start, param_end, parameter)`
@@ -249,24 +238,18 @@ Plots with logarithmic scale on one or both axes. Essential for frequency respon
 | Function | Description |
 |----------|-------------|
 | `plotlgx(expr, from, to, var)` | Display on screen |
-| `fplotlgx(filename, expr, from, to, var)` | Save to file |
-| `oplotlgx(filename, expr, from, to, var)` | Overlay on file |
 
 #### Semi-log Y (Log Y, Linear X)
 
 | Function | Description |
 |----------|-------------|
 | `plotlgy(expr, from, to, var)` | Display on screen |
-| `fplotlgy(filename, expr, from, to, var)` | Save to file |
-| `oplotlgy(filename, expr, from, to, var)` | Overlay on file |
 
 #### Log-Log (Both axes logarithmic)
 
 | Function | Description |
 |----------|-------------|
 | `plotlgxy(expr, from, to, var)` | Display on screen |
-| `fplotlgxy(filename, expr, from, to, var)` | Save to file |
-| `oplotlgxy(filename, expr, from, to, var)` | Overlay on file |
 
 ### Syntax
 ```
@@ -364,16 +347,12 @@ Specialized plot for RF and microwave engineering. Displays complex impedance on
 | Function | Description |
 |----------|-------------|
 | `plotsmith(expr, from, to, var)` | Display on screen |
-| `fplotsmith(filename, expr, from, to, var)` | Save to file |
-| `oplotsmith(filename, expr, from, to, var)` | Overlay on file |
 
 #### Custom Z0
 
 | Function | Description |
 |----------|-------------|
 | `plotsmithz(expr, from, to, var, Z0)` | Display on screen |
-| `fplotsmithz(filename, expr, from, to, var, Z0)` | Save to file |
-| `osmithz(filename, expr, from, to, var, Z0)` | Overlay on file |
 
 ### Syntax
 ```
@@ -554,6 +533,8 @@ These variables control plot appearance (set before calling plot functions):
 | `plot_height` | 600 | Plot height in pixels (100-2000) |
 | `plot_bgc` | 0xFFFFFF | Background color (RGB hex) |
 | `plot_fgc` | 0x000000 | Foreground/trace color (RGB hex) |
+| `plot_ymin` | 0       | Set y-scale, if 0 - auto scale. |
+| `plot_ymax` | 0       | Set y-scale, if 0 - auto scale. |
 
 ### Setting Configuration
 plot_width := 1024; plot_height := 768; 
@@ -589,16 +570,6 @@ plotsmith(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)), 10M, 200M, f)
 
 ;; 3. Phase response 
 plotlgx(arg(1/(1/1k + i2 pi f 10p + 1/(i2 pi f 1u)))*180/pi, 10M, 200M, f)
-```
-
-### Multi-Trace Overlay
-```
-;; Create base plot 
-fplot("comparison.bmp", sin(x), 0, 2*pi, x)
-
-;; Add more traces 
-oplot("comparison.bmp", cos(x), 0, 2*pi, x) 
-oplot("comparison.bmp", sin(2x), 0, 2*pi, x)
 ```
 
 ### Complete Filter Analysis

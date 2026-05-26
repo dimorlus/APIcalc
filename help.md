@@ -132,11 +132,6 @@ error("message")                Put message as error, stop script.
 ```
  
 #### [Plot functions](plot.md)
-Each function in this group has three versions.
-* **plot(...)** - displays a plot in a pop-up modal window (does not work in the CLI version)
-* **fplot("bmpfile", ...)** - places a plot in the specified BMP file (replaces an existing one or creates a new one)
-* **oplot("bmpfile", ...)** - places a plot over an existing BMP file (preserving its size and background color).
-
 ```	   
 plot(expr,from,to,x)             Plot of the expr function in Cartesian coordinates
 plotpol(expr,from, to, x)        Plot of the expr function in Polar coordinates.
@@ -148,6 +143,8 @@ plotsmith(expr,from,to,x)        Smith Chart plot (Z0=50Ω) for RF and microwave
 plotsmithz(expr,from,to,x,z0)    Smith Chart plot for RF and microwave engineering.
 plotdata("datafile"[,"mask"])    Display points in window 
 plotdatal ("datafile"[,"mask"])  Display lines in window
+plotreg(xmin,xmax,ymin,ymax)     Set plot region, disable auto scale.
+
 ```
 
 #### Related Variables
@@ -157,6 +154,7 @@ plot_height                     Graph height (100..2000, default - 600)
 plot_bgc                        Graph background color, default is white (0xFFFFFF)
 plot_fgc                        Graph color, default is black (0)
 path                            Default path to the "fname"
+plot_ymin, plot_ymax            Set y-scale, if 0 - auto scale.
 ```
 
 #### [Regression and Data Fitting](README.md#Regression-and-Data-Fitting)

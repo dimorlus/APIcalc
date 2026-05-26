@@ -427,7 +427,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsERROR,    // 36  error("message") operator for reporting errors
  tsEXTR,     // 37  extremum operator for finding local minima and maxima (extr)
  tsLDSV,     // 38  load/save operator for loading and saving variables.
- tsNUM       // 39  Total number of symbol types, must be the last in the list
+ tsPLOTREG,  // 39  plotreg(xmin, xmax, ymin, ymax) - define plot region
+ tsNUM       // 40  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -490,6 +491,7 @@ enum t_br_result
 #define MASK_DATAF      (1ULL << tsDATAF)       // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 #define MASK_EXTR       (1ULL << tsEXTR)        // extremum operator for finding local minima and maxima (extr)
 #define MASK_LDSV       (1ULL << tsLDSV)        // load/save operator for loading and saving variables
+#define MASK_PLOTREG    (1ULL << tsPLOTREG)     // plotreg(xmin, xmax, ymin, ymax) - define plot region
 
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
 
@@ -578,6 +580,9 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  // Data plot functions
  pl_plotdata,  // plotdata(datafile, mask)
  pl_plotdatal,  // plotdatal(datafile, mask) - with lines
+
+ pl_any,        // special value for plotreg  
+ fn_plotreg, // plotreg(xmin, xmax, ymin, ymax) - define plot region
 
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
@@ -1030,12 +1035,16 @@ class calculator // calculator represents the main class for the expression calc
  terr errtype;
  int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
+ 
  float__t Plot_Ymax; // Maximum Y value for plotting, used for autoscaling
  float__t Plot_Ymin; // Minimum Y value for plotting, used for autoscaling
  float__t Plot_Xmax; // Maximum X value for plotting, used for autoscaling
  float__t Plot_Xmin; // Minimum X value for plotting, used for autoscaling
  float__t Plot_Tmax; // Maximum T value for plotting, used for autoscaling
  float__t Plot_Tmin; // Minimum T value for plotting, used for autoscaling
+ float__t Plot_Rmax; // Maximum R value for plotting, used for autoscaling
+ v_func PlotFunc; // Function index for plotting, used to identify which function is being plotted
+                  // for autoscaling
 
  bool expr;    // Expression flag
  char sres[STRBUF]; // String result buffer
@@ -1108,8 +1117,8 @@ class calculator // calculator represents the main class for the expression calc
 
  //Functions and operators arguments check helpers.
  bool CheckOperand (int sp, uint32_t mask);
- bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[3]); 
- bool CheckOpArgs (int n_args, const uint32_t mask[2]);
+ bool CheckFnArgs (int n_args, int expected_args, const uint32_t mask[]); 
+ bool CheckOpArgs (int n_args, const uint32_t mask[]);
  bool isMxIdx1 ();
  bool isMxIdx2 ();
 
@@ -1174,7 +1183,7 @@ class calculator // calculator represents the main class for the expression calc
  void GetChildRes (calculator *child, value &res);
 
  // Plotting functions
- bool PlotPrepare (const char *expr, v_func fidx, char *fname, PlotParams &params);
+ bool PlotPrepare (const char *expr, v_func fidx, PlotParams &params);
 
  bool PlotCartesian (bmpdraw *bmp, PlotParams &params);
  void PlotDrawAxesCartesian (bmpdraw *bmp, PlotParams &params);
@@ -1194,6 +1203,9 @@ class calculator // calculator represents the main class for the expression calc
  bool PlotData (bmpdraw *bmp, PlotParams &params);
 
  bool Plot (const char *expr, v_func fidx, value &res); // Operator 'plot' for plotting data points or functions
+ void PlotRegion (float__t x_min, float__t x_max, 
+                  float__t y_min, float__t y_max); // Set the plotting region for the plot operator
+ void PlotReset ();    // Reset plot settings to defaults
  bool AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color);
 
 

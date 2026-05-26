@@ -1,4 +1,13 @@
-24.05.26 (2.201)
+26.05.26 (2.202)
++ Now plotreg(xmin, xmax, ymin,ymax) sets the ymin..ymax range for the entire session (as plot_ymin and 
+  plot_ymax do, in fact) and the from..to range for the current expression. In the current expression, 
+  the first use of plot(expr, from, to, var) sets the from..to range for all subsequent compatible plots 
+  in the same expression; they can be omitted or will be ignored. It's worth noting that xmin and xmax 
+  defined in plotreg are interpreted as from and to only in the current expression; in subsequent 
+  expressions, only the set ymin and ymax remain relevant. In general, specifying a region (or plot_ymin, 
+  plot_ymax) should only be done if really necessary. Usually, it's more convenient like this:
+	plot(0.25(x+2)(2x+1)(2x-5),-3,3,x)+plot(2x-3,x)
+  The first plot in auto scale mode defines the graph, and the second plots it on the same axes and range.
 * All fplot* and oplot* functions have been deprecated. For plotting, use the + or | operator, and 
   for saving, use the save operator (function).
   

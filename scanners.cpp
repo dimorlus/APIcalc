@@ -1368,20 +1368,20 @@ t_operator calculator::sscan (symbol *sym)
      bool error_in_args = false;
      switch (sym->fidx)
       {
-      case pl_plot:    // plot(expr, from, to, var)
+      case pl_plot:    // plot(expr, from, to, var) or plot(expr, var)
       case pl_plotpol: // plotpol(expr, from, to, var)
       case pl_plotlgx:
       case pl_plotlgy:
       case pl_plotlgxy:
       case pl_plotsmith: // plotsmith(expr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 3)
+       if (parenthesis_count == 0 && (comma_count == 3||comma_count == 1))
         v_stack[v_sp].tag = tvPLOT;
        else
         error_in_args = true;
        break;
 
-      case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var)
-       if (parenthesis_count == 0 && comma_count == 4)
+      case pl_xyplot: // xyplot(xexpr, yexpr, from, to, var) or xyplot(xexpr, yexpr, var)
+       if (parenthesis_count == 0 && (comma_count == 4 || comma_count == 2))
         v_stack[v_sp].tag = tvPLOT;
        else
         error_in_args = true;

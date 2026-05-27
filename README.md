@@ -3,51 +3,43 @@
 [Русская версия / Russian version](Readme_ru.md)
 
 ### Table of Contents
-1. [Floating points sizes](#Important-note.)
-2. [Variable types](#Variable-types.)
-3. [CLI Version (ccalc)](#CLI-Version)
-	3.1 [CLI Usage](#CLI-Usage)
-	3.2 [Batch Processing (File or stdin)](#Batch-Processing-(File-or-stdin))
-4. [Supported Functions](#Supported-Functions)
-	Basic Operations
-	Percentage Operations
-	Quick Rule of Thumb for Variables
-Mathematical Functions
-Utility Functions
-Plotting
-Complex Number Support
-User-Defined Functions
-Comments
-Matrix Support
-	Matrix Operations
-	Matrix Examples
-Data Format & File Handling
-	File Requirements
-	File Paths & Syntax
-	File Paths
-	The "All-Terrain" Parser
-	Column Selection (Advanced Masks)
-	Data Structures for Different Modes
-Regression & Data Fitting
-	Function Reference
-	Regression Calculation
-Statistical Analysis
-	Function Reference
-	Robust Statistics Example
-	Probability Functions (Normal Distribution)
-Strings
-Color Data Type & Chromatic Algebra
-Predefined constants
-User Constants Files
-Output Formats
-Engineering / Scientific Suffixes
-Usage
-Example Expressions
-Implicit Multiplication
-Keyboard Shortcuts
-Menu Options
-Sources and releases
+### Table of Contents
 
+1. [Floating point sizes](#important-note)
+2. [Variable types](#variable-types)
+3. [Two Versions Available](#two-versions-available)
+   - [GUI Version](#-gui-version-winapicalc--fcalcexe)
+   - [CLI Version](#-cli-version-ccalcexe)
+4. [Features](#features)
+   - [GUI Version](#gui-version-winapicalc)
+   - [CLI Version (ccalc)](#cli-version-ccalc)
+   - [CLI Usage](#cli-usage)
+   - [Batch Processing](#batch-processing-file-or-stdin)
+5. [Supported Functions](#supported-functions)
+   - [Basic Operations](#basic-operations)
+   - [Percentage Operations](#percentage-operations)
+   - [Mathematical Functions](#mathematical-functions)
+   - [Utility Functions and Solvers](#utility-functions-and-solvers)
+   - [Plotting](#plotting)
+   - [Complex Number Support](#complex-number-support)
+   - [User-Defined Functions](#user-defined-functions)
+   - [Comments](#comments)
+   - [Matrix Support](#matrix-support)
+   - [Regression & Data Fitting](#regression--data-fitting)
+   - [Statistical Analysis](#statistical-analysis)
+   - [Probability & Distributions (Normal)](#probability--distributions-normal)
+   - [Strings](#strings)
+   - [Color Data Type & Chromatic Algebra](#color-data-type--chromatic-algebra)
+6. [Constants](#constants)
+   - [Physical Constants](#physical-constants-codata-2018)
+   - [User Constants Files](#user-constants-files)
+7. [Output Formats](#output-formats)
+   - [Engineering / Scientific Suffixes](#engineering--scientific-suffixes)
+8. [Usage](#usage)
+   - [Example Expressions](#example-expressions)
+   - [Implicit Multiplication](#implicit-multiplication)
+9. [Keyboard Shortcuts](#keyboard-shortcuts)
+10. [Menu Options](#menu-options)
 
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.
 

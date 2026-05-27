@@ -842,7 +842,27 @@ You can enter a string, assign a string value to a variable, and perform string 
 ```
 S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 
 ```
+### Color Data Type & Chromatic Algebra
 
+The engine introduces a native `Color` data type, instantiated via the `color(RRGGBB)` constructor. This enables complex colorimetric and photometric simulations directly in the expression line.
+
+#### Visual Output
+If the final result of an evaluated expression evaluates to the `Color` type, the GUI automatically renders a corresponding solid color square at the end of the calculation cycle.
+
+#### Supported Operations
+The engine handles chromatic algebra using clamped saturation (0..255 per channel):
+
+* **Color & Color (`+`, `-`, `*`):** * `+` Simulates additive light mixing (e.g., combining light beams).
+  * `-` Simulates subtractive filtering or differential analysis.
+  * `*` Simulates surface light absorption (normalized per-channel multiplication).
+* **Color & Number (`+`, `-`, `*`, `/`):** Modifies the overall luminous intensity (brightness) of the color while preserving its chromatic hue.
+
+#### Practical Examples
+* **Illuminant Filtering Simulation:** Simulating a warm 2700K incandescent lamp mixed with a subtle blue LED component (attenuated by a factor of 20):
+  ```
+  color(trgb(2k7)) + color(wrgb(blue)) / 20  ->  0xFFFFBE ;; Elegant ivory tint
+  ```
+  
 ### Constants
 
 * **pi**: 3.14159265358979323846

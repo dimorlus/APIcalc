@@ -207,3 +207,13 @@ void vfunc2(value* res, value* arg1, value* arg2, int idx);
 bool is_complex2 (value *arg1, value *arg2, int idx);
 bool is_complex1 (value *arg, int idx);
 
+// Color operation functions
+int_t CADD (int_t A, int_t B);
+int_t CSUB (int_t A, int_t B);
+int_t CMUL (int_t A, int_t B);
+int_t CADDN (int_t A, int_t N);
+int_t CSUBN (int_t A, int_t N);
+int_t CMULN (int_t A, float__t N);
+int_t CDIVN (int_t A, float__t N);
+int_t CMIX (int_t A, int_t B, float__t alpha);
+bool CR_OP (value &left, value &right, t_operator cop);

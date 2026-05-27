@@ -278,6 +278,8 @@ int_t CalcSrv (void *clc, v_func fn, int_t prec)
      }
  return 0;
 }
+
+
 #pragma endregion
 //---------------------------------------------------------------------------
 
@@ -300,6 +302,7 @@ void calculator::AddPredefined (void)
  add (tsINVERSE, "inverse", nullptr);
  add (tsINVERSE, "inv", nullptr);
 
+ add (tsCOLOR, "color", nullptr);
 
  add (tsLDSV, vrLoad, "load", nullptr);
  add (tsLDSV, vrSave, "save", nullptr);
@@ -1318,6 +1321,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  result_fval  = qnan;           // Clear the floating-point result
  result_imval = 0.0;            // Clear the imaginary result
  result_ival  = 0;              // Clear the integer result
+ result_tag   = tvERR;          // Reset the result tag to error
  res_cols     = 0;              // Clear the result columns count
  res_rows = 0;                  // Clear the result rows count
  if (res_mval) free (res_mval); // Free any previously allocated matrix result
@@ -1487,6 +1491,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            v_stack[0].sval = nullptr; // Prevent freeing the bitmap data in clear_v_stack
          }
 
+         if (v_stack[0].tag == tvCOLOR)
+          {
+           symbol *sp = find ("showcolor");
+           if (sp && sp->tag == tsIFUNC1)
+           {
+             (*(int_t (*) (int_t))sp->func) (v_stack[0].get_int ());  
+           }
+          }
+
          if (v_stack[0].tag == tvMATRIX)
           {
            res_cols = v_stack[0].mcols;
@@ -1599,6 +1612,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
           AddBmp (bmp1, bmp2, fgc);
          }
+        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvCOLOR;
+         }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
           v_stack[v_sp - 2].ival += v_stack[v_sp - 1].ival;
@@ -1683,6 +1700,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
+        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvCOLOR;
+         }
         else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
          {
           error (v_stack[v_sp - 2].pos, "Illegal string operation");
@@ -1747,6 +1768,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
+        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvCOLOR;
+         }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
           v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
@@ -1809,6 +1834,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_sp -= 1;
           v_stack[v_sp - 1].var = nullptr;
           break;
+         }
+        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvCOLOR;
          }
         else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
                  || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
@@ -3315,6 +3344,18 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break;
 
+            case tsCOLOR: // color(int x)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              v_stack[v_sp - 2].ival = v_stack[v_sp - 1].get_int ();
+              v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 2].ival;
+              v_stack[v_sp - 2].imval = (float__t)0.0L;
+              v_stack[v_sp - 2].tag = tvCOLOR;
+              v_sp -= 1;
+             }
+             break;
+
             case tsIFUNC1: // int f(int x) (int() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
@@ -3435,7 +3476,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
               if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan; // filename (1st argument)
               if (!CheckOperand (n_args - 1, MSK_STR)) return result_fval = qnan; // format string (2nd argument)
-              char fnamebuf[STRBUF];
+              char fnamebuf[STRBUF] = { 0 };
               NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
 
               int res = (*(int_t (*) (char *, char *, int, char, value *))sym->func) // call prnf(...)
@@ -3621,7 +3662,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   return result_fval = qnan;
                  }
                }
-              char fnamebuf[STRBUF];
+              char fnamebuf[STRBUF] = { 0 };
               NormalizePath (filename, fnamebuf, STRBUF);
               res = mxRegrFn (fnamebuf, msk, n, rfn, v_stack[v_sp - n_args - 1]); 
 
@@ -3723,7 +3764,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                   return result_fval = qnan;
                  }
                }
-              char fnamebuf[STRBUF];
+              char fnamebuf[STRBUF] = { 0 };
               NormalizePath (filename, fnamebuf, STRBUF);
               errtype = teMath;
               float__t res = StatFn (fnamebuf, msk, sfn, x);
@@ -3769,9 +3810,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                    error (v_stack[v_sp - 1].pos, "Error saving variable");
                    return result_fval = qnan;
                   }
-                 v_stack[v_sp - n_args - 1].tag  = tvINT;
-                 v_stack[v_sp - n_args - 1].ival = 1;
-                 v_stack[v_sp - n_args - 1].fval = (float__t)1.0L;
+                 v_stack[v_sp - n_args - 1] = v_stack[v_sp - 1];
                 }
                v_sp -= n_args;
              }
@@ -3793,7 +3832,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                return result_fval = qnan; // format string (2nd argument)
               if (sym->fidx == dfDataf)
                {
-                char fnamebuf[STRBUF];
+                char fnamebuf[STRBUF] = { 0 };
                 NormalizePath (v_stack[v_sp - n_args].get_str (), fnamebuf, STRBUF);
 
                 res = dataf (fnamebuf, v_stack[v_sp - n_args + 1].get_str (), n_args - 2,

@@ -1746,12 +1746,18 @@ int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
  int_t res = 0; 
  fprn (buf, sfmt, args, ic, v_stack);
  if (buf[0] == '\0') return 0; // nothing to write
- if (sfmt&&*sfmt) f = fopen (fname, "a");
- else f = fopen (fname, "w");
- if (f)
+ if (!fname || fname[0] == '\0') res = fprintf (stdout, "%s\n", buf);
+ else
   {
-   res = fprintf (f, "%s\n", buf);
-   fclose (f);
+   if (sfmt && *sfmt)
+    f = fopen (fname, "a");
+   else
+    f = fopen (fname, "w");
+   if (f)
+    {
+     res = fprintf (f, "%s\n", buf);
+     fclose (f);
+    }
   }
  return res;
 }
@@ -3739,4 +3745,237 @@ void vfunc (value *res, value *arg, int idx)
    res->imval = (float__t)0.0L;
    res->ival  = (int64_t)res->fval;
   }
+}
+
+// Color operation functions
+// All colors are represented as 0xRRGGBB in the lower 24 bits of int_t
+
+// Clamp a value to 0-255 range
+static inline uint8_t clamp_byte (int value)
+{
+ if (value < 0) return 0;
+ if (value > 255) return 255;
+ return (uint8_t)value;
+}
+
+// Clamp a float value to 0-255 range
+static inline uint8_t clamp_byte_f (float__t value)
+{
+ if (value < 0.0L) return 0;
+ if (value > 255.0L) return 255;
+ return (uint8_t)value;
+}
+
+// Extract RGB components from color
+static inline void extract_rgb (int_t color, uint8_t &r, uint8_t &g, uint8_t &b)
+{
+ r = (uint8_t)((color >> 16) & 0xFF);
+ g = (uint8_t)((color >> 8) & 0xFF);
+ b = (uint8_t)(color & 0xFF);
+}
+
+// Pack RGB components into color
+static inline int_t pack_rgb (uint8_t r, uint8_t g, uint8_t b)
+{
+ return (int_t)((r << 16) | (g << 8) | b);
+}
+
+// Add two colors component-wise (with saturation)
+// CADD(0xFF0000, 0x00FF00) → 0xFFFF00 (red + green = yellow)
+int_t CADD (int_t A, int_t B)
+{
+ uint8_t r1, g1, b1, r2, g2, b2;
+ extract_rgb (A, r1, g1, b1);
+ extract_rgb (B, r2, g2, b2);
+
+ uint8_t r = clamp_byte ((int)r1 + (int)r2);
+ uint8_t g = clamp_byte ((int)g1 + (int)g2);
+ uint8_t b = clamp_byte ((int)b1 + (int)b2);
+
+ return pack_rgb (r, g, b);
+}
+
+// Subtract color B from color A component-wise (with clamping to 0)
+// CSUB(0xFFFF00, 0x00FF00) → 0xFF0000 (yellow - green = red)
+int_t CSUB (int_t A, int_t B)
+{
+ uint8_t r1, g1, b1, r2, g2, b2;
+ extract_rgb (A, r1, g1, b1);
+ extract_rgb (B, r2, g2, b2);
+
+ uint8_t r = clamp_byte ((int)r1 - (int)r2);
+ uint8_t g = clamp_byte ((int)g1 - (int)g2);
+ uint8_t b = clamp_byte ((int)b1 - (int)b2);
+
+ return pack_rgb (r, g, b);
+}
+
+// Multiply two colors component-wise (normalized: result/255)
+// CMUL(0xFF8080, 0x808080) → 0x7F4040 (each component multiplied and normalized)
+int_t CMUL (int_t A, int_t B)
+{
+ uint8_t r1, g1, b1, r2, g2, b2;
+ extract_rgb (A, r1, g1, b1);
+ extract_rgb (B, r2, g2, b2);
+
+ uint8_t r = (uint8_t)(((int)r1 * (int)r2) / 255);
+ uint8_t g = (uint8_t)(((int)g1 * (int)g2) / 255);
+ uint8_t b = (uint8_t)(((int)b1 * (int)b2) / 255);
+
+ return pack_rgb (r, g, b);
+}
+
+// Add a scalar value to all color components (with saturation)
+// CADDN(0x808080, 50) → 0xB2B2B2 (brighten by 50)
+int_t CADDN (int_t A, int_t N)
+{
+ uint8_t r, g, b;
+ extract_rgb (A, r, g, b);
+
+ int n = (int)N;
+ r     = clamp_byte ((int)r + n);
+ g     = clamp_byte ((int)g + n);
+ b     = clamp_byte ((int)b + n);
+
+ return pack_rgb (r, g, b);
+}
+
+// Subtract a scalar value from all color components (with clamping to 0)
+// CSUBN(0xB2B2B2, 50) → 0x808080 (darken by 50)
+int_t CSUBN (int_t A, int_t N)
+{
+ uint8_t r, g, b;
+ extract_rgb (A, r, g, b);
+
+ int n = (int)N;
+ r     = clamp_byte ((int)r - n);
+ g     = clamp_byte ((int)g - n);
+ b     = clamp_byte ((int)b - n);
+
+ return pack_rgb (r, g, b);
+}
+
+// Multiply color by a scalar value (with saturation)
+// CMULN(0x804020, 2.0) → 0xFF8040 (double intensity, with saturation)
+int_t CMULN (int_t A, float__t N)
+{
+ uint8_t r, g, b;
+ extract_rgb (A, r, g, b);
+
+ r = clamp_byte_f ((float__t)r * N);
+ g = clamp_byte_f ((float__t)g * N);
+ b = clamp_byte_f ((float__t)b * N);
+
+ return pack_rgb (r, g, b);
+}
+
+// Divide color by a scalar value (with clamping)
+// CDIVN(0xFF8040, 2.0) → 0x7F4020 (half intensity)
+int_t CDIVN (int_t A, float__t N)
+{
+ if (N == 0.0L) return 0; // Avoid division by zero
+
+ uint8_t r, g, b;
+ extract_rgb (A, r, g, b);
+
+ r = clamp_byte_f ((float__t)r / N);
+ g = clamp_byte_f ((float__t)g / N);
+ b = clamp_byte_f ((float__t)b / N);
+
+ return pack_rgb (r, g, b);
+}
+
+// Mix (blend) two colors with alpha blending
+// alpha = 0.0: returns A, alpha = 1.0: returns B
+// CMIX(0xFF0000, 0x0000FF, 0.5) → 0x7F007F (50% red + 50% blue)
+int_t CMIX (int_t A, int_t B, float__t alpha)
+{
+ // Clamp alpha to [0, 1]
+ if (alpha < 0.0L) alpha = 0.0L;
+ if (alpha > 1.0L) alpha = 1.0L;
+
+ uint8_t r1, g1, b1, r2, g2, b2;
+ extract_rgb (A, r1, g1, b1);
+ extract_rgb (B, r2, g2, b2);
+
+ float__t beta = 1.0L - alpha;
+ uint8_t r     = clamp_byte_f ((float__t)r1 * beta + (float__t)r2 * alpha);
+ uint8_t g     = clamp_byte_f ((float__t)g1 * beta + (float__t)g2 * alpha);
+ uint8_t b     = clamp_byte_f ((float__t)b1 * beta + (float__t)b2 * alpha);
+
+ return pack_rgb (r, g, b);
+}
+
+bool CR_OP (value &left, value &right, t_operator cop)
+{
+ int_t res = 0;
+ if (left.tag != tvCOLOR && right.tag != tvCOLOR) return false; // One must be colors
+ if (left.tag == tvCOLOR && right.tag == tvCOLOR)
+  {
+   int_t A = left.ival;
+   int_t B = right.ival;
+   switch (cop)
+    {
+    case toADD:
+     res = CADD (A, B);
+     break;
+    case toSUB:
+     res = CSUB (A, B);
+     break;
+    case toMUL:
+     res = CMUL (A, B);
+     break;
+    default:
+     return false; // Unsupported operator
+    }
+  }
+ else if ((left.tag == tvCOLOR) && ((right.tag & (t_value)~MSK_SCALAR) == 0))
+  {
+   int_t A = left.ival;
+   switch (cop)
+    {
+    case toADD:
+     res = CADDN (A, right.get_int ());
+     break;
+    case toSUB:
+     res = CSUBN (A, right.get_int ());
+     break;
+    case toMUL:
+     res = CMULN (A, right.get ());
+     break;
+    case toDIV:
+     res = CDIVN (A, right.get ());
+     break;
+    default:
+     return false; // Unsupported operator
+    }
+  }
+ else if ((right.tag == tvCOLOR) && ((left.tag & (t_value)~MSK_SCALAR) == 0))
+  {
+   int_t A = right.ival;
+   int_t B = left.get_int ();
+   switch (cop)
+    {
+    case toADD:
+     res = CADDN (A, left.get_int ());
+     break;
+    case toSUB:
+     res = CSUBN (A, left.get_int ());
+     break;
+    case toMUL:
+     res = CMULN (A, left.get ());
+     break;
+    case toDIV:
+     res = CDIVN (A, left.get ());
+     break;
+    default:
+     return false; // Unsupported operator
+    }
+  }
+ else return false;
+ left.ival = res;
+ left.fval = (float__t)res;
+ left.imval = (float__t)0.0L;
+ left.tag  = tvCOLOR; // Result is a color
+ return true;
 }

@@ -602,7 +602,7 @@ uint16_t script::find_label (const char *lbl)
 
 bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script or expression and store the result in res
 {                                 // return the result in res
- char filename[2048];
+ char filename[2048] = { 0 };
  char *buffer = nullptr;
  script *sct  = nullptr;
  res.tag = tvERR;

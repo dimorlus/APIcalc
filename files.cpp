@@ -215,7 +215,7 @@
 
  bool calculator::Load (char *fname, value &res)
  {
-  char fnamebuf[STRBUF];
+  char fnamebuf[STRBUF] = { 0 };
   NormalizePath (fname, fnamebuf, STRBUF);
   // try to load as bitmap first, if fails, try to load as text
   bmpdraw *bmp = new bmpdraw ();
@@ -262,7 +262,7 @@
 
  bool calculator::Save(char* fname, value& val)
  {
-  char fnamebuf[STRBUF];
+  char fnamebuf[STRBUF] = { 0 };
   NormalizePath (fname, fnamebuf, STRBUF);
   switch (val.tag)
    {
@@ -272,6 +272,9 @@
       if (!bmp) return false;
       bool r = bmp->save(fnamebuf);
       //val.tag = tvINT;
+      val.ival = r?1:0;
+      val.fval = (float__t)val.ival;
+      val.imval = (float__t)0.0L;
       return r;
      }
     case tvSTR:

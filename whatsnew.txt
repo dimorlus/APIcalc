@@ -1,4 +1,14 @@
-26.05.26 (2.202)
+27.05.26 (2.204)
+* Now the save function returns the type and value of the variable being written.
++ The Color data type has been added, returned by the color(rrggbb) function. The following operations 
+  are defined with this type:
+   for two colors: +, -, *
+   for a color and a number: +, -, *, /
+   If the expression result is of type Color, the GUI draws a square of the corresponding color.
+   color(trgb(2k7)) + color(wrgb(blue)) / 20 -> 0xFFFFBE 
+* Now in the CLI version, the prnf("","fmt",...) function outputs to stdout (as well as in scripts).
+   
+26.05.26 (2.203)
 + Added function inverse/inv(expr, point, var) which returns the inverse expr function at the specified 
   point using Brent's method.
   inv(sin(x),1/sqrt(2), x) → 0.7853981633974483 (45`)

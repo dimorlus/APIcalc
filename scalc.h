@@ -301,6 +301,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvFOR,
  tvPLOT,
  tvBMP,
+ tvCOLOR,
 };
 
 #define MSK_ERR     (1 << tvERR)     // Mask for error values
@@ -320,6 +321,7 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
 #define MSK_BMP     (1 << tvBMP)     // Mask for bitmap operator values
 #define MSK_INVERCE (1 << tvINVERSE) // Mask for inverse operator values
+#define MSK_COLOR   (1 << tvCOLOR)   // Mask for color operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
 
@@ -431,7 +433,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsLDSV,     // 38  load/save operator for loading and saving variables.
  tsPLOTREG,  // 39  plotreg(xmin, xmax, ymin, ymax) - define plot region
  tsINVERSE,  // 40  inverse operator for calculating the inverse of a function (inverse)
- tsNUM       // 41  Total number of symbol types, must be the last in the list
+ tsCOLOR,    // 41  color(r,g,b) operator for creating color values  
+ tsNUM       // 42  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult

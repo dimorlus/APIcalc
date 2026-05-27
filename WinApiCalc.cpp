@@ -804,7 +804,7 @@ void WinApiCalc::OnCreate ()
  m_pCalculator->addfn ("binwide", (void *)(int (*) (int))BinwideFunction);
  m_pCalculator->addfn ("font", (void *)(int (*) (int))FontFunction);
  m_pCalculator->addfn ("vars", (void *)(int (*) (int))VarsFunction);
- m_pCalculator->addfn ("color", (void *)(int (*) (int))ColorFunction);
+ m_pCalculator->addfn ("showcolor", (void *)(int (*) (int))ColorFunction);
  m_pCalculator->addfn ("home", (void *)(int (*) (int))HomeFunction);
 
  m_pCalculator->setEscFn (EscFn);
@@ -1356,6 +1356,12 @@ void WinApiCalc::EvaluateExpression (bool block)
    if (lineCount) m_resultLines = lineCount;
    else m_resultLines = 1;    // At least 1 line
    SetWindowTextA (m_hResultEdit, printBuf);
+
+   //if (m_pCalculator->get_res_tag() == tvCOLOR)
+   //{
+   // int_t colorValue = m_pCalculator->get_int_res ();
+   // ColorFunction (colorValue);
+   //}
 
    // OutputDebugStringA("EvaluateExpression: result set to '");
    // OutputDebugStringA(result.c_str());

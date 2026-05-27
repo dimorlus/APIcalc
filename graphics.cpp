@@ -2062,7 +2062,7 @@ bool calculator::PlotData (bmpdraw *bmp, PlotParams &params)
  if (param_count == 0) param_count = 1; // If no mask - one parameter
 
  // Normalize file path
- char fnamebuf[STRBUF];
+ char fnamebuf[STRBUF] = { 0 };
  NormalizePath (datafile, fnamebuf, STRBUF);
 
  float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;

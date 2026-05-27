@@ -878,7 +878,7 @@ bool calculator::Split (const char *expr, ...)
    error (0, "Not enough arguments");
    return false;
   }
-
+ err[0] = '\0'; // Clear error message
  return true;
 }
 // Split expression to the comma separeted parts.
@@ -1472,7 +1472,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            sprintf (var_name, "@%d", ++tmp_var_count);
            add (tsVARIABLE, var_name)->val = v_stack[0];
           }
-         register_mem (v_stack[0].sval);
+         if (v_stack[0].tag == tvBMP)
+          register_mem (v_stack[0].sval, ptBMP); 
+         else
+          register_mem (v_stack[0].sval, ptMALLOC);
+
          register_mem (v_stack[0].mval);
 
          result_fval = v_stack[0].get ();

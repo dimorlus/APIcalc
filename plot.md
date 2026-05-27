@@ -3,7 +3,7 @@
 This document describes all plotting functions available in the calculator for visualizing mathematical functions and circuit characteristics.<br>
 
 ## Table of Contents
-
+0. [Common](#common)
 1. [Cartesian Plots](#cartesian-plots)
 2. [Polar Plots](#polar-plots)
 3. [Parametric Plots](#parametric-plots)
@@ -14,6 +14,8 @@ This document describes all plotting functions available in the calculator for v
 8. [Examples](#examples)
 
 ---
+### Common
+
 #### Saving, loading and overlaying
 The **plot*** functions return the BMP type, and the `+` and `|` operators are defined for this type,  working in such a way that the second image (graph) 
 is drawn on top of the first. You can write 

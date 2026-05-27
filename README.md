@@ -3,7 +3,6 @@
 [Русская версия / Russian version](Readme_ru.md)
 
 ### Table of Contents
-### Table of Contents
 
 1. [Floating point sizes](#important-note)
 2. [Variable types](#variable-types)

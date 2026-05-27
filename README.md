@@ -5,7 +5,7 @@
 ### Table of Contents
 1. [Floating points sizes](#Important-note.)
 2. [Variable types](#Variable-types.)
-3. [CLI Version (ccalc)](#CLI Version-(ccalc))
+3. [CLI Version (ccalc)](#CLI-Version)
 	3.1 [CLI Usage](#CLI-Usage)
 	3.2 [Batch Processing (File or stdin)](#Batch-Processing-(File-or-stdin))
 4. [Supported Functions](#Supported-Functions)

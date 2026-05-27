@@ -2,6 +2,53 @@
 ![ccalc](calc.png)<br>
 [Русская версия / Russian version](Readme_ru.md)
 
+### Table of Contents
+1. [Floating points sizes](#Important-note.)
+2. [Variable types](#Variable-types.)
+3. [CLI Version (ccalc)](#CLI Version-(ccalc))
+	3.1 [CLI Usage](#CLI-Usage)
+	3.2 [Batch Processing (File or stdin)](#Batch-Processing-(File-or-stdin))
+4. [Supported Functions](#Supported-Functions)
+	Basic Operations
+	Percentage Operations
+	Quick Rule of Thumb for Variables
+Mathematical Functions
+Utility Functions
+Plotting
+Complex Number Support
+User-Defined Functions
+Comments
+Matrix Support
+	Matrix Operations
+	Matrix Examples
+Data Format & File Handling
+	File Requirements
+	File Paths & Syntax
+	File Paths
+	The "All-Terrain" Parser
+	Column Selection (Advanced Masks)
+	Data Structures for Different Modes
+Regression & Data Fitting
+	Function Reference
+	Regression Calculation
+Statistical Analysis
+	Function Reference
+	Robust Statistics Example
+	Probability Functions (Normal Distribution)
+Strings
+Color Data Type & Chromatic Algebra
+Predefined constants
+User Constants Files
+Output Formats
+Engineering / Scientific Suffixes
+Usage
+Example Expressions
+Implicit Multiplication
+Keyboard Shortcuts
+Menu Options
+Sources and releases
+
+
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.
 
 This calculator project on WinAPI (VS2022) is based on my old project on Cbuilder VCL (BCB6) [fcalc](https://github.com/dimorlus/fcalc), which, in turn, is based on DOS programs and [Ccalc](http://www.garret.ru/ccalc.zip) sources that have been heavily reworked since then.

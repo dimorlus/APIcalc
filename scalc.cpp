@@ -1580,7 +1580,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          error (v_stack[v_sp - 2].pos, "Undefined operand");
          return result_fval = qnan;
         }
-       register_mem (v_stack[v_sp - 1].sval);
+       if (v_stack[v_sp - 1].tag == tvBMP) register_mem (v_stack[v_sp - 1].sval, ptBMP);
+       else register_mem (v_stack[v_sp - 1].sval, ptMALLOC);
        register_mem (v_stack[v_sp - 1].mval);
        v_stack[v_sp - 2] = v_stack[v_sp - 1];
        v_stack[v_sp - 1].var = nullptr;
@@ -2852,8 +2853,16 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           if ((v_stack[v_sp - 1].tag == tvMATRIX) && (v_stack[v_sp - 1].mval))
            register_mem (v_stack[v_sp - 1].mval);
           // if ((v_stack[v_sp - 1].tag == tvSTR) && (v_stack[v_sp - 1].sval))
-          register_mem (v_stack[v_sp - 2].sval);
-          register_mem (v_stack[v_sp - 1].sval);
+
+          if (v_stack[v_sp - 2].tag == tvBMP)
+           register_mem (v_stack[v_sp - 2].sval, ptBMP);
+          else
+           register_mem (v_stack[v_sp - 2].sval, ptMALLOC);
+
+          if (v_stack[v_sp - 1].tag == tvBMP)
+           register_mem (v_stack[v_sp - 1].sval, ptBMP);
+          else
+           register_mem (v_stack[v_sp - 1].sval, ptMALLOC);
 
           // v_stack[v_sp - 2] := v_stack[v_sp - 1]
           if (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j] := v

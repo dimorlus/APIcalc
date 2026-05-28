@@ -711,104 +711,6 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
 };
 #pragma endregion
 
-#ifdef _comment_
-#pragma region Memory management class
-class MemList
-{
- void **list;
- int capacity;
- int count; // mem_idx 
-
- public:
- MemList (int initial = 256) : capacity (initial), count (0)
- {
-  list = (void **)malloc (capacity * sizeof (void *));
-  if (list) memset (list, 0, capacity * sizeof (void *));
- }
-
- ~MemList () { free (list); }
-
- void init_mem_list ()
- {
-  if (list) memset (list, 0, capacity * sizeof (void *));
-  count = 0;
- }
-
- int search_mem (void *mem)
- {
-  for (int i = 0; i < count; i++)
-   if (list[i] == mem) return i;
-  return -1;
- }
-
-void *register_mem (void *mem)
- {
-  if (!mem) return nullptr;
-  if (search_mem (mem) != -1) return mem; // already registered
-  // fill holes first
-  for (int i = 0; i < count; i++)
-   if (!list[i])
-    {
-     list[i] = mem;
-     return mem;
-    }
-  // no holes - append
-  if (count < capacity)
-   {
-    list[count++] = mem;
-    return mem;
-   }
-  // grow
-  int newcap     = capacity * 2;
-  void **newlist = (void **)realloc (list, newcap * sizeof (void *));
-  if (!newlist) return nullptr;
-  list = newlist;
-  memset (list + capacity, 0, (newcap - capacity) * sizeof (void *));
-  capacity      = newcap;
-  list[count++] = mem;
-  return mem;
- }
-
- void *unregister_mem (void *mem)
- {
-  if (!mem) return nullptr;
-  int idx = search_mem (mem);
-  if (idx != -1) list[idx] = nullptr; // mark as unregistered, not freed
-  return mem;
- }
-
- void *sf_alloc (int size)
- {
-  if (!size) return nullptr;
-  void *mem = malloc (size);
-  if (mem) register_mem (mem);
-  return mem;
- }
-
- void sf_free (void *dat)
- {
-  if (dat)
-   {
-    unregister_mem (dat);
-    free (dat);
-   }
- }
-
- void free_all ()
- {
-  for (int i = 0; i < count; i++)
-   if (list[i])
-    {
-     free (list[i]);
-     list[i] = nullptr;
-    }
-  count = 0;
- }
-
- int size () const { return count; }
-};
-#pragma endregion
-#endif
 
 #pragma region Memory management class
 
@@ -864,6 +766,12 @@ class MemList
     {
      list[i].ptr  = mem;
      list[i].type = type;
+#ifdef _DEBUG_MEM_   
+     if (type == ptBMP)
+      {
+       printf ("Registering bmpdraw* object at %p\n", mem);
+      }
+#endif
      return mem;
     }
 
@@ -873,6 +781,12 @@ class MemList
     list[count].ptr  = mem;
     list[count].type = type;
     count++;
+#ifdef _DEBUG_MEM_   
+    if (type == ptBMP)
+     {
+      printf ("Registering bmpdraw* object at %p\n", mem);
+     }
+#endif
     return mem;
    }
 
@@ -885,6 +799,12 @@ class MemList
   capacity         = newcap;
   list[count].ptr  = mem;
   list[count].type = type;
+#ifdef _DEBUG_MEM_   
+  if (type == ptBMP)
+   {
+    printf ("Registering bmpdraw* object at %p\n", mem);
+   }
+#endif
   count++;
   return mem;
  }
@@ -903,13 +823,14 @@ class MemList
 
  void *sf_alloc (int size, ptr_type type = ptMALLOC)
  {
+  if (type != ptMALLOC) return nullptr; // Invalid type
   if (!size) return nullptr;
   void *mem = malloc (size);
   if (mem) register_mem (mem, type);
   return mem;
  }
 
- void sf_free (void *dat)
+ void sf_free (void *dat, ptr_type type = ptMALLOC)
  {
   if (dat)
    {
@@ -919,6 +840,9 @@ class MemList
       switch (list[idx].type)
        {
        case ptBMP:
+#ifdef _DEBUG_MEM_   
+        printf ("Freeing bmpdraw* object at %p\n", dat); 
+#endif
         delete (bmpdraw *)dat;
         break;
        case ptMALLOC:
@@ -929,7 +853,22 @@ class MemList
       list[idx].ptr  = nullptr;
       list[idx].type = ptMALLOC;
      }
-    else free (dat); // Not found in list, free anyway (should not happen)
+    else
+     { // Not found in list, free anyway
+      switch (type)
+       {
+       case ptBMP:
+#ifdef _DEBUG_MEM_   
+        printf ("Freeing bmpdraw* object at %p (not found in list)\n", dat); 
+#endif
+        delete (bmpdraw *)dat;
+        break;
+       case ptMALLOC:
+       default:
+        free (dat);
+        break;
+       }
+     }
    }
  }
 
@@ -942,6 +881,9 @@ class MemList
       switch (list[i].type)
        {
        case ptBMP:
+#ifdef _DEBUG_MEM_   
+        printf ("Freeing bmpdraw* object at %p\n", list[i].ptr);
+#endif
         delete (bmpdraw *)list[i].ptr;
         break;
 
@@ -1082,7 +1024,7 @@ class calculator // calculator represents the main class for the expression calc
  void *register_mem (void *mem, ptr_type type = ptMALLOC) { return mem_list.register_mem (mem, type); }
  void *unregister_mem (void *mem) { return mem_list.unregister_mem (mem); }
  void *sf_alloc (int size, ptr_type type = ptMALLOC) { return mem_list.sf_alloc (size, type); }
- void sf_free (void *dat) { mem_list.sf_free (dat); }
+ void sf_free (void *dat, ptr_type type = ptMALLOC) { mem_list.sf_free (dat, type); }
  void clear_mem_list (void) { mem_list.free_all (); }
 
  // sybol table management

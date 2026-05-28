@@ -12,6 +12,8 @@
 #include <float.h>
 #include <errno.h>
 #include <limits>
+#include <io.h>
+#include <conio.h>
 
 #include "scalc.h"
 #include "sfmts.h"
@@ -41,6 +43,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <io.h>
+#include <conio.h>
 
 #include "scalc.h"
 #include "sfmts.h"
@@ -3906,7 +3910,8 @@ int_t CMIX (int_t A, int_t B, float__t alpha)
  return pack_rgb (r, g, b);
 }
 
-bool CR_OP (value &left, value &right, t_operator cop)
+// Main function to perform color operations based on the operator
+bool ColorOp (value &left, value &right, t_operator cop)
 {
  int_t res = 0;
  if (left.tag != tvCOLOR && right.tag != tvCOLOR) return false; // One must be colors
@@ -3978,4 +3983,249 @@ bool CR_OP (value &left, value &right, t_operator cop)
  left.imval = (float__t)0.0L;
  left.tag  = tvCOLOR; // Result is a color
  return true;
+}
+
+// Console functions
+void OpenDebugConsole ()
+{
+ // 1. Check if the console is already created to avoid spawning multiple windows
+ if (GetStdHandle (STD_OUTPUT_HANDLE) == INVALID_HANDLE_VALUE || !GetConsoleWindow ())
+  {
+   AllocConsole ();
+   SetConsoleCtrlHandler (NULL, TRUE);
+   // 2. Redirect standard C runtime streams to the new window
+   (void)freopen ("CONOUT$", "w", stdout);
+   (void)freopen ("CONOUT$", "w", stderr);
+   (void)freopen ("CONIN$", "r", stdin);
+
+   // 3. (Optional) Set UTF-8 encoding to prevent printf from breaking Russian characters
+   SetConsoleCP (65001);
+   SetConsoleOutputCP (65001);
+
+   HWND hwnd = GetConsoleWindow ();
+   if (hwnd)
+    {
+     HMENU hMenu = GetSystemMenu (hwnd, FALSE);
+     if (hMenu)
+      {
+       // Disable the "Close" button (X) and the Alt+F4 menu item
+       EnableMenuItem (hMenu, SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+      }
+    }
+
+   // 4. Symbolically clear the screen and welcome the engineer
+   printf ("--- Engine Debug Console Activated ---\n");
+  }
+}
+
+void CloseDebugConsole ()
+{
+ if (GetConsoleWindow ())
+  {
+   HANDLE hStdin = GetStdHandle (STD_INPUT_HANDLE);
+
+   // IMPORTANT: restoring normal mode before closing
+   if (hStdin != INVALID_HANDLE_VALUE)
+    {
+     DWORD mode;
+     GetConsoleMode (hStdin, &mode);
+     SetConsoleMode (hStdin, mode | ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+     FlushConsoleInputBuffer (hStdin);
+    }
+
+   fflush (stdout);
+   fflush (stderr);
+
+   // Closing streams
+   fclose (stdout);
+   fclose (stderr);
+   fclose (stdin);
+
+   // Destroying the console
+   SetConsoleCtrlHandler (NULL, FALSE);
+   FreeConsole ();
+
+   // Redirecting to the black hole
+   (void)freopen ("NUL", "w", stdout);
+   (void)freopen ("NUL", "w", stderr);
+   (void)freopen ("NUL", "r", stdin);
+  }
+}
+
+bool is_console_open ()
+{
+ return GetConsoleWindow () != NULL;
+}
+
+bool is_gui_app ()
+{
+ return GetConsoleWindow () == NULL;
+}
+
+int_t console (int_t cmd)
+{
+ // Detect if the application is a GUI or console application
+ static bool is_gui_app = (GetConsoleWindow () == NULL);
+
+ switch (cmd)
+  {
+  case 1: // Open console
+   if (is_gui_app)
+    {
+     // GUI application: create a new console
+     OpenDebugConsole ();
+    }
+   else
+    {
+     // Console application: console already exists, just set UTF-8
+     SetConsoleCP (65001);
+     SetConsoleOutputCP (65001);
+     printf ("--- Debug Console Ready ---\n");
+    }
+   return 1;
+
+  case 0: // Close console
+   if (is_gui_app)
+    {
+     // GUI application: close the created console
+     CloseDebugConsole ();
+    }
+   else
+    {
+     // Console application: just clear the buffer, do not close
+     HANDLE hStdin = GetStdHandle (STD_INPUT_HANDLE);
+     if (hStdin != INVALID_HANDLE_VALUE)
+      {
+       FlushConsoleInputBuffer (hStdin);
+      }
+     printf ("--- Debug Console Closed ---\n");
+    }
+   return 0;
+
+  default:
+   return -1; // Invalid command
+  }
+}
+
+
+int Debug (const char *fmt, ...)
+{
+ // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
+ static int execution_mode = 0;
+
+ // Check for redirection (once on the first call)
+ static int is_redirected = -1; // -1 = not checked, 0 = interactive console, 1 = redirected
+ if (is_redirected == -1)
+  {
+   HANDLE hStdin  = GetStdHandle (STD_INPUT_HANDLE);
+   HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);
+
+   // Check if stdin is a console (not a file/pipe)
+   DWORD mode;
+   bool stdin_is_console = (hStdin != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdin, &mode);
+
+   // Check if stdout is a console
+   bool stdout_is_console = (hStdout != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdout, &mode);
+
+   // If at least one stream is redirected, operate in no-break mode
+   is_redirected = (!stdin_is_console || !stdout_is_console) ? 1 : 0;
+
+   if (is_redirected)
+    {
+     execution_mode = 1; // Automatically enable F5 mode (output without pauses)
+    }
+  }
+
+ // Reset mode when called with an empty string
+ if (*fmt == '\0')
+  {
+   // Do not reset execution_mode back to 0 if redirected
+   if (!is_redirected)
+    {
+     execution_mode = 0;
+    }
+   return 0;
+  }
+
+ va_list args;
+ va_start (args, fmt);
+
+ // In F10 mode (2), do not output anything
+ if (execution_mode != 2)
+  {
+   vprintf (fmt, args);
+   fflush (stdout);
+  }
+
+ va_end (args);
+
+ // In F5 (1), F10 (2) modes and when redirected, do not wait for key presses
+ if (execution_mode != 0 || is_redirected)
+  {
+   return 0;
+  }
+
+ // --- Step-by-step mode (only for interactive console) ---
+ HANDLE hStdin = GetStdHandle (STD_INPUT_HANDLE);
+ if (hStdin == INVALID_HANDLE_VALUE) return 0;
+
+ DWORD oldMode;
+ if (!GetConsoleMode (hStdin, &oldMode)) return 0;
+
+ SetConsoleMode (hStdin, ENABLE_WINDOW_INPUT);
+
+ INPUT_RECORD ir;
+ DWORD read;
+ int result = 0;
+
+ while (true)
+  {
+   if (!ReadConsoleInput (hStdin, &ir, 1, &read) || read == 0)
+    {
+     break;
+    }
+
+   if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
+    {
+     WORD vkCode     = ir.Event.KeyEvent.wVirtualKeyCode;
+     DWORD ctrlState = ir.Event.KeyEvent.dwControlKeyState;
+
+     // Ctrl-C - interrupt
+     if ((ctrlState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+         && (vkCode == 'C' || vkCode == VK_CANCEL))
+      {
+       result = 1;
+       break;
+      }
+
+     // F5 - continue without breaks (but with output)
+     if (vkCode == VK_F5)
+      {
+       execution_mode = 1;
+       printf ("\n[F5: Running without breaks...]\n");
+       result = 0;
+       break;
+      }
+
+     // F10 - continue without breaks and without output
+     if (vkCode == VK_F10)
+      {
+       execution_mode = 2;
+       printf ("\n[F10: Running silently...]\n");
+       result = 0;
+       break;
+      }
+
+     // Any other key - next step
+     if (ir.Event.KeyEvent.uChar.AsciiChar != 0)
+      {
+       result = 0;
+       break;
+      }
+    }
+  }
+
+ SetConsoleMode (hStdin, oldMode);
+
+ return result;
 }

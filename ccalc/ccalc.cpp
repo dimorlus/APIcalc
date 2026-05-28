@@ -365,18 +365,19 @@ void load_user_constants (calculator &calc, const char *Fname)
   }
 }
 
-
-int debug (const char *fmt, ...)
-{
- int ch;
- va_list args;
- va_start (args, fmt);
- vprintf (fmt, args);
- if (_isatty (_fileno (stdout))) ch = _getch (); // Wait for key press
- va_end (args);
- if (ch == 3) return 1; // Ctrl-C pressed
- return 0;
-}
+// Engine Debug function used. We can overlap it with a custom one to get debug info from the engine
+// during script trace.
+//int debug (const char *fmt, ...)
+//{
+// int ch = 0;
+// va_list args;
+// va_start (args, fmt);
+// vprintf (fmt, args);
+// if (_isatty (_fileno (stdout))) ch = _getch (); // Wait for key press
+// va_end (args);
+// if (ch == 3) return 1; // Ctrl-C pressed
+// return 0;
+//}
 
 int main ()
 {
@@ -459,8 +460,7 @@ int main ()
  expr_len = strlen (expression);
  while (expr_len > 0 && isspace (expression[expr_len - 1])) expression[--expr_len] = '\0';
 
-
- // Create the calculator
+  // Create the calculator
  calculator calc (config.get_options ().calc_flags);
 
  calc.addfn ("help", (void *)(int (*) (int))fhelp);
@@ -468,9 +468,12 @@ int main ()
  load_user_constants (calc, "consts.txt");
  load_user_constants (calc, "user.txt");
 
- if (config.get_options ().calc_flags & DBG)
+  if (config.get_options ().calc_flags & DBG)
   {
-   calc.setDebugFn (debug);
+    // calc.setDebugFn (debug); // Overlap the engine debug function with our custom one to get
+                                // debug info during script execution
+   calc.syntax (calc.issyntax () | DBG); // Inforce debug mode in case if DBG flag was 
+                                         //clearred by user.txt or const.text
   }
 
  if (errMsg[0] != '\0')

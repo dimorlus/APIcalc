@@ -847,7 +847,7 @@ t_operator calculator::sqbraces (void)
    return toERROR;
   }
 
- float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
+ float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t), ptMALLOC);
 
  if (!mval)
   {
@@ -1818,8 +1818,8 @@ t_operator calculator::scan (bool operand, bool percent)
          {
           fflags |= CHR;
           info |= CHR;
-          ival               = *(unsigned char *)(ipos - 1);
-          v_stack[v_sp].sval = (char *)sf_alloc (2);
+          ival = *(unsigned char *)(ipos - 1);
+          v_stack[v_sp].sval = (char *)sf_alloc (2, ptMALLOC);
           if (v_stack[v_sp].sval)
            {
             if (v_stack[v_sp].sval) v_stack[v_sp].sval[0] = *(ipos - 1);

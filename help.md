@@ -263,6 +263,7 @@ help(0)                         Call help
 opacity(100)                    Set opacity level in percent
 binwide(32)                     Set binary width
 menu(0)                         Hide (0) or show (1) menu.
+console(1)                      Show (1) or hide (0) console
 vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.

@@ -150,6 +150,11 @@ void calculator::copy_symbols (symbol **symtab, uint64_t mask)
             new_symbol->val.mrows = sp->val.mrows;
             new_symbol->val.sval  = nullptr;
             new_symbol->val.mval  = nullptr;
+            #ifdef _COPY_BMP_ //child calculator does'nt work with BMP values
+            if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvBMP))
+              new_symbol->val.sval = (char*)dupBMP ((bmpdraw *)sp->val.sval); // Duplicate and register BMP value 
+            else 
+            #endif
             if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
               new_symbol->val.sval = dupString (sp->val.sval); // Duplicate and register string value 
             else 
@@ -181,22 +186,22 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
         {
          if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvBMP))
           {
-           sf_free (sp->val.sval); // Free BMP value using sf_free to ensure it's unregistered
+           sf_free (sp->val.sval, ptBMP); // Free BMP value using sf_free to ensure it's unregistered
            sp->val.sval = nullptr;
           }
          if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvSTR))
           {
-           sf_free (sp->val.sval); // Free string value using sf_free to ensure it's unregistered
+           sf_free (sp->val.sval, ptMALLOC); // Free string value using sf_free to ensure it's unregistered
            sp->val.sval = nullptr;
           }
          if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
           {
-           sf_free (sp->val.mval); // Free matrix value using sf_free to ensure it's unregistered
+           sf_free (sp->val.mval, ptMALLOC); // Free matrix value using sf_free to ensure it's unregistered
            sp->val.mval = nullptr;
           }
          if (sp->tag == tsUFUNCT && sp->func) 
           {
-           free (sp->func); // Free function name using sf_free to ensure it's unregistered
+           sf_free (sp->func, ptMALLOC); // Free function name using sf_free to ensure it's unregistered
            sp->func = nullptr;
           }    
          sp->name[0] = '\0';
@@ -250,6 +255,16 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
           {
            written = snprintf (cp, bsize - (cp - buf), "%-10s = %lld (%llX)\r\n", sp->name,
                                (long long)sp->val.ival, (long long)sp->val.ival);
+          }
+         else if (sp->val.tag == tvCOLOR)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %x\r\n", sp->name,
+                               (uint32_t)sp->val.ival);
+          }
+         else if (sp->val.tag == tvBMP)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = BMP%dx%d\r\n", sp->name,
+                               ((bmpdraw *)sp->val.sval)->width, ((bmpdraw *)sp->val.sval)->height);
           }
          else
           {

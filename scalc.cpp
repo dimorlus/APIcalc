@@ -289,6 +289,9 @@ void calculator::AddPredefined (void)
  // This function can be used to add predefined constants and functions
  // to the symbol table. It is called from the constructor after initializing
  // the hash table and copying symbols from the provided symbol table (if any).
+
+ add (tsIFUNC1, "console", (void *)console);
+ 
  add (tsSOLVE, "solve", nullptr);
  add (tsCALC, "calc", nullptr);
  add (tsINTEGR, "integr", nullptr);
@@ -1617,7 +1620,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
           AddBmp (bmp1, bmp2, fgc);
          }
-        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+        else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }
@@ -1634,7 +1637,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             return result_fval = qnan;
            }
           {
-           char *new_s = (char *)sf_alloc (new_len);
+           char *new_s = (char *)sf_alloc (new_len, ptMALLOC);
            if (!new_s)
             {
              error (v_stack[v_sp - 2].pos, "Memory allocation failed");
@@ -1705,7 +1708,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
-        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+        else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }
@@ -1773,7 +1776,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
-        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+        else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }
@@ -1840,7 +1843,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
-        else if (CR_OP (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+        else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }

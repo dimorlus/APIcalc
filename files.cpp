@@ -165,7 +165,7 @@
      && (v_stack[0].var->val.tag == tvSTR))
   {
    if (mn != 1) return da_ArgNum; // Format does not match number of arguments
-   sf_free (v_stack[0].var->val.sval);
+   sf_free (v_stack[0].var->val.sval, ptMALLOC);
    v_stack[0].var->val.sval = dupString (str);
    v_stack[0].sval = v_stack[0].var->val.sval;
   }

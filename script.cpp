@@ -397,14 +397,16 @@ bool script::execute ()
 
  if (!child) return false;
 
- if (debug) br = debug("=== Script started, %d lines. Press any key for the next step, Ctrl+C for exit ===\n", num_lines);
+ if (debug) debug (""); // Reset debug execution mode to step-by-step if it was set to auto before
+ if (debug) br = debug("=== Script started, %d lines. Press any key for the next step, Ctrl+C for exit ===\n"
+                       "===          F5 for running without breaks, F10 for running silently           ===\n", num_lines);
 
  while (ip < num_lines)
   {
    char *line = buffer + lineidx[ip];
 
    if (check_break (init_ms, last_gui_check) != brNONE) return false;
-   if (br) return false;
+   if (br) break; //return false;
 
    // Skip leading spaces
    while (*line == ' ') line++;
@@ -576,7 +578,8 @@ bool script::execute ()
     }
   }
 
- if (debug) debug("=== Script finished (end of lines) ===\n");
+ //if (debug) debug("=== Script finished (end of lines) ===\n");
+ if (debug) printf ("=== Script finished (end of lines) ===\n");
  return true;
 }
 
@@ -641,7 +644,11 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
 
      child->setEscFn(EscFn);
      sct->setEscFn(EscFn);
-     sct->set_debug_callback(debugFn);
+     sct->set_debug_callback (nullptr);
+     if (debugFn) sct->set_debug_callback(debugFn);
+     else 
+     if ((scfg & DBG) && is_console_open ()) 
+         sct->set_debug_callback (Debug); // Use calculator's debug function if available
      sct->set_calculator(child);
 
      success = sct->execute();
@@ -673,7 +680,7 @@ void calculator::GetChildRes(calculator *child, value &res)
  res.ival  = child->get_int_res ();
  res.fval  = child->get_re_res ();
  res.imval = child->get_im_res ();
- res.sval  = dupString (child->get_str_res ());
+ if (res.tag != tvBMP) res.sval  = dupString (child->get_str_res ());
  if (res.imval != (float__t)0.0L)
   res.tag = tvCOMPLEX; // Upgrade to complex if imaginary part is non-zero
  else if (res.tag == tvFLOAT && res.fval == (float__t)(int64_t)res.fval)
@@ -689,7 +696,7 @@ void calculator::GetChildRes(calculator *child, value &res)
    int msize      = mxr.rows * mxr.cols * sizeof (float__t);
    if (msize)
     {
-     float__t *new_mval = (float__t *)sf_alloc (msize);
+     float__t *new_mval = (float__t *)sf_alloc (msize, ptMALLOC);
      if (new_mval)
       {
        memcpy (new_mval, mxr.mval, msize);

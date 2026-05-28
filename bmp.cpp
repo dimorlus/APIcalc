@@ -142,7 +142,9 @@ bmpdraw::bmpdraw (void)
 // Destructor
 bmpdraw::~bmpdraw (void)
 {
+ //void *ptr = data;
  if (data) delete[] data;
+ //printf ("bmpdraw destroyed. data was at %p\n", ptr);
 }
 
 // Create a new BMP
@@ -160,6 +162,7 @@ bool bmpdraw::newbmp (int w, int h, uint32_t color)
  if (!data) return false;
 
  clear (color);
+ //printf ("New BMP created: %dx%d. data allocated at %p\n", width, height, data);
  return true;
 }
 

@@ -108,7 +108,7 @@ int isinf_l(float__t x) { return x < -LDBL_MAX||x > LDBL_MAX; }
 // Returns NULL on failure (error already set)
 float__t *calculator::mxAlloc (int rows, int cols)
 {
- float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t));
+ float__t *mval = (float__t *)sf_alloc (rows * cols * sizeof (float__t), ptMALLOC);
  if (!mval)
   {
    mxerror ("memory allocation failed");

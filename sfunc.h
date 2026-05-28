@@ -216,4 +216,9 @@ int_t CSUBN (int_t A, int_t N);
 int_t CMULN (int_t A, float__t N);
 int_t CDIVN (int_t A, float__t N);
 int_t CMIX (int_t A, int_t B, float__t alpha);
-bool CR_OP (value &left, value &right, t_operator cop);
+bool ColorOp (value &left, value &right, t_operator cop);
+
+// Console functions
+int_t console (int_t cmd);
+bool is_console_open ();
+int Debug (const char *fmt, ...);

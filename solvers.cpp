@@ -544,51 +544,12 @@ bool calculator::For (const char *expr, value &res)
       while (vfrom <= vto);
      }
    }
-
-   res.tag = child->get_res_tag ();
-   if (res.tag == tvMATRIX)
-    {
-     res.fval       = child->get_re_res ();
-     res.ival       = child->get_int_res ();
-     res.imval      = child->get_im_res ();
-     res.sval       = dupString (get_str_res ());
-     mxresult_t mxr = child->get_mx_res ();
-     res.mcols      = mxr.cols;
-     res.mrows      = mxr.rows;
-     int msize      = mxr.rows * mxr.cols * sizeof (float__t);
-     if (msize)
-      {
-       float__t *new_mval = (float__t *)sf_alloc (msize);
-       if (new_mval)
-        {
-         memcpy (new_mval, mxr.mval, msize);
-         res.mval = new_mval;
-        }
-       else
-        {
-         errorf (res.pos, "Out of memory");
-         delete child;
-         result_fval = qnan;
-         return false;
-        }
-      }
-    }
-   else
-    {
-     res.fval  = child->get_re_res ();
-     res.ival  = child->get_int_res ();
-     res.imval = child->get_im_res ();
-     res.sval  = dupString (get_str_res ());
-    }
-
-   fflags |= child->isfflags ();
+   GetChildRes (child, res);
    delete child;
    return true;
   }
  return false;
 }
-
-
 
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // sum(expr(x), from, to, x) 

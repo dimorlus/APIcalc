@@ -3202,6 +3202,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                    0x58, 0x68, 0x67, 0x68, 0x68, 0x59, 0x68, 0x77, 0x68, 0x77
                 };
                 int idx = v_stack[v_sp - 1].get_int ();
+                if (idx < 0) idx = 0;
+                if (idx > 49) idx = 49;
                 cols    = rng[idx] & 0x0f;
                 rows    = rng[idx] / 16;
                 resval = &v_stack[v_sp - 2];

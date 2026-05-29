@@ -469,7 +469,7 @@ int main ()
   if (config.get_options ().calc_flags & DBG)
   {
    //if (!_isatty (_fileno (stdout)))
-     calc.setDebugFn (debug); // Overlap the engine debug function with our custom one to get
+   // calc.setDebugFn (debug); // Overlap the engine debug function with our custom one to get
                                 // debug info during script execution
    calc.syntax (calc.issyntax () | DBG); // Inforce debug mode in case if DBG flag was 
                                          //clearred by user.txt or const.text

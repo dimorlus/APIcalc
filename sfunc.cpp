@@ -4110,7 +4110,7 @@ int_t console (int_t cmd)
 }
 
 
-int Debug (const char *fmt, ...)
+int Debug (void *context, const char *fmt, ...)
 {
  // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
  static int execution_mode = 0;

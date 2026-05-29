@@ -126,7 +126,7 @@ void calculator::save_vars_mem (void)
   if (src && src[0]) 
    {
     char *dup = strdup (src); // Duplicate string using strdup
-    if (dup) register_mem (dup); // Register duplicated string for cleanup
+    if (dup) register_mem (dup, ptMALLOC); // Register duplicated string for cleanup
     return dup;
    }
   return nullptr;
@@ -145,7 +145,7 @@ void calculator::save_vars_mem (void)
      float__t *new_mval = (float__t *)malloc (msize);
      if (new_mval)
       {
-       register_mem (new_mval); // Register the new matrix for cleanup
+       register_mem (new_mval, ptMALLOC); // Register the new matrix for cleanup
        memcpy (new_mval, val.mval, msize);
        return new_mval;
       }
@@ -180,5 +180,31 @@ void calculator::save_vars_mem (void)
 
    return dup;
   }
+
+bool calculator::dupvar (value &dst, value &src) 
+{
+ dst.tag = src.tag;
+ dst.fval = src.get();
+ dst.ival = src.get_int ();
+ dst.imval = src.imval;
+ if (src.tag == tvSTR)
+  {
+   dst.sval = dupString (src.sval); // Duplicate string value
+   if (!dst.sval) return false; // Check for duplication failure
+  }
+ else if (src.tag == tvMATRIX)
+  {
+   dst.mval = dupMatrix (src); // Duplicate matrix value
+   if (!dst.mval) return false; // Check for duplication failure
+   dst.mrows = src.mrows;
+   dst.mcols = src.mcols;
+  }
+ else if (src.tag == tvBMP)
+  {
+   dst.sval = (char *)dupBMP ((bmpdraw *)src.sval); // Duplicate bitmap value
+   if (!dst.sval) return false; // Check for duplication failure
+  }
+ return true;
+}
 #pragma endregion
 //---------------------------------------------------------------------------

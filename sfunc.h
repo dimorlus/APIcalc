@@ -221,4 +221,4 @@ bool ColorOp (value &left, value &right, t_operator cop);
 // Console functions
 int_t console (int_t cmd);
 bool is_console_open ();
-int Debug (const char *fmt, ...);
+int Debug (void *context, const char *fmt, ...);

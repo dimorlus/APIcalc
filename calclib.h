@@ -50,7 +50,7 @@ extern "C" {
  typedef void* HCALC;  // opaque handle, no one outside knows what's inside
 
  typedef bool (*fnShowImage) (void *bmpObject);
- typedef int (*debug_callback_t) (const char *fmt, ...);
+ typedef int (*debug_callback_t) (void *context, const char *fmt, ...);
  typedef int64_t int_t;
  typedef uint64_t unsigned_t;
 

@@ -382,8 +382,8 @@ bool calculator::addconst (const char *name, value &val)
   } 
  symbol *sp    = add (tsCONSTANT, name);
  sp->val.tag   = val.tag;
- sp->val.fval  = val.fval;
- sp->val.ival  = val.ival;
+ sp->val.fval  = val.get ();
+ sp->val.ival  = val.get_int ();
  sp->val.imval = val.imval;
  // For string and matrix types, we need to copy the values
  if (val.sval)
@@ -568,25 +568,20 @@ void calculator::addsvar (const char *name, const char *svar)
 
 
 // Add  variable to the hash table
-// todo:add matrix variable
 bool calculator::addvar (const char *name, value &val)
 {
  symbol *sp   = add (tsVARIABLE, name);
- sp->val.tag  = val.tag;
- sp->val.fval = val.fval;
- sp->val.ival = val.ival;
- sp->val.imval = val.imval;
- // For string and matrix types, we need to copy the values
- if (val.sval) sp->val.sval = strdup(val.sval);
- else sp->val.sval = nullptr;
- register_mem (sp->val.sval);
- if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
+ return dupvar (sp->val, val);
+}
+
+bool calculator::getvar (const char *name, value &val)
+{
+ symbol *sp = find(name);
+ if (sp)
   {
-   sp->val.mval = dupMatrix (val);
-  }   
- sp->val.mcols = val.mcols;
- sp->val.mrows = val.mrows;
- return true;
+   return dupvar (val, sp->val);
+  }
+ return false;
 }
 
 // Add an imaginary constant to the hash table (if enabled)
@@ -622,6 +617,40 @@ void calculator::addlconst (const char *name, float__t fval, int_t ival)
  sp->val.fval = fval;
  sp->val.ival = ival;
  sp->val.imval = 0;
+}
+
+void calculator::import_child (calculator *child, uint32_t mask)
+{
+ symbol *sp;
+ for (int i = 0; i < hash_table_size; i++)
+  {
+   if ((sp = child->hash_table[i]) != nullptr)
+    {
+     do
+      {
+       if (sp->tag == tsVARIABLE)
+        {
+         if (mask & (1U << sp->val.tag)) // Check if the variable's type matches the import mask
+          {
+           // Import variable into parent calculator
+           addvar (sp->name, sp->val);
+          }
+        }
+       if ((sp->tag == tsCONSTANT) && (mask & (1U << sp->val.tag))) // Check if the constant's type matches the import mask
+        {
+         // Import constant into parent calculator
+         addconst (sp->name, sp->val);
+        }
+       if ((sp->tag == tsUFUNCT) && (mask & (1U << tvUFUNCT))) // Check if the user function matches the import mask
+        {
+         // Import user function into parent calculator
+         addUF (sp->name, (char*)sp->func);
+        }
+       sp = sp->next;
+      }
+     while (sp);
+    }
+  }
 }
 
 #pragma endregion

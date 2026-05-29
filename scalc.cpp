@@ -210,7 +210,7 @@ void calculator::AddPredefined (void)
 
  add (tsIF, "if", nullptr);
  add (tsRUN, scRun, "run", nullptr, true);
- add (tsRUN, scEval, "eval", nullptr, true);
+ add (tsRUN, scEval, "eval", nullptr, false);
  add (tsDATAF, dfDataf, "dataf", nullptr);
  add (tsDATAF, dfDatas, "datas", nullptr);
  add (tsERROR, "error", nullptr);
@@ -1377,8 +1377,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          else
           register_mem (v_stack[0].sval, ptMALLOC);
 
-         register_mem (v_stack[0].mval);
+         register_mem (v_stack[0].mval, ptMALLOC);
 
+         addvar ("answer", v_stack[0]); // Store the result in the 'answer' variable
          result_fval = v_stack[0].get ();
          result_imval = v_stack[0].imval;
          result_ival  = v_stack[0].ival;

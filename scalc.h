@@ -305,27 +305,28 @@ enum t_value // t_value represents the type of a value in the calculator
  tvCOLOR,
 };
 
-#define MSK_ERR     (1 << tvERR)     // Mask for error values
-#define MSK_INT     (1 << tvINT)     // Mask for integer values
-#define MSK_FLOAT   (1 << tvFLOAT)   // Mask for float values   
-#define MSK_PERCENT (1 << tvPERCENT) // Mask for percentage values
-#define MSK_COMPLEX (1 << tvCOMPLEX) // Mask for complex values
-#define MSK_STR     (1 << tvSTR)     // Mask for string values
-#define MSK_MATRIX  (1 << tvMATRIX)  // Mask for matrix values
-#define MSK_MX_ELEM (1 << tvMX_ELEM) // Mask for matrix element values
-#define MSK_UFUNCT  (1 << tvUFUNCT)  // Mask for user-defined function values
-#define MSK_SOLVE   (1 << tvSOLVE)   // Mask for solve operator values
-#define MSK_SOLVEA  (1 << tvSOLVEA)  // Mask for alternative solve operator values
-#define MSK_INTEGR  (1 << tvINTEGR)  // Mask for integration operator values
-#define MSK_DIFF    (1 << tvDIFF)    // Mask for differentiation operator values
-#define MSK_EXTR    (1 << tvEXTR)    // Mask for extremum operator values
-#define MSK_FOR     (1 << tvFOR)     // Mask for for operator values
-#define MSK_BMP     (1 << tvBMP)     // Mask for bitmap operator values
-#define MSK_INVERCE (1 << tvINVERSE) // Mask for inverse operator values
-#define MSK_COLOR   (1 << tvCOLOR)   // Mask for color operator values
+#define MSK_ERR     (1 << tvERR)     //  0 Mask for error values
+#define MSK_INT     (1 << tvINT)     //  1 Mask for integer values
+#define MSK_FLOAT   (1 << tvFLOAT)   //  2 Mask for float values   
+#define MSK_PERCENT (1 << tvPERCENT) //  3 Mask for percentage values
+#define MSK_COMPLEX (1 << tvCOMPLEX) //  4 Mask for complex values
+#define MSK_STR     (1 << tvSTR)     //  5 Mask for string values
+#define MSK_MATRIX  (1 << tvMATRIX)  //  6 Mask for matrix values
+#define MSK_MX_ELEM (1 << tvMX_ELEM) //  7 Mask for matrix element values
+#define MSK_UFUNCT  (1 << tvUFUNCT)  //  8 Mask for user-defined function values
+#define MSK_SOLVE   (1 << tvSOLVE)   //  9 Mask for solve operator values
+#define MSK_SOLVEA  (1 << tvSOLVEA)  // 10 Mask for alternative solve operator values
+#define MSK_INTEGR  (1 << tvINTEGR)  // 11 Mask for integration operator values
+#define MSK_DIFF    (1 << tvDIFF)    // 12 Mask for differentiation operator values
+#define MSK_EXTR    (1 << tvEXTR)    // 13 Mask for extremum operator values
+#define MSK_FOR     (1 << tvFOR)     // 14 Mask for for operator values
+#define MSK_BMP     (1 << tvBMP)     // 15 Mask for bitmap operator values
+#define MSK_INVERCE (1 << tvINVERSE) // 16 Mask for inverse operator values
+#define MSK_COLOR   (1 << tvCOLOR)   // 17 Mask for color operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
-
+#define MSK_ALLVAR (MSK_SCALAR | MSK_COMPLEX | MSK_STR | MSK_MATRIX | MSK_BMP | MSK_COLOR | MSK_UFUNCT)                                                                                    \
+ 
 #define MAX_R 7
 #define MAX_C 7
 
@@ -928,7 +929,7 @@ struct mxresult_t
 };
 
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
-typedef int (*debug_callback_t) (const char *fmt, ...);// Debug callback function type
+typedef int (*debug_callback_t) (void *context, const char *fmt, ...);// Debug callback function type
 
 int_t scan_opt (char *str, int_t &opts);
 int Mxprint (t_value tag, int8_t res_rows, int8_t res_cols, 
@@ -1024,6 +1025,7 @@ class calculator // calculator represents the main class for the expression calc
 
  void AddPredefined (void);
 
+ // copy symbols from parent calculator with specified mask
  void copy_symbols (symbol **symtab = nullptr, uint64_t mask = (MASK_NONE));
 
  //memory management
@@ -1040,14 +1042,35 @@ class calculator // calculator represents the main class for the expression calc
                             // memory management
  char *dupString (const char *src); // Duplicate a string and register it in the string list
  bmpdraw *dupBMP (bmpdraw *src); // Duplicate a bitmap and register it in the memory list
+
+ bool dupvar (value &dst, value &src); // Duplicate a variable value and register any dynamically
+                                       // allocated memory in the memory list 
  void destroyvars (void); // Destroy all variables in the hash table
  inline unsigned string_hash_function (const char *p); // Hash function for strings
- symbol *add (t_symbol tag, const char *name, void *func = nullptr, bool block = false); // Add a symbol to the hash table
+ symbol *add (t_symbol tag, const char *name, 
+              void *func = nullptr, bool block = false); // Add a symbol to the hash table
  symbol *add (t_symbol tag, v_func fidx, const char *name,
               void *func = nullptr, bool block = false); // Add a symbol with function index to the hash table
  symbol *find (const char *name);    // Find a symbol in the hash table by name
  symbol *addUF (const char *name, const char *expr); // Add a user-defined function to the calculator
                                                     // with the given name and expression
+ inline char *get_last_var (void) { return lastvar;}; // Get the last variable name assigned in the expression
+ float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
+ float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
+ bool addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
+ bool addconst (const char *name, value &val); // Add a constant with a specified value to the calculator
+ void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
+ void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);
+ void addivar (const char *name, int_t ival);
+ void addsvar (const char *name, const char *svar);
+ int_t getivar (const char *name);
+ float__t getfvar (const char *name);
+ bool getvar (const char *name, value &val); // Get the value of a variable by name 
+ char *getsvar (const char *name);
+ void addiconst (const char *name, int_t val); // Add an integer variable to the calculator
+ void addlconst (const char *name, float__t fval, int_t ival); // Add a long constant to the calculator
+ void import_child (calculator *child, uint32_t mask); // import symbols from child calculator with specified mask
+
 
  // Expression parsing
  void isNRM (char *start, char *end); // Check if the current position in the expression is a normalized number format
@@ -1218,23 +1241,6 @@ class calculator // calculator represents the main class for the expression calc
  bool Save (char *fname, value &val);
 
  inline char Ichar (void) { return c_imaginary; }; // Get the character used for the imaginary unit
- inline char *get_last_var (void){ return lastvar; }; // Get the last variable name assigned in the
-                                                      // expression  
-
- float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
- float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
- bool addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
- bool addconst (const char *name, value &val); // Add a constant with a specified value to the calculator
- void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
-  // Add or assign if existing a floating-point or complex variable to the calculator
- void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);
- void addivar (const char *name, int_t ival);
- void addsvar (const char *name, const char *svar);
- int_t getivar (const char *name);
- float__t getfvar (const char *name);
- char *getsvar (const char *name);
- void addiconst (const char *name, int_t val); // Add an integer variable to the calculator
- void addlconst (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
 
  int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
               int *size = nullptr) // and an optional pointer to store the size of the output

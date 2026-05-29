@@ -1590,8 +1590,10 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
         if (v_stack[n].tag == tvMATRIX)
          {
           int size=0;
-          Mxprint (v_stack[n].tag, v_stack[n].mrows, v_stack[n].mcols, v_stack[n].mval, dst, false, &size);
-          dst += size;
+          if (dst < dst_end) dst += fmtc (dst, pfmt);
+          if (dst < dst_end)
+           Mxprint (v_stack[n].tag, v_stack[n].mrows, v_stack[n].mcols, v_stack[n].mval, dst, false, &size);
+          if (dst < dst_end) dst += size;
          }
         else
          {

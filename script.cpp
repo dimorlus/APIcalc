@@ -58,7 +58,7 @@ script::script()
  child = nullptr;
  debug = nullptr;
  EscFn = nullptr;
- err[0] = '\0';
+ serr[0] = '\0';
  errln  = 0;
  pass = 0;
 
@@ -82,7 +82,7 @@ bool script::load (const char *filename)
  if (fsize <= 0||fsize > 0x7FFF)
   {
    fclose (f);
-   sprintf (err, "File size error: %ld bytes", fsize);
+   sprintf (serr, "File size error: %ld bytes", fsize);
    errln = 0;
    return false;
   }
@@ -90,7 +90,7 @@ bool script::load (const char *filename)
  if (!buffer)
   {
    fclose (f);
-   sprintf (err, "Out of memory");
+   sprintf (serr, "Out of memory");
   }
  fread (buffer, 1, fsize, f);
  buffer[fsize] = '\0';
@@ -164,7 +164,7 @@ bool script::pass_buf ()
         {
          LblTable[labels].ptr = lines - 1;
          int i                = 0;
-         while (i < 8 && isalnum (*cp & 0x7f))
+         while (i < 8 && (isalnum (*cp & 0x7f)||*cp == '_'))
           {
            plb[i++] = toupper (*cp++ & 0x7f);
           }
@@ -173,7 +173,7 @@ bool script::pass_buf ()
        else
         {
          // First pass - just count
-         while (isalnum (*cp & 0x7f)) cp++;
+         while (isalnum (*cp & 0x7f)||*cp == '_') cp++;
         }
 
        labels++;
@@ -207,7 +207,7 @@ bool script::pass_buf ()
 
      if ((labels > 0 && !LblTable) || (lines > 0 && !lineidx))
       {
-       sprintf (err, "Out of memory");
+       sprintf (serr, "Out of memory");
        errln = 0;
        return false;
       }
@@ -283,7 +283,7 @@ bool script::compile ()
            uint16_t target = find_label (arg);
            if (target == 0xFFFF)
             {
-             sprintf (err, "Undefined label: %s", arg);
+             sprintf (serr, "Undefined label: %s", arg);
              return false; // Label not found
             }
 
@@ -345,12 +345,12 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
   {
    if (!EscFn)
     {
-     sprintf(err, "Operation took too long");
+     sprintf(serr, "Operation took too long");
      return brTIMEOUT;
     }
    if (EscFn && EscFn ())
     {
-     sprintf (err, "Operation cancelled by user");
+     sprintf (serr, "Operation cancelled by user");
      return brESC;
     }
    else
@@ -362,7 +362,7 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
       }
      if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
       {
-       sprintf (err, "Operation took too long");
+       sprintf (serr, "Operation took too long");
        return brTIMEOUT;
       }
     }
@@ -371,13 +371,12 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
  return brNONE;
 }
 
-
 bool script::execute ()
 {
  if (!buffer || !lineidx)
   {
    if (debug) debug ("ERROR: No script loaded!\n");
-   sprintf (err, "No script loaded");
+   sprintf (serr, "No script loaded");
    return false;
   }
 
@@ -477,7 +476,7 @@ bool script::execute ()
         if (sp >= 256)
          {
           if (debug) br = debug("ERROR: Stack overflow!\n");
-          sprintf (err, "Stack overflow");
+          sprintf (serr, "Stack overflow");
           return false; // Stack overflow
          }
         stack[sp++] = ip;
@@ -495,7 +494,7 @@ bool script::execute ()
           if (sp >= 256)
            {
             if (debug) br = debug("ERROR: Stack overflow!\n");
-            sprintf (err, "Stack overflow");
+            sprintf (serr, "Stack overflow");
             return false;
            }
           stack[sp++] = ip;
@@ -516,7 +515,7 @@ bool script::execute ()
           if (sp >= 256)
            {
             if (debug) br = debug("ERROR: Stack overflow!\n");
-            sprintf (err, "Stack overflow");
+            sprintf (serr, "Stack overflow");
             return false;
            }
           stack[sp++] = ip;
@@ -541,7 +540,7 @@ bool script::execute ()
      if (child->error ()[0] && child->errt () == teSyntax)
       {
        if (debug) br = debug ("Evaluation error: %s\n", child->error ());
-       sprintf (err, "%s", child->error ());
+       sprintf (serr, "%s", child->error ());
        return false;
       }
      last_result.tag = child->get_res_tag ();
@@ -638,8 +637,9 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      NormalizePath(expr, filename, STRBUF);
      if (!sct->load(filename))
      {
-         errorf(pos, "Failed to load script: %s", filename);
-         return false; // failed to load script
+       if (sct->serror()[0]) errorf (pos, "%s%", sct->serror ());
+       else  errorf(pos, "Failed to load script: %s", filename);
+       return false; // failed to load script
      }
 
      child->setEscFn(EscFn);

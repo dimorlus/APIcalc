@@ -342,17 +342,17 @@ float__t calculator::mxNorm (value &M)
  return Sqrt (sum);
 }
 
-float__t calculator::mxDim (value & M, t_mxDim dim)
+float__t calculator::mxDim (value &M, v_func dim)
 { 
   switch (dim)
   {
-   case mxRows:
+   case mx_Rows:
    return M.mrows;
     break;
-   case mxCols:
+   case mx_Cols:
     return M.mcols;
     break;
-   case mxSize:
+   case mx_Size:
     return M.mrows * M.mcols;
     break;
    default:

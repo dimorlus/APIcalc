@@ -178,109 +178,6 @@ calculator::~calculator (void)
 }
 #pragma endregion
 //---------------------------------------------------------------------------
-
-#pragma region Wrapper Functions for External Use
-bool Const (void *clc, char *name, value &x)
-{
- return ((calculator *)clc)->addconst (name, x);
-}
-
-bool Var (void *clc, char *name, value &x)
-{
- return ((calculator *)clc)->addvar (name, x);
-}
-
-float__t Det (void *clc, value &M)
-{
- return ((calculator *)clc)->mxDet (M);
-}
-
-float__t Trace (void *clc, value &M)
-{
- return ((calculator *)clc)->mxTrace (M);
-}
-
-float__t Norm (void *clc, value &M)
-{
- return ((calculator *)clc)->mxNorm (M);
-}
-
-bool Dot (void *clc, value &res, value &A, value &B)
-{
- return ((calculator *)clc)->mxDot (res, A, B);
-}
-
-bool Cross (void *clc, value &res, value &A, value &B)
-{
- return ((calculator *)clc)->mxCross (res, A, B);
-}
-
-bool Zeros (void *clc, value &res, int rows, int cols)
-{
- return ((calculator *)clc)->mxZeros (res, rows, cols);
-}
-
-bool Diag (void *clc, value &res, int rows, int cols)
-{
- return ((calculator *)clc)->mxDiag (res, rows, cols);
-}
-
-float__t Rows (void *clc, value &M)
-{
- return ((calculator *)clc)->mxDim (M, mxRows);
-}
-
-float__t Cols (void *clc, value &M)
-{
- return ((calculator *)clc)->mxDim (M, mxCols);
-}
-
-float__t Size (void *clc, value &M)
-{
- return ((calculator *)clc)->mxDim (M, mxSize);
-}
-
-int_t CalcSrv (void *clc, v_func fn, int_t prec)
-{
- calculator *calc = (calculator *)clc;
- switch (fn)
-  {
-     case ccPrec:
-      if (prec < 0) prec = 0;
-      if (prec > MAX_PREC) prec = MAX_PREC;
-      calc->set_fprec (prec);
-      return prec;
-
-     case ccOpt:
-      {
-       // Handle option setting
-       int_t opt = calc->issyntax ();
-       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
-       calc->syntax (prec);
-       return opt;
-      }
-     case ccOptOn:
-      {
-       // Handle option enabling
-       int_t opt = calc->issyntax ();
-       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
-       calc->syntax (opt | prec);
-       return calc->issyntax ();
-      }
-     case ccOptOff:
-      {
-       // Handle option disabling
-       int_t opt = calc->issyntax ();
-       //prec &= ~(SNAN || DBG); // Clear SNAN and DBG bits from prec
-       calc->syntax (opt & ~prec);
-       return calc->issyntax ();
-      }
-     }
- return 0;
-}
-
-
-#pragma endregion
 //---------------------------------------------------------------------------
 
 #pragma region Predefined Symbols
@@ -351,18 +248,18 @@ void calculator::AddPredefined (void)
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
 
- add (tsFFUNCM, "det", (void *)Det);
- add (tsFFUNCM, "trace", (void *)Trace);
- add (tsFFUNCM, "tr", (void *)Trace);
- add (tsFFUNCM, "norm", (void *)Norm);
- add (tsMFUNCM2, "dot", (void *)Dot);
- add (tsMFUNCM2, "cross", (void *)Cross);
- add (tsFFUNCM, "rows", (void *)Rows);
- add (tsFFUNCM, "cols", (void *)Cols);
- add (tsFFUNCM, "size", (void *)Size);
- add (tsMFUNCI2, "zeros", (void *)Zeros);
- add (tsMFUNCI2, "diag", (void *)Diag);
- add (tsMFUNCI2, "eye", (void *)Diag);
+ add (tsFFUNCM, mx_Det, "det", nullptr);
+ add (tsFFUNCM, mx_Trace, "trace", nullptr);
+ add (tsFFUNCM, mx_Trace, "tr", nullptr);
+ add (tsFFUNCM, mx_Norm, "norm", nullptr);
+ add (tsFFUNCM, mx_Rows, "rows", nullptr);
+ add (tsFFUNCM, mx_Cols, "cols", nullptr);
+ add (tsFFUNCM, mx_Size, "size", nullptr);
+ add (tsMFUNCM2, mx_Dot, "dot", nullptr);
+ add (tsMFUNCM2, mx_Cross, "cross", nullptr);
+ add (tsMFUNCI2, mx_Zeros, "zeros", nullptr);
+ add (tsMFUNCI2, mx_Diag, "diag", nullptr);
+ add (tsMFUNCI2, mx_Diag, "eye", nullptr);
 
  add (tsFITFN, rtPoly, "fitpoly", nullptr);
  add (tsFITFN, rtExp, "fitexp", nullptr);
@@ -396,13 +293,13 @@ void calculator::AddPredefined (void)
 
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
- add (tsSFUNCF2, "const", (void *)Const);
- add (tsSFUNCF2, "var", (void *)Var);
+ add (tsSFUNCF2, vrConst, "const", nullptr);
+ add (tsSFUNCF2, vrVar,   "var", nullptr);
 
- add (tsCIFUNC1, ccPrec, "prec", (void *)CalcSrv);
- add (tsCIFUNC1, ccOpt, "opt", (void *)CalcSrv);
- add (tsCIFUNC1, ccOptOn, "opton", (void *)CalcSrv);
- add (tsCIFUNC1, ccOptOff, "optoff", (void *)CalcSrv);
+ add (tsCIFUNC1, ccPrec,   "prec", nullptr);
+ add (tsCIFUNC1, ccOpt,    "opt", nullptr);
+ add (tsCIFUNC1, ccOptOn,  "opton", nullptr);
+ add (tsCIFUNC1, ccOptOff, "optoff", nullptr);
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
@@ -2862,11 +2759,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           else
            register_mem (v_stack[v_sp - 2].sval, ptMALLOC);
 
-          if (v_stack[v_sp - 1].tag == tvBMP)
-           register_mem (v_stack[v_sp - 1].sval, ptBMP);
-          else
-           register_mem (v_stack[v_sp - 1].sval, ptMALLOC);
-
           // v_stack[v_sp - 2] := v_stack[v_sp - 1]
           if (v_stack[v_sp - 2].tag == tvFLOAT && // A[i,j] := v
               v_stack[v_sp - 2].mval && v_stack[v_sp - 2].mcols + v_stack[v_sp - 2].mrows)
@@ -3206,8 +3098,31 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 error (v_stack[v_sp - 1].pos, "Matrix operand required");
                 return result_fval = qnan;
                }
-              v_stack[v_sp - 2].fval
-                  = (*(float__t (*) (void *, value &))sym->func) ((void *)this, v_stack[v_sp - 1]);
+              switch (sym->fidx)
+               {
+               case mx_Det:
+                v_stack[v_sp - 2].fval = mxDet (v_stack[v_sp - 1]);
+               break;
+               case mx_Trace:
+                v_stack[v_sp - 2].fval = mxTrace (v_stack[v_sp - 1]);
+               break;
+               case mx_Norm:
+                v_stack[v_sp - 2].fval = mxNorm (v_stack[v_sp - 1]);
+               break;
+               case mx_Rows:
+                v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 1].mrows;
+               break;
+               case mx_Cols:
+                v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 1].mcols;
+               break;
+               case mx_Size:
+                v_stack[v_sp - 2].fval = (float__t)(v_stack[v_sp - 1].mrows * v_stack[v_sp - 1].mcols);
+               break;
+               default:
+                error (v_stack[v_sp - 1].pos, "Unknown matrix function");
+                return result_fval = qnan;
+               break;
+               }
 
               if (isnan (v_stack[v_sp - 2].fval) || mxerr[0])
                {
@@ -3226,18 +3141,24 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
                                          MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              bool res;
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
               if (!CheckOperand (1, MSK_MATRIX)) return result_fval = qnan;
+              switch (sym->fidx)
+               {
+               case mx_Dot:  
+                res = mxDot (v_stack[v_sp - 3], v_stack[v_sp - 2], v_stack[v_sp - 1]);
+               break;
+               case mx_Cross:
+                res = mxCross (v_stack[v_sp - 3], v_stack[v_sp - 2], v_stack[v_sp - 1]);
+               break;
+               default:
+                error (v_stack[v_sp - 1].pos, "Unknown matrix function");
+                return result_fval = qnan;
+               break;
+               }
 
-              //if (v_stack[v_sp - 1].tag != tvMATRIX || v_stack[v_sp - 2].tag != tvMATRIX)
-              // {
-              //  error (v_stack[v_sp - 2].pos, "Matrix operand required");
-              //  return result_fval = qnan;
-              // }
-
-              bool res = ((bool (*) (void *, value &, value &, value &))sym->func) (
-                  (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2], v_stack[v_sp - 1]);
               if (!res || mxerr[0])
                {
                 if (mxerr[0])
@@ -3253,21 +3174,58 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsMFUNCI2: // matrix f(int r, int c)
              {
               bool res = false;
+              int rows = 0, cols = 0;
+              value *resval = nullptr;
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
                                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
               if (n_args == 1 && v_stack[v_sp - 1].tag == tvMATRIX)
               {
-                res = ((bool (*) (void *, value &, int, int))sym->func) (
-                    (void *)this, v_stack[v_sp - 2], v_stack[v_sp - 1].mrows,
-                    v_stack[v_sp - 1].mcols);
+               rows = v_stack[v_sp - 1].mrows;
+               cols = v_stack[v_sp - 1].mcols;
+               resval = &v_stack[v_sp - 2];
+              }
+              else 
+              if (n_args == 1 && ((v_stack[v_sp - 1].tag == tvINT)
+                       || (v_stack[v_sp - 1].tag == tvFLOAT)))
+              {
+                const uint8_t rng[] = 
+                {
+                 //   0     1     2     3     4     5     6     7     8     9
+                   0x00, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x24, 0x33,
+                 //  10    11    12    13    14    15    16    17    18    19
+                   0x25, 0x34, 0x34, 0x27, 0x27, 0x35, 0x44, 0x36, 0x36, 0x45,
+                 //  20    21    22    23    24    25    26    27    28    29
+                   0x45, 0x37, 0x46, 0x46, 0x46, 0x55, 0x47, 0x54, 0x47, 0x48,
+                 //  30    31    32    33    34    35    36    37    38    39
+                   0x56, 0x48, 0x56, 0x67, 0x67, 0x57, 0x66, 0x67, 0x67, 0x68,
+                 //  40    41    42    43    44    45    46    47    48    49
+                   0x58, 0x68, 0x67, 0x68, 0x68, 0x59, 0x68, 0x77, 0x68, 0x77
+                };
+                int idx = v_stack[v_sp - 1].get_int ();
+                cols    = rng[idx] & 0x0f;
+                rows    = rng[idx] / 16;
+                resval = &v_stack[v_sp - 2];
               }
               else
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               else
                {
-                res = ((bool (*) (void *, value &, int, int))sym->func) (
-                    (void *)this, v_stack[v_sp - 3], v_stack[v_sp - 2].ival,
-                    v_stack[v_sp - 1].ival);
+                rows   = v_stack[v_sp - 2].ival;
+                cols   = v_stack[v_sp - 1].ival;
+                resval = &v_stack[v_sp - 3];
+               }
+              switch (sym->fidx)
+               {
+               case mx_Diag:
+                res = mxDiag (*resval, rows, cols);
+                break;
+               case mx_Zeros:
+                res = mxZeros (*resval, rows, cols);
+                break;
+               default:
+                error (v_stack[v_sp - 1].pos, "Unknown matrix function");
+                return result_fval = qnan;
+                break;
                }
 
               if (!res || mxerr[0])
@@ -3550,9 +3508,41 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
-
-              v_stack[v_sp - 2].ival = (*(int_t (*) (void *, v_func, int_t))sym->func) (
-                  (void *)this, sym->fidx, v_stack[v_sp - 1].get_int ());
+              int_t prec = v_stack[v_sp - 1].get_int ();
+              switch (sym->fidx)
+               {
+               case ccOpt:
+                {
+                 // Handle option setting
+                 int_t opt = issyntax ();
+                 syntax (prec);
+                 prec = opt;
+                }
+               break;
+               case ccOptOn:
+                {
+                 int_t opt = issyntax ();
+                 syntax (opt | prec);
+                 prec = issyntax ();
+                }
+               break;
+               case ccOptOff:
+                {
+                 int_t opt = issyntax ();
+                 syntax (opt & ~prec);
+                 prec = issyntax ();
+                }
+               break;
+               case ccPrec:
+                if (prec < 0) prec = 0;
+                if (prec > MAX_PREC) prec = MAX_PREC;
+                set_fprec (prec);
+               break;
+               default:
+                error (v_stack[v_sp - 1].pos, "Unknown calculator method");
+                return result_fval = qnan;
+               }
+              v_stack[v_sp - 2].ival = prec;
               v_stack[v_sp - 2].tag = tvINT;
               v_sp -= 1;
              }
@@ -3561,13 +3551,24 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsSFUNCF2: //  f(str, val) (const())
              {
               const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0, 0 };
+              bool res;
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
               errtype = teMath;  
-              bool res = (*((bool (*) (void *, char *, value &))sym->func)) // call const("name", value)
-                  ((void *)this, v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
+              switch (sym->fidx)
+              {
+               case vrConst:
+                res = addconst (v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
+               break;
+               case vrVar:
+                res = addvar (v_stack[v_sp - 2].get_str (), v_stack[v_sp - 1]);
+                break;
+               default:
+                error (v_stack[v_sp - 1].pos, "Unknown function");
+                return result_fval = qnan;
+               break;
+              }
               if (!res) return result_fval = qnan;
-
               v_stack[v_sp - 3] = v_stack[v_sp - 1];
               v_sp -= 2;
              }

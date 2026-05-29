@@ -18,6 +18,7 @@
 #include <limits>
 #include "bmp.h"
 #include "files.h"
+
 #pragma endregion
 
 // RW - set both by calc engine and application
@@ -444,13 +445,6 @@ enum t_mresult
  mrERROR,   // represents an error result
 };
 
-enum t_mxDim
-{
- mxRows,   
- mxCols,   
- mxSize,  
-};
-
 enum t_br_result
 {
  brNONE,    // Nothing to break, continue normal execution
@@ -614,9 +608,21 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  sfNormPD,  // Probability density function of the normal distribution (returns the height
             // of the normal distribution curve at a given x value)
 
+ mx_Rows,  // Get the number of rows in a matrix
+ mx_Cols,  // Get the number of columns in a matrix
+ mx_Size,  // Get the total number of elements in a matrix 
+ mx_Trace, // Get the trace of a matrix (sum of diagonal elements)
+ mx_Det,   // Get the determinant of a matrix
+ mx_Norm,  // Get the norm of a matrix
+ mx_Dim,   // Get the dimensions of a matrix
+ mx_Dot,   // Get the dot product of two matrices
+ mx_Cross, // Get the cross product of two matrices
+ mx_Zeros, // Get a matrix filled with zeros
+ mx_Diag,  // Get a diagonal matrix 
+
  ssFdlg,    // File dialog function for selecting files (e.g., for plotting)
 
- dfDataf,
+ dfDataf, 
  dfDatas,
 
  ccPrec,    // Set or get the calculator's precision for floating-point calculations
@@ -627,6 +633,8 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  scRun,    // Run a script file containing calculator commands
  scEval,   // Evaluate an expression from a string
 
+ vrConst, // Create a constant variable
+ vrVar,   // Create a variable
  vrLoad,   // Load variable from a file
  vrSave,   // Save variable to a file
 
@@ -1181,6 +1189,15 @@ class calculator // calculator represents the main class for the expression calc
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);
+
+ float__t mxTrace (value &M);
+ float__t mxDet (value &M);
+ float__t mxNorm (value &M);
+ float__t mxDim (value &M, v_func dim);
+ bool mxDot (value &res, value &A, value &B);
+ bool mxCross (value &res, value &A, value &B);
+ bool mxZeros (value &res, int rows, int cols);
+ bool mxDiag (value &res, int rows, int cols);
  void mxerror (const char *msg);
 
 // Statistical functions 
@@ -1188,52 +1205,29 @@ class calculator // calculator represents the main class for the expression calc
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
 
  // Script execution
+ friend class script; // Declare script as a friend class to allow it to access private members of
+                      // calculator
+
  bool Run (const char *expr, v_func fidx, value &res); // Run a script or expression and store the result in res
                                           // return the result in res
  int dataf (char *fname, char *sfmt, int args, value *v_stack);
  int datas (char *str, char *sfmt, int args, value *v_stack);
 
+ // Variable and constant management
  bool Load (char *fname, value &res);
  bool Save (char *fname, value &val);
 
- public:
- calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
-             int deep = 0); // Constructor with optional syntax configuration
- inline void syntax (int_t cfg = PAS + SCI + UPCASE + FFLOAT) {scfg = cfg;}  // Set syntax configuration
- inline int_t issyntax (void) { return scfg; } // Get current syntax configuration
-
- void setEscFn (int (__cdecl*fn) (void)) {EscFn = fn;} // Set the escape function for long calculations
- void setFileDlgFn (bool (*fn) (char*, int)) {FileDlgFn = fn;} // Set the file dialog callback
- void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
- void setDebugFn (debug_callback_t fn) { debugFn = fn; }
-
- inline int_t isfflags (void) { return fflags; } // Get current flags configuration
- inline void clrfflags (void) { fflags = 0; } // Clear flags configuration
-
- inline char *error (void) { return err; }   // Get error message
- inline int errps (void) { return errpos; }; // Get error position
- inline char *Sres (void) { return sres; };  // Get string result
- inline char Ichar (void) { return c_imaginary;}; // Get the character used for the imaginary unit
- inline terr errt (void) { return errtype; }; // Get the error type
+ inline char Ichar (void) { return c_imaginary; }; // Get the character used for the imaginary unit
+ inline char *get_last_var (void){ return lastvar; }; // Get the last variable name assigned in the
+                                                      // expression  
 
  float__t AddConst (const char *name, float__t val); // Add a constant to the calculator and return its value
  float__t AddVar (const char *name, float__t val); // Add a variable to the calculator and return its value
-
- float__t mxTrace (value &M);
- float__t mxDet (value &M);
- float__t mxNorm (value &M);
- float__t mxDim (value &M, t_mxDim dim);
-
- bool mxDot (value &res, value &A, value &B);
- bool mxCross (value &res, value &A, value &B);
- bool mxZeros (value &res, int rows, int cols);
- bool mxDiag (value &res, int rows, int cols);
-
  bool addvar (const char *name, value &val); // Add a variable with a specified value to the calculator
  bool addconst (const char *name, value &val); // Add a constant with a specified value to the calculator
  void addfconst (const char *name, float__t val); // Add a floating-point constant to the calculator
- // Add or assign if existing a floating-point or complex variable to the calculator
- void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L); 
+  // Add or assign if existing a floating-point or complex variable to the calculator
+ void addfvar (const char *name, float__t fval, float__t imval = (float__t)0.0L);
  void addivar (const char *name, int_t ival);
  void addsvar (const char *name, const char *svar);
  int_t getivar (const char *name);
@@ -1241,40 +1235,23 @@ class calculator // calculator represents the main class for the expression calc
  char *getsvar (const char *name);
  void addiconst (const char *name, int_t val); // Add an integer variable to the calculator
  void addlconst (const char *name, float__t fval, int_t ival); // Add a long variable to the calculator
- void addfn (const char *name, void *func) { add (tsIFUNC1, name, func); } // Add a function to the calculator
- void addfn2 (const char *name, void *func) { add (tsFFUNC2, name, func); } // Add a function with two arguments to the calculator
 
- inline void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
- inline int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
- int print (char *str, int_t Options,
-            int binwide,          // Print a string representation of the result with specified
-            int *size = nullptr); // options and binary width,
- 
  int mxprint (char *str, bool nl, // Print matrix result in a formatted way, with an option for a new line
               int *size = nullptr) // and an optional pointer to store the size of the output
-  {
-   return Mxprint (result_tag, res_rows, res_cols, res_mval, str, nl, size);
-  }
+ {
+  return Mxprint (result_tag, res_rows, res_cols, res_mval, str, nl, size);
+ }
 
- int printres (char *str, int_t options = FFLOAT, int binwide = 64);
+ float__t evaluate_f (char *expr, // Evaluate an expression
+                      __int64 *piVal = nullptr, float__t *pimval = nullptr); 
 
- int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
-              int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
-                          
- float__t evaluate_f (char *expr, // Evaluate an expression   
-           __int64 *piVal = nullptr, float__t *pimval = nullptr); 
-
- double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
-
- inline char *get_last_var (void) { return lastvar; }; // Get the last variable name assigned in the 
-                                                       //expression  
  inline int64_t get_int_res () { return result_ival; };
  inline float__t get_re_res () { return result_fval; };
  inline float__t get_im_res () { return result_imval; };
  inline t_value get_res_tag () { return result_tag; };
  inline uint32_t get_res_info () { return result_info; };
  inline char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
- inline mxresult_t get_mx_res () 
+ inline mxresult_t get_mx_res ()
  {
   mxresult_t res;
   res.rows = res_rows;
@@ -1283,7 +1260,56 @@ class calculator // calculator represents the main class for the expression calc
   return res;
  };
 
- inline bool block () { return (scfg & NBLK)?false:blockflag; };  // Block GUI
+ public:
+ calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
+             int deep = 0); // Constructor with optional syntax configuration
+
+ void setEscFn (int (__cdecl *fn) (void)) { EscFn = fn; } // Set the escape function for long calculations
+ void setFileDlgFn (bool (*fn) (char *, int)) { FileDlgFn = fn; } // Set the file dialog callback
+ void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
+ void setDebugFn (debug_callback_t fn) { debugFn = fn; }
+
+ void addfn (const char *name, void *func) { add (tsIFUNC1, name, func);} // Add a function to the calculator
+
+ double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
+
+ inline void syntax (int_t cfg = PAS + SCI + UPCASE + FFLOAT) {scfg = cfg;}  // Set syntax configuration
+ inline int_t issyntax (void) { return scfg; } // Get current syntax configuration
+
+ inline int_t isfflags (void) { return fflags; } // Get current flags configuration
+ inline void clrfflags (void) { fflags = 0; } // Clear flags configuration
+
+ inline char *error (void) { return err; }   // Get error message
+ inline int errps (void) { return errpos; }; // Get error position
+ inline terr errt (void) { return errtype; }; // Get the error type
+
+ inline void set_fprec (int prec) { fprec = prec; } // Set floating-point precision for output formatting
+ inline int get_fprec () { return fprec; } // Get current floating-point precision for output formatting
+
+ int print (char *str, int_t Options,
+            int binwide,          // Print a string representation of the result with specified
+            int *size = nullptr); // options and binary width,
+ int printres (char *str, int_t options = FFLOAT, int binwide = 64);
+
+ int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
+              int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
+
+ //inline int64_t get_int_res () { return result_ival; };
+ //inline float__t get_re_res () { return result_fval; };
+ //inline float__t get_im_res () { return result_imval; };
+ //inline t_value get_res_tag () { return result_tag; };
+ //inline uint32_t get_res_info () { return result_info; };
+ //inline char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
+ //inline mxresult_t get_mx_res () 
+ //{
+ // mxresult_t res;
+ // res.rows = res_rows;
+ // res.cols = res_cols;
+ // res.mval = res_mval;
+ // return res;
+ //};
+
+ inline bool block () { return (scfg & NBLK) ? false : blockflag; };  // Block GUI
  ~calculator (void); // Destructor to clean up resources
 };
 

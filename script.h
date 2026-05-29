@@ -98,7 +98,7 @@ class script
    uint16_t *lineidx;
    char *label;
    char *plb;
-   char err[80]; // Error message buffer
+   char serr[80]; // Error message buffer
    int errln;
 
    calculator *child;
@@ -112,10 +112,11 @@ class script
    bool is_zero (const value &v);
    t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check);
  public:
-	script();
+   script();
    ~script ();
-	bool load(const char* filename);
+   bool load(const char* filename);
    bool execute ();
+   inline char *serror (void) { return serr; } // Get error message
    void set_calculator (calculator *calc) { child = calc; }
    void set_debug_callback (debug_callback_t callback) { debug = callback; }
    void setEscFn (int (__cdecl *fn) (void)) {EscFn = fn;} // Set the escape function for long calculations

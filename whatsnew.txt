@@ -1,3 +1,17 @@
+28.05.26 (2.206)
+- Fixed a bug in the prn("Mx = %S", A) function for matrices: the text before the format ("Mx = ") was 
+  not displayed.
+- Fixed a bug in script error messages.
+- Fixed a bug in script label names ('_') - now a valid character.
++ Added the ability to create matrices of a specified length (useful for scalar arrays). zeros(17) 
+  creates a matrix with 6 columns and 3 rows.
+  
+28.05.26 (2.205)
++ A console has been added to the GUI version. It can be enabled by calling the special function consol(1) 
+  and disabled by calling consol(0). If you enable script debugging with opton(1<<32), the script traceback 
+  process will be written to the console. If you don't enable it, you can write to the console using the 
+  function prnf("", "fmt", ...).
+	opton(1<<32);console(1);run("test.txt")
 27.05.26 (2.204)
 * Now the save function returns the type and value of the variable being written.
 + The Color data type has been added, returned by the color(rrggbb) function. The following operations 

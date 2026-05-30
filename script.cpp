@@ -397,8 +397,8 @@ bool script::execute ()
  if (!child) return false;
 
  if (debug) debug (child, ""); // Reset debug execution mode to step-by-step if it was set to auto before
- if (debug) br = debug (child, "=== Script started, %d lines. Press any key for the next step, Ctrl+C for exit ===\n"
-                               "===          F5 for running without breaks, F10 for running silently           ===\n", num_lines);
+ if (debug) br = debug (child, "===   Script started, %d lines. Press any key for the next step, Ctrl+C for exit   ===\n"
+                               "=== F5 for running without breaks, F7 - interactive mode, F10 for running silently ===\n", num_lines);
 
  while (ip < num_lines)
   {

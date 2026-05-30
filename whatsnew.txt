@@ -1,4 +1,13 @@
-28.05.26 (2.206)
+29.05.26 (2.207)
++ Pressing F7 in the debug console now allows you to view and change variable values in the script 
+  being debugged. The entered expression is evaluated in the same context in which the script is running.
+* The eval("experssion") function now operates not in its own isolated context, as before, but in the 
+  context of the expression in which it is called. Thus, an expression can change variables and create 
+  new ones, just like part of an expression. The exception is plot functions, which are not available 
+  within 'eval' expressions (using them will cause an error).
+* Now the debug console (in the GUI version) closes automatically when exiting the script.  
+
+29.05.26 (2.206)
 - Fixed a bug in the prn("Mx = %S", A) function for matrices: the text before the format ("Mx = ") was 
   not displayed.
 - Fixed a bug in script error messages.

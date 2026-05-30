@@ -495,7 +495,7 @@ enum t_br_result
 #define MASK_PLOTREG    (1ULL << tsPLOTREG)     // plotreg(xmin, xmax, ymin, ymax) - define plot region
 #define MASK_INVERSE    (1ULL << tsINVERSE)     // inverse operator for calculating the inverse of a function (inverse)
 
-#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT))) // default mask for user defined functions, excludes variables
+#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_SFUNCS1))) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

@@ -398,7 +398,7 @@ bool script::execute ()
 
  if (debug) debug (child, ""); // Reset debug execution mode to step-by-step if it was set to auto before
  if (debug) br = debug (child, "=== Script started, %d lines. Press any key for the next step, Ctrl+C for exit ===\n"
-                       "===          F5 for running without breaks, F10 for running silently           ===\n", num_lines);
+                               "===          F5 for running without breaks, F10 for running silently           ===\n", num_lines);
 
  while (ip < num_lines)
   {
@@ -651,6 +651,12 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      sct->set_calculator(child);
 
      success = sct->execute();
+     if ((scfg & DBG) && is_console_open())
+     {
+       Debug (nullptr, ""); // Reset debug execution mode to step-by-step if it was set to auto before
+       Debug (nullptr, "=== Console closed ===\n");
+       console (0);
+     }
  }
  else if (fidx == scEval)
  {

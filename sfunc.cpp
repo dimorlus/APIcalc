@@ -4109,129 +4109,6 @@ int_t console (int_t cmd)
   }
 }
 
-
-int Debug0 (void *context, const char *fmt, ...)
-{
- // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
- static int execution_mode = 0;
-
- // Check for redirection (once on the first call)
- static int is_redirected = -1; // -1 = not checked, 0 = interactive console, 1 = redirected
- if (is_redirected == -1)
-  {
-   HANDLE hStdin  = GetStdHandle (STD_INPUT_HANDLE);
-   HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);
-
-   // Check if stdin is a console (not a file/pipe)
-   DWORD mode;
-   bool stdin_is_console = (hStdin != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdin, &mode);
-
-   // Check if stdout is a console
-   bool stdout_is_console = (hStdout != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdout, &mode);
-
-   // If at least one stream is redirected, operate in no-break mode
-   is_redirected = (!stdin_is_console || !stdout_is_console) ? 1 : 0;
-
-   if (is_redirected)
-    {
-     execution_mode = 1; // Automatically enable F5 mode (output without pauses)
-    }
-  }
-
- // Reset mode when called with an empty string
- if (*fmt == '\0')
-  {
-   // Do not reset execution_mode back to 0 if redirected
-   if (!is_redirected)
-    {
-     execution_mode = 0;
-    }
-   return 0;
-  }
-
- va_list args;
- va_start (args, fmt);
-
- // In F10 mode (2), do not output anything
- if (execution_mode != 2)
-  {
-   vprintf (fmt, args);
-   fflush (stdout);
-  }
-
- va_end (args);
-
- // In F5 (1), F10 (2) modes and when redirected, do not wait for key presses
- if (execution_mode != 0 || is_redirected)
-  {
-   return 0;
-  }
-
- // --- Step-by-step mode (only for interactive console) ---
- HANDLE hStdin = GetStdHandle (STD_INPUT_HANDLE);
- if (hStdin == INVALID_HANDLE_VALUE) return 0;
-
- DWORD oldMode;
- if (!GetConsoleMode (hStdin, &oldMode)) return 0;
-
- SetConsoleMode (hStdin, ENABLE_WINDOW_INPUT);
-
- INPUT_RECORD ir;
- DWORD read;
- int result = 0;
-
- while (true)
-  {
-   if (!ReadConsoleInput (hStdin, &ir, 1, &read) || read == 0)
-    {
-     break;
-    }
-
-   if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
-    {
-     WORD vkCode     = ir.Event.KeyEvent.wVirtualKeyCode;
-     DWORD ctrlState = ir.Event.KeyEvent.dwControlKeyState;
-
-     // Ctrl-C - interrupt
-     if ((ctrlState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-         && (vkCode == 'C' || vkCode == VK_CANCEL))
-      {
-       result = 1;
-       break;
-      }
-
-     // F5 - continue without breaks (but with output)
-     if (vkCode == VK_F5)
-      {
-       execution_mode = 1;
-       printf ("\n[F5: Running without breaks...]\n");
-       result = 0;
-       break;
-      }
-
-     // F10 - continue without breaks and without output
-     if (vkCode == VK_F10)
-      {
-       execution_mode = 2;
-       printf ("\n[F10: Running silently...]\n");
-       result = 0;
-       break;
-      }
-
-     // Any other key - next step
-     if (ir.Event.KeyEvent.uChar.AsciiChar != 0)
-      {
-       result = 0;
-       break;
-      }
-    }
-  }
-
- SetConsoleMode (hStdin, oldMode);
-
- return result;
-}
-
 int Debug (void *context, const char *fmt, ...)
 {
  // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
@@ -4341,7 +4218,7 @@ int Debug (void *context, const char *fmt, ...)
          break;
         }
 
-       printf ("\n[Interactive mode - Enter expressions, 'exit' or F7 to quit]\n");
+       printf ("\n[Interactive mode - Enter expressions, 'exit' or 'q' to quit]\n");
 
        char input[1024];
        char sres[1024];

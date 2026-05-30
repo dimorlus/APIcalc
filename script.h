@@ -100,7 +100,6 @@ class script
    char *plb;
    char serr[80]; // Error message buffer
    int errln;
-   void *parent; // Pointer to parent calculator instance, set by calc engine
    calculator *child;
    debug_callback_t debug;
    int (*EscFn) (void);
@@ -112,7 +111,7 @@ class script
    bool is_zero (const value &v);
    t_br_result check_break (uint64_t init_ms, uint64_t last_gui_check);
  public:
-   script(void *par = nullptr);
+   script();
    ~script ();
    bool load(const char* filename);
    bool execute ();

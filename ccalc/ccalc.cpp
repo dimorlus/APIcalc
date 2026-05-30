@@ -367,7 +367,7 @@ void load_user_constants (calculator &calc, const char *Fname)
 
 // Engine Debug function used. We can overlap it with a custom one to get debug info from the engine
 // during script trace.
-int debug (const char *fmt, ...)
+int debug (void* context, const char *fmt, ...)
 {
  int ch = 0;
  va_list args;

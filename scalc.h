@@ -1266,6 +1266,7 @@ class calculator // calculator represents the main class for the expression calc
   return res;
  };
 
+ void strval (char *str, value &val);
  public:
  calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration
@@ -1300,20 +1301,8 @@ class calculator // calculator represents the main class for the expression calc
  int varlist (char *buf, int bsize, // Get a list of variables in the calculator and store it in the provided
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
 
- //inline int64_t get_int_res () { return result_ival; };
- //inline float__t get_re_res () { return result_fval; };
- //inline float__t get_im_res () { return result_imval; };
- //inline t_value get_res_tag () { return result_tag; };
- //inline uint32_t get_res_info () { return result_info; };
- //inline char *get_str_res () { return result_tag == tvSTR ? sres : nullptr; };
- //inline mxresult_t get_mx_res () 
- //{
- // mxresult_t res;
- // res.rows = res_rows;
- // res.cols = res_cols;
- // res.mval = res_mval;
- // return res;
- //};
+ bool Eval (char *expr, char *sres);
+
 
  inline bool block () { return (scfg & NBLK) ? false : blockflag; };  // Block GUI
  ~calculator (void); // Destructor to clean up resources

@@ -4110,7 +4110,7 @@ int_t console (int_t cmd)
 }
 
 
-int Debug (void *context, const char *fmt, ...)
+int Debug0 (void *context, const char *fmt, ...)
 {
  // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
  static int execution_mode = 0;
@@ -4205,6 +4205,185 @@ int Debug (void *context, const char *fmt, ...)
       {
        execution_mode = 1;
        printf ("\n[F5: Running without breaks...]\n");
+       result = 0;
+       break;
+      }
+
+     // F10 - continue without breaks and without output
+     if (vkCode == VK_F10)
+      {
+       execution_mode = 2;
+       printf ("\n[F10: Running silently...]\n");
+       result = 0;
+       break;
+      }
+
+     // Any other key - next step
+     if (ir.Event.KeyEvent.uChar.AsciiChar != 0)
+      {
+       result = 0;
+       break;
+      }
+    }
+  }
+
+ SetConsoleMode (hStdin, oldMode);
+
+ return result;
+}
+
+int Debug (void *context, const char *fmt, ...)
+{
+ // Execution modes: 0 = step-by-step, 1 = no breaks (F5), 2 = no breaks and no output (F10)
+ static int execution_mode = 0;
+
+ // Check for redirection (once on the first call)
+ static int is_redirected = -1;
+ if (is_redirected == -1)
+  {
+   HANDLE hStdin  = GetStdHandle (STD_INPUT_HANDLE);
+   HANDLE hStdout = GetStdHandle (STD_OUTPUT_HANDLE);
+
+   DWORD mode;
+   bool stdin_is_console  = (hStdin != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdin, &mode);
+   bool stdout_is_console = (hStdout != INVALID_HANDLE_VALUE) && GetConsoleMode (hStdout, &mode);
+
+   is_redirected = (!stdin_is_console || !stdout_is_console) ? 1 : 0;
+
+   if (is_redirected)
+    {
+     execution_mode = 1;
+    }
+  }
+
+ // Reset mode when called with an empty string
+ if (*fmt == '\0')
+  {
+   if (!is_redirected)
+    {
+     execution_mode = 0;
+    }
+   return 0;
+  }
+
+ va_list args;
+ va_start (args, fmt);
+
+ // In F10 mode (2), do not output anything
+ if (execution_mode != 2)
+  {
+   vprintf (fmt, args);
+   fflush (stdout);
+  }
+
+ va_end (args);
+
+ // In F5 (1), F10 (2) modes and when redirected, do not wait for key presses
+ if (execution_mode != 0 || is_redirected)
+  {
+   return 0;
+  }
+
+ // --- Step-by-step mode (only for interactive console) ---
+ HANDLE hStdin = GetStdHandle (STD_INPUT_HANDLE);
+ if (hStdin == INVALID_HANDLE_VALUE) return 0;
+
+ DWORD oldMode;
+ if (!GetConsoleMode (hStdin, &oldMode)) return 0;
+
+ SetConsoleMode (hStdin, ENABLE_WINDOW_INPUT);
+
+ INPUT_RECORD ir;
+ DWORD read;
+ int result = 0;
+
+ while (true)
+  {
+   if (!ReadConsoleInput (hStdin, &ir, 1, &read) || read == 0)
+    {
+     break;
+    }
+
+   if (ir.EventType == KEY_EVENT && ir.Event.KeyEvent.bKeyDown)
+    {
+     WORD vkCode     = ir.Event.KeyEvent.wVirtualKeyCode;
+     DWORD ctrlState = ir.Event.KeyEvent.dwControlKeyState;
+
+     // Ctrl-C - interrupt
+     if ((ctrlState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
+         && (vkCode == 'C' || vkCode == VK_CANCEL))
+      {
+       result = 1;
+       break;
+      }
+
+     // F5 - continue without breaks (but with output)
+     if (vkCode == VK_F5)
+      {
+       execution_mode = 1;
+       printf ("\n[F5: Running without breaks...]\n");
+       result = 0;
+       break;
+      }
+
+     // F7 - interactive mode
+     if (vkCode == VK_F7)
+      {
+       // Switch console to line input mode
+       SetConsoleMode (hStdin, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+
+       calculator *calc = (calculator *)context;
+       if (!calc)
+        {
+         printf ("\n[ERROR: No calculator context available]\n");
+         SetConsoleMode (hStdin, oldMode);
+         result = 0;
+         break;
+        }
+
+       printf ("\n[Interactive mode - Enter expressions, 'exit' or F7 to quit]\n");
+
+       char input[1024];
+       char sres[1024];
+       bool interactive = true;
+
+       while (interactive)
+        {
+         printf ("> ");
+         fflush (stdout);
+
+         // Read line from console
+         if (!fgets (input, sizeof (input), stdin))
+          {
+           break;
+          }
+
+         // Remove trailing newline
+         size_t len = strlen (input);
+         if (len > 0 && input[len - 1] == '\n') input[len - 1] = '\0';
+         if (len > 1 && input[len - 2] == '\r') input[len - 2] = '\0';
+
+         // Skip empty lines
+         char *p = input;
+         while (*p && (*p == ' ' || *p == '\t')) p++;
+         if (*p == '\0') continue;
+
+         // Check for exit commands
+         if (strcmp (p, "exit") == 0 || strcmp (p, "quit") == 0 || strcmp (p, "q") == 0)
+          {
+           printf ("[Exiting interactive mode]\n");
+           interactive = false;
+           break;
+          }
+
+         // Evaluate expression using calculator
+         sres[0]   = '\0';
+         bool bres = calc->Eval (p, sres);
+         printf ("= %s\n", sres);
+        }
+
+       // Restore original console mode
+       SetConsoleMode (hStdin, ENABLE_WINDOW_INPUT);
        result = 0;
        break;
       }

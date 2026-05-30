@@ -995,5 +995,47 @@ int calculator::print (char *str, int_t Options, int binwide, int *size)
  if (size) *size = bsize;
  return n;
 }
+
+void calculator::strval (char *str, value &val)
+{
+ if (!str) return;
+ switch (val.tag)
+  {
+  case tvBMP:
+   {
+    bmpdraw *bmp = (bmpdraw *)val.sval;
+    sprintf (str, "BMP(%dx%d)", bmp->width, bmp->height);
+   }
+   break; 
+  case tvSTR:
+   {
+    sprintf (str, "'%s'", val.sval ? val.sval : "");
+   }
+   break;
+  case tvMATRIX:
+   {
+    Mxprint (val.tag, val.mrows, val.mcols, val.mval, str, false, nullptr);
+   }
+   break;
+  case tvINT:
+   {
+    sprintf (str, "%lld", val.ival);
+   }
+   break;
+  case tvCOLOR:
+   {
+    sprintf (str, "%x", (uint32_t)val.ival);
+   }
+   break;
+  case tvFLOAT:
+  case tvCOMPLEX:
+   {
+    qprint (str, val.fval, val.imval, fprec, c_imaginary);
+   }
+   break;
+  default:
+   *str = '\0'; // Unsupported type
+  }
+}
 #pragma endregion
 //---------------------------------------------------------------------------

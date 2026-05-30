@@ -934,13 +934,12 @@ Depending on how a child calculator handles inherited variables and registers fu
 
 * **Behavior:** The child calculator instantiated for a user-defined function **does not inherit variables** from the parent context. It is completely isolated from the parent workspace, recognizing only the explicit arguments passed to it during the call.
 * **Example:**
-```pascal
+```
 {summa(x, y) x+y}
 x := 10; y := 20;
 res := summa(1, 2)  ;; 'res' evaluates to 3, completely ignoring parent x and y
 
 ```
-
 
 * **Teardown:** Upon termination, the local context is wiped from memory, returning only the final computed scalar or matrix to the parent.
 

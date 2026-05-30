@@ -289,7 +289,7 @@ void calculator::AddPredefined (void)
  add (tsSTFUN, sfInvNorm, "invnorm", nullptr);
  add (tsSTFUN, sfNormPD, "normpd", nullptr);
 
- add (tsSFUNCS1, ssFdlg, "fdlg", nullptr, true);
+ add (tsFDLG, ssFdlg, "fdlg", nullptr, true);
 
  add (tsVFUNC1, vf_pol_rt, "polynom", (void *)vfunc);
 
@@ -3468,7 +3468,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break;
 
-            case tsSFUNCS1: // str f(str) (filedlg("*.*) function)
+            case tsFDLG: // str f(str) (filedlg("*.*) function)
              {
               char filename[STRBUF];
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };

@@ -427,7 +427,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSTFUN,    // 30  float mean("data") statistics function for calculating mean, median, etc
  tsCLCFN,    // 31  pair to fit* clcpoly([(1,2,3)], 10.5) float clcpoly(Matrix data, float x)
  tsPLOT,     // 32  plot operator for plotting data (plot)
- tsSFUNCS1,  // 33  char* f(char *s) (fdlg("*.bmp"))
+ tsFDLG,     // 33  char* f(char *s) (fdlg("*.bmp"))
  tsRUN,      // 34  value f(char *s) load("user.txt") load calculator's script. Return any type.
  tsDATAF,    // 35  dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
  tsERROR,    // 36  error("message") operator for reporting errors
@@ -487,15 +487,15 @@ enum t_br_result
 #define MASK_STFUN      (1ULL << tsSTFUN)       // Statistics function for calculating mean, median, etc
 #define MASK_CLCFN      (1ULL << tsCLCFN)       // clcpoly function for curve fitting with confidence intervals 
 #define MASK_PLOT       (1ULL << tsPLOT)        // plot operator for plotting data
-#define MASK_SFUNCS1    (1ULL << tsSFUNCS1)     // char* f(char *s) (fdlg("*.bmp"))
-#define MASK_SFUNC      (1ULL << tsRUN)         // value f(char *s) run("script.txt") run calculator's script. Return any type.
+#define MASK_FDLG       (1ULL << tsFDLG)        // char* f(char *s) (fdlg("*.bmp"))
+#define MASK_RUN        (1ULL << tsRUN)         // value f(char *s) run("script.txt") run calculator's script. Return any type.
 #define MASK_DATAF      (1ULL << tsDATAF)       // dataf operator for loading data from file (dataf("data.txt","mask", x1, x2, ...))
 #define MASK_EXTR       (1ULL << tsEXTR)        // extremum operator for finding local minima and maxima (extr)
 #define MASK_LDSV       (1ULL << tsLDSV)        // load/save operator for loading and saving variables
 #define MASK_PLOTREG    (1ULL << tsPLOTREG)     // plotreg(xmin, xmax, ymin, ymax) - define plot region
 #define MASK_INVERSE    (1ULL << tsINVERSE)     // inverse operator for calculating the inverse of a function (inverse)
 
-#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_SFUNCS1))) // default mask for user defined functions, excludes variables
+#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG))) // default mask for user defined functions, excludes variables
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {

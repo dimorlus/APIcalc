@@ -926,8 +926,6 @@ Depending on how a child calculator handles inherited variables and registers fu
 * **`plot*`** functions are excluded because they return a bitmap (BMP) handle designed for image operations, storage, or main GUI rendering, making them meaningless inside a mathematical solver.
 * **`fdlg`** is excluded because it triggers a modal GUI file dialog, which cannot resolve input context when executed from within a nested background evaluation.
 
-
-
 ### B. Full Isolation
 
 *Applies to:* User-Defined Functions declared via the `{fn(x, y) expr}` syntax.

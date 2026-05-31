@@ -1399,7 +1399,7 @@ int fmtc (char *dst, char *fmt)
 
 int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
 {
- char pfmt[STRBUF];
+ char pfmt[STRBUF] = { 0 };
  enum ftypes
  {
   tNone,
@@ -1418,7 +1418,7 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
   tPtr
  } fmt;
  char c, cc;
- char param[16];
+ char param[16] = { 0 };
  int p;
  int i;
  int n = 0;
@@ -1748,10 +1748,9 @@ int_t fprn (char *dest, char *sfmt, int args, char ic, value *v_stack)
 int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
 {
  FILE *f;
- char buf[2048];
+ char buf[2048] = { 0 };
  int_t res = 0; 
  fprn (buf, sfmt, args, ic, v_stack);
- if (buf[0] == '\0') return 0; // nothing to write
  if (!fname || fname[0] == '\0') res = fprintf (stdout, "%s\n", buf);
  else
   {
@@ -1761,7 +1760,7 @@ int_t fprnf(char* fname, char* sfmt, int args, char ic, value* v_stack)
     f = fopen (fname, "w");
    if (f)
     {
-     res = fprintf (f, "%s\n", buf);
+     if (buf[0]) res = fprintf (f, "%s\n", buf);
      fclose (f);
     }
   }

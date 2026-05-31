@@ -207,7 +207,6 @@ void calculator::AddPredefined (void)
  add (tsLDSV, vrLoad, "load", nullptr);
  add (tsLDSV, vrSave, "save", nullptr);
 
-
  add (tsIF, "if", nullptr);
  add (tsRUN, scRun, "run", nullptr, false);
  add (tsRUN, scEval, "eval", nullptr, false);

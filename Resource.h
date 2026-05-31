@@ -24,6 +24,7 @@
 #define ID_CALC_CASESENSETIVE           301
 #define ID_CALC_FORCEDFLOAT             302
 #define ID_CALC_ESCMINIMIZED            303
+#define ID_CALC_SCRIPTDEBUG				309
 #define ID_CALC_OPACITY                 304
 #define ID_CALC_EXIT                    305
 #define ID_CALC_VIEWVARIABLES           306

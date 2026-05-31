@@ -435,8 +435,10 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsLDSV,     // 38  load/save operator for loading and saving variables.
  tsPLOTREG,  // 39  plotreg(xmin, xmax, ymin, ymax) - define plot region
  tsINVERSE,  // 40  inverse operator for calculating the inverse of a function (inverse)
- tsCOLOR,    // 41  color(r,g,b) operator for creating color values  
- tsNUM       // 42  Total number of symbol types, must be the last in the list
+ tsCOLOR,    // 41  color(r,g,b) operator for creating color values 
+ tsSCRIPT,   // 42  script service finction
+ tsGUI,      // 43  GUI service functions
+ tsNUM       // 43  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -494,8 +496,11 @@ enum t_br_result
 #define MASK_LDSV       (1ULL << tsLDSV)        // load/save operator for loading and saving variables
 #define MASK_PLOTREG    (1ULL << tsPLOTREG)     // plotreg(xmin, xmax, ymin, ymax) - define plot region
 #define MASK_INVERSE    (1ULL << tsINVERSE)     // inverse operator for calculating the inverse of a function (inverse)
+#define MASK_SCRIPT     (1ULL << tsSCRIPT)      // Script service
+#define MASK_GUI        (1ULL << tsGUI)         // GUI service
 
-#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG))) // default mask for user defined functions, excludes variables
+// default mask for user defined functions, excludes variables
+#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI))) 
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -633,6 +638,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
 
  scRun,    // Run a script file containing calculator commands
  scEval,   // Evaluate an expression from a string
+ scVars,   // Script vars function
 
  vrConst, // Create a constant variable
  vrVar,   // Create a variable
@@ -1276,7 +1282,7 @@ class calculator // calculator represents the main class for the expression calc
  void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
  void setDebugFn (debug_callback_t fn) { debugFn = fn; }
 
- void addfn (const char *name, void *func) { add (tsIFUNC1, name, func);} // Add a function to the calculator
+ void addfn (const char *name, void *func) { add (tsGUI, name, func);} // Add a function to the calculator
 
  double evaluate (char *expr) { return (double)evaluate_f (expr); } // Evaluate an expression
 
@@ -1302,6 +1308,7 @@ class calculator // calculator represents the main class for the expression calc
               int *maxlen = nullptr); // buffer, with an optional maximum length for variable names 
 
  bool Eval (char *expr, char *sres);
+ int_t ScriptService (int_t x, v_func fidx);
 
 
  inline bool block () { return (scfg & NBLK) ? false : blockflag; };  // Block GUI

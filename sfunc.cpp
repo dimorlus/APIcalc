@@ -4140,7 +4140,7 @@ int Debug (void *context, const char *fmt, ...)
     {
      execution_mode = 0;
     }
-   return 0;
+   return drNONE;
   }
 
  va_list args;
@@ -4158,7 +4158,7 @@ int Debug (void *context, const char *fmt, ...)
  // In F5 (1), F10 (2) modes and when redirected, do not wait for key presses
  if (execution_mode != 0 || is_redirected)
   {
-   return 0;
+   return drNONE;
   }
 
  // --- Step-by-step mode (only for interactive console) ---
@@ -4172,7 +4172,7 @@ int Debug (void *context, const char *fmt, ...)
 
  INPUT_RECORD ir;
  DWORD read;
- int result = 0;
+ int result = drNONE;
 
  while (true)
   {
@@ -4190,7 +4190,7 @@ int Debug (void *context, const char *fmt, ...)
      if ((ctrlState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
          && (vkCode == 'C' || vkCode == VK_CANCEL))
       {
-       result = 1;
+       result = drBREAK;
        break;
       }
 
@@ -4199,7 +4199,7 @@ int Debug (void *context, const char *fmt, ...)
       {
        execution_mode = 1;
        printf ("\n[F5: Running without breaks...]\n");
-       result = 0;
+       result = drNONE;
        break;
       }
 
@@ -4214,7 +4214,7 @@ int Debug (void *context, const char *fmt, ...)
         {
          printf ("\n[ERROR: No calculator context available]\n");
          SetConsoleMode (hStdin, oldMode);
-         result = 0;
+         result = drNONE;
          break;
         }
 
@@ -4261,7 +4261,23 @@ int Debug (void *context, const char *fmt, ...)
 
        // Restore original console mode
        SetConsoleMode (hStdin, ENABLE_WINDOW_INPUT);
-       result = 0;
+       result = drNONE;
+       break;
+      }
+
+     // F8 - skip
+     if (vkCode == VK_F8)
+      {
+       printf ("\n[F8: skip...]\n");
+       result = drSKIP;
+       break;
+      }
+
+     // F9 - restart
+     if (vkCode == VK_F9)
+      {
+       printf ("\n[F9: Restarting...]\n");
+       result = drRESTART;
        break;
       }
 
@@ -4270,14 +4286,14 @@ int Debug (void *context, const char *fmt, ...)
       {
        execution_mode = 2;
        printf ("\n[F10: Running silently...]\n");
-       result = 0;
+       result = drNONE;
        break;
       }
 
      // Any other key - next step
      if (ir.Event.KeyEvent.uChar.AsciiChar != 0)
       {
-       result = 0;
+       result = drNONE;
        break;
       }
     }

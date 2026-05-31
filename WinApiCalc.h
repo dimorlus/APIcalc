@@ -125,8 +125,7 @@ public:
     
     // Menu operations
     void UpdateMenuChecks();
-    void OnMenuCommand(int command);
-    void ToggleOption(int flag);
+    void ToggleOption(int_t flag);
     void SetBinaryWidth(int width);
     
     // Hot key operations

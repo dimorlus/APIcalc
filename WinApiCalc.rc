@@ -84,7 +84,8 @@ BEGIN
         MENUITEM "View &variables",             ID_CALC_VIEWVARIABLES
         MENUITEM SEPARATOR
     MENUITEM "Esc minimized",               ID_CALC_ESCMINIMIZED
-    MENUITEM "Always on top",                ID_CALC_ALWAYSONTOP
+    MENUITEM "Script debugger",             ID_CALC_SCRIPTDEBUG
+    MENUITEM "Always on top",               ID_CALC_ALWAYSONTOP
     MENUITEM "Opacity(100)",                ID_CALC_OPACITY
     MENUITEM "Exit",                        ID_CALC_EXIT
     END

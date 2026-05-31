@@ -221,4 +221,11 @@ bool ColorOp (value &left, value &right, t_operator cop);
 // Console functions
 int_t console (int_t cmd);
 bool is_console_open ();
+enum debug_result
+{
+	drNONE = 0,    // No debug action, continue normal execution
+	drBREAK = 1,   // Break into the debugger
+    drRESTART = 2, // Restart the program
+    drSKIP    = 3, // Skip the current line
+};
 int Debug (void *context, const char *fmt, ...);

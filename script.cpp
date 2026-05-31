@@ -380,13 +380,13 @@ bool script::execute ()
    return false;
   }
 
- int br      = 0;
+ int br      = drNONE;
  uint16_t ip = 0;     // instruction pointer
  uint16_t stack[256]; // return stack
  int sp = 0;          // stack pointer
  value last_result;
 
- last_result.tag  = tvINT;
+ last_result.tag  = tvERR;
  last_result.ival = 0;
  last_result.fval = 0.0;
 
@@ -397,15 +397,27 @@ bool script::execute ()
  if (!child) return false;
 
  if (debug) debug (child, ""); // Reset debug execution mode to step-by-step if it was set to auto before
- if (debug) br = debug (child, "===   Script started, %d lines. Press any key for the next step, Ctrl+C for exit   ===\n"
-                               "=== F5 for running without breaks, F7 - interactive mode, F10 for running silently ===\n", num_lines);
+ if (debug) br = debug (child, 
+                "===                         Script started, %d lines.                              ===\n"
+                "=== Press any key for the next step, F9 for restart, F8 for skip, Ctrl+C for exit  ===\n"
+                "=== F5 for running without breaks, F7 - interactive mode, F10 for running silently ===\n", num_lines);
 
  while (ip < num_lines)
   {
    char *line = buffer + lineidx[ip];
 
    if (check_break (init_ms, last_gui_check) != brNONE) return false;
-   if (br) break; //return false;
+   if (br == drBREAK) break; //return false;
+   else if (br == drRESTART)
+    {
+     ip = 0;
+     sp = 0;
+     last_result.tag  = tvERR;
+     last_result.ival = 0;
+     last_result.fval = 0.0;
+     if (debug) br = debug (child, "=== Script restarted ===\n");
+     continue;
+    }
 
    // Skip leading spaces
    while (*line == ' ') line++;
@@ -427,13 +439,16 @@ bool script::execute ()
       {
       case opRET:
        if (debug) br = debug(child, "[%04d] RET (sp=%d)\n", ip, sp);
-       if (sp == 0)
+       if (br != drSKIP)
         {
-         if (debug) br = debug(child, "=== Script finished (RET from main) ===\n");
-         return true; // Exit script
+         if (sp == 0)
+          {
+           if (debug) br = debug (child, "=== Script finished (RET from main) ===\n");
+           return true; // Exit script
+          }
+         ip = stack[--sp];
+         if (debug) br = debug (child, "       Returned to line %d\n", ip + 1);
         }
-       ip = stack[--sp];
-       if (debug) br = debug(child, "       Returned to line %d\n", ip + 1);
        ip++;
        break;
 
@@ -441,7 +456,8 @@ bool script::execute ()
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         if (debug) br = debug(child, "[%04d] JMP %d\n", ip, target);
-        ip = target;
+        if (br != drSKIP) ip = target;
+        else ip++;
        }
        break;
 
@@ -450,10 +466,14 @@ bool script::execute ()
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_z = is_zero (last_result);
         if (debug) br = debug(child, "[%04d] JZ %d (condition=%s)\n", ip, target, is_z ? "true" : "false");
-        if (is_z)
-         ip = target;
-        else
-         ip++;
+        if (br != drSKIP)
+         {
+          if (is_z)
+           ip = target;
+          else
+           ip++;
+         }
+        else ip++;
        }
        break;
 
@@ -462,8 +482,13 @@ bool script::execute ()
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_nz = !is_zero (last_result);
         if (debug) br = debug(child, "[%04d] JNZ %d (condition=%s)\n", ip, target, is_nz ? "true" : "false");
-        if (is_nz)
-         ip = target;
+        if (br != drSKIP)
+         {
+          if (is_nz)
+           ip = target;
+          else
+           ip++;
+         }
         else
          ip++;
        }
@@ -473,14 +498,19 @@ bool script::execute ()
        {
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         if (debug) br = debug(child, "[%04d] CALL %d (sp=%d)\n", ip, target, sp);
-        if (sp >= 256)
+        if (br != drSKIP)
          {
-          if (debug) br = debug(child, "ERROR: Stack overflow!\n");
-          sprintf (serr, "Stack overflow");
-          return false; // Stack overflow
+          if (sp >= 256)
+           {
+            if (debug) br = debug (child, "ERROR: Stack overflow!\n");
+            sprintf (serr, "Stack overflow");
+            return false; // Stack overflow
+           }
+          stack[sp++] = ip;
+          ip          = target;
          }
-        stack[sp++] = ip;
-        ip = target;
+        else
+         ip++;
        }
        break;
 
@@ -489,16 +519,21 @@ bool script::execute ()
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_z = is_zero (last_result);
         if (debug) debug(child, "[%04d] CALLZ %d (condition=%s, sp=%d)\n", ip, target, is_z ? "true" : "false", sp);
-        if (is_z)
+        if (br != drSKIP)
          {
-          if (sp >= 256)
+          if (is_z)
            {
-            if (debug) br = debug(child, "ERROR: Stack overflow!\n");
-            sprintf (serr, "Stack overflow");
-            return false;
+            if (sp >= 256)
+             {
+              if (debug) br = debug (child, "ERROR: Stack overflow!\n");
+              sprintf (serr, "Stack overflow");
+              return false;
+             }
+            stack[sp++] = ip;
+            ip          = target;
            }
-          stack[sp++] = ip;
-          ip = target;
+          else
+           ip++;
          }
         else
          ip++;
@@ -510,16 +545,21 @@ bool script::execute ()
         uint16_t target = (unsigned char)line[1] | ((unsigned char)line[2] << 8);
         bool is_nz = !is_zero (last_result);
         if (debug) br = debug(child, "[%04d] CALLNZ %d (condition=%s, sp=%d)\n", ip, target, is_nz ? "true" : "false", sp);
-        if (is_nz)
+        if (br != drSKIP)
          {
-          if (sp >= 256)
+          if (is_nz)
            {
-            if (debug) br = debug(child, "ERROR: Stack overflow!\n");
-            sprintf (serr, "Stack overflow");
-            return false;
+            if (sp >= 256)
+             {
+              if (debug) br = debug (child, "ERROR: Stack overflow!\n");
+              sprintf (serr, "Stack overflow");
+              return false;
+             }
+            stack[sp++] = ip;
+            ip          = target;
            }
-          stack[sp++] = ip;
-          ip = target;
+          else
+           ip++;
          }
         else
          ip++;
@@ -535,48 +575,56 @@ bool script::execute ()
     {
      // Evaluate expression
      if (debug) br = debug(child, "[%04d] EVAL: %s\n", ip, line);
-     
-     double result = child->evaluate (line);
-     if (child->error ()[0] && child->errt () == teSyntax)
+     if (br != drSKIP)
       {
-       if (debug) br = debug(child, "Evaluation error: %s\n", child->error ());
-       sprintf (serr, "%s", child->error ());
-       return false;
-      }
-     last_result.tag = child->get_res_tag ();
-     last_result.ival = child->get_int_res ();
-     last_result.fval = child->get_re_res ();
-     last_result.imval = child->get_im_res ();
-
-     if (debug)
-      {
-       switch (last_result.tag)
+       double result = child->evaluate (line);
+       if (child->error ()[0] && child->errt () == teSyntax)
         {
-        case tvINT:
-         br = debug(child, "       Result: %lld (int)\n", last_result.ival);
-         break;
-        case tvFLOAT:
-         br = debug(child, "       Result: %.15g (float)\n", (double)last_result.fval);
-         break;
-        case tvCOMPLEX:
-         br = debug(child, "       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval, (double)last_result.imval);
-         break;
-        case tvSTR:
-         br = debug(child, "       Result: \"%s\" (string)\n", child->get_str_res ());
-         break;
-        case tvMATRIX:
-         br = debug(child, "       Result: %d x %d matrix\n", child->get_mx_res ().rows, child->get_mx_res ().cols);
-         break;
-        default:
-         br = debug(child, "       Result: (other type %d)\n", last_result.tag);
-         break;
+         if (debug) br = debug (child, "Evaluation error: %s\n", child->error ());
+         sprintf (serr, "%s", child->error ());
+         return false;
+        }
+       last_result.tag   = child->get_res_tag ();
+       last_result.ival  = child->get_int_res ();
+       last_result.fval  = child->get_re_res ();
+       last_result.imval = child->get_im_res ();
+
+       if (debug)
+        {
+         switch (last_result.tag)
+          {
+          case tvINT:
+           br = debug (child, "       Result: %lld (int)\n", last_result.ival);
+           break;
+          case tvFLOAT:
+           br = debug (child, "       Result: %.15g (float)\n", (double)last_result.fval);
+           break;
+          case tvCOMPLEX:
+           br = debug (child, "       Result: %.15g + %.15gi (complex)\n", (double)last_result.fval,
+                       (double)last_result.imval);
+           break;
+          case tvSTR:
+           br = debug (child, "       Result: \"%s\" (string)\n", child->get_str_res ());
+           break;
+          case tvMATRIX:
+           br = debug (child, "       Result: %d x %d matrix\n", child->get_mx_res ().rows,
+                       child->get_mx_res ().cols);
+           break;
+          default:
+           br = debug (child, "       Result: (other type %d)\n", last_result.tag);
+           break;
+          }
         }
       }
-
      ip++;
     }
   }
 
+  if (br == drBREAK)
+  {
+   sprintf (serr, "User break");
+   return false;
+  }
  if (debug) printf ("=== Script finished (end of lines) ===\n");
  return true;
 }
@@ -644,10 +692,13 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      child->setEscFn(EscFn);
      sct->setEscFn(EscFn);
      sct->set_debug_callback (nullptr);
+     if (scfg & DBG) console (1);
      if (debugFn) sct->set_debug_callback(debugFn);
      else 
      if ((scfg & DBG) && is_console_open ()) 
          sct->set_debug_callback (Debug); // Use calculator's debug function if available
+     
+     child->add (tsSCRIPT, scVars, "vars", nullptr, false);
      sct->set_calculator(child);
 
      success = sct->execute();
@@ -754,4 +805,19 @@ bool calculator::Eval (char *expr, char *sres)
  strval (sres, res);
  delete child;  
  return true;
+}
+
+int_t calculator::ScriptService(int_t x, v_func fidx)
+{
+    switch (fidx)
+    {
+     case scVars:
+      {
+       char buf[4096];
+       varlist (buf,sizeof(buf));
+       printf (buf);
+      }
+     break;
+    }
+    return x;
 }

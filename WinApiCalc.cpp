@@ -344,6 +344,7 @@ BOOL WinApiCalc::InitInstance (HINSTANCE hInstance, int nCmdShow)
  return TRUE;
 }
 
+#define _MULTILINE_PASTE_
 LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM wParam,
                                                LPARAM lParam)
 {
@@ -436,7 +437,7 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
       }
     }
   }
-
+#ifdef _SIMPLE_PASTE_
  if (message == WM_PASTE)
   {
    // Handle Paste from context menu - same logic as Ctrl+V
@@ -462,6 +463,80 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
     }
    return 0; // Message handled
   }
+#endif //_SIMPLE_PASTE_
+#ifdef _MULTILINE_PASTE_
+ if (message == WM_PASTE)
+  {
+   // Handle Paste from context menu or Ctrl+V
+   if (IsClipboardFormatAvailable (CF_TEXT) && OpenClipboard (hWnd))
+    {
+     HANDLE hData = GetClipboardData (CF_TEXT);
+     if (hData)
+      {
+       char *pszText = (char *)GlobalLock (hData);
+       if (pszText && pThis)
+        {
+         // Make a copy for processing
+         char *buffer = _strdup (pszText);
+         GlobalUnlock (hData);
+         CloseClipboard ();
+
+         if (buffer)
+          {
+           char *context  = nullptr;
+           char *line     = strtok_s (buffer, "\r\n", &context);
+           char *nextLine = strtok_s (nullptr, "\r\n", &context);
+
+           while (line)
+            {
+             if (nextLine)
+              {
+               // Not last line - evaluate
+               SetWindowTextA (hWnd, line);
+               pThis->OnExpressionChanged (true);
+
+               // Check for errors
+               if (pThis->m_pCalculator && pThis->m_pCalculator->error ()[0])
+                {
+                 // Stop on error, leave problematic line in edit field
+                 free (buffer);
+                 return 0;
+                }
+
+               // Add to history
+               pThis->AddToHistory (line);
+
+               // Move to next line
+               line     = nextLine;
+               nextLine = strtok_s (nullptr, "\r\n", &context);
+              }
+             else
+              {
+               // Last line - paste normally (without evaluation)
+               SetWindowTextA (hWnd, line);
+               SendMessage (hWnd, EM_SETSEL, strlen (line), strlen (line));
+               pThis->OnExpressionChanged (true);
+               break;
+              }
+            }
+
+           free (buffer);
+          }
+        }
+       else
+        {
+         GlobalUnlock (hData);
+         CloseClipboard ();
+        }
+      }
+     else
+      {
+       CloseClipboard ();
+      }
+    }
+   return 0; // Message handled
+  }
+#endif //_MULTILINE_PASTE_
 
  if (pThis && pThis->m_originalEditProc)
   {
@@ -909,7 +984,7 @@ void WinApiCalc::OnCreate ()
  m_hMenu = ::GetMenu (m_hWnd);
 
  // Apply saved menu visibility (MNU flag)
- ::SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
+ SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
  m_menuVisible = ((m_options & MNU) == 0);
  DrawMenuBar (m_hWnd);
 
@@ -974,6 +1049,9 @@ void WinApiCalc::OnCommand (WPARAM wParam)
   case ID_CALC_ESCMINIMIZED:
    ToggleOption (MIN);
    break;
+  case ID_CALC_SCRIPTDEBUG :
+   ToggleOption (DBG);
+  break;
   case ID_CALC_ALWAYSONTOP:
    ToggleOption (TOP);
    break;
@@ -1536,6 +1614,7 @@ void WinApiCalc::UpdateMenuChecks ()
  CheckMenuItem (m_hMenu, ID_CALC_FORCEDFLOAT, (m_options & FFLOAT) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_CALC_IMPLICITMUL, (m_options & IMUL) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_CALC_ESCMINIMIZED, (m_options & MIN) ? MF_CHECKED : MF_UNCHECKED);
+ CheckMenuItem (m_hMenu, ID_CALC_SCRIPTDEBUG, (m_options & DBG) ? MF_CHECKED : MF_UNCHECKED);
  CheckMenuItem (m_hMenu, ID_CALC_ALWAYSONTOP, (m_options & TOP) ? MF_CHECKED : MF_UNCHECKED);
  // Menu visibility is controlled via the pseudo-function menu(0) -> MenuFunction()
  // and persisted in m_options (MNU). There is no separate menu item for this.
@@ -1591,7 +1670,7 @@ void WinApiCalc::UpdateMenuChecks ()
                      MF_BYCOMMAND);
 }
 
-void WinApiCalc::ToggleOption (int flag)
+void WinApiCalc::ToggleOption (int_t flag)
 {
  m_options ^= flag;
  // Special handling for some UI-related flags must be applied before layout updates
@@ -2467,11 +2546,11 @@ void WinApiCalc::LoadSettings ()
  HKEY hKey;
  if (RegOpenKeyExA (HKEY_CURRENT_USER, "Software\\WinApiCalc", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
   {
-   DWORD dwOptions = (FFLOAT + NRM + CMP + IGR + UNS + HEX + CHR + WCH + OCT + fBIN + DAT
-                      + DEG + STR + ALL + MNU + FRC + FRI);
+   DWORD dwOptions = (FFLOAT + SCI + CMP + IGR + HEX + CHR + fBIN + DAT + UTM + IMUL
+                      + DEG + STR + ALL + MNU + FRC);
    DWORD dwSize    = sizeof (dwOptions);
    DWORD dwOptionsH = 0;
-   dwOptions       = 0x0bcf7f37; // Default options if not found
+   
    if (RegQueryValueExA (hKey, "Options", nullptr, nullptr, (LPBYTE)&dwOptions, &dwSize) == ERROR_SUCCESS)
     {
      m_options = dwOptions;
@@ -3142,12 +3221,18 @@ void WinApiCalc::SetMenuVisibilityOption (bool visible)
    m_options &= ~MNU; // clear MNU -> menu visible
    SetMenu (m_hWnd, m_hMenu);
    m_menuVisible = true;
+   int_t opt = m_pCalculator->issyntax ();
+   opt &= ~MNU;
+   m_pCalculator->syntax (opt);
   }
  else
   {
    m_options |= MNU; // set MNU -> menu hidden
    SetMenu (m_hWnd, nullptr);
    m_menuVisible = false;
+   int_t opt     = m_pCalculator->issyntax ();
+   opt |= MNU;
+   m_pCalculator->syntax (opt);
   }
  DrawMenuBar (m_hWnd);
  // Force immediate non-client recalculation so ResizeWindow uses correct metrics

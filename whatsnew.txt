@@ -1,4 +1,20 @@
-29.05.26 (2.207)
+31.05.26 (2.208)
+- Fixed a bug where the enabled menu state was not saved.
++ A Script debugger menu item has been added. When enabled, the script debug console appears automatically 
+  and is automatically hidden after script execution. The debugger can also be enabled by calling opton(1<<32).
++ Now, if Ctrl+C is pressed while debugging a script, the script returns a User break error, which should stop 
+  any cyclic script calls, such as from the plot function.
++ You can now paste multiple lines containing an expression into the input line. All but the last line will be 
+  executed and added to the history, and the last line will be pasted into the input line. The process will 
+  continue if the calculation of the next line results in an error.
++ Now the F9 key restarts the debugged script from the beginning.
++ Now the F8 key skips the current step (goes straight to the next one).
+* An 'answer' variable has been added, containing the result of the last calculation. It is used internally, but 
+  is visible in the variable list.
+* GUI-related functions (menu(x), vars(x), etc.) are no longer passed to child calculators.
+* Calling vars(1) in the interactive script debugger now prints a list of variables to the console.  
+
+30.05.26 (2.207)
 + Pressing F7 in the debug console now allows you to view and change variable values in the script 
   being debugged. The entered expression is evaluated in the same context in which the script is running.
 * The eval("experssion") function now operates not in its own isolated context, as before, but in the 

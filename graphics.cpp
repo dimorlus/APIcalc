@@ -724,6 +724,11 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
 
      child->addfvar (params.svar, vfrom);
      float__t fvx = child->evaluate_f (params.sexpr);
+     if (isnan (fvx) && child->errt () == teSyntax)
+      {
+       errorf (pos, "%s", child->err);
+       return false;
+      }
 
      if (pass == 0)
       {

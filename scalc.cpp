@@ -187,7 +187,7 @@ void calculator::AddPredefined (void)
  // to the symbol table. It is called from the constructor after initializing
  // the hash table and copying symbols from the provided symbol table (if any).
 
- add (tsIFUNC1, "console", (void *)console);
+ add (tsGUI, "console", (void *)console);
  
  add (tsSOLVE, "solve", nullptr);
  add (tsCALC, "calc", nullptr);
@@ -209,7 +209,7 @@ void calculator::AddPredefined (void)
 
 
  add (tsIF, "if", nullptr);
- add (tsRUN, scRun, "run", nullptr, true);
+ add (tsRUN, scRun, "run", nullptr, false);
  add (tsRUN, scEval, "eval", nullptr, false);
  add (tsDATAF, dfDataf, "dataf", nullptr);
  add (tsDATAF, dfDatas, "datas", nullptr);
@@ -3343,6 +3343,17 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break;
 
+            case tsGUI: // int f(int x) (int() function)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              v_stack[v_sp - 2].ival
+                  = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
+              v_stack[v_sp - 2].tag = tvINT;
+              v_sp -= 1;
+             }
+             break;
+
             case tsIFUNC2: // int f(int x, int y) (invmod() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
@@ -3490,7 +3501,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
             break;
 
-            case tsRUN:
+            case tsRUN: //run("script.txt")
             {
               const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
@@ -3500,13 +3511,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               if (!Run (filename, sym->fidx, v_stack[v_sp - n_args - 1]))
                {
                 if (!err[0]) error (v_stack[v_sp - 1].pos, "Error run script");
+                errtype = teSyntax;
                 return result_fval = qnan;
                }
               v_sp -= n_args; 
             }
             break;
 
-            case tsCIFUNC1: // int f(this, int fn, int x) (method of calculator class with int argument,
+            case tsCIFUNC1: // int f(int x) (method of calculator class with int argument,
                             // prec() function)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
@@ -3547,6 +3559,18 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
               v_stack[v_sp - 2].ival = prec;
               v_stack[v_sp - 2].tag = tvINT;
+              v_sp -= 1;
+             }
+             break;
+
+            case tsSCRIPT: // int f(int x) (method of calculator class with int argument,
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              int_t ival = v_stack[v_sp - 1].get_int ();
+              ival = ScriptService (ival, sym->fidx);
+              v_stack[v_sp - 2].ival = ival;
+              v_stack[v_sp - 2].tag  = tvINT;
               v_sp -= 1;
              }
              break;

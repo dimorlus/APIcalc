@@ -922,7 +922,7 @@ Depending on how a child calculator handles inherited variables and registers fu
 * **Inheritance:** The child calculator automatically inherits the parent calculator's context (clones all variables available at the moment of invocation).
 * **Behavior:** The child calculator can read and modify inherited variables, as well as instantiate new variables during its execution loop.
 * **Teardown:** When the operation terminates, the entire child context is **completely destroyed**. The parent context remains unmodified; no changes or new variables leak upstream.
-* **Function Unavailability (`plot*` and `fdlg`):** High-level GUI functions are not registered in the child calculator's function lookup table. Attempting to call them produces an "Unknown function" error (identical to calling an undefined identifier like `abrakadabra(10)`).
+* **Function Unavailability** (`plot*`, `fdlg` and other GUI related functions like `help`): High-level GUI functions are not registered in the child calculator's function lookup table. Attempting to call them produces an "Unknown function" error (identical to calling an undefined identifier like `abrakadabra(10)`).
 * **`plot*`** functions are excluded because they return a bitmap (BMP) handle designed for image operations, storage, or main GUI rendering, making them meaningless inside a mathematical solver.
 * **`fdlg`** is excluded because it triggers a modal GUI file dialog, which cannot resolve input context when executed from within a nested background evaluation.
 

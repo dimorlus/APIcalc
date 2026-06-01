@@ -150,6 +150,8 @@ double scandatatime (char *tstr, char **endp);
 const char* wavelength_info(float__t wavelength_m);
 uint32_t wavelength_to_rgb(float__t wavelength_m);
 uint32_t temperature_to_rgb(float__t temp_kelvin);
+void rgb_to_color_name_extended (char *str, bool pas, int_t rgb);
+
 
 
 // Complex number functions

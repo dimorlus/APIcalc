@@ -1,3 +1,10 @@
+$ цвет rrggbb в имя.
+
+31.05.26 (2.209)
++ The BREAK operator has been added to the scripting language. In debug mode, it causes a breakpoint; in 
+  normal mode, it does nothing.
++ Added colorname/cname(RRGGBB) function, which returns the name of the specified color.
+
 31.05.26 (2.208)
 - Fixed a bug where the enabled menu state was not saved.
 + A Script debugger menu item has been added. When enabled, the script debug console appears automatically 
@@ -13,6 +20,7 @@
   is visible in the variable list.
 * GUI-related functions (menu(x), vars(x), etc.) are no longer passed to child calculators.
 * Calling vars(1) in the interactive script debugger now prints a list of variables to the console.  
+- Fixed a bug in prnf("file,""). The file was not recreated.
 
 30.05.26 (2.207)
 + Pressing F7 in the debug console now allows you to view and change variable values in the script 

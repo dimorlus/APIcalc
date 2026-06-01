@@ -437,6 +437,11 @@ bool script::execute ()
 
      switch (opcode)
       {
+      case opBREAK:
+       if (debug) br = debug (child, "", ip, sp);
+       if (debug) br = debug (child, "[%04d] BREAK\n", ip);
+       ip++;
+       break;
       case opRET:
        if (debug) br = debug(child, "[%04d] RET (sp=%d)\n", ip, sp);
        if (br != drSKIP)

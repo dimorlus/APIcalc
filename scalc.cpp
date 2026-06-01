@@ -393,6 +393,8 @@ void calculator::AddPredefined (void)
  add (tsIFUNC1, "tick", (void *)Tick);
 
  add (tsSFUNCI1, "factorize", (void *)factorize_p);
+ add (tsSFUNCI1, "colorname", (void *)rgb_to_color_name_extended);
+ add (tsSFUNCI1, "cname", (void *)rgb_to_color_name_extended);
 
  add (tsPFUNCn, "fprn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
@@ -1398,7 +1400,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          if (v_stack[0].tag == tvCOLOR)
           {
            symbol *sp = find ("showcolor");
-           if (sp && sp->tag == tsIFUNC1)
+           if (sp && sp->tag == tsGUI)
            {
              (*(int_t (*) (int_t))sp->func) (v_stack[0].get_int ());  
            }

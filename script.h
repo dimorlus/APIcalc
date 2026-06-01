@@ -74,6 +74,7 @@ class script
     opCALLZ,
     opCALLNZ,
     opRET,
+    opBREAK,
     opNUM // Total number of opcodes
    };
 
@@ -87,6 +88,7 @@ class script
     "CALLZ",  // 5
     "CALLNZ", // 6
     "RET",    // 7
+    "BREAK",  // 8
    };
 #endif
 

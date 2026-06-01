@@ -9,7 +9,7 @@ The script engine provides a simple assembly-like language with labels, jumps, c
 Lines can contain:
 - Comments: lines starting with `;` or `;;`
 - Labels: lines starting with `:` followed by a label name (up to 8 characters)
-- Operators: JMP, JZ, JNZ, CALL, CALLZ, CALLNZ, RET
+- Operators: JMP, JZ, JNZ, CALL, CALLZ, CALLNZ, RET, BREAK
 - Expressions: any valid calculator expression
 
 Multiple statements can be placed on one line separated by `;`
@@ -86,6 +86,9 @@ RET
 
 ### RET
 Return from subroutine. If called from the main script level (stack is empty), exits the script.
+
+### BREAK
+In debug mode, it causes a breakpoint; in normal mode, it does nothing.
 
 ## Expression Evaluation
 

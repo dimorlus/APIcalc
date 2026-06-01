@@ -438,7 +438,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsCOLOR,    // 41  color(r,g,b) operator for creating color values 
  tsSCRIPT,   // 42  script service finction
  tsGUI,      // 43  GUI service functions
- tsNUM       // 43  Total number of symbol types, must be the last in the list
+ tsNUM       // 45  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult

@@ -139,8 +139,15 @@ void calculator::copy_symbols (symbol **symtab, uint64_t mask)
                 new_symbol->func = strdup((char *)sp->func); // Copy UDF
                 //register_mem (new_symbol->func); // Register UDF for cleanup
               }
+            else 
+            if (sp->tag == tsTBLFN && sp->func)
+             {
+              tablefn_data *tbl = nullptr; 
+              if (dup_tbl_fn (&tbl, (tablefn_data *)sp->func) && tbl)
+                new_symbol->func = (char*) tbl; // Copy table function data structure
+             }                 
             else
-                new_symbol->func = sp->func; // Copy function pointer as is (static functions)
+             new_symbol->func = sp->func; // Copy function pointer as is (static functions)
             
             new_symbol->val.tag = sp->val.tag;
             new_symbol->val.ival = sp->val.ival;
@@ -203,7 +210,14 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
           {
            sf_free (sp->func, ptMALLOC); // Free function name using sf_free to ensure it's unregistered
            sp->func = nullptr;
-          }    
+          }   
+         if (sp->tag == tsTBLFN && sp->func)
+          {
+           tablefn_data *tbl = (tablefn_data *)sp->func;
+           if (tbl->data) free (tbl->data); 
+           free (tbl); // Free table function data structure
+           sp->func = nullptr;
+          }
          sp->name[0] = '\0';
         }
        delete sp;
@@ -438,12 +452,296 @@ symbol *calculator::find (const char *name)
  return nullptr;
 }
 
+#ifdef SUPPORT_TABLEFN
+int calculator::find_tbl_fn (const char *expr, const char **endp)
+{
+ const int NUM               = 3;
+ const char *const tfns[NUM] = { "TABLE", "LINEAR", "SPLINE" };
+ const t_appr tfidx[NUM]     = { ap_linear, ap_linear, ap_spline };
+ const char *p               = expr;
+ // Skip leading whitespace
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+ // Skip (...) if present to allow matching functions in nested expressions
+ if (*p == '(')  while (*p && *p != ')') p++; // Skip until closing parenthesis
+ if (*p == ')') p++;         // Skip closing parenthesis if we stopped at one
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+ const char *start = p;
+
+ for (int i = 0; i < NUM; i++)
+  {
+   const char *opcode = tfns[i];
+   p                  = start;
+   bool match         = true;
+
+   // Compare opcode character by character, case-insensitive
+   while (*opcode)
+    {
+     if (toupper (*p & 0x7f) != *opcode)
+      {
+       match = false;
+       break;
+      }
+     p++;
+     opcode++;
+    }
+   if (match && (*p == '('))
+    {
+     *endp = p;       // Set end pointer to the position after the matched opcode
+     return tfidx[i]; // Return the corresponding function index if a match is found
+    }
+  }
+ *endp = nullptr; // Set end pointer to nullptr if no match is found
+ return -1;       // Return -1 if no match is found
+}
+
+int calculator::scan_tbl_fn (const char *expr, int fn_idx, tablefn_data **tbl)
+{
+ //const char *endp;
+ //int fn_idx = find_tbl_fn (expr, &endp);
+ if (fn_idx < 0) return -1; // No match found
+
+ // endp points to '(' after function name
+ const char *p = expr + 1; // Skip '('
+
+ // Skip whitespace after '('
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+ char fname[STRBUF]    = { 0 };
+ char mask[STRBUF]     = { 0 };
+ char fnamebuf[STRBUF] = { 0 };
+
+ // ---- Parse filename (may be quoted with " or ') ----
+ char quote = 0;
+ if (*p == '"' || *p == '\'')
+  {
+   quote = *p++;
+  }
+
+ int fname_len = 0;
+ while (*p && fname_len < STRBUF - 1)
+  {
+   if (quote)
+    {
+     // Quoted string: stop at matching quote
+     if (*p == quote)
+      {
+       p++; // Skip closing quote
+       break;
+      }
+     fname[fname_len++] = *p++;
+    }
+   else
+    {
+     // Unquoted: stop at comma, closing paren, or whitespace
+     if (*p == ',' || *p == ')' || isspace ((unsigned char)*p & 0x7f)) break;
+     fname[fname_len++] = *p++;
+    }
+  }
+ fname[fname_len] = '\0';
+
+ // Skip whitespace after filename
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+ // ---- Parse optional comma and mask ----
+ if (*p == ',')
+  {
+   p++; // Skip comma
+
+   // Skip whitespace after comma
+   while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+   // Parse mask (may be quoted with " or ')
+   quote = 0;
+   if (*p == '"' || *p == '\'')
+    {
+     quote = *p++;
+    }
+
+   int mask_len = 0;
+   while (*p && mask_len < STRBUF - 1)
+    {
+     if (quote)
+      {
+       // Quoted string: stop at matching quote
+       if (*p == quote)
+        {
+         p++; // Skip closing quote
+         break;
+        }
+       mask[mask_len++] = *p++;
+      }
+     else
+      {
+       // Unquoted: stop at closing paren or whitespace
+       if (*p == ')' || isspace ((unsigned char)*p & 0x7f)) break;
+       mask[mask_len++] = *p++;
+      }
+    }
+   mask[mask_len] = '\0';
+  }
+
+ // Skip whitespace before closing paren
+ while (*p && isspace ((unsigned char)*p & 0x7f)) p++;
+
+ // Expect closing parenthesis
+ if (*p != ')')
+  {
+   error ("expected ')' in table function call");
+   return -1;
+  }
+
+ // Normalize path (convert relative to absolute, handle separators)
+ NormalizePath (fname, fnamebuf, STRBUF);
+
+ // Load table function from file
+ *tbl = tablefn (fnamebuf, mask, (t_appr)fn_idx);
+ if (!*tbl) return -1; // Error already set by tablefn
+
+ return fn_idx;
+}
+
+symbol *calculator::addTF (const char *name, const char *expr)
+{
+ symbol *sp = nullptr;
+ tablefn_data *tbl = nullptr;
+ if (!expr) return nullptr;
+ err[0] = '\0'; 
+ const char *endp = nullptr;
+ int fn_idx = find_tbl_fn (expr, &endp);
+ if ((fn_idx < 0)||!endp)  return nullptr; 
+ int n = scan_tbl_fn (endp, fn_idx, &tbl);
+ if ((n < 0)||!tbl) return nullptr; // If the expression is not a valid table function call, return an error
+ sp = find (name);
+ if (sp)
+  {
+   //error ("Duplicate symbol name");
+   return nullptr; // If a symbol with the same name already exists, return an error
+  }
+ // If no existing symbol is found, add the new user function to the hash table
+ unsigned h = string_hash_function (name) % hash_table_size;
+ sp         = new symbol;
+ sp->tag    = tsTBLFN;
+ sp->func   = (char *)tbl;
+ strcpy (sp->name, name);
+ sp->val.tag   = tvTBLFN;
+ sp->val.ival  = 0;
+ sp->val.fval  = ((float__t)0.0L);
+ sp->val.imval = ((float__t)0.0L);
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
+ sp->next      = hash_table[h];
+ hash_table[h] = sp;
+
+ return sp;
+}
+
+symbol *calculator::cpyTFptr (const char *name, tablefn_data *tbl)
+{
+ symbol *sp = nullptr;
+ tablefn_data *ntbl = nullptr;
+ if (!tbl) return nullptr;
+ sp = find (name);
+ if (sp)
+  {
+   //error ("Duplicate symbol name");
+   return nullptr; // If a symbol with the same name already exists, return an error
+  }
+ // If no existing symbol is found, add the new user function to the hash table
+ if (!dup_tbl_fn (&ntbl, tbl)) return nullptr; // Duplicate the table function data structure to ensure it's owned by this symbol
+                  
+ unsigned h = string_hash_function (name) % hash_table_size;
+ sp         = new symbol;
+ sp->tag    = tsTBLFN;
+ sp->func   = (char *)ntbl;
+ strcpy (sp->name, name);
+ sp->val.tag   = tvTBLFN;
+ sp->val.ival  = 0;
+ sp->val.fval  = ((float__t)0.0L);
+ sp->val.imval = ((float__t)0.0L);
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
+ sp->next      = hash_table[h];
+ hash_table[h] = sp;
+ return sp;
+}
+
+symbol *calculator::addTFptr (const char *name, tablefn_data *tbl)
+{
+ symbol *sp = nullptr;
+ if (!tbl) return nullptr;
+ sp = find (name);
+ if (sp)
+  {
+   if (sp->tag == tsTBLFN && sp->func)
+    { // Redefine existing table function. Free old table function data and replace with new one
+     tablefn_data *old_tbl = (tablefn_data *)sp->func;
+     if (old_tbl->data)free (old_tbl->data); // Free old table function data 
+     free (old_tbl);                         // Free old table function data structure
+     sp->func = (char *)tbl; // Update symbol to point to the new table function data structure
+     return sp; // Return the updated symbol
+    }
+   else
+   if (sp->tag == tsVARIABLE)
+    {
+     if (sp->val.tag == tvERR)
+      {
+       sp->tag  = tsTBLFN;
+       sp->val.tag = tvTBLFN;
+       sp->func    = (char *)tbl;
+       return sp;
+      }
+    }
+   return nullptr; // If a symbol with the same name already exists, return an error
+  }
+ // If no existing symbol is found, add the new user function to the hash table owned by this symbol
+
+ unsigned h = string_hash_function (name) % hash_table_size;
+ sp         = new symbol;
+ sp->tag    = tsTBLFN;
+ sp->func   = (char *)tbl;
+ strcpy (sp->name, name);
+ sp->val.tag   = tvTBLFN;
+ sp->val.ival  = 0;
+ sp->val.fval  = ((float__t)0.0L);
+ sp->val.imval = ((float__t)0.0L);
+ sp->val.sval  = nullptr;
+ sp->val.mcols = 0;
+ sp->val.mrows = 0;
+ sp->val.mval  = nullptr;
+ sp->next      = hash_table[h];
+ hash_table[h] = sp;
+ return sp;
+}
+#endif
+
 // Add a user-defined function to the hash table, or return an error if it already exists
 symbol *calculator::addUF (const char *name, const char *expr)
 {
+ tablefn_data *tbl = nullptr;
  if (!expr) return nullptr;
  symbol *sp = find (name);
- 
+ err[0] = '\0';
+ const char *endp = nullptr;
+ int fn_idx  = find_tbl_fn (expr, &endp);
+ if (fn_idx >= 0 && endp)
+  {
+   int n = scan_tbl_fn (endp, fn_idx, &tbl);
+   if ((n >= 0) && tbl)
+    {
+     // If the expression is a valid table function call, add it as a table function instead of a
+     // user function
+     sp = addTFptr (name, tbl);
+     if (sp) return sp; // If the table function was added successfully, return it
+     if (tbl->data) free (tbl->data); 
+     free (tbl);
+     return nullptr;
+    }
+  }
  if (sp && sp->tag == tsUFUNCT)
   {
    // redefine user function.
@@ -456,8 +754,17 @@ symbol *calculator::addUF (const char *name, const char *expr)
     }
    return sp;
   }
- if (sp) 
-  return nullptr; // If a symbol with the same name exists but is not a user function, return an error
+ else if (sp && sp->tag == tsVARIABLE)
+  {
+   if (sp->val.tag == tvERR)
+    {
+     sp->tag     = tsUFUNCT;
+     sp->func    = strdup (expr);
+     sp->val.tag = tvUFUNCT;
+     return sp;
+    }
+  }
+ if (sp) return nullptr; // If a symbol with the same name exists but is not a user function, return an error
 
  // If no existing symbol is found, add the new user function to the hash table
  unsigned h    = string_hash_function (name) % hash_table_size;
@@ -646,6 +953,11 @@ void calculator::import_child (calculator *child, uint32_t mask)
          // Import user function into parent calculator
          addUF (sp->name, (char*)sp->func);
         }
+       if ((sp->tag == tsTBLFN) && (mask & (1U << tvTBLFN))) // Check if the table function matches the import mask
+         {
+          // Import table function into parent calculator
+          cpyTFptr (sp->name, (tablefn_data *)sp->func);
+         }
        sp = sp->next;
       }
      while (sp);

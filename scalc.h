@@ -303,6 +303,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvPLOT,
  tvBMP,
  tvCOLOR,
+ tvTBLFN,
 };
 
 #define MSK_ERR     (1 << tvERR)     //  0 Mask for error values
@@ -323,6 +324,7 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_BMP     (1 << tvBMP)     // 15 Mask for bitmap operator values
 #define MSK_INVERCE (1 << tvINVERSE) // 16 Mask for inverse operator values
 #define MSK_COLOR   (1 << tvCOLOR)   // 17 Mask for color operator values
+#define MSK_TBLFN   (1 << tvTBLFN)   // 18 Mask for table function operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
 #define MSK_ALLVAR (MSK_SCALAR | MSK_COMPLEX | MSK_STR | MSK_MATRIX | MSK_BMP | MSK_COLOR | MSK_UFUNCT)                                                                                    \
@@ -439,6 +441,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsCOLOR,    // 41  color(r,g,b) operator for creating color values 
  tsSCRIPT,   // 42  script service finction
  tsGUI,      // 43  GUI service functions
+ tsTBLFN,    // 44  table function for creating tables of values (tblfn)
  tsNUM       // 45  Total number of symbol types, must be the last in the list
 };
 
@@ -499,6 +502,7 @@ enum t_br_result
 #define MASK_INVERSE    (1ULL << tsINVERSE)     // inverse operator for calculating the inverse of a function (inverse)
 #define MASK_SCRIPT     (1ULL << tsSCRIPT)      // Script service
 #define MASK_GUI        (1ULL << tsGUI)         // GUI service
+#define MASK_TBLFN      (1ULL << tsTBLFN)       // table function for creating tables of values (tblfn)
 
 // default mask for user defined functions, excludes variables
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI))) 
@@ -936,6 +940,40 @@ struct mxresult_t
  float__t *mval; // Matrix values (pointer to array of floats)
 };
 
+#define SUPPORT_TABLEFN // Enable support for table functions (interpolation)
+
+#ifdef SUPPORT_TABLEFN
+struct datapoint
+{
+ double x;
+ double y;
+};
+
+enum t_appr
+{
+ ap_linear,
+ ap_spline
+};
+
+struct tablefn_data
+{
+ int num;         // Number of data points
+ t_appr appr;     // Approximation type (linear/spline)
+ datapoint *data; // Array of data points (sorted by x)
+
+ // === Optimization: cached search state ===
+ int last_idx;  // Last used interval index (hint for next search)
+ double last_x; // Last queried x value
+
+ // === Precomputed bounds (for fast range check) ===
+ double x_min; // Minimum x value (data[0].x)
+ double x_max; // Maximum x value (data[num-1].x)
+
+ // === Statistics (optional, for debugging) ===
+ int eval_count; // Number of evaluations performed
+ int cache_hits; // Number of times last_idx was useful
+};
+#endif
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
 typedef int (*debug_callback_t) (void *context, const char *fmt, ...);// Debug callback function type
 
@@ -1234,6 +1272,17 @@ class calculator // calculator represents the main class for the expression calc
 // Statistical functions 
  float__t StatFn (const char *fname, const char *msk, sfntype sfn, float__t x=qnan);
  double Median (const char *fname, const char *msk, double totalN, double minV, double maxV);
+
+ #ifdef SUPPORT_TABLEFN
+ tablefn_data *tablefn (const char *fname, const char *msk, t_appr appr);
+ float__t tablefn_eval (tablefn_data *tbl, float__t x);
+ int find_tbl_fn (const char *name, const char **endp);
+ int scan_tbl_fn (const char *expr, int fn_idx, tablefn_data **tbl);
+ symbol *addTF (const char *name, const char *expr);
+ symbol *addTFptr (const char *name, tablefn_data *tbl);
+ symbol *cpyTFptr (const char *name, tablefn_data *tbl);
+ bool dup_tbl_fn (tablefn_data **dst, tablefn_data *src);
+ #endif
 
  // Script execution
  friend class script; // Declare script as a friend class to allow it to access private members of

@@ -1927,4 +1927,366 @@ t_mresult calculator::matrixuno (value &res, value &operand, t_operator cop)
  return mrSKIP;
 }
 #pragma endregion
-//---------------------------------------------------------------------------
+
+
+#ifdef SUPPORT_TABLEFN
+// struct datapoint
+//{
+//  double x;
+//  double y;
+// };
+//
+// enum t_appr
+//{
+//  ap_linear,
+//  ap_spline
+// };
+//
+// struct tablefn_data
+//{
+//  int num;
+//  t_appr appr;     // 0 - linear, 1 - spline
+//  datapoint *data; // Array of data points for interpolation
+// };
+
+// Bubble sort for datapoint by x (for BCB6 compatibility)
+static void sort_datapoints (datapoint *data, int count)
+{
+ for (int i = 0; i < count - 1; i++)
+  {
+   for (int j = 0; j < count - i - 1; j++)
+    {
+     if (data[j].x > data[j + 1].x)
+      {
+       // Swap
+       datapoint temp = data[j];
+       data[j]        = data[j + 1];
+       data[j + 1]    = temp;
+      }
+    }
+  }
+}
+
+// Remove duplicates by x (keep the average y value)
+static int remove_duplicates (datapoint *data, int count)
+{
+ if (count <= 1) return count;
+
+ int write_idx = 0;
+ int read_idx  = 0;
+
+ while (read_idx < count)
+  {
+   double x_curr = data[read_idx].x;
+   double y_sum  = data[read_idx].y;
+   int dup_count = 1;
+
+   // Find all duplicates with the same x
+   while (read_idx + 1 < count && data[read_idx + 1].x == x_curr)
+    {
+     read_idx++;
+     y_sum += data[read_idx].y;
+     dup_count++;
+    }
+
+   // Write the average value
+   data[write_idx].x = x_curr;
+   data[write_idx].y = y_sum / dup_count;
+
+   write_idx++;
+   read_idx++;
+  }
+
+ return write_idx; // new number of points
+}
+
+tablefn_data *calculator::tablefn (const char *fname, const char *msk, t_appr appr)
+{
+ tablefn_data *tbl = (tablefn_data *)malloc (sizeof (tablefn_data));
+ if (!tbl)
+  {
+   error ("memory allocation failed");
+   return nullptr;
+  }
+
+ FILE *f   = nullptr;
+ int count = 0;
+
+ // First pass: count valid points
+ f = fopen (fname, "r");
+ if (f)
+  {
+   char line[1024];
+   while (fgets (line, sizeof (line), f))
+    {
+     double xd = qnan, yd = qnan;
+     if (strscan (line, msk, 2, &xd, &yd) == 2)
+      {
+       if (!(isnan (xd) || isnan (yd))) count++;
+      }
+    }
+   fclose (f);
+  }
+ else
+  {
+   error ("cannot open data file");
+   free (tbl);
+   return nullptr;
+  }
+
+ if (count == 0)
+  {
+   error ("no valid data points found");
+   free (tbl);
+   return nullptr;
+  }
+
+ // Allocate memory for data
+ tbl->data = (datapoint *)malloc (count * sizeof (datapoint));
+ if (!tbl->data)
+  {
+   error ("memory allocation failed");
+   free (tbl);
+   return nullptr;
+  }
+
+ // Second pass: load data
+ f = fopen (fname, "r");
+ if (f)
+  {
+   char line[1024];
+   int idx = 0;
+   while (fgets (line, sizeof (line), f) && idx < count)
+    {
+     double xd = qnan, yd = qnan;
+     if (strscan (line, msk, 2, &xd, &yd) == 2)
+      {
+       if (!(isnan (xd) || isnan (yd)))
+        {
+         tbl->data[idx].x = xd;
+         tbl->data[idx].y = yd;
+         idx++;
+        }
+      }
+    }
+   fclose (f);
+  }
+ else
+  {
+   error ("cannot reopen data file");
+   free (tbl->data);
+   free (tbl);
+   return nullptr;
+  }
+
+ // Sort data by x (important for interpolation!)
+ sort_datapoints (tbl->data, count);
+
+ // Remove duplicates (collapse, averaging y)
+ count = remove_duplicates (tbl->data, count);
+
+ // Check minimum number of points
+ if (count < 2)
+  {
+   error ("at least 2 unique points required");
+   free (tbl->data);
+   free (tbl);
+   return nullptr;
+  }
+
+ tbl->num  = count;
+ tbl->appr = appr;
+
+ // === Initialize optimization fields ===
+ tbl->last_idx   = 0;                      // Start from first interval
+ tbl->last_x     = qnan;                   // No previous query
+ tbl->x_min      = tbl->data[0].x;         // Precompute min
+ tbl->x_max      = tbl->data[count - 1].x; // Precompute max
+ tbl->eval_count = 0;                      // Statistics
+ tbl->cache_hits = 0;
+
+ return tbl;
+}
+
+float__t calculator::tablefn_eval (tablefn_data *tbl, float__t x)
+{
+ if (!tbl)
+  {
+   error ("invalid table function data");
+   return qnan;
+  }
+
+ datapoint *data = tbl->data;
+ if (!data)
+  {
+   error ("table function data is null");
+   return qnan;
+  }
+
+ int num = tbl->num;
+ if (num < 2)
+  {
+   error ("table function requires at least 2 points");
+   return qnan;
+  }
+
+ // === Fast range check using precomputed bounds ===
+ if (x < tbl->x_min || x > tbl->x_max)
+  {
+   return qnan; // Out of range
+  }
+
+ tbl->eval_count++; // Statistics
+
+ // === Smart interval search with caching ===
+ int i;
+
+ // Try cached interval first (locality of reference)
+ if (!isnan (tbl->last_x) && tbl->last_idx >= 0 && tbl->last_idx < num - 1)
+  {
+   int idx = tbl->last_idx;
+
+   // Check if x is in the same interval as last time
+   if (x >= data[idx].x && x <= data[idx + 1].x)
+    {
+     i = idx;
+     tbl->cache_hits++;
+     goto interpolate; // Fast path!
+    }
+
+   // Check adjacent intervals (common for sequential access)
+   if (idx > 0 && x >= data[idx - 1].x && x < data[idx].x)
+    {
+     i = idx - 1;
+     tbl->cache_hits++;
+     goto interpolate;
+    }
+   if (idx + 2 < num && x > data[idx + 1].x && x <= data[idx + 2].x)
+    {
+     i = idx + 1;
+     tbl->cache_hits++;
+     goto interpolate;
+    }
+  }
+
+ // Fallback to binary search if cache miss
+ {
+  int left  = 0;
+  int right = num - 1;
+  while (right - left > 1)
+   {
+    int mid = (left + right) / 2;
+    if (data[mid].x <= x)
+     left = mid;
+    else
+     right = mid;
+   }
+  i = left;
+ }
+
+interpolate:
+ // Update cache
+ tbl->last_idx = i;
+ tbl->last_x   = x;
+
+ // Now data[i].x <= x <= data[i+1].x
+ double x0 = data[i].x;
+ double y0 = data[i].y;
+ double x1 = data[i + 1].x;
+ double y1 = data[i + 1].y;
+
+ if (tbl->appr == ap_linear)
+  {
+   // Linear interpolation
+   double t = (x - x0) / (x1 - x0);
+   return (float__t)(y0 + (y1 - y0) * t);
+  }
+ else if (tbl->appr == ap_spline)
+  {
+   // Cubic Hermite spline (Catmull-Rom) interpolation
+   double xm1, ym1, x2, y2;
+
+   if (i > 0)
+    {
+     xm1 = data[i - 1].x;
+     ym1 = data[i - 1].y;
+    }
+   else
+    {
+     xm1 = x0 - (x1 - x0);
+     ym1 = y0 - (y1 - y0);
+    }
+
+   if (i + 2 < num)
+    {
+     x2 = data[i + 2].x;
+     y2 = data[i + 2].y;
+    }
+   else
+    {
+     x2 = x1 + (x1 - x0);
+     y2 = y1 + (y1 - y0);
+    }
+
+   double m0 = (y1 - ym1) / (x1 - xm1);
+   double m1 = (y2 - y0) / (x2 - x0);
+
+   double t  = (x - x0) / (x1 - x0);
+   double t2 = t * t;
+   double t3 = t2 * t;
+
+   double h00 = 2.0 * t3 - 3.0 * t2 + 1.0;
+   double h10 = t3 - 2.0 * t2 + t;
+   double h01 = -2.0 * t3 + 3.0 * t2;
+   double h11 = t3 - t2;
+
+   double dx = x1 - x0;
+
+   return (float__t)(h00 * y0 + h10 * dx * m0 + h01 * y1 + h11 * dx * m1);
+  }
+ else
+  {
+   error ("unknown approximation type");
+   return qnan;
+  }
+}
+
+bool calculator::dup_tbl_fn (tablefn_data **dst, tablefn_data *src)
+{
+ if (!src || !src->data || src->num <= 0)
+  {
+   error ("invalid source table function data");
+   return false;
+  }
+
+ *dst = (tablefn_data *)malloc (sizeof (tablefn_data));
+ if (!*dst)
+  {
+   error ("memory allocation failed");
+   return false;
+  }
+
+ // Copy all fields
+ (*dst)->num        = src->num;
+ (*dst)->appr       = src->appr;
+ (*dst)->last_idx   = 0; // Reset cache for new instance
+ (*dst)->last_x     = qnan;
+ (*dst)->x_min      = src->x_min;
+ (*dst)->x_max      = src->x_max;
+ (*dst)->eval_count = 0; // Reset statistics
+ (*dst)->cache_hits = 0;
+
+ (*dst)->data = (datapoint *)malloc (src->num * sizeof (datapoint));
+ if (!(*dst)->data)
+  {
+   error ("memory allocation failed");
+   free (*dst);
+   *dst = nullptr;
+   return false;
+  }
+
+ memcpy ((*dst)->data, src->data, src->num * sizeof (datapoint));
+ return true;
+}
+#endif
+    //---------------------------------------------------------------------------

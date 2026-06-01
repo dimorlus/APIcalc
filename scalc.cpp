@@ -1232,6 +1232,15 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
  PlotReset ();
  clear_v_stack (); // Clear the value stack before evaluation
  
+#ifdef SUPPORT_TABLEFN_TEST
+ int n, nn;
+ const char *endp;
+ value tfn;
+ //n = find_tbl_fn ("linear(\"ntc.txt\",\"01\")", &endp);
+ n = scan_tbl_fn ("linear(\"ntc.txt\",\"01\")", tfn);
+ printf ("%d", n);
+#endif
+
  if (!expr) return qnan;
 
  o_stack[o_sp++] = toBEGIN;
@@ -3932,6 +3941,17 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               errpos  = 1;
               errtype = teSyntax;
               return result_fval = qnan;
+             }
+             break;
+
+            case tsTBLFN: // table function
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              errtype = teMath;
+              v_stack[v_sp - 2].fval = tablefn_eval ((tablefn_data *)sym->func, v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 2].tag = tvFLOAT;
+              v_sp -= 1;
              }
              break;
 

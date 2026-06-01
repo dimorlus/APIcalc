@@ -181,6 +181,8 @@ void calculator::save_vars_mem (void)
    return dup;
   }
 
+
+
 bool calculator::dupvar (value &dst, value &src) 
 {
  dst.tag = src.tag;

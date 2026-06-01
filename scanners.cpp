@@ -915,7 +915,7 @@ t_operator calculator::braces (void) //{...}
      // Add user function to symbol table
      if (!addUF (fname, &sbuf[spos]))
       {
-       error ("Duplicate name");
+       //error ("Duplicate name");
        return toERROR;
       }
     }

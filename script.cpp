@@ -355,7 +355,7 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
     }
    else
     {
-     if (current_ms - last_gui_check > 100)
+     if (current_ms - last_gui_check > 1000)
       {
        last_gui_check = current_ms;
        Sleep (1); // Sleep briefly to allow GUI to remain responsive
@@ -670,7 +670,8 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      return false; // empty script name
  }
 
- calculator* child = new calculator(scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ calculator *child = new calculator (scfg | SNAN | NBLK, hash_table,
+                                     (MASK_DEFAULT | MASK_VARIABLE | MASK_PLOT), deep);
  if (!child)
  {
      errorf(pos, "Out of memory");

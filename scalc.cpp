@@ -157,6 +157,7 @@ calculator::calculator (int_t cfg, symbol **symtab, int_t copyMask, int deep)
  memset (v_stack, 0, sizeof v_stack);
 
  fprec         = 16; // Default precision for output formatting
+ timeout       = 1000; // Default timeout for long calculations in milliseconds
  c_imaginary   = 'i';
  Randomize ();
  srand (static_cast<unsigned int> (time (nullptr)));
@@ -917,7 +918,7 @@ t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
 #ifdef NDEBUG
  uint64_t current_ms = GetTickCount64 ();
 
- if (current_ms - init_ms > 1000)
+ if (current_ms - init_ms > timeout)
   {
    if (!EscFn)
     {
@@ -931,7 +932,7 @@ t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
     }
    else
     {
-     if (current_ms - last_gui_check > 100)
+     if (current_ms - last_gui_check > 1000)
       {
        last_gui_check = current_ms;
        Sleep (1); // Sleep briefly to allow GUI to remain responsive
@@ -3553,6 +3554,11 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (prec < 0) prec = 0;
                 if (prec > MAX_PREC) prec = MAX_PREC;
                 set_fprec (prec);
+               break;
+               case ccTimeout:
+                if (prec < 0) prec = 0;
+                if (prec > MAX_TIMEOUT) prec = MAX_TIMEOUT;
+                timeout = prec;
                break;
                default:
                 error (v_stack[v_sp - 1].pos, "Unknown calculator method");

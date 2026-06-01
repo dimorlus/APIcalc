@@ -486,7 +486,6 @@ void __fastcall TCalcForm::FormCreate(TObject *Sender)
  ccalc->addfn("vars", (void*)(int_t(*)(int_t))vars);
  ccalc->addfn("opacity", (void*)(int_t(*)(int_t))fOpacity);
  ccalc->addfn("binwide", (void*)(int_t(*)(int_t))BinWide);
- ccalc->addfn2("home", (void*)(float__t(*)(float__t, float__t))home);
  //AlphaBlend = true;
  //AlphaBlendValue = opacity;
 

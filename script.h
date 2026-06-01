@@ -33,6 +33,7 @@ enum opcodes
  opCALLZ,
  opCALLNZ,
  opRET,
+ opBREAK,
  opNUM // Total number of opcodes
 };
 
@@ -45,6 +46,7 @@ const char *const ops[opNUM] = {
  "CALLZ",  // 5
  "CALLNZ", // 6
  "RET",    // 7
+ "BREAK"   // 8
 };
 #endif
 

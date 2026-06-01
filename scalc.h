@@ -330,7 +330,8 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MAX_R 7
 #define MAX_C 7
 
-#define TIMEOUT 10000 // Timeout in milliseconds for long calculations
+#define TIMEOUT 60000 // Timeout in milliseconds for long calculations
+#define MAX_TIMEOUT 120000
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {
@@ -635,6 +636,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  ccOpt,     // Set the calculator's options (e.g., output format, angle mode, etc.)
  ccOptOn,   // Set specific options (e.g., enable/disable features) without affecting other options
  ccOptOff,  // Clear specific options without affecting other options
+ ccTimeout,
 
  scRun,    // Run a script file containing calculator commands
  scEval,   // Evaluate an expression from a string
@@ -669,7 +671,7 @@ class value // value represents a value in the calculator, which can be an integ
  symbol *var; // Uses for variables and functions
  int pos;     // Position in expression for error reporting
  
- int_t ival; // Integer value
+ int_t ival;     // Integer value
  float__t fval;  // Float value or real part of complex value
  float__t imval; // Imaginary part of complex value
  char *sval;     // String value
@@ -999,7 +1001,7 @@ class calculator // calculator represents the main class for the expression calc
  terr errtype;
  int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
- 
+ int timeout;        // Timeout for long calculations in milliseconds
  float__t Plot_Ymax; // Maximum Y value for plotting, used for autoscaling
  float__t Plot_Ymin; // Minimum Y value for plotting, used for autoscaling
  float__t Plot_Xmax; // Maximum X value for plotting, used for autoscaling

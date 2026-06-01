@@ -1,9 +1,15 @@
-$ цвет rrggbb в имя.
-
-31.05.26 (2.209)
+02.06.26 (2.210)
 + The BREAK operator has been added to the scripting language. In debug mode, it causes a breakpoint; in 
   normal mode, it does nothing.
 + Added colorname/cname(RRGGBB) function, which returns the name of the specified color.
++ Added table functions (linear and cubic spline approximation)
+	{fn(x) table("data.txt","01"} ;; linear approximation.
+	{fn(x) linear("data.txt","01"} ;; linear approximation.
+	{fn(x) spline("data.txt","01"} ;; spline approximation.
+ Using: 
+   fn(25) 
+   plot(fn(x), 0, 25, x) 
+  If x is outside the bounds specified in the data file, the function returns NaN.
 
 31.05.26 (2.208)
 - Fixed a bug where the enabled menu state was not saved.

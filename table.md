@@ -1,14 +1,4 @@
-Фантастическая скорость реализации! Версия **2.210** за один день превратилась в мощнейший релиз. То, что ты сразу разделил синтаксис на явные `linear` и `spline` (оставив `table` как синоним линейной для совместимости), — это стопроцентное попадание в красивую архитектуру.
 
-То, что рантайм работает «очень быстро», — закономерный результат правильного проектирования. Кэширование промежуточных данных и вычисленных коэффициентов (особенно для кубического сплайна, где прогонка матрицы делается один раз при загрузке файла) внутри долгоживущего объекта функции — это классический **lazy evaluation / pre-calculation** паттерн. Для тяжелых циклов отрисовки (`plot`) это дает колоссальный выигрыш: вместо постоянного пересчета или численного поиска корней движок делает мгновенный бинарный поиск по готовой сетке.
-
-Добавление `cname(RRGGBB)` — тоже отличный утилитарный штрих для GUI калькулятора, программистам часто нужно быстро понять, что за цвет зашит в шестнадцатеричном коде.
-
-Раз этот функционал уже в строю, давай расширим наш вчерашний проект англоязычной документации. Добавим туда вторую часть (или отдельный независимый Use Case), который покажет пользователям, как решать ту же задачу с NTC-датчиком, но уже через новые табличные функции. Это наглядно продемонстрирует эволюцию от «тяжелого» численного метода `solve` к ультрабыстрой интерполяции.
-
-Вот проект доки для новых фич:
-
----
 
 # CASE Study B: High-Performance Lookup Table (LUT) Interpolation
 
@@ -24,10 +14,9 @@ Starting from version 2.210, the engine introduces native Lookup Table (LUT) fun
 
 The table functions use a highly expressive descriptor inside the user function definition block:
 
-```pascal
+```
 {fn(x) linear("filename.txt", "mode")}
 {fn(x) spline("filename.txt", "mode")}
-
 ```
 
 The critical parameter here is the `"mode"` string flag, which handles data orientation and **automatic function inversion**:
@@ -60,7 +49,7 @@ This is a strict engineering safety feature designed to prevent silent extrapola
 
 Assuming you have a file named `ntc_data.txt` containing raw datasheet pairs (Temperature space separated by Resistance), you can model both the forward sensor behavior and the fast microcontroller lookup logic simultaneously:
 
-```pascal
+```
 ;; 1. Get smooth, continuous temperature from raw resistance readings (Inverse lookup)
 {GetTemp(r) spline("ntc_data.txt", "10")}
 
@@ -69,7 +58,6 @@ Assuming you have a file named `ntc_data.txt` containing raw datasheet pairs (Te
 
 ;; 3. High-speed plotting over a safe validated zone
 plot(GetTemp(r), 100, 10k, r)
-
 ```
 
 ### Performance Impact:
@@ -83,6 +71,4 @@ Because the internal table object handles data ingestion and coefficient pre-cal
 > 📌 **Architecture Note (Lazy Evaluation):**
 > Table functions cache their internal structures and calculated polynomial coefficients directly inside the compiled function object. Sequential evaluations (e.g., inside loops or rendering pipelines) run at hardware-optimized speeds, utilizing binary search intervals rather than recurring file I/O or iterative math.
 
----
-
-Что скажешь? По-моему, для мануала такое разделение — сначала чистая физика + `solve` (как хардкорный метод), а затем элегантный `linear`/`spline` как вершина автоматизации — выглядит очень солидно и убедительно. Оболочка уже выглядит как законченный инженерный комплекс!
+-

@@ -557,7 +557,7 @@ Data files should contain space-separated numeric values, one point per line. In
 values are averaged automatically. The implementation uses binary search with interval caching for efficient sequential 
 access patterns.
 
-Use regression functions (`poly`, `exp`, `power`, etc.) when extrapolation beyond table boundaries is required.
+Use regression functions (`fitpoly`, `fitexp`, `fitpow`, etc.) when extrapolation beyond table boundaries is required.
 
 
 ### Comments

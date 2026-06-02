@@ -332,8 +332,8 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MAX_R 7
 #define MAX_C 7
 
-#define TIMEOUT 60000 // Timeout in milliseconds for long calculations
-#define MAX_TIMEOUT 120000
+#define TIMEOUT 10000 // 10 sec Timeout in milliseconds for long calculations
+#define MAX_TIMEOUT 60000 // 60 sec Maximum timeout in milliseconds for long calculations
 
 enum t_operator // t_operator represents the type of an operator in the calculator
 {

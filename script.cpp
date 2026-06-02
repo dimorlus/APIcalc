@@ -341,7 +341,7 @@ t_br_result script::check_break (uint64_t init_ms, uint64_t last_gui_check)
 #ifdef NDEBUG
  uint64_t current_ms = GetTickCount64 ();
  if (debug) return brNONE;
- if (current_ms - init_ms > 1000)
+ if (current_ms - init_ms > TIMEOUT)
   {
    if (!EscFn)
     {

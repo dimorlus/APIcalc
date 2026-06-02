@@ -157,7 +157,7 @@ calculator::calculator (int_t cfg, symbol **symtab, int_t copyMask, int deep)
  memset (v_stack, 0, sizeof v_stack);
 
  fprec         = 16; // Default precision for output formatting
- timeout       = 1000; // Default timeout for long calculations in milliseconds
+ timeout       = TIMEOUT; // 10sec Default timeout for long calculations in milliseconds
  c_imaginary   = 'i';
  Randomize ();
  srand (static_cast<unsigned int> (time (nullptr)));
@@ -300,6 +300,7 @@ void calculator::AddPredefined (void)
  add (tsCIFUNC1, ccOpt,    "opt", nullptr);
  add (tsCIFUNC1, ccOptOn,  "opton", nullptr);
  add (tsCIFUNC1, ccOptOff, "optoff", nullptr);
+ add (tsCIFUNC1, ccTimeout, "timeout", nullptr);
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
@@ -932,12 +933,12 @@ t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
     }
    else
     {
-     if (current_ms - last_gui_check > 1000)
+     if (current_ms - last_gui_check > 100) //Start OS idle after 100ms
       {
        last_gui_check = current_ms;
        Sleep (1); // Sleep briefly to allow GUI to remain responsive
       }
-     if (current_ms - init_ms > TIMEOUT) // 10 second time limit for summation
+     if (current_ms - init_ms > timeout) // 10 second time limit for summation
       {
        errorf (pos, "Operation took too long");
        return brTIMEOUT;

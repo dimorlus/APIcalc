@@ -22,6 +22,7 @@
    - [Plotting](#plotting)
    - [Complex Number Support](#complex-number-support)
    - [User-Defined Functions](#user-defined-functions)
+   - [Table Functions](#table-functions)
    - [Comments](#comments)
    - [Matrix Support](#matrix-support)
    - [Regression & Data Fitting](#regression--data-fitting)
@@ -530,13 +531,34 @@ Then use them in expressions:
 ```
 frq(130u, 2n2) → 297602.87 
 ```
-
 **Key properties:**
 
 * Functions can be nested up to **10 levels** deep.
 * When a user-defined function is called, all previously defined constants (including those from `consts.txt`) are available inside it, but not variables.
 * User-defined functions can be **overridden** by re-declaring them (previously, re-declarations were silently ignored).
 * Type checking is enforced on function arguments — for example, you cannot call `sin` on a string.
+
+## Table Functions
+
+Table functions provide data interpolation from external text files. They are defined using the syntax:
+```
+    {function_name(x) method("filename", "mask")}
+```
+where `method` specifies interpolation type (`linear` or `spline`), `filename` is the data file path, and `mask` defines 
+column mapping (e.g., "01" means first column is X, second is Y).
+
+The function returns interpolated values strictly within the data range. If the argument falls outside the table bounds, 
+`NaN` is returned - no extrapolation is performed. This prevents unreliable predictions beyond measured data.
+
+Swapping mask digits (e.g., "10" instead of "01") creates an inverse function automatically by reversing X and Y columns. 
+This is useful for bi-directional lookups without analytical inversion.
+
+Data files should contain space-separated numeric values, one point per line. Invalid entries are skipped. Duplicate X 
+values are averaged automatically. The implementation uses binary search with interval caching for efficient sequential 
+access patterns.
+
+Use regression functions (`poly`, `exp`, `power`, etc.) when extrapolation beyond table boundaries is required.
+
 
 ### Comments
 

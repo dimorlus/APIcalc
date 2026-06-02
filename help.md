@@ -212,6 +212,7 @@ winf(x)                         Returns a string describing the portion of the s
 wrgb(x)                         Returns the RGB color of the given wavelength in 0xRRGGBB format.
 trgb(x)                         Returns the RGB color of the given absolute temperature in 0xRRGGBB format.
 color(n)                        Shows a color (colored square on top of the application in 0xRRGGBB format)
+cname/colorname(n)              Returns RRGGBB color name 
 ```
 ```
 const("name",x|z|M)     (1,3)   Add (declare) constant 
@@ -276,6 +277,12 @@ optoff(n)                       Off calculator options.
 ### User defined functions:
 ```
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
+```
+
+### Table functions (Lookup Table (LUT) Interpolation)
+```
+{fn(x) linear("filename.txt", "mask")};;Linear interpolation
+{fn(x) spline("filename.txt", "mask")};;Cubic spline interpolation
 ```
 
 ### Newton-Raphson solution of the equation:

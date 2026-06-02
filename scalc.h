@@ -1039,7 +1039,7 @@ class calculator // calculator represents the main class for the expression calc
  terr errtype;
  int fprec;      // Floating point precision for output formatting
  char c_imaginary; // Imaginary unit character
- int timeout;        // Timeout for long calculations in milliseconds
+ uint64_t timeout; // Timeout for long calculations in milliseconds
  float__t Plot_Ymax; // Maximum Y value for plotting, used for autoscaling
  float__t Plot_Ymin; // Minimum Y value for plotting, used for autoscaling
  float__t Plot_Xmax; // Maximum X value for plotting, used for autoscaling

@@ -10,6 +10,7 @@
    fn(25) 
    plot(fn(x), 0, 25, x) 
   If x is outside the bounds specified in the data file, the function returns NaN.
++ Added timeout(n) function, allowing to change default timeout value of 10000ms (10s) for long calculations.
 
 31.05.26 (2.208)
 - Fixed a bug where the enabled menu state was not saved.

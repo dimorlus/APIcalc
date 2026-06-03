@@ -85,3 +85,114 @@ The output `tc.c` file is generated fully autonomously, stripping out all high-o
 
 > 📌 **Important Syntax Note for C/C++ Programmers:**
 > The script's native `if(cond, expr_true, expr_false)` statement acts as a functional expression rather than a structural control flow statement. It can dynamically evaluate and return entirely different data types (e.g., strings, characters, vectors, or scalars) from its respective branches depending on the runtime state. This enables highly compact and expressive formatting patterns during automated text and code generation.
+
+**mcu_ntc.txt:**
+```
+;; NTC divider piecewise linear approximation generator (Scaled range: ADC 80..248)
+;;Start conditios
+N:=8
+xmin:=80;;~0`C
+xmax:=248;;~130`C
+;;Precalculations
+NN := (248-80)/N
+ix := 0
+;;Array definitions
+Toffs := zeros(NN)
+Tslop := zeros(NN)
+
+;;Functions definitions
+{ntcr(r25, t) B:=3k95; T0:=stdt; T25:=T0+25; r25 * exp(B * (1/(t+T0) - 1/T25))} ;;ntc(t) from datasheet
+{ADC(T) rl:=ntcr(100k,T);256*rl/(rl+6k8)} ;;ADC(T) digitized voltage from divider
+{Tc(N) solve(adc(t)-N, 50, t)};;Inverse function calculation
+
+;;Main loop
+:loop
+ x1 := ix*N+xmin
+ x2 := (ix+1)*N+xmin 
+ y1 := Tc(x1); y1 := if(y1<0,0,y1)
+ y2 := Tc(x2); y2 := if(y2<0,0,y2)
+ Toffs[ix] := round(y1) 
+ Tslop[ix] := round(-(y2-y1)*64/(x2-x1))
+ ix += 1
+ NN - ix
+JNZ loop
+
+BREAK 
+
+;;save("toffs.txt", Toffs)
+;;save("tslop.txt", Tslop)
+prnf("","Toffs:=%S", Toffs)
+prnf("","Tslop:=%S", Tslop)
+;;RET
+prnf("tc.txt","");;Create simulation script file
+prnf("tc.txt","Toffs:=%S", Toffs)
+prnf("tc.txt","Tslop:=%S", Tslop)
+
+prnf("tc.txt","n:=if(n<%d,0,n-%d)", xmin, xmin)
+prnf("tc.txt","idx := int(n / %d)",N)
+prnf("tc.txt","offset := Toffs[idx]")
+prnf("tc.txt","slope := Tslop[idx]")
+prnf("tc.txt","T_res := int(offset - int(((n %% %d) * slope) / 64))",N)
+
+BREAK
+prnf("tc.c","");;Create C file (for MCU)
+prnf("tc.c","uint8_t thermo(uint8_t adc)")
+prnf("tc.c","{")
+prnf("tc.c"," const uint8_t Toffs = {")
+ix := 0
+:loffs
+ prnf("tc.c","  %d%c",Toffs[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ loffs
+prnf("tc.c"," };")
+prnf("tc.c"," const uint8_t Tslop = {")
+ix := 0
+:lslop
+ prnf("tc.c","  %d%c",Tslop[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ lslop
+prnf("tc.c"," };")
+prnf("tc.c"," ")
+prnf("tc.c","  uint8_t i, offset, slope;")
+prnf("tc.c","  adc=(adc<%d)?0:adc-%d;", xmin, xmin)
+prnf("tc.c","  i = adc / %d;", N)
+prnf("tc.c","  offset = Toffs[i];")
+prnf("tc.c","  slope = Tslop[i];")
+prnf("tc.c","  return (uint8_t)(offset - ((uint16_t)(adc %% %d)) * slope / 64);", N)
+prnf("tc.c","}")
+prnf("tc.c"," ")
+
+BREAK
+
+RET
+```
+
+**tc.txt:**
+```C
+Toffs:=[(131, 125, 120, 115, 110, 105, 101); (97, 92, 88, 84, 79, 75, 70); (66, 61, 55, 49, 43, 35, 25)]
+Tslop:=[(46, 43, 41, 39, 37, 36, 35); (35, 34, 34, 35, 35, 36, 38); (40, 43, 47, 54, 64, 82, 124)]
+n:=if(n<80,0,n-80)
+idx := int(n / 8)
+offset := Toffs[idx]
+slope := Tslop[idx]
+T_res := int(offset - int(((n % 8) * slope) / 64))
+
+tc.c (autoformatted):
+
+uint8_t thermo (uint8_t adc)
+{
+ const uint8_t Toffs = { 131, 125, 120, 115, 110, 105, 101, 97, 92, 88, 84,
+                         79,  75,  70,  66,  61,  55,  49,  43, 35, 25 };
+ const uint8_t Tslop = { 46, 43, 41, 39, 37, 36, 35, 35, 34, 34, 35, 35, 
+                         36, 38, 40, 43, 47, 54, 64, 82, 124 };
+
+ uint8_t i, offset, slope;
+ adc    = (adc < 80) ? 0 : adc - 80;
+ i      = adc / 8;
+ offset = Toffs[i];
+ slope  = Tslop[i];
+ return (uint8_t)(offset - ((uint16_t)(adc % 8)) * slope / 64);
+}
+```

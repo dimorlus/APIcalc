@@ -141,7 +141,7 @@ prnf("tc.c","{")
 prnf("tc.c"," const uint8_t Toffs = {")
 ix := 0
 :loffs
- prnf("tc.c","  %d%c",Toffs[ix],if(ix<NN-1,',',' '))
+ prnfs("tc.c","  %d%c",Toffs[ix],if(ix<NN-1,',',' '))
  ix += 1
  NN - ix
 JNZ loffs
@@ -149,7 +149,7 @@ prnf("tc.c"," };")
 prnf("tc.c"," const uint8_t Tslop = {")
 ix := 0
 :lslop
- prnf("tc.c","  %d%c",Tslop[ix],if(ix<NN-1,',',' '))
+ prnfs("tc.c","  %d%c",Tslop[ix],if(ix<NN-1,',',' '))
  ix += 1
  NN - ix
 JNZ lslop
@@ -170,7 +170,7 @@ RET
 ```
 
 **tc.txt:**
-```C
+```
 Toffs:=[(131, 125, 120, 115, 110, 105, 101); (97, 92, 88, 84, 79, 75, 70); (66, 61, 55, 49, 43, 35, 25)]
 Tslop:=[(46, 43, 41, 39, 37, 36, 35); (35, 34, 34, 35, 35, 36, 38); (40, 43, 47, 54, 64, 82, 124)]
 n:=if(n<80,0,n-80)
@@ -178,9 +178,10 @@ idx := int(n / 8)
 offset := Toffs[idx]
 slope := Tslop[idx]
 T_res := int(offset - int(((n % 8) * slope) / 64))
+```
 
 tc.c (autoformatted):
-
+```C
 uint8_t thermo (uint8_t adc)
 {
  const uint8_t Toffs = { 131, 125, 120, 115, 110, 105, 101, 97, 92, 88, 84,

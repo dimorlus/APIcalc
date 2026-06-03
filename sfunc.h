@@ -142,6 +142,7 @@ bool IsInfL (const float__t ldVal);
 // String formatting functions
 int_t fprn(char *dest, char *sfmt, int args, char ic, value* v_stack);
 int_t fprnf (char *fname, char *sfmt, int args, char ic, value *v_stack);
+int_t fprnfs (char *fname, char *sfmt, int args, char ic, value *v_stack);
 
 int_t datatime(char *tstr);
 double scandatatime (char *tstr, char **endp);

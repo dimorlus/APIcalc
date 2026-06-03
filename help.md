@@ -248,7 +248,8 @@ floatf(i)                       Reinterpret an integer as a floating-point 32
 ```
 ```
 printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
-prnf(filename, fmt, ...)        Works the same as prn, but print to the filename.
+prnf/prnfl(filename, fmt, ...)  Works the same as prn, but print to the filename.
+prnfs(filename, fmt, ...)       Print to file without '\n'
 datatime("2017.11.23 22:00:20") Return Unix time.
 now(n)                          Current Unix time (+/- n hours).
 tick(n)							Current system milliseconds.

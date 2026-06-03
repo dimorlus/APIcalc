@@ -313,10 +313,11 @@ x %% y  →  (x / y - 1) * 100
   ```
 * **cmplx / cpx / cplx(a, b)**: Construct a complex number (all three are synonyms)
 * **prn("format", ...)**: Formatted print, e.g., `prn("f:%SHz, Rw:%SOhm", f, Rw)`
-* **prnf("filename", "format", ...)**: Works the same as prn, but appends the created string to the end of the 
+* **prnf/prnfl("filename", "format", ...)**: Works the same as prn, but appends the created string with newline symbol `'\n'` to the end of the 
 file 'filename' (if it doesn't exist, it creates it). Returns the number of characters written to the file 
 (0 if writing to the file is impossible). Calling prnf("filename", "") (with an empty format string) overwrites 
 an existing file or creates a new one.
+* **prnfs("filename", "format", ...)**: Does the same as **prnf/prnfl**, but does not add a newline character `'\n'` to the end of the line.
 * **dataf("filename", "mask", ...)**: function for reading data from files. Each call to the  function reads the 
 next line from the file, extracts data from it using the mask, places it in the passed variable list, and returns 
 the number of values read. A call with an empty mask closes the file; the next call with a mask  will start reading 

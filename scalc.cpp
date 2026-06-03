@@ -402,6 +402,9 @@ void calculator::AddPredefined (void)
  add (tsPFUNCn, "prn", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsPFUNCn, "printf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprn);
  add (tsFPFUNCn, "prnf", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf, true);
+ add (tsFPFUNCn, "prnfl", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnf, true);
+ add (tsFPFUNCn, "prnfs", (void *)(int_t (*) (char *, char *, int args, char, value *))fprnfs,
+      true);
   
  add (tsSIFUNC1, "datatime", (void *)datatime);
  

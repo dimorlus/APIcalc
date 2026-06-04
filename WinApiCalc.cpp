@@ -464,6 +464,79 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
    return 0; // Message handled
   }
 #endif //_SIMPLE_PASTE_
+#ifdef _MULTILINE_PASTE_OLD_
+ if (message == WM_PASTE)
+  {
+   // Handle Paste from context menu or Ctrl+V
+   if (IsClipboardFormatAvailable (CF_TEXT) && OpenClipboard (hWnd))
+    {
+     HANDLE hData = GetClipboardData (CF_TEXT);
+     if (hData)
+      {
+       char *pszText = (char *)GlobalLock (hData);
+       if (pszText && pThis)
+        {
+         // Make a copy for processing
+         char *buffer = _strdup (pszText);
+         GlobalUnlock (hData);
+         CloseClipboard ();
+
+         if (buffer)
+          {
+           char *context  = nullptr;
+           char *line     = strtok_s (buffer, "\r\n", &context);
+           char *nextLine = strtok_s (nullptr, "\r\n", &context);
+
+           while (line)
+            {
+             if (nextLine)
+              {
+               // Not last line - evaluate
+               SetWindowTextA (hWnd, line);
+               pThis->OnExpressionChanged (true);
+
+               // Check for errors
+               if (pThis->m_pCalculator && pThis->m_pCalculator->error ()[0])
+                {
+                 // Stop on error, leave problematic line in edit field
+                 free (buffer);
+                 return 0;
+                }
+
+               // Add to history
+               pThis->AddToHistory (line);
+
+               // Move to next line
+               line     = nextLine;
+               nextLine = strtok_s (nullptr, "\r\n", &context);
+              }
+             else
+              {
+               // Last line - paste normally (without evaluation)
+               SetWindowTextA (hWnd, line);
+               SendMessage (hWnd, EM_SETSEL, strlen (line), strlen (line));
+               pThis->OnExpressionChanged (true);
+               break;
+              }
+            }
+
+           free (buffer);
+          }
+        }
+       else
+        {
+         GlobalUnlock (hData);
+         CloseClipboard ();
+        }
+      }
+     else
+      {
+       CloseClipboard ();
+      }
+    }
+   return 0; // Message handled
+  }
+#endif //_MULTILINE_PASTE_OLD
 #ifdef _MULTILINE_PASTE_
  if (message == WM_PASTE)
   {
@@ -483,6 +556,49 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
 
          if (buffer)
           {
+           // Count lines in clipboard
+           int lineCount   = 0;
+           char *tempPtr   = buffer;
+           bool hasContent = false;
+
+           while (*tempPtr)
+            {
+             if (*tempPtr == '\n')
+              {
+               if (hasContent) lineCount++;
+               hasContent = false;
+              }
+             else if (*tempPtr != '\r' && !isspace ((unsigned char)*tempPtr))
+              {
+               hasContent = true;
+              }
+             tempPtr++;
+            }
+           if (hasContent) lineCount++; // Last line without \n
+
+           // Single line - use simple paste (old behavior)
+           if (lineCount <= 1)
+            {
+             // Remove trailing newlines for single line
+             size_t len = strlen (buffer);
+             while (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r'))
+              {
+               buffer[len - 1] = '\0';
+               len--;
+              }
+
+             // Get current selection
+             DWORD dwStart, dwEnd;
+             SendMessage (hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
+             // Replace selection with clipboard text
+             SendMessage (hWnd, EM_REPLACESEL, TRUE, (LPARAM)buffer);
+
+             free (buffer);
+             return 0;
+            }
+
+           // Multiple lines - use multiline evaluation (new behavior)
            char *context  = nullptr;
            char *line     = strtok_s (buffer, "\r\n", &context);
            char *nextLine = strtok_s (nullptr, "\r\n", &context);

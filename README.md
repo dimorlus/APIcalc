@@ -451,8 +451,6 @@ Each BMP object takes up 1.4–2.4 MB of memory, depending on the  selected size
 * **load("bmpfile")**:  Function  for load BMP (and any other) type from the file<br>
 	```A:=load("cross.bmp")```
 
->**Note**: The **fplot*** and **oplot*** functions are no longer needed, but are retained for compatibility.	
-
 When overlaying multiple graphs using the + or | operators, managing the coordinate axes and scales is crucial for accurate visual analysis. 
 The engine provides two distinct mechanisms for scale management: Automatic Expression-Bound Scaling and Global Fixed Scaling.
 
@@ -644,8 +642,11 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 | `zeros(r,c)`       | matrix  | Return zero matrix with r rows and c columns                 |
 |`diag(r,c),eye(r,c)`| matrix  | Return zero matrix with r rows and c columns with 1 diagonal |
 
-The **int**, **float**, **round**, **floor**, **ceil**, and **frac** functions can accept and return matrices, processing them element-by-element. 
-The **rnd** (**rand**) function returns a matrix of the same size as the original, filled with random numbers with a base chosen as the RMS of the original matrix.
+* The **int**, **float**, **round**, **floor**, **ceil**, and **frac** functions can accept and return matrices, processing them element-by-element. 
+* The **rnd** (**rand**) function returns a matrix of the same size as the original, filled with random numbers with a base chosen as the RMS of the original matrix.
+* The **zeros** function can accept the number of elements, the number of rows and columns, and a matrix. If there is only one element, the function returns a matrix with 
+an equal or greater number of elements (it can also be used as a linear array of up to 7x7 = 49 elements, accessible at index [i]). If there is a matrix, the function 
+returns a zero matrix of the same dimension as the one passed. The **diag/eye** function works the same way.
 
 #### Matrix Examples
 

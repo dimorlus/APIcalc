@@ -309,6 +309,9 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 
 ;; --- Vector and Matrix Utility Functions ---
 
+;; Returns RMS norm of matrix
+{MRMS(A) n:=size(A);ssum:=0;sqrt(for(ssum+=A[ix]^2,0,n-1,ix))/n}
+
 ;; Returns the angle between two vectors in radians
 {angle(A, B) acos(dot(A, B) / (norm(A) * norm(B)))}
 

@@ -1,4 +1,4 @@
-02.06.26 (2.210)
+04.06.26 (2.210)
 + The BREAK operator has been added to the scripting language. In debug mode, it causes a breakpoint; in 
   normal mode, it does nothing.
 + Added colorname/cname(RRGGBB) function, which returns the name of the specified color.

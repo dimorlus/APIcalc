@@ -90,7 +90,7 @@ The output `tc.c` file is generated fully autonomously, stripping out all high-o
 **mcu_ntc.txt:**
 ```
 ;; NTC divider piecewise linear approximation generator (Scaled range: ADC 80..248)
-;;Start conditios
+;;Start conditions
 N:=8
 xmin:=80;;~0`C
 xmax:=248;;~130`C
@@ -181,7 +181,7 @@ slope := Tslop[idx]
 T_res := int(offset - int(((n % 8) * slope) / 64))
 ```
 
-tc.c (autoformatted):
+**tc.c (autoformatted):**
 ```C
 uint8_t thermo (uint8_t adc)
 {

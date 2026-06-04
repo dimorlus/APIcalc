@@ -1,0 +1,79 @@
+;; NTC divider piecewise linear approximation generator (Scaled range: ADC 80..248)
+;;Start conditios
+N:=8
+xmin:=80;;~0`C
+xmax:=248;;~130`C
+;;Precalculations
+NN := (248-80)/N
+ix := 0
+;;Array definitions
+Toffs := zeros(NN)
+Tslop := zeros(NN)
+
+;;Functions definitions
+{ntcr(r25, t) B:=3k95; T0:=stdt; T25:=T0+25; r25 * exp(B * (1/(t+T0) - 1/T25))} ;;ntc(t) from datasheet
+{ADC(T) rl:=ntcr(100k,T);256*rl/(rl+6k8)} ;;ADC(T) digitized voltage from divider
+{Tc(N) solve(adc(t)-N, 50, t)};;Inverse function calculation
+
+;;Main loop
+:loop
+ x1 := ix*N+xmin
+ x2 := (ix+1)*N+xmin 
+ y1 := Tc(x1); y1 := if(y1<0,0,y1)
+ y2 := Tc(x2); y2 := if(y2<0,0,y2)
+ Toffs[ix] := round(y1) 
+ Tslop[ix] := round(-(y2-y1)*64/(x2-x1))
+ ix += 1
+ NN - ix
+JNZ loop
+
+BREAK 
+
+;;save("toffs.txt", Toffs)
+;;save("tslop.txt", Tslop)
+prnf("","Toffs:=%S", Toffs)
+prnf("","Tslop:=%S", Tslop)
+;;RET
+prnf("tc.txt","");;Create simulation script file
+prnf("tc.txt","Toffs:=%S", Toffs)
+prnf("tc.txt","Tslop:=%S", Tslop)
+
+prnf("tc.txt","n:=if(n<%d,0,n-%d)", xmin, xmin)
+prnf("tc.txt","idx := int(n / %d)",N)
+prnf("tc.txt","offset := Toffs[idx]")
+prnf("tc.txt","slope := Tslop[idx]")
+prnf("tc.txt","T_res := int(offset - int(((n %% %d) * slope) / 64))",N)
+
+BREAK
+prnf("tc.c","");;Create C file (for MCU)
+prnf("tc.c","uint8_t thermo(uint8_t adc)")
+prnf("tc.c","{")
+prnf("tc.c"," const uint8_t Toffs = {")
+ix := 0
+:loffs
+ prnfs("tc.c","  %d%c",Toffs[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ loffs
+prnf("tc.c"," };")
+prnf("tc.c"," const uint8_t Tslop = {")
+ix := 0
+:lslop
+ prnfs("tc.c","  %d%c",Tslop[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ lslop
+prnf("tc.c"," };")
+prnf("tc.c"," ")
+prnf("tc.c","  uint8_t i, offset, slope;")
+prnf("tc.c","  adc=(adc<%d)?0:adc-%d;", xmin, xmin)
+prnf("tc.c","  i = adc / %d;", N)
+prnf("tc.c","  offset = Toffs[i];")
+prnf("tc.c","  slope = Tslop[i];")
+prnf("tc.c","  return (uint8_t)(offset - ((uint16_t)(adc %% %d)) * slope / 64);", N)
+prnf("tc.c","}")
+prnf("tc.c"," ")
+
+BREAK
+
+RET

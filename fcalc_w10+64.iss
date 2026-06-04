@@ -28,6 +28,8 @@ Name: "custom"; Description: "custom"; Flags:iscustom
 Name: "program"; Description: "Fcalc formula calculator"; Types: custom; Flags: fixed
 Name: "ccalc"; Description:"CLI Calculator "; Types: custom
 
+[Dirs]
+Name: "{userdocs}\Fcalc"
 
 [Files]
 ; 64-bit version for x64 systems
@@ -45,6 +47,12 @@ Source: ".\plot.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall;
 Source: ".\plotdata.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\scripts.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+
+Source: ".\Fcalc\mcu_ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\test.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\tc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\tc.c"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist

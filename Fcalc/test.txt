@@ -1,0 +1,22 @@
+;; test script
+prnf("","test stdout")
+jmp start
+
+:sub1
+a:=a+1
+ret
+
+:start
+
+a:=0
+:loop
+call sub1
+if(a>3, 1, 0)
+jz loop
+break
+2 a
+prnf("","test stdout")
+M:=zeros(3,3)
+STR:="test string"
+Z:= 3+4j
+ret;; exit from script 

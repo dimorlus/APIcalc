@@ -11,7 +11,11 @@
    plot(fn(x), 0, 25, x) 
   If x is outside the bounds specified in the data file, the function returns NaN.
 + Added timeout(n) function, allowing to change default timeout value of 10000ms (10s) for long calculations.
-
++ Added the prnfs function and the prnfl synonym to the prnf function. Now, prnfl (like prnf before it) appends 
+  a newline character '\n' to the line written to the file, while prnfs does not.
+* The installer now creates the Fcalc directory in %userprofile%\Documents and places sample scripts there. 
+  In the user.txt file, it is recommended to specify path:="%userprofile%\Documents\Fcalc"  
+  
 31.05.26 (2.208)
 - Fixed a bug where the enabled menu state was not saved.
 + A Script debugger menu item has been added. When enabled, the script debug console appears automatically 

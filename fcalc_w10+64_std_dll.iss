@@ -32,6 +32,9 @@ Name: "ccalc";       Description: "CLI Calculator (ccalc.exe)";       Types: cus
 Name: "ccalc\std";   Description: "Standard CLI";                     Types: std;            Flags: exclusive
 Name: "ccalc\dll";   Description: "DLL CLI (higher precision)";       Types: dll;            Flags: exclusive
 
+[Dirs]
+Name: "{userdocs}\Fcalc"
+
 [Files]
 ; GUI Standard version
 Source: ".\bin64\Release\std\fcalc.exe";         DestDir: "{app}"; DestName: "fcalc.exe"; Components: program\std; Flags: ignoreversion
@@ -56,6 +59,13 @@ Source: ".\plot.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall;
 Source: ".\plotdata.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\scripts.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+
+Source: ".\Fcalc\mcu_ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\test.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\tc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\tc.c"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist

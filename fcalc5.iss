@@ -46,6 +46,8 @@ Source: ".\options.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninsta
 Source: ".\plot.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\plotdata.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\scripts.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\tutor.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\table.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 Source: ".\Fcalc\mcu_ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify

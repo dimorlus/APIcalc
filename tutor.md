@@ -4,7 +4,7 @@
 
 Non-Linear Temperature Coefficient (NTC) thermistors are widely used for temperature measurement due to their low cost and sensitivity. However, their temperature-to-resistance characteristic is highly non-linear, governed by exponential relationships (such as the Beta formula or the Steinhart-Hart equation).
 
-Executing floating-point exponential or logarithmic math (using `math.h`) on an 8-bit microcontroller (like PIC or AVR) is extremely resource-intensive, consuming valuable flash memory and hundreds of instruction cycles.
+Executing floating-point exponential or logarithmic math (using `math.h`) on an 8-bit microcontroller (like PIC or AVR) is extremely resource-intensive, consuming valuable flash memory and hundreds of instruction cycles. In simple words, it is impossible.
 
 The standard engineering solution is **Piecewise Linear Approximation (PWLA)** — dividing the non-linear curve into multiple smaller segments where the temperature can be calculated using fast, integer-only linear interpolation. However, manually calculating lookup tables (`Toffs`) and segment slopes (`Tslop`) in Excel for every change in circuit values or sensor models is tedious and error-prone.
 

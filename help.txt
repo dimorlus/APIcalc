@@ -216,7 +216,8 @@ binf(x)                         Reinterpret a floating-point value as an integer
 floatf(i)                       Reinterpret an integer as a floating-point 32
 
 printf(fmt, ...),fprn, prn (1)  C-style printf. Result in the string value.
-prnf(filename, fmt, ...)        Works the same as prn, but print to the filename.
+prnf/prnfl(filename, fmt, ...)  Works the same as prn, but print to the filename.
+prnfs(filename, fmt, ...)       Print to file without '\n'
 datatime("2017.11.23 22:00:20") Return Unix time.
 now(n)                          Current Unix time (+/- n hours).
 tick(n)							Current system milliseconds.
@@ -228,12 +229,14 @@ help(0)                         Call help
 opacity(100)                    Set opacity level in percent
 binwide(32)                     Set binary width
 menu(0)                         Hide (0) or show (1) menu.
+console(1)                      Show (1) or hide (0) console
 vars(0)                         Show variables list
 font(x)                         Set calculator font size.
 prec(n)                         Set decimal digits in output.
 opt(n)                          Set calculator options.
 opton(n)                        On calculator options.
 optoff(n)                       Off calculator options.
+timeout(n)                      Set timeout in ms for long operations
 
 Legend: x, y - real number; z - complex number; n, m, i - integer number; 
         A, B, M - matrix; c, r - column, row of matrix
@@ -241,6 +244,9 @@ Legend: x, y - real number; z - complex number; n, m, i - integer number;
 		
         User defined functions:
 {frq(L, C)1/(2 pi sqrt(L C))} (1,3)     frq(130u, 2n2)
+        Table functions (Lookup Table (LUT) Interpolation)
+{fn(x) linear("filename.txt", "mask")};;Linear interpolation
+{fn(x) spline("filename.txt", "mask")};;Cubic spline interpolation
         Newton-Raphson solution of the equation:
 solve(x(2x+2)-2, x:=0)  (1)             0.6180339887500326
 solve(z^2+z+1, z:=0+1i) (1)             |1|(120`0'0") -500m+866mi

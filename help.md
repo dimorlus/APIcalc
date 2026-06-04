@@ -272,6 +272,8 @@ prec(n)                         Set decimal digits in output.
 opt(n)                          Set calculator options.
 opton(n)                        On calculator options.
 optoff(n)                       Off calculator options.
+timeout(n)                      Set timeout in ms for long operations
+
 
 ```
 

@@ -31,7 +31,8 @@ Because the NTC is in the lower arm, its resistance drops as temperature rises, 
 Thus, the ADC output is an **inverse/falling curve** (e.g., maximum ADC values correspond to low temperatures, and minimum ADC values correspond to high temperatures).
 
 ---
-
+![ntc_diags](ntc_diags.png)<br>
+---
 ### 3. The Power of Numerical Inversion: The `solve` Function
 
 To build our lookup table, we need a function that yields **Temperature as a function of the ADC code** ($T(N)$). Since we only have the forward physical equation ($ADC(T)$), we leverage the engine's capability to numerically invert functions on the fly using the built-in `solve()` routine:

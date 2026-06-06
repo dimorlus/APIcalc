@@ -1407,10 +1407,16 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
          if (v_stack[0].tag == tvBMP)
          {
-           strval (sres, v_stack[0]);
-           if (v_stack[0].sval && ShowImageFn) ShowImageFn ((void *)v_stack[0].sval);
-           else 
-           if (!v_stack[0].sval) error ("Invalid bitmap data");
+           if (v_stack[0].sval)
+            {
+             bmpdraw *bmp = (bmpdraw *)v_stack[0].sval;
+             strval (sres, v_stack[0]);
+             v_stack[0].ival = result_ival = bmp->height * bmp->rowSize;
+             v_stack[0].fval = result_fval = (float__t) v_stack[0].ival;
+             v_stack[0].imval = result_imval = (float__t) 0.0L;
+             if (ShowImageFn) ShowImageFn ((void *)bmp);
+            }
+           else error ("Invalid bitmap data");
            v_stack[0].sval = nullptr; // Prevent freeing the bitmap data in clear_v_stack
          }
 

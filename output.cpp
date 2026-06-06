@@ -1002,6 +1002,7 @@ void calculator::strval (char *str, value &val)
  switch (val.tag)
   {
   case tvBMP:
+   if (val.sval) 
    {
     bmpdraw *bmp = (bmpdraw *)val.sval;
     sprintf (str, "BMP(%dx%d)", bmp->width, bmp->height);
@@ -1014,7 +1015,7 @@ void calculator::strval (char *str, value &val)
    break;
   case tvMATRIX:
    {
-    Mxprint (val.tag, val.mrows, val.mcols, val.mval, str, false, nullptr);
+    if (val.mval) Mxprint (val.tag, val.mrows, val.mcols, val.mval, str, false, nullptr);
    }
    break;
   case tvINT:

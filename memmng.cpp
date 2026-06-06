@@ -161,8 +161,8 @@ void calculator::save_vars_mem (void)
    bmpdraw *dup = new bmpdraw ();
    if (!dup) return nullptr;
 
-   // Copy bitmap data
-   if (!dup->newbmp (src->width, src->height, 0xFFFFFF))
+   // Create bitmap data
+   if (!dup->newbmp (src->width, src->height, 0))
     {
      delete dup;
      return nullptr;
@@ -176,7 +176,7 @@ void calculator::save_vars_mem (void)
    dup->left = src->left;
 
    // Register for cleanup
-   register_mem (dup, ptBMP);
+   if (dup) register_mem (dup, ptBMP);
 
    return dup;
   }
@@ -206,7 +206,47 @@ bool calculator::dupvar (value &dst, value &src)
    dst.sval = (char *)dupBMP ((bmpdraw *)src.sval); // Duplicate bitmap value
    if (!dst.sval) return false; // Check for duplication failure
   }
+ //else if (src.tag == tvCOLOR)
+ // {
+ //  char color[128] = { 0 };
+ //  rgb_to_color_name_extended (color, true, src.get_int ());
+ //  dst.sval = dupString (color); // Duplicate color name string
+ // }
  return true;
 }
+
+bool calculator::freevar (value &src)
+{
+ if (src.tag == tvSTR)
+  {
+   sf_free (src.sval, ptMALLOC); // Unregister string value
+   src.sval = nullptr;
+  }
+ else if (src.tag == tvMATRIX)
+  {
+   if (src.mval) sf_free (src.mval, ptMALLOC); // Unregister matrix value
+   src.mval = nullptr;
+   src.mrows = 0;
+   src.mcols = 0;
+  }
+ else if (src.tag == tvBMP)
+  {
+   if (src.sval) sf_free (src.sval, ptBMP); // Unregister bitmap value
+   src.sval = nullptr;
+  }
+ //else if (src.tag == tvCOLOR)
+ // {
+ //  if (src.sval) sf_free (src.sval, ptMALLOC); // Unregister color name string
+ //  src.sval = nullptr;
+ // }
+ src.tag = tvERR; // Reset tag to indicate variable is now empty
+ src.ival = 0;
+ src.fval = qnan;
+ src.imval = (float__t)0.0L;
+ if (src.sval) sf_free (src.sval, ptMALLOC); 
+ src.sval = nullptr; 
+ return true;
+}
+
 #pragma endregion
 //---------------------------------------------------------------------------

@@ -1,3 +1,7 @@
+06.06.26 (2.212)
++ Now the script (run("script.txt")) and eval("expr") can return a BMP image.
+* Now the color() function not only displays a colored square but also sets the color name to the resulting string.
+
 04.06.26 (2.211)
 + Added the prnfs function and the prnfl synonym to the prnf function. Now, prnfl (like prnf before it) appends 
   a newline character '\n' to the line written to the file, while prnfs does not.

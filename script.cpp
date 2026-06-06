@@ -615,6 +615,9 @@ bool script::execute ()
            br = debug (child, "       Result: %d x %d matrix\n", child->get_mx_res ().rows,
                        child->get_mx_res ().cols);
            break;
+          case tvBMP:
+           br = debug (child, "       Result: Bitmap\n");
+           break;
           default:
            br = debug (child, "       Result: (other type %d)\n", last_result.tag);
            break;
@@ -729,8 +732,17 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      return false; // invalid function index
  }
 
+#ifdef _ENABLE_BMP_RES_
+ strcpy (err, child->error ());
+ {
+  value val; 
+  child->getvar ("answer", val); // Get 'answer' variable if set by script
+  dupvar (res, val);
+ }
+ fflags |= child->isfflags ();
+#else
  GetChildRes (child, res);
-  
+#endif
  delete child;
  if (fidx == scRun && sct) delete sct;
  return success;

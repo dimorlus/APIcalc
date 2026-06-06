@@ -1393,8 +1393,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           register_mem (v_stack[0].sval, ptMALLOC);
 
          register_mem (v_stack[0].mval, ptMALLOC);
-
-         addvar ("answer", v_stack[0]); // Store the result in the 'answer' variable
+#ifndef _ENABLE_BMP_RES_
+         if (v_stack[0].tag != tvBMP)
+#endif
+          addvar ("answer", v_stack[0]); // Store the result in the 'answer' variable
          result_fval = v_stack[0].get ();
          result_imval = v_stack[0].imval;
          result_ival  = v_stack[0].ival;
@@ -1405,6 +1407,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
          if (v_stack[0].tag == tvBMP)
          {
+           strval (sres, v_stack[0]);
            if (v_stack[0].sval && ShowImageFn) ShowImageFn ((void *)v_stack[0].sval);
            else 
            if (!v_stack[0].sval) error ("Invalid bitmap data");
@@ -1413,11 +1416,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
          if (v_stack[0].tag == tvCOLOR)
           {
+           rgb_to_color_name_extended (sres, true, v_stack[0].get_int ());
            symbol *sp = find ("showcolor");
-           if (sp && sp->tag == tsGUI)
-           {
-             (*(int_t (*) (int_t))sp->func) (v_stack[0].get_int ());  
-           }
+           if (sp && sp->tag == tsGUI && sp->func)
+            {
+             (*(int_t (*) (int_t))sp->func) (
+                 v_stack[0].get_int ()); // call showcolor function if it exists to display the
+                                         // color visually 
+            }
           }
 
          if (v_stack[0].tag == tvMATRIX)
@@ -1458,7 +1464,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              sres[STRBUF - 1] = '\0';                     // Ensure null-termination
              v_stack[0].sval  = nullptr;
             }
-           else sres[0] = '\0'; // Clear sres if not a string result
+           else 
+           if (v_stack[0].tag != tvCOLOR && v_stack[0].tag != tvBMP)
+             sres[0] = '\0'; // Clear sres if not a string result
 
            v_stack[v_sp - 1].var = nullptr;
            v_stack[0].imval = (float__t)0.0L;

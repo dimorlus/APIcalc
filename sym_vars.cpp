@@ -878,6 +878,7 @@ void calculator::addsvar (const char *name, const char *svar)
 bool calculator::addvar (const char *name, value &val)
 {
  symbol *sp   = add (tsVARIABLE, name);
+ freevar (sp->val); // Free existing value if any
  return dupvar (sp->val, val);
 }
 
@@ -886,7 +887,8 @@ bool calculator::getvar (const char *name, value &val)
  symbol *sp = find(name);
  if (sp)
   {
-   return dupvar (val, sp->val);
+   val = sp->val; // Copy the value from the symbol table to the provided variable reference
+   return true; // dupvar (val, sp->val);
   }
  return false;
 }

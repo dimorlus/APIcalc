@@ -112,7 +112,7 @@ typedef uint64_t unsigned_t;
 #define _WCHAR_ // L'c' and 'c'W input format allow
 #define _ENABLE_PREIMAGINARY_
 
-
+#define _ENABLE_BMP_RES_ 
 
 #pragma region Floating-point 128-bit support
 
@@ -1091,6 +1091,9 @@ class calculator // calculator represents the main class for the expression calc
 
  bool dupvar (value &dst, value &src); // Duplicate a variable value and register any dynamically
                                        // allocated memory in the memory list 
+ bool freevar (value &src); // Free the memory associated with a variable value and unregister it
+                            // from the memory list
+
  void destroyvars (void); // Destroy all variables in the hash table
  inline unsigned string_hash_function (const char *p); // Hash function for strings
  symbol *add (t_symbol tag, const char *name, 
@@ -1323,7 +1326,8 @@ class calculator // calculator represents the main class for the expression calc
   return res;
  };
 
- void strval (char *str, value &val);
+ void strval (char *str, value &val); // Convert a value to its string representation and store it
+                                      // in the provided buffer
  public:
  calculator (int_t cfg = PAS + SCI + UPCASE, symbol **symtab = nullptr, int_t mask = (MASK_NONE),
              int deep = 0); // Constructor with optional syntax configuration

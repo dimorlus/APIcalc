@@ -198,3 +198,123 @@ uint8_t thermo (uint8_t adc)
  return (uint8_t)(offset - ((uint16_t)(adc % 8)) * slope / 64);
 }
 ```
+# CASE Study B: High-Performance Lookup Table (LUT) Interpolation
+
+Let's assume the NTC resistance/temperature relationship is defined in a table. For this example, let's create it as a file every 5 degrees using the formula.
+
+fn:="ntc5.txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t*5, ntcr(100k,t*5)),-40/5, 140/5, t)
+
+Now we can use the table function to plot the NTC resistance versus temperature and the ADC code versus temperature.
+```
+{ntc(t) spline("ntc5.txt", "01")}
+{ADC(T) rl:=ntc(T);255*rl/(rl+6k8)}
+```
+Using solve to invert the table function won't work because the derivative is broken, so we'll create another table.
+
+```fn:="adc(t).txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t, adc(t)),-40, 140, t)```
+
+Now we can create a table function for temperature. Since the `adc(t).txt` table shows a direct relationship, and we need an inverse one, we use the mask `"10"`
+
+```{Tc(N) spline("adc(t).txt", "10")}```
+
+Now we can use the same script to generate tables for piecewise linear approximation.
+```
+;; NTC divider piecewise linear approximation (Scaled range: ADC 80..248)
+N:=8
+xmin:=80;;~0`C
+xmax:=248;;~130`C
+NN := (248-80)/N
+ix := 0
+Toffs := zeros(NN)
+Tslop := zeros(NN)
+
+fn:="ntc5.txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t*5, ntcr(100k,t*5)),-40/5, 140/5, t)
+{ntc(t) spline("ntc5.txt", "01")}
+{ADC(T) rl:=ntc(T);255*rl/(rl+6k8)}
+fn:="adc(t).txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t, adc(t)),-40, 140, t)
+{Tc(N) spline("adc(t).txt", "10")}
+
+;;Main loop
+:loop
+ x1 := ix*N+xmin
+ x2 := (ix+1)*N+xmin 
+ y1 := Tc(x1); y1 := if(y1<0,0,y1)
+ y2 := Tc(x2); y2 := if(y2<0,0,y2)
+ Toffs[ix] := round(y1) 
+ Tslop[ix] := round(-(y2-y1)*64/(x2-x1))
+ ix += 1
+ NN - ix
+JNZ loop
+
+BREAK 
+
+;;save("toffs.txt", Toffs)
+;;save("tslop.txt", Tslop)
+prnf("","Toffs:=%S", Toffs)
+prnf("","Tslop:=%S", Tslop)
+;;RET
+
+;; Generate proof script
+prnf("tc.txt","");;Create file
+prnf("tc.txt","Toffs:=%S", Toffs)
+prnf("tc.txt","Tslop:=%S", Tslop)
+
+prnf("tc.txt","n:=if(n<%d,0,n-%d)", xmin, xmin)
+prnf("tc.txt","idx := int(n / %d)",N)
+prnf("tc.txt","offset := Toffs[idx]")
+prnf("tc.txt","slope := Tslop[idx]")
+prnf("tc.txt","T_res := int(offset - int(((n %% %d) * slope) / 64))",N)
+
+;;uint8_t thermo(uint8_t adc)
+;;{
+;; const uint8_t Toffs = {0, 0, 0};
+;; const uint8_t Tslop = {0, 0, 0};
+;; 
+;; uint8_t i, offset, slope;
+;;
+;; adc=(adc<80)?0,adc-80; 
+;; i = adc / 16;
+;; offset = Toffs[i];
+;; slope = Tslop[i];
+;; return (uint8_t)(offset - ((uint16_t)(adc % 16)) * slope / 64);
+;;}
+
+BREAK
+;;Generate C-code
+prnf("tc.c","");;Create file
+prnf("tc.c","uint8_t thermo(uint8_t adc)")
+prnf("tc.c","{")
+prnf("tc.c"," const uint8_t Toffs = {")
+ix := 0
+:loffs
+ prnfs("tc.c","  %d%c",Toffs[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ loffs
+prnf("tc.c"," };")
+prnf("tc.c"," const uint8_t Tslop = {")
+ix := 0
+:lslop
+ prnfs("tc.c","  %d%c",Tslop[ix],if(ix<NN-1,',',' '))
+ ix += 1
+ NN - ix
+JNZ lslop
+prnf("tc.c"," };")
+prnf("tc.c"," ")
+prnf("tc.c","  uint8_t i, offset, slope;")
+prnf("tc.c","  adc=(adc<%d)?0:adc-%d;", xmin, xmin)
+prnf("tc.c","  i = adc / %d;", N)
+prnf("tc.c","  offset = Toffs[i];")
+prnf("tc.c","  slope = Tslop[i];")
+prnf("tc.c","  return (uint8_t)(offset - ((uint16_t)(adc %% %d)) * slope / 64);", N)
+prnf("tc.c","}")
+prnf("tc.c"," ")
+
+BREAK
+;;Plot result
+plot_width := 640; plot_height := 480; optoff(1<<32);; turn off debug mode for child script
+save("lappr.bmp", plot(Tc(n), xmin, xmax, n)+plot(run("tc.txt"), n))
+save("lapprer.bmp", plot(Tc(n)-run("tc.txt"), xmin, xmax, n))
+RET
+```
+

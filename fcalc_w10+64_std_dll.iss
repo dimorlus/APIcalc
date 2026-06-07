@@ -71,12 +71,12 @@ Source: ".\Fcalc\tc.c"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist un
 
 [Registry]
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"CurrentExpression"; ValueData:"help(1)"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History0"; ValueData:"L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c))"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History1"; ValueData:"font(14)"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History2"; ValueData:"now(tz)"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History3"; ValueData:"opacity(100)"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History4"; ValueData:"menu(0)"; Components:program; Flags: createvalueifdoesntexist
-Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History5"; ValueData:"version"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History000"; ValueData:"L:=130u;c:=2.2n;f:=1/(2*pi*sqrt(l*c))"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History001"; ValueData:"font(14)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History002"; ValueData:"now(tz)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History003"; ValueData:"opacity(100)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History004"; ValueData:"menu(0)"; Components:program; Flags: createvalueifdoesntexist
+Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: string; Valuename:"History005"; ValueData:"version"; Components:program; Flags: createvalueifdoesntexist
 
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowY"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist
 Root:HKCU; Subkey: "Software\WinApiCalc"; Valuetype: dword; Valuename:"WindowX"; ValueData:"100"; Components:program; Flags: createvalueifdoesntexist

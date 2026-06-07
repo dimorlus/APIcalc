@@ -116,10 +116,11 @@ const("visc_air", 1.516e-5);; Kinematic viscosity of air at 20C (m²/s)
 const("c_water", 4186);; Specific heat of water (J/kg*K)
 const("c_air", 1005);; Specific heat of air (J/kg*K)
 const("rho_air", 1.225);; Air density at sea level (kg/m3)
-
+const("torr", 133.322);;Torr 1mm Hg 
 ;; --- Nukes ---
 const("m_crit_u235", 52);; Critical mass U-235 (kg)
 const("m_crit_pu239", 10);; Critical mass Pu-239 (kg)
+
 
 ;; --- Functions ---
 {frq(L, C)1/(2*pi*sqrt(L*C))};; L-C circuit resonant frequency

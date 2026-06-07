@@ -2403,6 +2403,7 @@ void WinApiCalc::ShowVariablesDialog ()
   }
  if (hFont) DeleteObject (hFont);
 }
+#ifdef _comment_
 void WinApiCalc::LoadHistory ()
 {
  HKEY hKey;
@@ -2444,7 +2445,83 @@ void WinApiCalc::LoadHistory ()
    RegCloseKey (hKey);
   }
 }
+#endif
+void WinApiCalc::LoadHistory ()
+{
+ HKEY hKey;
+ if (RegOpenKeyExA (HKEY_CURRENT_USER, "Software\\WinApiCalc", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+  {
+   m_history.clear ();
 
+   // Helper lambda to trim trailing whitespace (same as in AddToHistory)
+   auto trimRight = [] (const std::string &str) -> std::string {
+    size_t end = str.find_last_not_of (" \t\r\n");
+    return (end == std::string::npos) ? "" : str.substr (0, end + 1);
+   };
+
+   // Helper lambda to check if normalized string already exists in history
+   auto isDuplicate = [&] (const std::string &str) -> bool {
+    std::string normalized = trimRight (str);
+    if (normalized.empty ()) return true; // Skip empty strings
+
+    for (const auto &item : m_history)
+     {
+      if (trimRight (item) == normalized) return true;
+     }
+    return false;
+   };
+
+   // Load history count first
+   DWORD historyCount = 0;
+   DWORD size         = sizeof (historyCount);
+   if (RegQueryValueExA (hKey, "HistoryCount", nullptr, nullptr, (LPBYTE)&historyCount, &size)
+       == ERROR_SUCCESS)
+    {
+     // Load history items in DIRECT order - History0=newest, History1=older, etc.
+     // Try both new format (History001) and old format (History1) to support migration
+     for (size_t i = 0; i < (size_t)historyCount && i < (size_t)MAX_HISTORY; i++)
+      {
+       char szData[1024];
+       DWORD dwDataSize = sizeof (szData);
+       bool found       = false;
+
+       // Try new format first (History001, History002, etc.)
+       char szValueName[256];
+       sprintf_s (szValueName, "History%03zu", i);
+
+       if (RegQueryValueExA (hKey, szValueName, nullptr, nullptr, (LPBYTE)szData, &dwDataSize)
+           == ERROR_SUCCESS)
+        {
+         std::string expr (szData);
+         if (!isDuplicate (expr))
+          {
+           m_history.push_back (trimRight (expr)); // Store normalized version
+          }
+         found = true;
+        }
+
+       // If not found in new format, try old format (History1, History2, etc.)
+       if (!found)
+        {
+         sprintf_s (szValueName, "History%zu", i);
+         dwDataSize = sizeof (szData);
+
+         if (RegQueryValueExA (hKey, szValueName, nullptr, nullptr, (LPBYTE)szData, &dwDataSize)
+             == ERROR_SUCCESS)
+          {
+           std::string expr (szData);
+           if (!isDuplicate (expr))
+            {
+             m_history.push_back (trimRight (expr)); // Store normalized version
+            }
+          }
+        }
+      }
+    }
+
+   RegCloseKey (hKey);
+  }
+}
 void WinApiCalc::SaveHistory ()
 {
  HKEY hKey;
@@ -2571,6 +2648,7 @@ void WinApiCalc::AddToHistory (const std::string &expression)
  // }
 }
 
+#ifdef _comment1_
 void WinApiCalc::LoadHistoryItem (int index)
 {
  // Check the validity of the index
@@ -2610,7 +2688,150 @@ void WinApiCalc::LoadHistoryItem (int index)
  // other processing
  PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
 }
+#endif
+#ifdef _comment2_
+void WinApiCalc::LoadHistoryItem (int index)
+{
+ // Check the validity of the index
+ if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
+  {
+   return;
+  }
 
+ // Direct mapping: combo index = vector index (0 = newest item)
+ const std::string &expression = m_history[index];
+
+ // Check if the expression is empty
+ if (expression.empty ())
+  {
+   return;
+  }
+
+ // IMPORTANT: Close the dropdown explicitly BEFORE setting text
+ // This prevents the dropdown from staying open when console windows are created
+ if (m_hComboBox)
+  {
+   SendMessage (m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
+  }
+
+ // Process pending messages to ensure dropdown is fully closed
+ // This is Win32 API equivalent of Application->ProcessMessages() in VCL
+ MSG msg;
+ while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
+  {
+   TranslateMessage (&msg);
+   DispatchMessage (&msg);
+  }
+
+ // Set the expression in the input field
+ m_isUpdatingHistory = true;
+ SetWindowTextA (m_hExpressionEdit, expression.c_str ());
+ m_isUpdatingHistory = false;
+
+ // Force update of title and result
+ OnExpressionChanged (true); // OnHistoryItemSelected
+
+ // Set cursor to end of text without selection using PostMessage to ensure it happens after any
+ // other processing
+ PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
+}
+#endif
+#ifdef _comment3_
+void WinApiCalc::LoadHistoryItem (int index)
+{
+ // Check the validity of the index
+ if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
+  {
+   return;
+  }
+
+ // Direct mapping: combo index = vector index (0 = newest item)
+ const std::string &expression = m_history[index];
+
+ // Check if the expression is empty
+ if (expression.empty ())
+  {
+   return;
+  }
+
+ // Close the dropdown explicitly
+ if (m_hComboBox)
+  {
+   SendMessage (m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
+  }
+
+ // Remove any pending WM_DELAYED_CLEAR_HISTORY messages
+ // They will be recreated naturally when dropdown closes next time
+ MSG msg;
+ while (PeekMessage (&msg, m_hWnd, WM_DELAYED_CLEAR_HISTORY, WM_DELAYED_CLEAR_HISTORY, PM_REMOVE))
+  {
+   // Just remove them, don't dispatch
+  }
+
+ // Set the expression in the input field
+ m_isUpdatingHistory = true;
+ SetWindowTextA (m_hExpressionEdit, expression.c_str ());
+ m_isUpdatingHistory = false;
+
+ // Force update of title and result
+ OnExpressionChanged (true); // OnHistoryItemSelected
+
+ // Set cursor to end of text
+ PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
+}
+#endif
+void WinApiCalc::LoadHistoryItem (int index)
+{
+ // Check the validity of the index
+ if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
+  {
+   return;
+  }
+
+ // Direct mapping: combo index = vector index (0 = newest item)
+ const std::string &expression = m_history[index];
+
+ // Check if the expression is empty
+ if (expression.empty ())
+  {
+   return;
+  }
+
+ // Close the dropdown explicitly
+ if (m_hComboBox)
+  {
+   SendMessage (m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
+  }
+
+ // Remove any pending WM_DELAYED_CLEAR_HISTORY messages
+ MSG msg;
+ while (PeekMessage (&msg, m_hWnd, WM_DELAYED_CLEAR_HISTORY, WM_DELAYED_CLEAR_HISTORY, PM_REMOVE))
+  {
+   // Just remove them, don't dispatch
+  }
+
+ // Set the expression in the input field
+ m_isUpdatingHistory = true;
+ SetWindowTextA (m_hExpressionEdit, expression.c_str ());
+ m_isUpdatingHistory = false;
+
+ // Set cursor to end of text immediately (not via PostMessage)
+ SendMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
+
+ // Force immediate window update to show the new text BEFORE evaluation
+ UpdateWindow (m_hExpressionEdit);
+ UpdateWindow (m_hComboBox);
+ UpdateWindow (m_hWnd);
+
+ // Process any remaining paint messages to ensure UI is fully updated
+ while (PeekMessage (&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
+  {
+   DispatchMessage (&msg);
+  }
+
+ // NOW evaluate the expression (this may open console windows)
+ OnExpressionChanged (true); // OnHistoryItemSelected
+}
 void WinApiCalc::DeleteSelectedHistoryItem ()
 {
  if (!m_hComboBox) return;

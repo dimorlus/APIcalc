@@ -1803,6 +1803,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             return result_fval = qnan;
            }
          }
+        else
         if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
           v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;

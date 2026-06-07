@@ -17,7 +17,7 @@ const int WINDOW_MIN_HEIGHT = 200;
 const int CONTROL_HEIGHT = 25; // Increased from 20 to 25 for proper text rendering
 const int CONTROL_MARGIN = 0;  // No margins as per requirements
 const int HISTORY_HEIGHT = 100;
-const int MAX_HISTORY = 200;
+const int MAX_HISTORY = 300;
 const int WM_DELAYED_CLEAR_HISTORY = WM_APP + 100;
 
 // Main application class

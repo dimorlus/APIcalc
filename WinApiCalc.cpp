@@ -1027,8 +1027,8 @@ void WinApiCalc::OnCreate ()
  m_hMenu = ::GetMenu (m_hWnd);
 
  // Apply saved menu visibility (MNU flag)
- SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
- m_menuVisible = ((m_options & MNU) == 0);
+ SetMenu (m_hWnd, (m_options & MNU) ? m_hMenu : nullptr);
+ m_menuVisible = ((m_options & MNU) != 0);
  DrawMenuBar (m_hWnd);
 
  // Update menu states
@@ -1727,7 +1727,7 @@ void WinApiCalc::ToggleOption (int_t flag)
   {
    // Show or hide menu and persist the option BEFORE resizing so AdjustWindowRect
    // uses correct m_menuVisible value.
-   SetMenuVisibilityOption ((m_options & MNU) ? false : true);
+   SetMenuVisibilityOption ((m_options & MNU) ? true : false);
   }
 
  UpdateMenuChecks ();
@@ -2419,10 +2419,10 @@ void WinApiCalc::LoadHistory ()
      // Load history items in DIRECT order - History0=newest, History1=older, etc.
      // Registry already stores in correct order: History0=newest
      // Vector needs: [0]=newest ... [N]=oldest
-     for (int i = 0; i < (int)historyCount && i < (int)MAX_HISTORY; i++)
+     for (size_t i = 0; i < (int)historyCount && i < (int)MAX_HISTORY; i++)
       {
        char szValueName[256];
-       sprintf_s (szValueName, "History%d", i);
+       sprintf_s (szValueName, "History%03zu", i);
 
        char szData[1024];
        DWORD dwDataSize = sizeof (szData);
@@ -2431,6 +2431,13 @@ void WinApiCalc::LoadHistory ()
         {
          m_history.push_back (std::string (szData));
         }
+       sprintf_s (szValueName, "History%zu", i);
+       if (RegQueryValueExA (hKey, szValueName, nullptr, nullptr, (LPBYTE)szData, &dwDataSize)
+           == ERROR_SUCCESS)
+        {
+         m_history.push_back (std::string (szData));
+        }
+
       }
     }
 
@@ -2454,7 +2461,7 @@ void WinApiCalc::SaveHistory ()
    for (size_t i = 0; i < m_history.size (); ++i)
     {
      char szValueName[32];
-     sprintf_s (szValueName, "History%zu", i);
+     sprintf_s (szValueName, "History%03zu", i);
      RegSetValueExA (hKey, szValueName, 0, REG_SZ, (LPBYTE)m_history[i].c_str (),
                      (DWORD)(m_history[i].length () + 1));
     }
@@ -2468,11 +2475,12 @@ void WinApiCalc::SaveHistory ()
   {
    SetWindowPos (m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE);
-   SetMenu (m_hWnd, (m_options & MNU) ? nullptr : m_hMenu);
+   SetMenu (m_hWnd, (m_options & MNU) ? m_hMenu : nullptr);
    DrawMenuBar (m_hWnd);
   }
 }
 
+#ifdef _comment_
 void WinApiCalc::AddToHistory (const std::string &expression)
 {
  if (expression.empty ()) return;
@@ -2500,6 +2508,51 @@ void WinApiCalc::AddToHistory (const std::string &expression)
 
  // Add to vector
  if (m_history.size () < MAX_HISTORY) m_history.insert (m_history.begin (), expression);
+
+ // Limit history size
+ if (m_history.size () > MAX_HISTORY)
+  {
+   m_history.pop_back ();
+  }
+
+ // Update ComboBox - REMOVED
+ // We use populate-on-demand strategy (PopulateHistoryCombo on dropdown).
+ // Adding items here would make PopulateHistoryCombo think the list is already populated (count >
+ // 0), resulting in a list containing only this new item until the next close/clear cycle. if
+ // (m_hComboBox)
+ // {
+ //    SendMessageA(m_hComboBox, CB_INSERTSTRING, 0, (LPARAM)expression.c_str());
+ //    ...
+ // }
+}
+#endif
+void WinApiCalc::AddToHistory (const std::string &expression)
+{
+ if (expression.empty ()) return;
+
+ // Helper lambda to trim trailing whitespace
+ auto trimRight = [] (const std::string &str) -> std::string {
+  size_t end = str.find_last_not_of (" \t\r\n");
+  return (end == std::string::npos) ? "" : str.substr (0, end + 1);
+ };
+
+ // Normalize the expression by trimming trailing whitespace
+ std::string normalizedExpr = trimRight (expression);
+
+ // Check if normalized expression is empty
+ if (normalizedExpr.empty ()) return;
+
+ // Check if expression already exists in history (compare normalized versions)
+ for (const auto &item : m_history)
+  {
+   if (trimRight (item) == normalizedExpr)
+    {
+     return; // Do nothing if already exists (ignoring trailing spaces)
+    }
+  }
+
+ // Add normalized expression to vector
+ if (m_history.size () < MAX_HISTORY) m_history.insert (m_history.begin (), normalizedExpr);
 
  // Limit history size
  if (m_history.size () > MAX_HISTORY)
@@ -2684,6 +2737,7 @@ void WinApiCalc::SaveSettings ()
    RegCloseKey (hKey);
   }
 }
+
 void WinApiCalc::InitializeDPI ()
 {
  HDC hdc = GetDC (nullptr);
@@ -3261,20 +3315,20 @@ void WinApiCalc::SetMenuVisibilityOption (bool visible)
 {
  if (visible)
   {
-   m_options &= ~MNU; // clear MNU -> menu visible
+   m_options |= MNU; // set MNU -> menu visible
    SetMenu (m_hWnd, m_hMenu);
    m_menuVisible = true;
    int_t opt = m_pCalculator->issyntax ();
-   opt &= ~MNU;
+   opt |= MNU;
    m_pCalculator->syntax (opt);
   }
  else
   {
-   m_options |= MNU; // set MNU -> menu hidden
+   m_options &= ~MNU; // clear MNU -> menu hidden
    SetMenu (m_hWnd, nullptr);
    m_menuVisible = false;
    int_t opt     = m_pCalculator->issyntax ();
-   opt |= MNU;
+   opt &= ~MNU;
    m_pCalculator->syntax (opt);
   }
  DrawMenuBar (m_hWnd);

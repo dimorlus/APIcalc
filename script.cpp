@@ -398,9 +398,9 @@ bool script::execute ()
 
  if (debug) debug (child, ""); // Reset debug execution mode to step-by-step if it was set to auto before
  if (debug) br = debug (child, 
-                "===                         Script started, %d lines.                              ===\n"
-                "=== Press any key for the next step, F9 for restart, F8 for skip, Ctrl+C for exit  ===\n"
-                "=== F5 for running without breaks, F7 - interactive mode, F10 for running silently ===\n", num_lines);
+                " |                         Script started, %d lines.                              |\n"
+                " | Press any key for the next step, F9 for restart, F8 for skip, Ctrl+C for exit  |\n"
+                " | F5 for running without breaks, F7 - interactive mode, F10 for running silently |\n", num_lines);
 
  while (ip < num_lines)
   {
@@ -704,9 +704,30 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      if (scfg & DBG) console (1);
      if (debugFn) sct->set_debug_callback(debugFn);
      else 
-     if ((scfg & DBG) && is_console_open ()) 
-         sct->set_debug_callback (Debug); // Use calculator's debug function if available
-     
+     if ((scfg & DBG) && is_console_open ())
+      {
+       sct->set_debug_callback (Debug); // Use calculator's debug function if available
+       SetConsoleTitle (filename);
+       HWND hwnd = GetConsoleWindow ();
+       if (hwnd)
+        {
+        //con_top:= 10; con_left:= 10; con_width:= 800; con_height:= 600
+         int top = (int)getivar ("con_top");
+         int left = (int)getivar ("con_left");
+         int width = (int)getivar ("con_width");
+         int height = (int)getivar ("con_height");
+         if (!(top < 0 || left < 0 || width < 0
+               || height < 0)) // If any of the values are invalid, use defaults
+          {
+           if ((width <= 100) || (width > 2000)) width = 800;
+           if ((height <= 100) || (height > 2000)) height = 600;
+           if (top < 0 || top > 2000) top = 0;
+           if (left < 0 || left > 2000) left = 0;
+
+           SetWindowPos (hwnd, HWND_TOPMOST, top, left, width, height, SWP_SHOWWINDOW);
+          }
+        }
+      }
      child->add (tsSCRIPT, scVars, "vars", nullptr, false);
      sct->set_calculator(child);
 

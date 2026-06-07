@@ -4217,7 +4217,9 @@ void OpenDebugConsole ()
     }
 
    // 4. Symbolically clear the screen and welcome the engineer
-   printf ("--- Engine Debug Console Activated ---\n");
+   printf (
+    " |                     --- Debug Console Activated ---                            |\n");
+  //" |                         Script started, %d lines.                              |\n"
   }
 }
 

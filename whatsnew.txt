@@ -1,4 +1,4 @@
-06.06.26 (2.212)
+07.06.26 (2.212)
 + Now the script (run("script.txt")) and eval("expr") can return a BMP image.
 * Now the color() function not only displays a colored square but also sets the color name to the resulting string.
 * Now, if the result is a BMP, the integer and floating-point results are equal to its size (in bytes), and the 
@@ -10,7 +10,10 @@
   around). Executing opton(1<<22)/optoff(1<<22) does not immediately show/hide the menu (there is a menu(1)/menu(0) 
   function for this), but the value will be saved in the registry and the menu will appear or, conversely, hide the 
   next time the program is launched.
-
+* The script file name is now displayed in the debug console title.
+* Now, the variables con_top:= 10; con_left:= 10; con_width:= 800; con_height:= 600 can be used to set the position 
+  and size of the debug console on the screen. Any negative value leaves the choice to the system.
+  
 04.06.26 (2.211)
 + Added the prnfs function and the prnfl synonym to the prnf function. Now, prnfl (like prnf before it) appends 
   a newline character '\n' to the line written to the file, while prnfs does not.

@@ -298,11 +298,7 @@ const("a_phase", exp(120*deg * j));; Phase shift operator (120 degrees)
 {vol_sphere(r) (4/3)*pi*r^3};; Sphere volume
 
 ;; --- Conversions ---
-{mil_to_mm(m) m * 0.0254};; Mil (thou) to mm
-{cmil_to_mm2(cm) cm * 0.0005067};; Circular mil to mm²
-{mm2_to_cmil(mm2) mm2 / 0.0005067};; mm² to Circular mil
-{psi_to_bar(p) p * 0.0689476};; PSI to Bar
-{bar_to_psi(p) p / 0.0689476};; Bar to PSI
+const("mm",1e-3)
 {gpm_to_lpm(g) g * 3.78541};; Gallons per minute to Liters per minute
 {lbft_to_nm(v) v * 1.355818};; Pound-foot to Newton-meter
 {nm_to_lbft(v) v / 1.355818};; Newton-meter to Pound-foot

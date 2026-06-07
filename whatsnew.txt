@@ -3,7 +3,14 @@
 * Now the color() function not only displays a colored square but also sets the color name to the resulting string.
 * Now, if the result is a BMP, the integer and floating-point results are equal to its size (in bytes), and the 
   string is 'BMP WxH', where W and H are the width and height of the image in pixels.
-  
+- Minor UI fixes (removed duplicate history, new registry template for history, removed the history window before 
+  opening the console window when the expression that triggers it is retrieved from the history).
+- Fixed color division by a constant.  
+* Now the MNU (1<<22) option shows the menu if it is not zero, and hides it if it is zero (it was the other way 
+  around). Executing opton(1<<22)/optoff(1<<22) does not immediately show/hide the menu (there is a menu(1)/menu(0) 
+  function for this), but the value will be saved in the registry and the menu will appear or, conversely, hide the 
+  next time the program is launched.
+
 04.06.26 (2.211)
 + Added the prnfs function and the prnfl synonym to the prnf function. Now, prnfl (like prnf before it) appends 
   a newline character '\n' to the line written to the file, while prnfs does not.

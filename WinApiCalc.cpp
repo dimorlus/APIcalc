@@ -2637,15 +2637,6 @@ void WinApiCalc::AddToHistory (const std::string &expression)
    m_history.pop_back ();
   }
 
- // Update ComboBox - REMOVED
- // We use populate-on-demand strategy (PopulateHistoryCombo on dropdown).
- // Adding items here would make PopulateHistoryCombo think the list is already populated (count >
- // 0), resulting in a list containing only this new item until the next close/clear cycle. if
- // (m_hComboBox)
- // {
- //    SendMessageA(m_hComboBox, CB_INSERTSTRING, 0, (LPARAM)expression.c_str());
- //    ...
- // }
 }
 
 #ifdef _comment1_
@@ -2686,97 +2677,6 @@ void WinApiCalc::LoadHistoryItem (int index)
  // Set cursor to end of text without selection
  // Set cursor to end of text without selection using PostMessage to ensure it happens after any
  // other processing
- PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
-}
-#endif
-#ifdef _comment2_
-void WinApiCalc::LoadHistoryItem (int index)
-{
- // Check the validity of the index
- if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
-  {
-   return;
-  }
-
- // Direct mapping: combo index = vector index (0 = newest item)
- const std::string &expression = m_history[index];
-
- // Check if the expression is empty
- if (expression.empty ())
-  {
-   return;
-  }
-
- // IMPORTANT: Close the dropdown explicitly BEFORE setting text
- // This prevents the dropdown from staying open when console windows are created
- if (m_hComboBox)
-  {
-   SendMessage (m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
-  }
-
- // Process pending messages to ensure dropdown is fully closed
- // This is Win32 API equivalent of Application->ProcessMessages() in VCL
- MSG msg;
- while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
-  {
-   TranslateMessage (&msg);
-   DispatchMessage (&msg);
-  }
-
- // Set the expression in the input field
- m_isUpdatingHistory = true;
- SetWindowTextA (m_hExpressionEdit, expression.c_str ());
- m_isUpdatingHistory = false;
-
- // Force update of title and result
- OnExpressionChanged (true); // OnHistoryItemSelected
-
- // Set cursor to end of text without selection using PostMessage to ensure it happens after any
- // other processing
- PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
-}
-#endif
-#ifdef _comment3_
-void WinApiCalc::LoadHistoryItem (int index)
-{
- // Check the validity of the index
- if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
-  {
-   return;
-  }
-
- // Direct mapping: combo index = vector index (0 = newest item)
- const std::string &expression = m_history[index];
-
- // Check if the expression is empty
- if (expression.empty ())
-  {
-   return;
-  }
-
- // Close the dropdown explicitly
- if (m_hComboBox)
-  {
-   SendMessage (m_hComboBox, CB_SHOWDROPDOWN, FALSE, 0);
-  }
-
- // Remove any pending WM_DELAYED_CLEAR_HISTORY messages
- // They will be recreated naturally when dropdown closes next time
- MSG msg;
- while (PeekMessage (&msg, m_hWnd, WM_DELAYED_CLEAR_HISTORY, WM_DELAYED_CLEAR_HISTORY, PM_REMOVE))
-  {
-   // Just remove them, don't dispatch
-  }
-
- // Set the expression in the input field
- m_isUpdatingHistory = true;
- SetWindowTextA (m_hExpressionEdit, expression.c_str ());
- m_isUpdatingHistory = false;
-
- // Force update of title and result
- OnExpressionChanged (true); // OnHistoryItemSelected
-
- // Set cursor to end of text
  PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
 }
 #endif

@@ -482,6 +482,7 @@ struct ColorNode
  ColorNode *next;
 };
 
+#ifdef _GETDOMINANTCOLOR_
 uint32_t bmpdraw::getDominantColor () const
 {
  if (!data || width <= 0 || height <= 0) return 0xFFFFFF;
@@ -560,7 +561,8 @@ uint32_t bmpdraw::getDominantColor () const
 
  return dominantColor;
 }
-
+#endif
+#ifdef _TEST_BMP_
 void test_bmp ()
 {
  bmpdraw bmp;
@@ -568,9 +570,11 @@ void test_bmp ()
   {
    bmp.drawLine (10, 10, 190, 90, 0xFF0000);
    bmp.drawString (20, 20, "Hello, BMP!", 0x0000FF,0,2);
+#ifdef _GETDOMINANTCOLOR_
    uint32_t dominant = bmp.getDominantColor ();
    printf ("Dominant color: #%06X\n", dominant);
+#endif
    bmp.save ("test.bmp");
-
   }
 }
+#endif

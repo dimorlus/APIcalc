@@ -47,7 +47,6 @@
 script::script()
 {
  buffer = nullptr;
- int pass = 0;
  LblTable = nullptr;
  lineidx = nullptr;
  label  = nullptr;
@@ -61,7 +60,6 @@ script::script()
  serr[0] = '\0';
  errln  = 0;
  pass = 0;
-
 }
 
 script::~script()
@@ -83,7 +81,6 @@ bool script::load (const char *filename)
   {
    fclose (f);
    sprintf (serr, "File size error: %ld bytes", fsize);
-   errln = 0;
    return false;
   }
  buffer = (char *)malloc (fsize + 1);
@@ -91,6 +88,7 @@ bool script::load (const char *filename)
   {
    fclose (f);
    sprintf (serr, "Out of memory");
+   return false;
   }
  fread (buffer, 1, fsize, f);
  buffer[fsize] = '\0';
@@ -707,6 +705,11 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
      if ((scfg & DBG) && is_console_open ())
       {
        sct->set_debug_callback (Debug); // Use calculator's debug function if available
+       //{
+       // wchar_t wFilename[MAX_PATH];
+       // MultiByteToWideChar (CP_ACP, 0, filename, -1, wFilename, MAX_PATH);
+       // SetConsoleTitle (wFilename);
+       //}
        SetConsoleTitle (filename);
        HWND hwnd = GetConsoleWindow ();
        if (hwnd)
@@ -716,9 +719,8 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
          int left = (int)getivar ("con_left");
          int width = (int)getivar ("con_width");
          int height = (int)getivar ("con_height");
-         if (!(top < 0 || left < 0 || width < 0
-               || height < 0)) // If any of the values are invalid, use defaults
-          {
+         if (!(top < 0 || left < 0 || width < 0 || height < 0)) 
+          {// If any of the values are invalid, use defaults
            if ((width <= 100) || (width > 2000)) width = 800;
            if ((height <= 100) || (height > 2000)) height = 600;
            if (top < 0 || top > 2000) top = 0;

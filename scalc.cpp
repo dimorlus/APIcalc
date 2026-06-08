@@ -1356,7 +1356,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       }
     }
    n_args = 1;
-   while (o_sp && (lpr[o_stack[o_sp - 1]] >= rpr[oper])) 
+   while (o_sp && (oper < toTERMINALS) && (oper >= toBEGIN) && (lpr[o_stack[o_sp - 1]] >= rpr[oper])) 
     {
      t_operator cop = o_stack[--o_sp];
      if ((UNARY (cop) && (v_sp < 1)) || (BINARY (cop) && (v_sp < 2)))

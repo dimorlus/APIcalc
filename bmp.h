@@ -118,8 +118,9 @@ class bmpdraw
  // Getting image information
  int getWidth () const { return width; }
  int getHeight () const { return height; }
+#ifdef _GETDOMINANTCOLOR_
  uint32_t getDominantColor () const; // get the dominant color
-
+#endif
  ~bmpdraw (void);
 };
 

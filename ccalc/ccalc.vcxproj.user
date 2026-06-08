@@ -8,5 +8,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>"(1+j2)" /ALL-</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArgumentsHistory>"(1+j2)" /ALL-|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
 </Project>

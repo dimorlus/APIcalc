@@ -9,10 +9,11 @@ EXPORTS
     calc_get_flags
     calc_clr_flags
     calc_set_syntax
+    calc_get_syntax
     calc_varlist
     calc_error
     calc_setEscFn
-	calc_setFileDlgFn
+    calc_setFileDlgFn
     calc_setShowImageFn
     calc_setDebugFn
     calc_block

@@ -67,7 +67,7 @@ $(OUTDIR):
 	mkdir $(OUTDIR)
 
 $(TARGET): $(OBJS) $(RCOBJ)
-	$(CXX) $(CXXFLAGS) $^ $(DEFFILE) $(LDFLAGS) -o $@
+	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(OUTDIR)/%.o: %.cpp $(MAKEFILE_LIST) ver.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@

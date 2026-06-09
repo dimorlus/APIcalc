@@ -5,11 +5,11 @@ pause
 type ver.h
 pause
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" calc_std.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+"c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" calclib.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Build
+copy /Y x64\Release\calclib.lib .\
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" calc_std.vcxproj /p:Configuration=Release /p:Platform=x86 /t:Rebuild
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" ccalc\ccalc.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" ccalc\ccalc.vcxproj /p:Configuration=Release /p:Platform=x86 /t:Rebuild
-"c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" calclib.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
-copy /Y x64\Release\calclib.lib .\
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" ccalc\ccalc_dll.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 "c:\Program Files\Microsoft Visual Studio\18\Professional\MSBuild\Current\Bin\MSBuild.exe" calc_dll.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
 

@@ -173,6 +173,13 @@ WinApiCalc::WinApiCalc ()
 #ifdef _DEBUG_MEMORY_
 // _CrtMemCheckpoint (&s1);
 #endif
+ m_dpiX = 0;
+ m_dpiY = 0;
+ m_resultLines = 0;
+ m_lastResultClientHeight = 0;        // measured client height of result edit control
+ m_resultEditInternalPadding = 0;     // cached internal top/bottom padding inside result edit
+ m_resultEditInternalHorzPadding = 0; // cached left+right internal padding inside result edit
+ m_lastComboHeight = 0;               // cached height of the combobox when closed
 
 
  // Detect Wine
@@ -1770,7 +1777,7 @@ void WinApiCalc::UpdateLayout ()
   }
 
  // Result edit
- if (m_hResultEdit)
+ if (m_hComboBox && m_hResultEdit)
   {
    // Position and size result edit
    // It should be below the ComboBox.
@@ -2639,47 +2646,6 @@ void WinApiCalc::AddToHistory (const std::string &expression)
 
 }
 
-#ifdef _comment1_
-void WinApiCalc::LoadHistoryItem (int index)
-{
- // Check the validity of the index
- if (index < 0 || index >= (int)m_history.size () || m_history.empty ())
-  {
-   return;
-  }
-
- // Direct mapping: combo index = vector index (0 = newest item)
- const std::string &expression = m_history[index];
-
- // Update window title with current expression
- // OutputDebugStringA("LoadHistoryItem: index=");
- // char idxStr[32];
- // sprintf_s(idxStr, "%d", index);
- // OutputDebugStringA(idxStr);
- // OutputDebugStringA(", expr='");
- // OutputDebugStringA(expression.c_str());
- // OutputDebugStringA("'\n");
-
- // Check if the expression is empty
- if (expression.empty ())
-  {
-   return;
-  }
-
- // Set the expression in the input field
- m_isUpdatingHistory = true;
- SetWindowTextA (m_hExpressionEdit, expression.c_str ());
- m_isUpdatingHistory = false;
-
- // Force update of title and result
- OnExpressionChanged (true); // OnHistoryItemSelected
-
- // Set cursor to end of text without selection
- // Set cursor to end of text without selection using PostMessage to ensure it happens after any
- // other processing
- PostMessage (m_hExpressionEdit, EM_SETSEL, expression.length (), expression.length ());
-}
-#endif
 void WinApiCalc::LoadHistoryItem (int index)
 {
  // Check the validity of the index
@@ -2720,7 +2686,7 @@ void WinApiCalc::LoadHistoryItem (int index)
 
  // Force immediate window update to show the new text BEFORE evaluation
  UpdateWindow (m_hExpressionEdit);
- UpdateWindow (m_hComboBox);
+ if (m_hComboBox) UpdateWindow (m_hComboBox);
  UpdateWindow (m_hWnd);
 
  // Process any remaining paint messages to ensure UI is fully updated
@@ -3733,7 +3699,7 @@ void WinApiCalc::GetLastImageWindowPos (LONG &x, LONG &y, bool &hasPos)
  hasPos = m_hasImageWindowPos;
 }
 
-// Window proc для окна с изображением
+// Window proc for the image window
 LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
  switch (message)
@@ -3743,7 +3709,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint (hWnd, &ps);
 
-    // Получаем указатель на HBITMAP из user data
+    // Get the pointer to HBITMAP from user data
     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
     if (hBitmap)
      {
@@ -3753,7 +3719,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
       BITMAP bm;
       GetObject (hBitmap, sizeof (bm), &bm);
 
-      // Рисуем изображение в окне
+      // Draw the image in the window
       BitBlt (hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
       SelectObject (hdcMem, hOldBitmap);
@@ -3767,7 +3733,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
   case WM_LBUTTONDOWN:
   case WM_RBUTTONDOWN:
   case WM_KEYDOWN:
-   // Любое нажатие закрывает окно
+   // Any key closes the window
    {
     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
     if (hBitmap) DeleteObject (hBitmap);
@@ -3777,7 +3743,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
 
   case WM_DESTROY:
    {
-    // Сохраняем позицию окна перед закрытием
+    // Save window position before closing
     RECT rc;
     if (GetWindowRect (hWnd, &rc) && g_pCalcInstance)
      {
@@ -3791,7 +3757,7 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
 
   case WM_CLOSE:
    {
-    // WM_CLOSE приведёт к WM_DESTROY, где позиция будет сохранена
+    // WM_CLOSE will lead to WM_DESTROY, where the position will be saved
     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
     if (hBitmap) DeleteObject (hBitmap);
     DestroyWindow (hWnd);
@@ -3819,7 +3785,7 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 
  const char *pClassName = "WinApiCalcImageWindow";
 
- // --- ДОБАВЛЕНО: Регистрация класса окна ---
+ // --- ADDED: Window class registration ---
  WNDCLASSEXA wc = { 0 };
  if (!GetClassInfoExA (GetModuleHandle (nullptr), pClassName, &wc))
   {
@@ -3836,7 +3802,7 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
    if (!RegisterClassExA (&wc)) return false;
   }
 
- // Создаём DIB
+ // Create DIB
  BITMAPINFO bmi              = { 0 };
  bmi.bmiHeader.biSize        = sizeof (BITMAPINFOHEADER);
  bmi.bmiHeader.biWidth       = width;
@@ -3852,14 +3818,14 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 
  if (!hBitmap || !pBits) return false;
 
- // --- ПРЯМОЕ ПРЕОБРАЗОВАНИЕ ИЗ bmp->data (BGR, 3 байта) В BGRA (4 байта) ---
+ // --- DIRECT CONVERSION FROM bmp->data (BGR, 3 bytes) TO BGRA (4 bytes) ---
  uint32_t *dest = (uint32_t *)pBits;
 
  for (int y = 0; y < height; y++)
   {
    for (int x = 0; x < width; x++)
     {
-     int srcIdx = y * bmp->rowSize + x * 3; // BGR: учитываем выравнивание rowSize
+     int srcIdx = y * bmp->rowSize + x * 3; //BGR: considering rowSize alignment
      int dstIdx = y * width + x;
 
      uint8_t b = bmp->data[srcIdx + 0];
@@ -3871,12 +3837,12 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
     }
   }
 
- // --- Создание окна plot (на 10 px ниже и правее окна калькулятора),  ---
- // с учётом размера клиентской области,
- // чтобы изображение не обрезалось рамкой и заголовком окна-- -
- // Можно добавить положение в ксласс bmp для управления его положением.
+ // --- Create window plot (10 px below and to the right of the calculator window),  ---
+ // taking into account the client area size,
+ // so that the image is not clipped by the window frame and title bar--
+ // You can add position to the bmp class to control its position.
 
- // Используем сохранённую позицию, если она есть
+ // Using the saved position, if available
  RECT rc;
 
  if (top + left == 0)
@@ -3886,7 +3852,7 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 
    if (!hasPos)
     {
-     // Если позиции нет, используем позицию относительно главного окна
+     // if there is no saved position, use the position relative to the main window
      if (GetWindowRect (m_hWnd, &rc))
       {
        rc.left += 10;
@@ -3913,8 +3879,9 @@ bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)
 
  int windowWidth  = clientRect.right - clientRect.left;
  int windowHeight = clientRect.bottom - clientRect.top;
-
- HWND hImageWnd = CreateWindowExA (dwExStyle, pClassName, "Image Preview", dwStyle, rc.left, rc.top,
+ char title[64];
+ sprintf_s (title, 64, "Image Preview (%dx%d)", width, height);
+ HWND hImageWnd = CreateWindowExA (dwExStyle, pClassName, title, dwStyle, rc.left, rc.top,
                                    windowWidth, windowHeight, m_hWnd, nullptr,
                                    GetModuleHandle (nullptr), nullptr);
 

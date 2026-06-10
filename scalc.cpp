@@ -1447,7 +1447,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            result_fval     = 0;
           }
 
-         if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == 0.0))
+         if ((v_stack[0].tag == tvINT) && (v_stack[0].imval == (float__t)0.0L))
           {
            result_ival = v_stack[0].ival;
            if (piVal) *piVal = v_stack[0].ival;

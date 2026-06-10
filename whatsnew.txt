@@ -1,6 +1,6 @@
-09.06.26 (2.214)
+10.06.26 (2.214)
 * Optimized assembly (removed recompilation of already compiled files)
-
+- Fixed a bug in the GUI where the Ctrl+A combination was not processed in the input line. 
 08.06.26 (2.213)
 * Rebuilt with new tools (MSVC2026)
 

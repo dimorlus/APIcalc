@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctime>
 
-#include "bmp.h" // Теперь можем работать с bmpdraw напрямую
+#include "bmp.h" 
 
 //#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
@@ -351,6 +351,8 @@ BOOL WinApiCalc::InitInstance (HINSTANCE hInstance, int nCmdShow)
  return TRUE;
 }
 
+// #define OLD_KEY_PROC // Old key handling logic (Ctrl+key combinations sent to main handler, which
+// caused issues with standard edit shortcuts) Ctrl+A fix.
 #define _MULTILINE_PASTE_
 LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM wParam,
                                                LPARAM lParam)
@@ -435,6 +437,7 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
      // Else let it pass (delete character)
     }
    else if (GetKeyState (VK_CONTROL) < 0 && wParam != VK_CONTROL)
+#ifdef OLD_KEY_PROC
     {
      // Delegate Ctrl+key combinations to the main handler for consistency
      if (pThis)
@@ -443,6 +446,40 @@ LRESULT CALLBACK WinApiCalc::EditSubclassProc (HWND hWnd, UINT message, WPARAM w
        return 0;
       }
     }
+#else
+    {
+     // Explicit handling for Ctrl+A (Select All)
+     if (wParam == 'A')
+      {
+       // Manually select all text
+       SendMessageA (hWnd, EM_SETSEL, 0, -1);
+       return 0; // Handled
+      }
+     // Allow other standard edit operations to pass through
+     else if (wParam == 'C' || // Copy
+              wParam == 'X' || // Cut
+              wParam == 'V' || // Paste
+              wParam == 'Z' || // Undo
+              wParam == 'Y')   // Redo
+      {
+       // Pass these directly to the original edit control for standard handling
+       if (pThis && pThis->m_originalEditProc)
+        {
+         return CallWindowProcA (pThis->m_originalEditProc, hWnd, message, wParam, lParam);
+        }
+      }
+     else
+      {
+       // Delegate custom Ctrl+key combinations to the main handler
+       if (pThis)
+        {
+         pThis->OnKeyDown (wParam);
+         return 0;
+        }
+      }
+    }
+#endif //_comment_
+    
   }
 #ifdef _SIMPLE_PASTE_
  if (message == WM_PASTE)
@@ -3460,7 +3497,7 @@ int WinApiCalc::MeasureTextHeightForWidth (const std::string &text, int width)
  int height = rc.bottom - rc.top;
 
  SelectObject (hdc, hOld);
- if (!((HFONT)SendMessage (m_hResultEdit, WM_GETFONT, 0, 0)))
+ if (m_hResultEdit && !((HFONT)SendMessage (m_hResultEdit, WM_GETFONT, 0, 0)))
   {
    DeleteObject (hFont);
   }

@@ -642,10 +642,6 @@ Plot data points or lines from text files with flexible data extraction using ma
 ```
 plotdata(datafile [, mask])           ;; Display points in window
 plotdatal(datafile [, mask])          ;; Display lines in window
-fplotdata(bmpfile, datafile [, mask]) ;; Save points to BMP file
-fplotdatal(bmpfile, datafile [, mask]);; Save lines to BMP file
-oplotdata(bmpfile, datafile [, mask]) ;; Overlay points on existing BMP
-oplotdatal(bmpfile, datafile [, mask]);; Overlay lines on existing BMP
 ```
 ### Parameters
 

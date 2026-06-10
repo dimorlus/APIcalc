@@ -1,8 +1,9 @@
-# WinAPI Calculator
+# fcalc Calculator
+
 ![ccalc](calc.png)<br>
 [Русская версия / Russian version](Readme_ru.md)
 
-### Table of Contents
+## Table of Contents
 
 1. [Floating point sizes](#important-note)
 2. [Variable types](#variable-types)
@@ -56,7 +57,7 @@ This calculator project on WinAPI (VS2022) is based on my old project on Cbuilde
 ```
 The ***Casio Fx-991EX*** calculator served as a source of inspiration and ideas.
 
-## Important note. 
+## Important note 
 
 The DLL version is only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
 
@@ -100,7 +101,7 @@ Graphical objects containing plotted curves and coordinate grids.
    If the expression result is of type Color, the GUI draws a square of the corresponding color.
    ```color(trgb(2k7)) + color(wrgb(blue))/20 → 0xFFFFBE```  
 
-#### Data Persistence (File I/O)
+### Data Persistence (File I/O)
 
 The environment provides a polymorphic, type-agnostic way to save and restore variables. The engine 
 automatically detects the data type during execution.
@@ -116,7 +117,7 @@ If it is not a BMP, it spawns a silent child parsing instance to evaluate the te
 
 ## Two Versions Available
 
-### 📊 GUI Version (WinApiCalc / fcalc.exe)
+### 📊 GUI Version (fcalc.exe)
 
 Windows desktop application with native interface, history dropdown, and real-time calculation.
 
@@ -126,7 +127,7 @@ Command-line calculator for scripts, automation, and terminal use.
 
 ## Features
 
-### GUI Version (WinApiCalc)
+### GUI Version (fcalc.exe)
 
 * **Scientific Calculator**: Support for trigonometric functions, logarithms, exponentials, and more
 * **Expression Parser**: Advanced mathematical expression evaluation with proper operator precedence
@@ -354,6 +355,7 @@ The last variable in the initial conditions is the one being solved for:
   ```
 * **integral/integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:
   $$\int_{-5}^{5} e^{-x^2}\,dx = \sqrt{\pi} \approx 1.7725$$
+
   ```
   integr(exp(-(x^2)), -5, 5, x)  →  1.772453850902790   ;; sqrt(pi)
   integral(exp(-(x^2)), -5, 5, x)  →  1.772453850902790   ;; sqrt(pi)
@@ -394,7 +396,7 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
   ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
   ```  
-* **run("script.txt")**: Run script. Can be used as operand: 
+* **run("script.txt")**: Run [script](scripts.md). Can be used as operand: 
 ```
 	plot(run("sin.txt"), 0, 2 pi, x)
 ```	
@@ -405,18 +407,12 @@ solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
 ```	
 * **eval("expr")**: Evaluate string as expression.
 
-
 ### [Plotting](plot.md)
-The engine provides three distinct operators for visualization:
-* **plot(expr,from,to,var)**: Plot of the expr function in Cartesian coordinates and show graph in the modal window. 
-The window closes when you press any key or use the mouse.
-* **fplot("fname",expr,from,to,var)**: Plot of the expr function in Cartesian coordinates to the BMP file. Creates a fresh chart. 
-It initializes the background, draws the grid/axes based on the calculated range, and renders the function. If the file exists, 
-it will be overwritten.
-* **oplot("fname",expr,from,to,var)**: The "Overlay Plot" variant. It loads an existing BMP file and draws a new curve over it. This is ideal 
-for comparing multiple functions on the same scale.
+
+The **plot*** group of functions is designed to construct various graphs of functions and dependencies from text files with data.
 
 #### The following plot functions are available	   
+
 * **plot(expr,from,to,x)**: Plot of the expr function in Cartesian coordinates
 * **plotpol(expr,from, to, x)**: Plot of the expr function in Polar coordinates.
 * **plotxy(exprX, exprY,from, to, t)**: Parametric plot exprX(t), exprY(t) in Cartesian coordinates.
@@ -925,7 +921,7 @@ The engine handles chromatic algebra using clamped saturation (0..255 per channe
 #### Practical Examples
 * **Illuminant Filtering Simulation:** Simulating a warm 2700K incandescent lamp mixed with a subtle blue LED component (attenuated by a factor of 20):
   ```
-  color(trgb(2k7)) + color(wrgb(blue)) / 20  ->  0xFFFFBE ;; Elegant ivory tint
+  color(trgb(2k7)) + color(wrgb(blue)) / 2  ->  0xFFFFD6 ;; LightGoldenRodYellow
   ```
 # Architecture of Variable Scopes and Calculator Contexts
 
@@ -1125,7 +1121,7 @@ In engineering and normalized formats, the suffix order is based on the **modulu
 6. Access format options and binary width settings via the Calc menu or local menu jf the output panel
 
 ### Example Expressions
-
+[Tutorial](tutor.md)
 ```
 2 + 3 * 4
 sin(pi/2)

@@ -93,3 +93,4 @@ BCB/*.exe
 gcc_release/calclib.dll
 *.bmp
 calclib.exp
+calclib.lib

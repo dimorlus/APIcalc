@@ -5,11 +5,13 @@
    for(expr, var:=from, to, var+=step). 
   The exact number of steps for a non-integer step may not be obvious due to the implementation of floating-point 
   numbers.
+   sum(1/((x/10)^2),10,20,x) - sum(1/x^2,x:=1,2,x+=0.1) -> 1.447392195435611e-16
 - Fixed a bug in handling division by 0 in child calculators that appeared in version 2.12.
   
 10.06.26 (2.214)
 * Optimized assembly (removed recompilation of already compiled files)
 - Fixed a bug in the GUI where the Ctrl+A combination was not processed in the input line. 
+
 08.06.26 (2.213)
 * Rebuilt with new tools (MSVC2026)
 

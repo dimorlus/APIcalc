@@ -375,12 +375,13 @@ The last variable in the initial conditions is the one being solved for:
   ```
   inv(sin(x),1/sqrt(2), x) → 0.7853981633974483 (45`)
   ```  
-* **sum(expr, from, to, var)**: Summation over integer range. Supports both ascending and descending order:
+* **sum(expr, from, to, var)**, **sum(expr, var:=from, to, var+=step)**: Summation over integer range. Supports both ascending and descending order:
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
+  sum(1/((x/10)^2),10,20,x) - sum(1/x^2,x:=1,2,x+=0.1) → 1.447392195435611e-16
   ```
-* **for(expr, from, to, var)**: Execution over integer range, return `expr` value (any type including matrix and complex). Supports both ascending and descending order:
+* **for(expr, from, to, var)**, **for(expr, var:=from, to, var+=step)**: Execution over integer range, return `expr` value (any type including matrix and complex). Supports both ascending and descending order:
   ```
   r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) → [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
   ```

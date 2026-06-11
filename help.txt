@@ -190,13 +190,14 @@ color(n)                        Shows a color (colored square on top of the appl
 const("name",x|z|M)     (1,3)   Add (declare) constant 
 var("name",x|z|M)       (1,3)   Add (declare) variable
 
-integr(expr, from, to, x)       Numeric Gauss-Kronrod integration
-diff(expr, point, x)            Numeric differentiation
-extr(expr, est, x)              Find extemum
-inv(expr, point, var)           Inverse using Brent's method
-sum(expr, from, to, x)          ∑expr(x)
-for(expr, from, to, x)  (1,3)   Repeat expr calculations for x and return last expr value.
-if(cond, true, false)   (1,3)   Return true if cond!=0 else return false.
+integr(expr, from, to, x)          Numeric Gauss-Kronrod integration
+diff(expr, point, x)               Numeric differentiation
+extr(expr, est, x)                 Find extemum
+inv(expr, point, var)              Inverse using Brent's method
+sum(expr, from, to, x)             ∑expr(x)
+for(expr, from, to, x)       (1,3) Repeat expr calculations for x and return last expr value.
+while(expr, init, cond, calc)(1,3) Init, Repeat expr calculations while cond ≠ 0 and return last expr value.
+if(cond, true, false)        (1,3) Return true if cond!=0 else return false.
 
 tr(A)                     (3)   trace = sum of diagonal
 det(A)                    (3)   Determinant of matrix

@@ -659,8 +659,7 @@ bool calculator::For (const char *expr, value &res)
      return false;
     }
 
-   calculator *child
-       = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
    if (!child)
     {
      errorf (pos, "Out of memory");
@@ -772,6 +771,88 @@ bool calculator::For (const char *expr, value &res)
      }
    }
    GetChildRes (child, res);
+   delete child;
+   return true;
+  }
+ return false;
+}
+
+//while(expr, init, cond, calc)
+bool calculator::While (const char *expr, value &res)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char sinit[STRBUF];
+   char scond[STRBUF];
+   char scalc[STRBUF];
+
+   if (!Split (expr, sexpr, STRBUF, sinit, STRBUF, scond, STRBUF, scalc, STRBUF, nullptr, 0))
+    {
+     result_fval = qnan;
+     return false;
+    }
+
+   calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   if (!child)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return false;
+    }
+
+   float__t finit = child->evaluate_f (sinit);
+   if (isnan (finit) || child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+
+   float__t fexpr          = qnan;
+   float__t fcalc          = qnan;
+   float__t fcond          = qnan;
+   uint64_t init_ms        = GetTickCount64 ();
+   uint64_t last_gui_check = 0;
+
+   do
+    {
+     if (check_break (init_ms, last_gui_check) != brNONE)
+      {
+       delete child;
+       result_fval = qnan;
+       return qnan;
+      }
+
+     fexpr = child->evaluate_f (sexpr);
+     if (isnan (fexpr) || child->err[0])
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
+     GetChildRes (child, res);
+
+     fcalc = child->evaluate_f (scalc);
+     if (isnan (fcalc) || child->err[0])
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
+     fcond = child->evaluate_f (scond);
+     if (isnan (fcond) || child->err[0])
+      {
+       errorf (pos, "%s", child->err);
+       delete child;
+       result_fval = qnan;
+       return false;
+      }
+    }
+   while (fcond != (float__t)0.0L);
    delete child;
    return true;
   }

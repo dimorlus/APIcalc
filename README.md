@@ -99,7 +99,7 @@ Graphical objects containing plotted curves and coordinate grids.
    * for two colors: +, -, *
    * for a color and a number (or number and color): +, -, *, /
    If the expression result is of type Color, the GUI draws a square of the corresponding color.
-   ```color(trgb(2k7)) + color(wrgb(blue))/20 → 0xFFFFBE```  
+   ```color(trgb(2k7)) + color(wrgb(blue))/2 → 0xFFFFD6 'LightGoldenRodYellow'```  
 
 ### Data Persistence (File I/O)
 
@@ -384,6 +384,10 @@ The last variable in the initial conditions is the one being solved for:
 * **for(expr, from, to, var)**, **for(expr, var:=from, to, var+=step)**: Execution over integer range, return `expr` value (any type including matrix and complex). Supports both ascending and descending order:
   ```
   r:=3;A:=zeros(r,r);for(A[n/r,n%r]:=n;A, 0, r*r-1, n) → [(0, 1, 2); (3, 4, 5); (6, 7, 8)]
+  ```
+* **while(expr, init, cond, calc)**: Loop. The init expression is executed before the loop, and the  expr, calc, and cond expressions are executed sequentially within the loop until cond ≠ 0. The last value of  expr is returned.
+  ```
+  while(n*=10,x:=0;n:=1,x<10,x++) → 10000000000
   ```
 * **if(cond, true, false)**: If the first operand `cond` is not 0, the second operand `true` returns; otherwise, the third operand `false` returns. The returned operands can be any type, including different types.  
   ```

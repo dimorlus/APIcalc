@@ -196,6 +196,7 @@ void calculator::AddPredefined (void)
  add (tsINTEGR, "integral", nullptr);
  add (tsSUM, "sum", nullptr);
  add (tsFOR, "for", nullptr);
+ add (tsWHILE, "while", nullptr);
  add (tsDIFF, "diff", nullptr);
  add (tsDIFF, "derivative", nullptr);
  add (tsEXTR, "extremum", nullptr);
@@ -3013,7 +3014,28 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  }
                }
              }
-             break;
+            break;
+
+            case tsWHILE:
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one argument");
+                return result_fval = qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvWHILE)
+               {
+                const char *equation = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                if (While (equation, v_stack[v_sp - 2]))
+                 v_sp -= 1;
+                else
+                 {
+                  // error (v_stack[v_sp - 1].pos, "Error in 'while'");
+                  return result_fval = qnan;
+                 }
+               }
+             }
+            break;
 
              case tsPLOT: //plot("fname", expr, from, to, var)
              {

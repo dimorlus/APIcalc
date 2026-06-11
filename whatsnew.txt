@@ -1,4 +1,6 @@
 11.06.26 (2.215)
++ while(expr, init, cond, calc)
+	while(n*=10,x:=0;n:=1,x<10,x++) -> 10000000000
 + Now the functions sum(expr, from, to, var) and for(expr, from, to, var), which assign var the value from and 
   increment it by 1 in each loop until they reach to, can also be used in this form: 
    sum(expr, var:=from, to, var+=step).

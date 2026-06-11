@@ -1445,6 +1445,21 @@ t_operator calculator::sscan (symbol *sym)
        return toERROR;
       }
     }
+   else if (sym->tag == tsWHILE) // while(expr, init, cond, calc)
+    {
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvWHILE;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in while expression");
+       else
+        error ("wrong number of arguments in while expression");
+       return toERROR;
+      }
+    }
 
    {
     char *sval = dupString (sbuf); // dup and register the string in the string table
@@ -2002,24 +2017,8 @@ t_operator calculator::scan (bool operand, bool percent)
      v_stack[v_sp]       = sym->val;
      v_stack[v_sp].pos   = pos;
      v_stack[v_sp++].var = sym;
-     if (sym->tag == tsSUM)
-      return toSOLVE;
-     else if (sym->tag == tsINTEGR)
-      return toSOLVE;
-     else if (sym->tag == tsDIFF)
-      return toSOLVE;
-     else if (sym->tag == tsEXTR)
-      return toSOLVE;
-     else if (sym->tag == tsINVERSE)
-      return toSOLVE;
-     else if (sym->tag == tsSOLVE)
-      return toSOLVE;
-     else if (sym->tag == tsCALC)
-      return toSOLVE;
-     else if (sym->tag == tsPLOT)
-      return toSOLVE;
-     else if (sym->tag == tsFOR)
-      return toSOLVE;
+
+     if ((1ULL << sym->tag) & MASK_SOLVERS) return toSOLVE;
      return (sym->tag == tsVARIABLE || sym->tag == tsCONSTANT) ? toOPERAND : toFUNC;
     }
    else

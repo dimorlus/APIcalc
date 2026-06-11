@@ -300,6 +300,7 @@ enum t_value // t_value represents the type of a value in the calculator
  tvEXTR,
  tvINVERSE,
  tvFOR,
+ tvWHILE,
  tvPLOT,
  tvBMP,
  tvCOLOR,
@@ -442,7 +443,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsSCRIPT,   // 42  script service finction
  tsGUI,      // 43  GUI service functions
  tsTBLFN,    // 44  table function for creating tables of values (tblfn)
- tsNUM       // 45  Total number of symbol types, must be the last in the list
+ tsWHILE,    // 45  while operator for loops (while)
+ tsNUM       // 46  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -503,9 +505,13 @@ enum t_br_result
 #define MASK_SCRIPT     (1ULL << tsSCRIPT)      // Script service
 #define MASK_GUI        (1ULL << tsGUI)         // GUI service
 #define MASK_TBLFN      (1ULL << tsTBLFN)       // table function for creating tables of values (tblfn)
+#define MASK_WHILE      (1ULL << tsWHILE)       // while operator for loops (while)
 
 // default mask for user defined functions, excludes variables
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI))) 
+#define MASK_SOLVERS ((uint64_t)(MASK_SUM | MASK_INTEGR | MASK_DIFF | MASK_EXTR | MASK_INVERSE | MASK_SOLVE | \
+                                MASK_CALC | MASK_PLOT | MASK_FOR | MASK_WHILE))
+
 
 enum v_func // v_func represents the index of a built-in function in the calculator
 {
@@ -1185,6 +1191,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t Diff (const char *expr); // Differentiate an equation given by the expression and return the
  float__t Extremum (const char *expr);
  bool For (const char *expr, value &res); // Operator 'for' (loop).
+ bool While (const char *expr, value &res); // Operator 'while' (loop)
 
  float__t Integr (const char *expr, // Integrate an equation given by the expression and return the
                   t_symbol tag);    // result as a floating-point value

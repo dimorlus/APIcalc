@@ -1795,36 +1795,39 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 2].imval = (b * c - a * d) / denom;
           v_stack[v_sp - 2].tag   = tvCOMPLEX;
          }
-        else if (v_stack[v_sp - 1].get () == (float__t)0.0L)
-         {
-          if ((scfg & SNAN) == 0)
-           {
-            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-            return result_fval = qnan;
-           }
-         }
         else
-        if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
-         {
-          v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;
-          v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
-          v_stack[v_sp - 2].tag  = tvINT;
-         }
-        else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
-         {
-          if (v_stack[v_sp - 1].tag == tvPERCENT)
-           {
-            float__t left = v_stack[v_sp - 2].get ();
-            float__t right = v_stack[v_sp - 1].get ();
-            //v_stack[v_sp - 2].fval = left / (left * right / ((float__t)100.0));
-            v_stack[v_sp - 2].fval = left / (right / ((float__t)100.0));
-            v_stack[v_sp - 2].tag  = tvFLOAT;
-           }
-          else
-           {
-            v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
-           }
-          v_stack[v_sp - 2].tag = tvFLOAT;
+         { 
+            if (v_stack[v_sp - 1].get () == (float__t)0.0L)
+             {
+              if ((scfg & SNAN) == 0)
+               {
+                error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+                return result_fval = qnan;
+               }
+             }
+
+            if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
+             {
+              v_stack[v_sp - 2].ival /= v_stack[v_sp - 1].ival;
+              v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
+              v_stack[v_sp - 2].tag  = tvINT;
+             }
+            else if (v_stack[v_sp - 2].tag != tvCOMPLEX)
+             {
+              if (v_stack[v_sp - 1].tag == tvPERCENT)
+               {
+                float__t left = v_stack[v_sp - 2].get ();
+                float__t right = v_stack[v_sp - 1].get ();
+                //v_stack[v_sp - 2].fval = left / (left * right / ((float__t)100.0));
+                v_stack[v_sp - 2].fval = left / (right / ((float__t)100.0));
+                v_stack[v_sp - 2].tag  = tvFLOAT;
+               }
+              else
+               {
+                v_stack[v_sp - 2].fval = v_stack[v_sp - 2].get () / v_stack[v_sp - 1].get ();
+               }
+              v_stack[v_sp - 2].tag = tvFLOAT;
+             }
          }
         v_sp -= 1;
         if (cop == toSETDIV)

@@ -379,6 +379,13 @@ bool calculator::PlotPrepare (const char *expr, v_func fidx, PlotParams &params)
     }
 
    // Test evaluate first expression
+   if (!isname (svar))
+    {
+     errorf (pos, "Invalid variable name");
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
    child->addfvar (svar, vfrom);
    float__t fvx = child->evaluate_f (sexpr);
 
@@ -561,7 +568,6 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
     {
      return false;
     }
-
    child->addfvar (params.svar, angle);
    float__t r = child->evaluate_f (params.sexpr);
 

@@ -156,6 +156,15 @@ float__t xi = child->get_im_res (); // 0 if real initial approximation
 
  if (tag == tsCALC)
   {
+   if (!isname (svar))
+    {
+     errorf (pos, "Invalid variable name");
+     delete child;
+     re_res = qnan;
+     im_res = qnan;
+     return false;
+    }
+
    child->addfvar (nvar, xr, xi);
    child->evaluate_f (sexpr);
    if (child->err[0])
@@ -439,118 +448,6 @@ GKResult calculator::gkAdaptive (calculator *pCalc, char *sexpr, const char *sva
 }
 
 
-bool calculator::For (const char *expr, value &res)
-{
- if (expr && *expr)
-  {
-   char sexpr[STRBUF];
-   char sfrom[MAXOP];
-   char sto[MAXOP];
-   char svar[STRBUF];
-
-   float__t vfrom  = qnan;
-   float__t vto    = qnan;
-   float__t fvx    = qnan;
-   float__t result = 0;
-   int callCount   = 0;
-
-   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
-    {
-     result_fval = qnan;
-     return false;
-    }
-
-   calculator *child = new calculator (scfg|SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
-   if (!child)
-    {
-     errorf (pos, "Out of memory");
-     result_fval = qnan;
-     return false;
-    }
-
-   vfrom = child->evaluate_f (sfrom);
-   if (isnan (vfrom) || child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   vto = child->evaluate_f (sto);
-   if (isnan (vto) || child->err[0])
-    {
-     errorf (pos, "%s", child->err);
-     delete child;
-     result_fval = qnan;
-     return false;
-    }
-   {
-    float__t fvx            = (float__t)0.0L;
-    uint64_t init_ms        = GetTickCount64 ();
-    uint64_t last_gui_check = 0;
-
-    if (vfrom > vto)
-     {
-      do
-       {
-        if (check_break (init_ms, last_gui_check) != brNONE)
-         {
-          delete child;
-          result_fval = qnan;
-          return false;
-         }
-
-        child->addfvar (svar, vfrom);
-        fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                         // the syntax check before starting the integration
-
-        if (isnan (fvx) || child->err[0])
-         {
-          errorf (pos, "%s", child->err);
-          delete child;
-          result_fval = qnan;
-          return false;
-         }
-        vfrom -= (float__t)1.0L; // increment by 1 for summation, this can be modified to support
-                                 // different step sizes
-       }
-      while (vfrom >= vto);
-     }
-    else
-     {
-      do
-       {
-        if (check_break (init_ms, last_gui_check) != brNONE)
-         {
-          delete child;
-          result_fval = qnan;
-          return qnan;
-         }
-
-        child->addfvar (svar, vfrom);
-        fvx = child->evaluate_f (sexpr); // evaluate the function for
-                                         // the syntax check before starting the integration
-
-        if (isnan (fvx) || child->err[0])
-         {
-          errorf (pos, "%s", child->err);
-          delete child;
-          result_fval = qnan;
-          return false;
-         }
-        vfrom += (float__t)1.0L; // increment by 1 for summation, this can be modified to support
-                                 // different step sizes
-       }
-      while (vfrom <= vto);
-     }
-   }
-   GetChildRes (child, res);
-   delete child;
-   return true;
-  }
- return false;
-}
-
 // integr(expr(x), from, to, x) integr(sin(x)/x, 0.001, pi, x)
 // sum(expr(x), from, to, x) 
 // expr -> sin(x)/x, x
@@ -599,10 +496,16 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    if (tag == tsINTEGR)
     {
      {
+      if (!isname (svar))
+       {
+        errorf (pos, "Invalid variable name");
+        delete child;
+        return result_fval = qnan;
+       }
       child->addfvar (svar, vfrom);
       float__t fvx = child->evaluate_f (sexpr); // evaluate the function for
                                            // the syntax check before starting the integration
-      if (isnan (fvx) && child->errt () == teMath) 
+      if ((isnan (fvx)|| isinf(fvx)) && child->errt () == teMath) 
        {
         fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
        }
@@ -637,8 +540,15 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
     {
      uint64_t init_ms = GetTickCount64 ();
      uint64_t last_gui_check = 0;
+     float__t fvx  = (float__t)0.0L;
+     // initial evaluation 
+     float__t sum = child->evaluate_f (sexpr); // evaluate the function for
+                                               // the syntax check before starting the integration
+     if (isnan (sum) || isinf (sum))
+      {
+       sum = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
+      }
 
-     float__t fvx = 0.0;
      if (vfrom > vto)
       {
        do
@@ -649,8 +559,22 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
 
-         child->addfvar (svar, vfrom);
-         fvx += child->evaluate_f (sexpr); 
+         if (isname(svar)) 
+          {
+           child->addfvar (svar, vfrom);
+           vfrom -= (float__t)1.0L; // decrement by 1 for summation
+          }
+         else
+          {
+           vfrom = child->evaluate_f (svar);
+           if (child->errt () == teSyntax && child->err[0])
+            {
+             errorf (pos, "%s", child->err);
+             delete child;
+             return result_fval = qnan;
+            }
+          }
+         fvx = child->evaluate_f (sexpr); 
          if ((isnan (fvx) || isinf (fvx)) && child->errt () == teMath)
           {
            fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
@@ -662,8 +586,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            delete child;
            return result_fval = qnan;
           }
-         vfrom -= 1.0; // increment by 1 for summation, this can be modified to support different
-                       // step sizes
+         sum += fvx;
         }
        while (vfrom >= vto);
       }
@@ -677,8 +600,22 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
 
-         child->addfvar (svar, vfrom);
-         fvx += child->evaluate_f (sexpr); 
+         if (isname (svar))
+          {
+           child->addfvar (svar, vfrom);
+           vfrom += (float__t)1.0L; // increment by 1 for summation
+          }
+         else
+          {
+           vfrom =child->evaluate_f (svar);
+           if (child->errt ()== teSyntax && child->err[0])
+            {
+             errorf (pos, "%s", child->err);
+             delete child;
+             return result_fval = qnan;
+            }
+          }
+         fvx = child->evaluate_f (sexpr); 
          if ((isnan (fvx) || isinf (fvx)) && child->errt () == teMath)
           {
            fvx = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
@@ -690,12 +627,11 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            delete child;
            return result_fval = qnan;
           }
-         vfrom += 1.0; // increment by 1 for summation, this can be modified to support different
-                       // step sizes
+         sum += fvx;
         }
        while (vfrom <= vto);
       }
-     result = fvx;
+     result = sum;
     }
    else
     {
@@ -707,6 +643,146 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
    return result;
   }
  return result_fval = qnan; // placeholder for actual integration result
+}
+
+bool calculator::For (const char *expr, value &res)
+{
+ if (expr && *expr)
+  {
+   char sexpr[STRBUF];
+   char sfrom[MAXOP];
+   char sto[MAXOP];
+   char svar[STRBUF];
+
+   float__t vfrom  = qnan;
+   float__t vto    = qnan;
+   float__t fvx    = qnan;
+   float__t result = 0;
+   int callCount   = 0;
+
+   if (!Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0))
+    {
+     result_fval = qnan;
+     return false;
+    }
+
+   calculator *child
+       = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+   if (!child)
+    {
+     errorf (pos, "Out of memory");
+     result_fval = qnan;
+     return false;
+    }
+
+   vfrom = child->evaluate_f (sfrom);
+   if (isnan (vfrom) || child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   vto = child->evaluate_f (sto);
+   if (isnan (vto) || child->err[0])
+    {
+     errorf (pos, "%s", child->err);
+     delete child;
+     result_fval = qnan;
+     return false;
+    }
+   {
+    float__t fvx            = (float__t)0.0L;
+    uint64_t init_ms        = GetTickCount64 ();
+    uint64_t last_gui_check = 0;
+
+    if (vfrom > vto)
+     {
+      do
+       {
+        if (check_break (init_ms, last_gui_check) != brNONE)
+         {
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+
+        if (isname (svar))
+         {
+          child->addfvar (svar, vfrom);
+          vfrom -= (float__t)1.0L; // decrement by 1
+         }
+        else
+         {
+          vfrom = child->evaluate_f (svar);
+          if (child->errt () == teSyntax && child->err[0])
+           {
+            errorf (pos, "%s", child->err);
+            delete child;
+            result_fval = qnan;
+            return false;
+           }
+         }
+
+        fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                         // the syntax check before starting the integration
+
+        if (isnan (fvx) || child->err[0])
+         {
+          errorf (pos, "%s", child->err);
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+       }
+      while (vfrom >= vto);
+     }
+    else
+     {
+      do
+       {
+        if (check_break (init_ms, last_gui_check) != brNONE)
+         {
+          delete child;
+          result_fval = qnan;
+          return qnan;
+         }
+
+        if (isname (svar))
+         {
+          child->addfvar (svar, vfrom);
+          vfrom += (float__t)1.0L; // increment by 1
+         }
+        else
+         {
+          vfrom = child->evaluate_f (svar);
+          if (child->errt () == teSyntax && child->err[0])
+           {
+            errorf (pos, "%s", child->err);
+            delete child;
+            result_fval = qnan;
+            return false;
+           }
+         }
+        fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                         // the syntax check before starting the integration
+
+        if (isnan (fvx) || child->err[0])
+         {
+          errorf (pos, "%s", child->err);
+          delete child;
+          result_fval = qnan;
+          return false;
+         }
+       }
+      while (vfrom <= vto);
+     }
+   }
+   GetChildRes (child, res);
+   delete child;
+   return true;
+  }
+ return false;
 }
 
 // Numerical differentiation using central difference

@@ -981,6 +981,8 @@ int_t scan_opt (char *str, int_t &opts);
 int Mxprint (t_value tag, int8_t res_rows, int8_t res_cols, 
              float__t *res_mval, char *str, bool nl, int *size);
 
+bool isname (const char *name);
+
 class calculator // calculator represents the main class for the expression calculator, which
                  // manages the state of the calculator, including variables, functions, stacks, and
                  // parsing logic

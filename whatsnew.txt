@@ -1,3 +1,12 @@
+11.06.26 (2.215)
++ Now the functions sum(expr, from, to, var) and for(expr, from, to, var), which assign var the value from and 
+  increment it by 1 in each loop until they reach to, can also be used in this form: 
+   sum(expr, var:=from, to, var+=step).
+   for(expr, var:=from, to, var+=step). 
+  The exact number of steps for a non-integer step may not be obvious due to the implementation of floating-point 
+  numbers.
+- Fixed a bug in handling division by 0 in child calculators that appeared in version 2.12.
+  
 10.06.26 (2.214)
 * Optimized assembly (removed recompilation of already compiled files)
 - Fixed a bug in the GUI where the Ctrl+A combination was not processed in the input line. 

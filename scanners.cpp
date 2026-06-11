@@ -2026,5 +2026,18 @@ t_operator calculator::scan (bool operand, bool percent)
     return toOPERAND;
   }
 }
+
+bool isname (const char *name)
+{
+ if (!name || !*name) return false;
+ char c = *name & 0x7f;
+ if (!((c == '_') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '@') || (c == '?')))
+  return false;
+ for (const char *p = name + 1; *p; p++)
+  {
+   if (!(isalnum (*p & 0x7f) || *p == '@' || *p == '_' || *p == '?')) return false;
+  }
+ return true;
+}
 #pragma endregion
 //---------------------------------------------------------------------------

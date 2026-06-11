@@ -156,15 +156,6 @@ float__t xi = child->get_im_res (); // 0 if real initial approximation
 
  if (tag == tsCALC)
   {
-   if (!isname (svar))
-    {
-     errorf (pos, "Invalid variable name");
-     delete child;
-     re_res = qnan;
-     im_res = qnan;
-     return false;
-    }
-
    child->addfvar (nvar, xr, xi);
    child->evaluate_f (sexpr);
    if (child->err[0])
@@ -546,8 +537,10 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
                                                // the syntax check before starting the integration
      if (isnan (sum) || isinf (sum))
       {
-       sum = 0; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
+       sum = (float__t)0.0L; // treat math error at the starting point as zero (e.g. sin(x)/x at x=0)
       }
+
+     if (isname (svar)) sum = (float__t)0.0L; // for previouse compatibility
 
      if (vfrom > vto)
       {

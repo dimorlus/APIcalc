@@ -338,7 +338,7 @@ the `` degrees`minutes'seconds" `` format:
   polar(10, 30`)        →  |10|(30`0'0")   8.660254+4.999999i
   polar(10k, 30`20'40") →  |10k|(30`20'40")  8.63k+5.052ki
   ```
-  m and a also can be complex according formula   $$z = m \cdot e^{ia}$$.
+  m and a also can be complex according formula   $z = m \cdot e^{ia}$.
   This function is built-in (previously defined in `consts.txt`).
 * **solve(expr, var:=estimate)**, **solve(expr, estimate, var)**: Find root (also complex) of equation `expr(var)=0` using Newton-Raphson method. 
 The last variable in the initial conditions is the one being solved for:
@@ -398,10 +398,10 @@ The last variable in the initial conditions is the one being solved for:
   {sign(x)if(x>0,1,-1)}
   ```   
 * **polynom([(a, b, c)])**: function find roots of polynomial given coefficients in a  row-matrix. Coefficients ordered from highest degree 
-to constant: <br>$$[a_n, a_{n-1}, \dots, a_1, a_0]$$ for polynomial: $$a_nx^{n} + a_{n-1}x^{n-1} + \dots + a_1x + a_0 = 0$$.<br> 
+to constant: <br>$[a_n, a_{n-1}, \dots, a_1, a_0]$ for polynomial: $a_nx^{n} + a_{n-1}x^{n-1} + \dots + a_1x + a_0 = 0$.<br> 
 Returns a matrix of complex roots (N rows × 2 cols: [real_part, imag_part]). Supports polynomials up to degree 4 having an analytical 
-solution. Polynomial $$degree > 4$$: use Durand-Kerner method (numerical).
-   The quadratic equation: $$x^2 + 2x + 3 = 0$$. Roots: $$-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$$.
+solution. Polynomial $degree > 4$: use Durand-Kerner method (numerical).
+   The quadratic equation: $x^2 + 2x + 3 = 0$. Roots: $-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$.
   ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
   ```  
@@ -436,7 +436,7 @@ The **plot*** group of functions is designed to construct various graphs of func
 
 #### Handling Special Values
 The engine is designed for robust engineering calculations:
-* **Division by Zero**: Handled gracefully. If an expression results in a singularity (like $$sin(x)/x$$ at $$x=0$$), 
+* **Division by Zero**: Handled gracefully. If an expression results in a singularity (like $sin(x)/x$ at $x=0$), 
 the parser maintains stability and continues rendering.
 * **Complex Transitions**: When a function enters the complex plane, the plot automatically breaks and resumes only 
 when real values are returned.
@@ -497,9 +497,9 @@ plot_ymax := 0; plot_ymin := 0;
 
 #### Complex Values & Continuity
 * **Real-only Rendering**: The `plot` operator automatically detects complex results. If the imaginary part exceeds a negligible 
-threshold ($$10^{-12}$$), the drawing "pen" is lifted.
+threshold ($10^{-12}$), the drawing "pen" is lifted.
 * **Automatic Resumption**: Plotting resumes with a `moveTo` command as soon as the expression returns to the real plane, ensuring 
-no false lines connect disconnected real branches (e.g., in $$ln(x)$$ or $$\sqrt{x}$$).
+no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}$).
 
 #### Related variables
 * **plot_width**: Graph width (100..2000, default - 800) `plot_width:=1024`
@@ -736,8 +736,8 @@ the calculation priority, which may not be obvious during expression interpretat
 #### The "All-Terrain" Parser
 The engine uses a robust, fault-tolerant scanner designed to extract numeric data from real-world engineering logs.
 * **Header & Comment Stripping**: The parser automatically skips non-numeric text at the beginning of lines, making 
-it easy to process files with headers or metadata.Engineering Notation: Full support for standard suffixes: k (kilo, $$10^3$$), 
-M (mega, $$10^6$$), etc.
+it easy to process files with headers or metadata.Engineering Notation: Full support for standard suffixes: k (kilo, $10^3$), 
+M (mega, $10^6$), etc.
 * **Delimiter Agnostic**: While comma-separated values (CSV) are standard, the parser handles spaces, tabs, and semicolons 
 gracefully.
 
@@ -774,8 +774,8 @@ initializing results with `qnan`. These lines are automatically ignored during a
 * **Statistical Functions** (mean, median, rms, etc.):<br>
 *Expected format*: A single column of numbers. If multiple columns exist, the parser takes the first number found on each line.
 * **Regression Functions** (fitpoly, fitexp, etc.):<br>
-*Expected format*: Two columns representing $$X$$ and $$Y$$ coordinates. If only one column is present, the line number (index) 
-is used as the $$X$$ value. Example of a "Dirty" Log File (Supported)
+*Expected format*: Two columns representing $X$ and $Y$ coordinates. If only one column is present, the line number (index) 
+is used as the $X$ value. Example of a "Dirty" Log File (Supported)
 ```
 # Experiment: NTC Thermistor Test
 # Date: 2026-04-21
@@ -803,27 +803,27 @@ Designed for engineers and hardware developers, these functions can process data
 stability even with high-degree polynomials.
 
 ### Function Reference
-* **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $$(x, y)$$. Degree: $$1$$ to $$6$$.<br>
-Returns: A row vector $$[a_n, \dots, a_1, a_0]$$ representing the polynomial: $$y = a_n x^n + \dots + a_1 x + a_0$$<br>
+* **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $(x, y)$. Degree: $1$ to $6$.<br>
+Returns: A row vector $[a_n, \dots, a_1, a_0]$ representing the polynomial: $y = a_n x^n + \dots + a_1 x + a_0$<br>
 Example: ```fitpoly("ntc.txt","01", 2)``` returns coefficients for a quadratic curve.
-* **fitexp("filename", ["msk"])**: Fits an exponential model: $$y = a \cdot e^{bx}$$.<br>
-Returns: $$[b, a]$$.<br>
-*Note*: Automatically performs linearization via $$\ln(y)$$.
-* **fitlog("filename", ["msk"])**: Fits a logarithmic model: $$y = a + b \cdot \ln(x)$$.<br>
-Returns: $$[b, a]$$.
-* **fitpwr("filename", ["msk"])**: Fits a power-law model: $$y = a \cdot x^b$$.<br>
-Returns: $$[b, a]$$.<br>
+* **fitexp("filename", ["msk"])**: Fits an exponential model: $y = a \cdot e^{bx}$.<br>
+Returns: $[b, a]$.<br>
+*Note*: Automatically performs linearization via $\ln(y)$.
+* **fitlog("filename", ["msk"])**: Fits a logarithmic model: $y = a + b \cdot \ln(x)$.<br>
+Returns: $[b, a]$.
+* **fitpwr("filename", ["msk"])**: Fits a power-law model: $y = a \cdot x^b$.<br>
+Returns: $[b, a]$.<br>
 *Note*: Excellent for modeling physical laws and sensor characteristics.
-* **fitinv("filename", ["msk"])**: Fits an inverse model: $$y = a + b/x$$.<br>
-Returns: $$[b, a]$$.
+* **fitinv("filename", ["msk"])**: Fits an inverse model: $y = a + b/x$.<br>
+Returns: $[b, a]$.
 
 ### Regression Calculation
 Use these functions to evaluate a model previously obtained via fit*("filename") functions.
-* **clcpoly(vector, x)**: Evaluates a polynomial of any degree (up to 6). Expects vector $$[a_n, \dots, a_1, a_0]$$
-* **clcexp(vector, x)**: Evaluates $$y = a \cdot e^{bx}$$. Expects vector $$[b, a]$$.
-* **clclog(vector, x)**: Evaluates $$y = a + b \cdot \ln(x)$$. Expects vector $$[b, a]$$.
-* **clcpow(vector, x)**: Evaluates $$y = a \cdot x^b$$. Expects vector $$[b, a]$$.
-* **clcinv(vector, x)**: Evaluates $$y = a + b/x$$. Expects vector $$[b, a]$$.
+* **clcpoly(vector, x)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[a_n, \dots, a_1, a_0]$
+* **clcexp(vector, x)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[b, a]$.
+* **clclog(vector, x)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[b, a]$.
+* **clcpow(vector, x)**: Evaluates $y = a \cdot x^b$. Expects vector $[b, a]$.
+* **clcinv(vector, x)**: Evaluates $y = a + b/x$. Expects vector $[b, a]$.
 ```
 C:\Projects>ccalc for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp) /ALL-
 for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)
@@ -870,17 +870,17 @@ and comments, focusing only on the numeric values.
 #### Function Reference
 * **num("filename", ["msk"])**: Returns the total count of valid numeric entries found in the file.<br>
 Example: ``num("test.log")`` — useful for verifying data integrity.
-* **mean("filename", ["msk"])**: Calculates the arithmetic mean ($$\mu$$) of all values.<br>
+* **mean("filename", ["msk"])**: Calculates the arithmetic mean ($\mu$) of all values.<br>
 Returns: A single scalar value representing the DC component or average level.
 * **median("filename", ["msk"])**: Provides a robust estimate of the central value.<br>
 *Note*: Unlike the mean, the median is resistant to "glitches" and extreme outliers. 
 It is calculated using a high-precision iterative binary search on the value range.
 * **rms("filename", ["msk"])**: Calculates the Root Mean Square (effective value).<br>
 * **sumx("filename", ["msk"])**: Returns the plain sum of all values in the dataset.
-* **stddevp("filename", ["msk"])**: Calculates the Population Standard Deviation ($$\sigma$$). 
+* **stddevp("filename", ["msk"])**: Calculates the Population Standard Deviation ($\sigma$). 
 Use this when the file contains the entire set of data you are interested in.
-* **stddevs("filename", ["msk"])**: Calculates the Sample Standard Deviation ($$s$$).
-Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is ($$n-1$$).
+* **stddevs("filename", ["msk"])**: Calculates the Sample Standard Deviation ($s$).
+Use this when the file is a sample of a larger process. (Uses Bessel's correction: divisor is ($n-1$).
 * **smin("filename", ["msk"]) / smax("filename", ["msk"])**: Find the absolute minimum and maximum values.<br>
 Returns: The peak values, useful for determining the dynamic range or signal clipping.
 
@@ -895,8 +895,8 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 10.4
 10.2
 ```
-* `mean("Sensor_Output.log")` $$\approx$$ 175.25 (The result is ruined by a single spike).
-* `median("Sensor_Output.log")` $$=$$ 10.35 (The spike is ignored; you get the true physical value).
+* `mean("Sensor_Output.log")` $\approx$ 175.25 (The result is ruined by a single spike).
+* `median("Sensor_Output.log")` $=$ 10.35 (The spike is ignored; you get the true physical value).
 
 ### Probability & Distributions (Normal)
 These functions use mean and stddev calculated from the data file:

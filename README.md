@@ -379,6 +379,9 @@ The last variable in the initial conditions is the one being solved for:
   ```
   sum(1/x!, 0, 10, x)   →  2.718281525573192   ;; partial sum of e
   sum(1/x!, 20, 0, x)-e →  0                   ;; reverse order = exact result
+  ```
+>  The exact number of steps for a non-integer step may not be obvious due to the implementation of floating-point numbers.
+  ```
   sum(1/((x/10)^2),10,20,x) - sum(1/x^2,x:=1,2,x+=0.1) → 1.447392195435611e-16
   ```
 * **for(expr, from, to, var)**, **for(expr, var:=from, to, var+=step)**: Execution over integer range, return `expr` value (any type including matrix and complex). Supports both ascending and descending order:

@@ -322,10 +322,11 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_DIFF    (1 << tvDIFF)    // 12 Mask for differentiation operator values
 #define MSK_EXTR    (1 << tvEXTR)    // 13 Mask for extremum operator values
 #define MSK_FOR     (1 << tvFOR)     // 14 Mask for for operator values
-#define MSK_BMP     (1 << tvBMP)     // 15 Mask for bitmap operator values
-#define MSK_INVERCE (1 << tvINVERSE) // 16 Mask for inverse operator values
-#define MSK_COLOR   (1 << tvCOLOR)   // 17 Mask for color operator values
-#define MSK_TBLFN   (1 << tvTBLFN)   // 18 Mask for table function operator values
+#define MSK_WHILE   (1 << tvWHILE)   // 15 Mask for while operator values
+#define MSK_BMP     (1 << tvBMP)     // 16 Mask for bitmap operator values
+#define MSK_INVERCE (1 << tvINVERSE) // 17 Mask for inverse operator values
+#define MSK_COLOR   (1 << tvCOLOR)   // 18 Mask for color operator values
+#define MSK_TBLFN   (1 << tvTBLFN)   // 19 Mask for table function operator values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
 #define MSK_ALLVAR (MSK_SCALAR | MSK_COMPLEX | MSK_STR | MSK_MATRIX | MSK_BMP | MSK_COLOR | MSK_UFUNCT)                                                                                    \

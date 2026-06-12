@@ -1,5 +1,10 @@
 for /f %%V in ('getver.bat') do set VER=%%V
 
+gh release view v%VER% >nul 2>&1
+if not errorlevel 1 (
+  gh release delete v%VER% --yes
+)
+
 gh release create v%VER% ^
   Setup\fcalc_setup.exe ^
   Setup\fcalc_bcb_setup.exe ^

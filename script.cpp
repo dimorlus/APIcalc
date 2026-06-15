@@ -161,7 +161,7 @@ bool script::pass_buf ()
        if (pass == 1 && plb)
         {
          LblTable[labels].ptr = lines - 1;
-         int i                = 0;
+         int i = 0;
          while (i < 8 && (isalnum (*cp & 0x7f)||*cp == '_'))
           {
            plb[i++] = toupper (*cp++ & 0x7f);

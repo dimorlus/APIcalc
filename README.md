@@ -31,6 +31,7 @@
    - [Probability & Distributions (Normal)](#probability--distributions-normal)
    - [Strings](#strings)
    - [Color Data Type & Chromatic Algebra](#color-data-type--chromatic-algebra)
+   - [Scripts](#scripts)
 6. [Architecture of Variable Scopes and Calculator Contexts](#architecture-of-variable-scopes-and-calculator-contexts)   
 7. [Constants](#constants)
    - [Physical Constants](#physical-constants-codata-2018)
@@ -324,11 +325,11 @@ next line from the file, extracts data from it using the mask, places it in the 
 the number of values read. A call with an empty mask closes the file; the next call with a mask  will start reading 
 from the beginning. When the entire file has been read, it closes and returns 0.
   ```
-  dataf("ntc.txt","01", t, r);prn("%S %S", t, r)->'20 125.4k'
+  dataf("ntc.txt","01", t, r);prn("%S %S", t, r)→'20 125.4k'
   ```
 * **datas("str", "msk", ...)**: Extract data from string.
   ```
-  A:=zeros(3,3); datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A->[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
+  A:=zeros(3,3); datas("[(11, 2, 3); (4, 5, 6); (7, 18, 19)]","012345678",A);A→[(11, 2, 3); (4, 5, 6); (7, 18, 19)]
   datas("1.5k: 2.2n","01",x, y);prn("%S; %S", x, y) → '1.5k; 2.2n'
   s:="s";datas("string","0",s) → 'string'
   ```
@@ -932,7 +933,14 @@ The engine handles chromatic algebra using clamped saturation (0..255 per channe
   ```
   color(trgb(2k7)) + color(wrgb(blue)) / 2  ->  0xFFFFD6 ;; LightGoldenRodYellow
   ```
-# Architecture of Variable Scopes and Calculator Contexts
+### Scripts
+
+The engine supports multi-line scripts, allowing you to define variables, perform sequential calculations, and even create simple loops and conditionals. Scripts are executed in a single pass, with all variables and functions available throughout the script's scope. A more detailed description is [here](scripts.md). 
+
+```
+ run("script.txt")
+```
+## Architecture of Variable Scopes and Calculator Contexts
 
 The expression engine utilizes a hierarchical structure of nested calculators to handle variable scopes, data isolation, and context management.
 
@@ -1018,7 +1026,7 @@ spawned the script.
 * **The Purpose of `eval()`:** This function is primarily an architecture utility intended for internal engine debugging and dynamic code injection. It is not designed for standard user-facing mathematical modeling.
 * **Automatic Debug Interface Cleanup:** In the GUI application, the debug console interface is bound to the lifecycle of the script. It automatically terminates and closes as soon as the script completes execution or encounters a `RET` instruction.  
 
-### Constants
+## Constants
 
 * **pi**: 3.14159265358979323846
 * **e**: 2.71828182845904523536

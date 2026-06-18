@@ -1026,7 +1026,7 @@ spawned the script.
 * **The Purpose of `eval()`:** This function is primarily an architecture utility intended for internal engine debugging and dynamic code injection. It is not designed for standard user-facing mathematical modeling.
 * **Automatic Debug Interface Cleanup:** In the GUI application, the debug console interface is bound to the lifecycle of the script. It automatically terminates and closes as soon as the script completes execution or encounters a `RET` instruction.  
 
-## Constants
+## [Constants](help.md#predefined-constants)
 
 * **pi**: 3.14159265358979323846
 * **e**: 2.71828182845904523536
@@ -1115,7 +1115,7 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 
 ### Engineering / Scientific Suffixes
 
-Standard SI suffixes are supported for input and output. Additional high-order postfixes **Q** (1E30), **R** (1E27) and their lowercase counterparts **q** (1E-30), **r** (1E-27) are also supported.
+Standard [SI suffixes](help.md#range-postfix) are supported for input and output. Additional high-order postfixes **Q** (1E30), **R** (1E27) and their lowercase counterparts **q** (1E-30), **r** (1E-27) are also supported.
 
 For complex numbers, suffixes apply independently to both the real and imaginary parts in output:
 ```

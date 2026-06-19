@@ -246,7 +246,7 @@ option is enabled, which determines the output format based on the input format.
 
 ## Supported Functions
 
-### Basic Operations
+### [Basic Operations](help.md#common)
 
 * Addition `+`, Subtraction `-`, Multiplication `*`, Division `/`
 * Modulo `%`, Power `^`
@@ -286,7 +286,7 @@ x %% y  →  (x / y - 1) * 100
 57.6 %% 72        →  -20       (57.6 is 20% less than 72)
 ```
 
-### Mathematical Functions
+### [Mathematical Functions](help.md#functions)
 
 * **Trigonometric**: sin, cos, tan, asin, acos, atan
 * **Hyperbolic**: sinh, cosh, tanh
@@ -419,7 +419,7 @@ solution. Polynomial $degree > 4$: use Durand-Kerner method (numerical).
 
 ### [Plotting](plot.md)
 
-The **plot*** group of functions is designed to construct various graphs of functions and dependencies from text files with data.
+The **[plot*](help.md#plot-functions)** group of functions is designed to construct various graphs of functions and dependencies from text files with data.
 
 #### The following plot functions are available	   
 

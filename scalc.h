@@ -1267,6 +1267,7 @@ class calculator // calculator represents the main class for the expression calc
 
  bool mxPolyRoots (value &res, value &coeffs);
  bool mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res);
+ void mxPolystr (char *str, int n, value M, rtype rt);
  float__t mxCalcFn (value M, rtype rt, float__t x);
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);

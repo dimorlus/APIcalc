@@ -1331,7 +1331,140 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
  return true;
 }
 
-// mxCalcFn: calculate the value of the regression function at a given x using the coefficients in M
+void calculator::mxPolystr (char *str, int n, value M, rtype rt)
+{
+ *str = 0;
+ if (M.tag != tvMATRIX)
+  {
+   snprintf (str, n, "matrix required");
+   return;
+  }
+ switch (rt)
+  {
+  case rtPoly:
+   {
+    if (M.mrows == 1 && M.mcols <= MAX_C)
+     {
+      // Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
+      // For polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0
+      char *cp = str;
+      char sval[8];
+      for (int i = 0; i < M.mcols; i++)
+       {
+        d2scistr (sval, M.mval[i]);
+        if (i == 0)
+         cp += snprintf (cp, n - (cp - str), "%s", sval);
+        else if (M.mval[i] >= 0)
+         cp += snprintf (cp, n - (cp - str), "+%s", sval);
+        else
+         cp += snprintf (cp, n - (cp - str), "-%s", sval + 1); // (sval + 1) - Skip the negative sign
+        if ((scfg & IMUL) == 0) cp += '*';
+        if (i < M.mcols - 1)
+         {
+          if ((scfg & PAS) == 0)
+           cp += snprintf (cp, n - (cp - str), "x**%d", M.mcols - 1 - i);
+          else
+           cp += snprintf (cp, n - (cp - str), "x^%d", M.mcols - 1 - i);
+         }
+       }
+     }
+    else
+     {
+      snprintf (str, n, "polynomial coefficients must be a row vector");
+      return;
+     }
+   }
+  break;
+  case rtExp: // y=a*exp(b*x), [b, a]
+   {
+    if (M.mrows == 1 && M.mcols == 2)
+     {
+      char sa[8];
+      char sb[8];
+      d2scistr (sa, M.mval[0]);
+      d2scistr (sb, M.mval[1]);
+      if ((scfg & IMUL) == 0)
+       snprintf (str, n, "%s*exp(%s*x)", sb, sa);
+      else
+       snprintf (str, n, "%sexp(%sx)", sb, sa);
+     }
+    else
+     {
+      snprintf (str, n, "exponential regression requires exactly 2 coefficients");
+      return;
+     }
+   }
+  break;
+  case rtPow: // y=a*x^b, [b, a]
+   {
+    if (M.mrows == 1 && M.mcols == 2)
+     {
+      char sa[8];
+      char sb[8];
+      d2scistr (sa, M.mval[0]);
+      d2scistr (sb, M.mval[1]);
+      if ((scfg & IMUL) == 0)
+       {
+        if ((scfg & PAS) == 0)
+         snprintf (str, n, "%s*x**%s", sb, sa);
+        else
+         snprintf (str, n, "%s*x^%s", sb, sa);
+       }
+      else
+       {
+        if ((scfg & PAS) == 0)
+         snprintf (str, n, "%sx**%s", sb, sa);
+        else
+         snprintf (str, n, "%sx^%s", sb, sa);
+       }
+     }
+    else
+     {
+      snprintf (str, n, "power regression requires exactly 2 coefficients");
+      return;
+     }
+   }
+  break;
+  case rtLg: // y=a*log(x)+b, [a, b]
+   {
+    if (M.mrows == 1 && M.mcols == 2)
+     {
+      char sa[8];
+      char sb[8];
+      d2scistr (sa, M.mval[0]);
+      d2scistr (sb, M.mval[1]);
+      if ((scfg & IMUL) == 0)
+       snprintf (str, n, "%s*log(x)+%s", sa, sb);
+      else
+       snprintf (str, n, "%slog(x)+%s", sa, sb);
+     }
+    else
+     {
+      snprintf (str, n, "logarithmic regression requires exactly 2 coefficients");
+      return;
+     }
+   }
+  break;
+  case rtInv: // y=a+b/x, [b, a]
+   {
+    if (M.mrows == 1 && M.mcols == 2)
+     {
+      char sa[8];
+      char sb[8];
+      d2scistr (sa, M.mval[0]);
+      d2scistr (sb, M.mval[1]);
+      snprintf (str, n, "%s+%s/x", sb, sa);
+     }
+    else
+     {
+      snprintf (str, n, "inverse regression requires exactly 2 coefficients");
+      return;
+     }
+   }
+  break;
+  }
+}
+
 float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
 {
   if (M.tag != tvMATRIX)

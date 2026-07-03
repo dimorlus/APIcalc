@@ -1,5 +1,16 @@
+03.07.26 (2.216)
++ Now follow functions returns also string value (according current syntax) 
+	clcpoly(vector, x) Evaluates a polynomial of any degree (up to 6). Expect vector [an ... a0].
+	clcexp(vector, x) Evaluates y=a·exp(b·x). Expects vector [b, a].
+	clclog(vector, x) Evaluates y = a + b·ln(x). Expects vector [b, a].
+	clcpow(vector, x) Evaluates y = a·x^b. Expects vector [b, a].
+	clcinv(vector, x) Evaluates y = a + b/x. Expects vector [b, a].
+ clcpoly([(1.5,-2.2,-3.2,4.5)],2.6) -> '1.5x^3-2.2x^2-3.2x^1+4.5'
+
 11.06.26 (2.215)
-+ while(expr, init, cond, calc)
++ A while(expr, init, cond, calc) loop has been added. The init expression is executed before the loop, and the 
+  expr, calc, and cond expressions are executed sequentially within the loop until cond != 0. The last value of 
+  expr is returned.
 	while(n*=10,x:=0;n:=1,x<10,x++) -> 10000000000
 + Now the functions sum(expr, from, to, var) and for(expr, from, to, var), which assign var the value from and 
   increment it by 1 in each loop until they reach to, can also be used in this form: 

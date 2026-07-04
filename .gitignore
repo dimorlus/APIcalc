@@ -91,6 +91,8 @@ WinApiCalc/
 x64/
 BCB/*.exe
 gcc_release/calclib.dll
+gcc_release/ccalc.exe
+gcc_release/fcalc.exe
 *.bmp
 calclib.exp
 calclib.lib

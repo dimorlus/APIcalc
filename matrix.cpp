@@ -1361,8 +1361,9 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
       char sval[8];
       for (int i = 0; i < M.mcols; i++)
        {
+        int nn = M.mcols - i - 1;
         d2scistr (sval, M.mval[i]);
-        if ((scfg & IMUL) && (i < M.mcols - 1)) addspc (sval);
+        if ((scfg & IMUL) && (nn > 0)) addspc (sval);
         if (i == 0)
          cp += snprintf (cp, n - (cp - str), "%s", sval);
         else if (M.mval[i] >= 0)
@@ -1370,7 +1371,6 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
         else
          cp += snprintf (cp, n - (cp - str), "-%s", sval + 1); // (sval + 1) - Skip the negative sign
         if ((scfg & IMUL) == 0) cp += '*';
-        int nn = M.mcols - i - 1;
         if (nn > 0)
          {
           if (nn == 1)

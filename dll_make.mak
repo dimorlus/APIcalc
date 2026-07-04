@@ -10,7 +10,7 @@ MAKE           = c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe
 # ──────────────────────────────────────────────────────────────
 	
 CXXFLAGS = -std=c++17 -Wall -DCALCLIB_EXPORTS -DWIN32 -D_WINDOWS -D_USRDLL -I../.. \
-           -O2 \
+           -Os \
            -mlong-double-128 -fext-numeric-literals\
            -D__USE_MINGW_ANSI_STDIO=1 \
            -Ic:/MinGW64-gcc14/mingw64/include \
@@ -26,7 +26,8 @@ ifdef DEBUG
   CXXFLAGS += -g -O0 -D_DEBUG
   OUTDIR    = gcc_debug
 else
-  CXXFLAGS += -O2 -DNDEBUG
+  CXXFLAGS += -Os -DNDEBUG
+  CXXFLAGS += -ffunction-sections -fdata-sections
   OUTDIR    = gcc_release
 endif
 
@@ -46,9 +47,15 @@ endif
 # ──────────────────────────────────────────────────────────────
 LDFLAGS = -shared -static-libgcc -static-libstdc++ \
           -Wl,--allow-multiple-definition \
-		  -Wl,--enable-auto-image-base \
-          -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive \
-          -Wl,-Bstatic -lquadmath -Wl,-Bdynamic
+          -Wl,--enable-auto-image-base \
+          -Wl,-Bstatic -lwinpthread -lquadmath -Wl,-Bdynamic
+
+
+# Для dll_make.mak - баланс скорость/размер:
+CXXFLAGS += -fomit-frame-pointer
+CXXFLAGS += -march=x86-64          # Базовая совместимость
+CXXFLAGS += -mtune=generic
+LDFLAGS += -s -flto -Wl,--gc-sections   # LTO + dead code elimination
 
 DEFFILE  = calclib.def
 WINDRES  = c:/MinGW64-gcc14/mingw64/bin/windres.exe

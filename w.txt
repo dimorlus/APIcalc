@@ -1,0 +1,64 @@
+WinApiCalc.cpp: In member function 'void WinApiCalc::UpdateLayout()':
+WinApiCalc.cpp:1870:40: error: 'max' was not declared in this scope; did you mean 'std::max'?
+ 1870 |      m_resultEditInternalHorzPadding = max (0, winW - cliW);
+      |                                        ^~~
+      |                                        std::max
+In file included from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/char_traits.h:39,
+                 from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/string:40,
+                 from framework.h:14,
+                 from WinApiCalc.h:4,
+                 from WinApiCalc.cpp:1:
+c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/stl_algobase.h:300:5: note: 'std::max' declared here
+  300 |     max(const _Tp& __a, const _Tp& __b, _Compare __comp)
+      |     ^~~
+WinApiCalc.cpp: In member function 'int WinApiCalc::GetControlHeight()':
+WinApiCalc.cpp:1936:9: error: 'max' was not declared in this scope; did you mean 'std::max'?
+ 1936 |  return max (height, minHeight);
+      |         ^~~
+      |         std::max
+In file included from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/char_traits.h:39,
+                 from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/string:40,
+                 from framework.h:14,
+                 from WinApiCalc.h:4,
+                 from WinApiCalc.cpp:1:
+c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/stl_algobase.h:300:5: note: 'std::max' declared here
+  300 |     max(const _Tp& __a, const _Tp& __b, _Compare __comp)
+      |     ^~~
+WinApiCalc.cpp: In member function 'void WinApiCalc::ShowVariablesDialog()':
+WinApiCalc.cpp:2340:29: error: 'min' was not declared in this scope; did you mean 'std::min'?
+ 2340 |  int displayLines = max (8, min (variableCount, 15));
+      |                             ^~~
+      |                             std::min
+In file included from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/char_traits.h:39,
+                 from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/string:40,
+                 from framework.h:14,
+                 from WinApiCalc.h:4,
+                 from WinApiCalc.cpp:1:
+c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/stl_algobase.h:278:5: note: 'std::min' declared here
+  278 |     min(const _Tp& __a, const _Tp& __b, _Compare __comp)
+      |     ^~~
+WinApiCalc.cpp:2340:21: error: 'max' was not declared in this scope; did you mean 'std::max'?
+ 2340 |  int displayLines = max (8, min (variableCount, 15));
+      |                     ^~~
+      |                     std::max
+In file included from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/char_traits.h:39,
+                 from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/string:40,
+                 from framework.h:14,
+                 from WinApiCalc.h:4,
+                 from WinApiCalc.cpp:1:
+c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/stl_algobase.h:300:5: note: 'std::max' declared here
+  300 |     max(const _Tp& __a, const _Tp& __b, _Compare __comp)
+      |     ^~~
+WinApiCalc.cpp: In member function 'void WinApiCalc::ResizeWindow()':
+WinApiCalc.cpp:2994:22: error: 'max' was not declared in this scope; did you mean 'std::max'?
+ 2994 |  int gap = ScaleDPI (max (2, (currentFontSize * 4) / baseFontSize)); // 2-6px range
+      |                      ^~~
+      |                      std::max
+In file included from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/char_traits.h:39,
+                 from c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/string:40,
+                 from framework.h:14,
+                 from WinApiCalc.h:4,
+                 from WinApiCalc.cpp:1:
+c:/Qt/Tools/mingw1120_64/lib/gcc/x86_64-w64-mingw32/11.2.0/include/c++/bits/stl_algobase.h:300:5: note: 'std::max' declared here
+  300 |     max(const _Tp& __a, const _Tp& __b, _Compare __comp)
+      |     ^~~

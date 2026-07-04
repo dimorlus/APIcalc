@@ -1,1 +1,1 @@
-c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=dll_make.mak > mk.txt 2>&1
+c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=dll_make.mak > mkd.txt 2>&1

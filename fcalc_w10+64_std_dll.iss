@@ -1,8 +1,8 @@
 ; -- TesterAll.iss --
 [Setup]
 AppName=fcalc
-AppVerName=fcalc (Scientific formula calculator) 2.216 files
-VersionInfoVersion=2.216
+AppVerName=fcalc (Scientific formula calculator) 2.217 files
+VersionInfoVersion=2.217
 AppContact=http://dorlov.no-ip.com
 DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc
@@ -22,15 +22,18 @@ WizardStyle=classic
 [Types]
 Name: "std";    Description: "Standard (built-in calculator engine)"
 Name: "dll";    Description: "DLL version (GCC engine, higher precision)"
+Name: "gcc";    Description: "GCC version (GCC engine, higher precision)"
 Name: "custom"; Description: "Custom installation"; Flags: iscustom
 
 [Components]
 Name: "program";     Description: "fcalc formula calculator";         Types: std dll custom; Flags: fixed
 Name: "program\std"; Description: "Standard version";                 Types: std;            Flags: exclusive
 Name: "program\dll"; Description: "DLL version (higher precision)";   Types: dll;            Flags: exclusive
+Name: "program\gcc"; Description: "GCC version (higher precision)";   Types: gcc;            Flags: exclusive
 Name: "ccalc";       Description: "CLI Calculator (ccalc.exe)";       Types: custom
 Name: "ccalc\std";   Description: "Standard CLI";                     Types: std;            Flags: exclusive
 Name: "ccalc\dll";   Description: "DLL CLI (higher precision)";       Types: dll;            Flags: exclusive
+Name: "ccalc\gcc";   Description: "GCC CLI (higher precision)";       Types: gcc;            Flags: exclusive
 
 [Dirs]
 Name: "{userdocs}\Fcalc"
@@ -41,12 +44,18 @@ Source: ".\bin64\Release\std\fcalc.exe";         DestDir: "{app}"; DestName: "fc
 ; GUI DLL version
 Source: ".\bin64\Release\dll\fcalc.exe";         DestDir: "{app}"; DestName: "fcalc.exe"; Components: program\dll; Flags: ignoreversion
 Source: ".\gcc_release\calclib.dll";             DestDir: "{app}";                        Components: program\dll; Flags: ignoreversion
+; GUI GCC version
+Source: ".\gcc_release\fcalc.exe";               DestDir: "{app}"; DestName: "fcalc.exe"; Components: program\gcc; Flags: ignoreversion
+
 ; CLI Standard version
 Source: ".\ccalc\bin\x64\Release\ccalc.exe";     DestDir: "{app}"; DestName: "ccalc.exe"; Components: ccalc\std;   Flags: ignoreversion
 ; CLI DLL version
 Source: ".\ccalc\bin\x64\Release\dll\ccalc.exe"; DestDir: "{app}"; DestName: "ccalc.exe"; Components: ccalc\dll;   Flags: ignoreversion
 Source: ".\gcc_release\calclib.dll";             DestDir: "{app}";                        Components: ccalc\dll;   Flags: ignoreversion skipifsourcedoesntexist
+; CLI DLL version
+Source: ".\gcc_release\ccalc.exe";               DestDir: "{app}"; DestName: "ccalc.exe"; Components: ccalc\gcc;   Flags: ignoreversion
 
+; common (all versions)
 Source: ".\fcalc.chm"; DestDir: "{app}";Components: program; Flags:ignoreversion
 Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
@@ -63,6 +72,7 @@ Source: ".\table.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall
 Source: ".\whatsnew.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\user.txt"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
+; Examples
 Source: ".\Fcalc\mcu_ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\Fcalc\test.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\Fcalc\ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify

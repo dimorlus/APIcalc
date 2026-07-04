@@ -263,7 +263,7 @@ typedef long double float__t;
 
 #ifdef _float128_
 typedef __float128 float__t;
-#define fabsl  fabsq
+inline float__t fabsl(float__t x) { return fabsq(x); }
 #endif
 
 

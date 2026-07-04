@@ -8,6 +8,11 @@
 
 #include "bmp.h" 
 
+#ifndef max
+#define max(a, b) std::max (a, b)
+#define min(a, b) std::min (a, b)
+#endif
+
 //#define _DEBUG_MEMORY_
 #ifdef _DEBUG_MEMORY_
 #include <crtdbg.h>
@@ -150,25 +155,14 @@ bool ShowImageFn (void *bmpObject)
 WinApiCalc::WinApiCalc ()
     : m_hInst (nullptr), m_hWnd (nullptr), m_hExpressionEdit (nullptr), m_hResultEdit (nullptr),
       m_hComboBox (nullptr), m_hHelpWindow (nullptr), m_hMenu (nullptr), m_pCalculator (nullptr),
-      m_options (NRM | FRC) // Default flags from SOW
-      ,
-      m_binWidth (64), m_fontSize (-12) // Default font size in pixels (negative value) - font(12)
-      ,
-      m_opacity (255) // Fully opaque by default
-      ,
-      m_menuVisible (true), m_uiReady (false) // UI not ready until fully initialized
-      ,
-      m_windowX (100) // Default X position
-      ,
-      m_windowY (100) // Default Y position
-      ,
-      m_dpiX (96), m_dpiY (96), m_resultLines (1), m_hWhiteBrush (nullptr),
-      m_originalEditProc (nullptr), m_originalResultEditProc (nullptr),
-      m_originalComboBoxProc (nullptr), m_isUpdatingHistory (false),
-      m_suppressInteractive (true) // Default to suppressed until InitInstance finishes
-      ,
-      m_isWine (false), m_pendingColor (0), m_hasPendingColor (false), m_isColorWindowOpen (false),
-      m_lastImageWindowX (0), m_lastImageWindowY (0), m_hasImageWindowPos (false)
+      m_options (NRM | FRC), m_binWidth (64), m_fontSize (-12), m_opacity (255),
+      m_menuVisible (true), m_uiReady (false), m_windowX (100), m_windowY (100), m_dpiX (96),
+      m_dpiY (96), m_resultLines (1), m_hWhiteBrush (nullptr), m_originalEditProc (nullptr),
+      m_originalResultEditProc (nullptr), m_originalComboBoxProc (nullptr), 
+      m_isUpdatingHistory (false),
+      m_suppressInteractive (true), m_isWine (false), m_pendingColor (0), m_hasPendingColor (false),
+      m_isColorWindowOpen (false),
+      m_lastImageWindowX (0), m_lastImageWindowY (0), m_hasImageWindowPos (false) 
 {
 #ifdef _DEBUG_MEMORY_
 // _CrtMemCheckpoint (&s1);
@@ -202,11 +196,25 @@ WinApiCalc::WinApiCalc ()
 
 // Global Variables:
 HINSTANCE hInst;                     // current instance
-WCHAR szTitle[MAX_LOADSTRING];       // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
 
 // Global application instance
 WinApiCalc *g_pApp = nullptr;
+
+#ifdef __GNUC__
+CHAR szTitle[MAX_LOADSTRING];       // The title bar text
+CHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
+int APIENTRY WinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+                      _In_ LPSTR lpCmdLine, _In_ int nCmdShow) // <-- НЕПРАВИЛЬНО!
+{
+ UNREFERENCED_PARAMETER (hPrevInstance);
+ UNREFERENCED_PARAMETER (lpCmdLine);
+
+ // Initialize global strings
+ LoadStringA (hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+ LoadStringA (hInstance, IDC_WINAPICALC, szWindowClass, MAX_LOADSTRING);
+#else
+WCHAR szTitle[MAX_LOADSTRING];       // The title bar text
+WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
 
 int APIENTRY wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
                        _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
@@ -217,6 +225,7 @@ int APIENTRY wWinMain (_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstanc
  // Initialize global strings
  LoadStringW (hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
  LoadStringW (hInstance, IDC_WINAPICALC, szWindowClass, MAX_LOADSTRING);
+#endif
 
  // Create application instance
  g_pApp = new WinApiCalc ();

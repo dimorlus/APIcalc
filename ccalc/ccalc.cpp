@@ -1,10 +1,9 @@
+#define _CRT_SECURE_NO_WARNINGS 1 
 #include <windows.h>
-#include <fstream>
+#define __USE_MINGW_ANSI_STDIO 1
 #include <cctype>
-#include <cstring>
-#include <iostream>
-#include <string>
 #include <stdio.h>
+#include <stdlib.h>
 #include <io.h>
 #include <conio.h>
 #include "ccalc.h"
@@ -61,7 +60,7 @@ bool ccalc_config::parse_single_option (const char *opt)
  else return false;
 
  // Search for the option in the table
- for (int j = 0; all_options[j].name != NULL; j++)
+ for (int j = 0; all_options[j].name[0] != '\0'; j++)
   {
    if (strcmp (name, all_options[j].name) == 0)
     {
@@ -230,17 +229,22 @@ int_t scan_opt (char *str, int_t initial_opts, int *binwide, char *filename)
 
 bool ccalc_config::load_config (const char *filename)
 {
- std::ifstream file (filename);
- if (!file.is_open ()) return false;
+ FILE *file = fopen (filename, "rb");
+ if (!file) return false;
 
- // Читаем весь файл в строку
- std::string content ((std::istreambuf_iterator<char> (file)), std::istreambuf_iterator<char> ());
- file.close ();
+ fseek (file, 0, SEEK_END);
+ long size = ftell (file);
+ fseek (file, 0, SEEK_SET);
 
- // Используем scan_opt для парсинга
- char *str       = const_cast<char *> (content.c_str ());
- opts.calc_flags = scan_opt (str, opts.calc_flags, &opts.binary_width, opts.filename);
+ char *content = (char *) malloc (size + 1);
+ if (!content) { fclose (file); return false; }
+ fread (content, 1, size, file);
+ content[size] = '\0';
+ fclose (file);
 
+ opts.calc_flags = scan_opt (content, opts.calc_flags, &opts.binary_width, opts.filename);
+
+ free (content);
  return true;
 }
 
@@ -296,19 +300,19 @@ int fhelp (int x)
   default:
    // Show all sections
    show_help_overview ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_functions ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_operators ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_formats ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_constants ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_prefixes ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_help_examples ();
-   std::cout << std::endl << std::endl;
+   puts(""); puts("");
    show_options_help ();
    break;
   }
@@ -477,7 +481,7 @@ int main ()
 
  if (errMsg[0] != '\0')
   {
-   std::cerr << errMsg << std::endl;
+   fprintf(stderr, "%s\n", errMsg);
    return 1;
   }
 
@@ -544,12 +548,12 @@ if (config.get_options().filename[0])
   return 0;
  }
 
- // Evaluate
- if (expression[0] == '\0')
-  {
-   printf("Error: Empty expression\n");
-   return 1;
-  }
+  // Evaluate
+  if (expression[0] == '\0')
+   {
+    printf("Error: Empty expression\n");
+    return 1;
+   }
 
 {
   char result_str[1600];

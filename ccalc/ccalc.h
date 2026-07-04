@@ -2,6 +2,7 @@
 #define CCALC_H
 
 #include <cstdint>
+#include <math.h>
 #ifdef USE_DLL
 #include "../scalc_dll.h"
 #else

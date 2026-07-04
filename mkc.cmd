@@ -15,7 +15,8 @@ REM === MSVC: standalone + CLI (x86) ===
 
 REM === GCC: calclib.dll with 128-bit floats ===
 del /Q gcc_release\*.*
-c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=dll_make.mak
+REM c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=dll_make.mak
+c:/MinGW64-gcc14/mingw64/bin/mingw32-make.exe --makefile=gcc_make.mak
 copy /Y gcc_release\calclib.dll bin64\Release\dll\calclib.dll
 
 REM === Import library from .def (no MSVC compilation of calclib) ===

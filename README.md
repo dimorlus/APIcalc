@@ -67,6 +67,7 @@ The DLL version is only available for 64-bit systems and is compiled using 128-b
 |std    |Double (64)        |11             |52             |15..17             |±2.2E-308 ..  ±1.8E+308    |
 |bcb    |Long Double (80)   |15             |64             |18..19             |±3.4E-4932 .. ±1.1E+4932   |
 |dll    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932   |
+|gcc    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932   |
 
 Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
 or 128-bit versions. However, you can enter 1.234*10^1234.

@@ -1,0 +1,61 @@
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c scalc.cpp -o gcc_release/scalc.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c sfmts.cpp -o gcc_release/sfmts.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c sfunc.cpp -o gcc_release/sfunc.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c bmp.cpp -o gcc_release/bmp.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c files.cpp -o gcc_release/files.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c graphics.cpp -o gcc_release/graphics.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c matrix.cpp -o gcc_release/matrix.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c memmng.cpp -o gcc_release/memmng.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c output.cpp -o gcc_release/output.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c scanners.cpp -o gcc_release/scanners.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c script.cpp -o gcc_release/script.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c solvers.cpp -o gcc_release/solvers.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c sym_vars.cpp -o gcc_release/sym_vars.o
+c:/MinGW64-gcc14/mingw64/bin/g++.exe -std=c++17 -Wall -DWIN32 -D_WINDOWS -I../.. -Os -mlong-double-128 -fext-numeric-literals -D__USE_MINGW_ANSI_STDIO=1 -Ic:/MinGW64-gcc14/mingw64/include -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0 -Ic:/MinGW64-gcc14/mingw64/include/c++/14.2.0/x86_64-w64-mingw32 -Wno-unused-variable -Wno-unused-but-set-variable -Wno-switch -Wno-class-memaccess -Wno-sign-compare -Wno-reorder -Os -DNDEBUG -c ccalc/ccalc.cpp -o gcc_release/ccalc.o
+In file included from ccalc/ccalc.h:8,
+                 from ccalc/ccalc.cpp:10:
+ccalc/../scalc.h:266:16: error: conflicting declaration of C function 'long double fabsq(long double)'
+  266 | #define fabsl  fabsq
+      |                ^~~~~
+In file included from ccalc/../scalc.h:120:
+C:/MinGW64-gcc14/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/quadmath.h:64:19: note: previous declaration '__float128 fabsq(__float128)'
+   64 | extern __float128 fabsq (__float128) __quadmath_throw;
+      |                   ^~~~~
+ccalc/../scalc.h:266:16: error: conflicting declaration of C function 'long double fabsq(long double)'
+  266 | #define fabsl  fabsq
+      |                ^~~~~
+C:/MinGW64-gcc14/mingw64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/quadmath.h:64:19: note: previous declaration '__float128 fabsq(__float128)'
+   64 | extern __float128 fabsq (__float128) __quadmath_throw;
+      |                   ^~~~~
+In file included from C:/MinGW64-gcc14/mingw64/include/c++/14.2.0/math.h:36,
+                 from ccalc/../sfunc.h:12,
+                 from ccalc/ccalc.cpp:18:
+C:/MinGW64-gcc14/mingw64/include/c++/14.2.0/cmath:1879:11: error: 'fabsl' has not been declared in '::'
+ 1879 |   using ::fabsl;
+      |           ^~~~~
+C:/MinGW64-gcc14/mingw64/include/c++/14.2.0/math.h:64:12: error: 'bool std::isfinite(__float128)' conflicts with a previous declaration
+   64 | using std::isfinite;
+      |            ^~~~~~~~
+ccalc/../scalc.h:127:13: note: previous declaration 'bool isfinite(__float128)'
+  127 | inline bool isfinite(__float128 x) { return finiteq(x); }
+      |             ^~~~~~~~
+C:/MinGW64-gcc14/mingw64/include/c++/14.2.0/math.h:65:12: error: 'bool std::isinf(__float128)' conflicts with a previous declaration
+   65 | using std::isinf;
+      |            ^~~~~
+ccalc/../scalc.h:126:13: note: previous declaration 'bool isinf(__float128)'
+  126 | inline bool isinf(__float128 x) { return isinfq(x); }
+      |             ^~~~~
+C:/MinGW64-gcc14/mingw64/include/c++/14.2.0/math.h:66:12: error: 'bool std::isnan(__float128)' conflicts with a previous declaration
+   66 | using std::isnan;
+      |            ^~~~~
+ccalc/../scalc.h:125:13: note: previous declaration 'bool isnan(__float128)'
+  125 | inline bool isnan(__float128 x) { return isnanq(x); }
+      |             ^~~~~
+ccalc/ccalc.cpp: In member function 'bool ccalc_config::parse_single_option(const char*)':
+ccalc/ccalc.cpp:64:38: warning: the address of 'option_def::name' will never be NULL [-Waddress]
+   64 |  for (int j = 0; all_options[j].name != NULL; j++)
+      |                                      ^
+ccalc/ccalc.h:14:13: note: 'option_def::name' declared here
+   14 |  const char name[8]; // Option name (макс 7 символов + null-терминатор)
+      |             ^~~~
+mingw32-make: *** [cli_make.mak:94: gcc_release/ccalc.o] Error 1

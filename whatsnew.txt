@@ -1,3 +1,9 @@
+04.07.26 (2.217)
+* The DLL version has been optimized for size, and independent fcalc.exe and ccalc.exe versions, compiled with 
+  GCC at 128-bit floating point, have been added. Depending on the usage scenario, either the DLL or the 
+  independent GCC version may perform faster. The STD version (compiled with MSVC) is the most compact and 
+  fastest, but at the cost of precision (64-bit floating point).
+  
 03.07.26 (2.216)
 + Now follow functions returns also string value (according current syntax) 
 	clcpoly(vector, x) Evaluates a polynomial of any degree (up to 6). Expect vector [an ... a0].

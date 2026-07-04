@@ -1331,6 +1331,16 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
  return true;
 }
 
+static void addspc (char *s)
+{
+ int len = (int)strlen (s);
+ if (s[len - 1] > '9')
+  {
+   s[len]     = ' ';
+   s[len + 1] = '\0';
+  }
+}
+
 void calculator::mxPolystr (char *str, int n, value M, rtype rt)
 {
  *str = 0;
@@ -1352,6 +1362,7 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
       for (int i = 0; i < M.mcols; i++)
        {
         d2scistr (sval, M.mval[i]);
+        if ((scfg & IMUL) && (i < M.mcols - 1)) addspc (sval);
         if (i == 0)
          cp += snprintf (cp, n - (cp - str), "%s", sval);
         else if (M.mval[i] >= 0)
@@ -1386,7 +1397,11 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
       if ((scfg & IMUL) == 0)
        snprintf (str, n, "%s*exp(%s*x)", sb, sa);
       else
-       snprintf (str, n, "%sexp(%sx)", sb, sa);
+       {
+        addspc (sa);
+        addspc (sb);
+        snprintf (str, n, "%sexp(%sx)", sb, sa);
+       }
      }
     else
      {
@@ -1412,6 +1427,7 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
        }
       else
        {
+        addspc (sb);
         if ((scfg & PAS) == 0)
          snprintf (str, n, "%sx**%s", sb, sa);
         else
@@ -1436,7 +1452,10 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
       if ((scfg & IMUL) == 0)
        snprintf (str, n, "%s*log(x)+%s", sa, sb);
       else
-       snprintf (str, n, "%slog(x)+%s", sa, sb);
+       {
+        addspc (sa);
+        snprintf (str, n, "%slog(x)+%s", sa, sb);
+       }
      }
     else
      {

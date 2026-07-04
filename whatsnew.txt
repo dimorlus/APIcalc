@@ -11,7 +11,7 @@
 	clclog(vector, x) Evaluates y = a + b·ln(x). Expects vector [b, a].
 	clcpow(vector, x) Evaluates y = a·x^b. Expects vector [b, a].
 	clcinv(vector, x) Evaluates y = a + b/x. Expects vector [b, a].
- clcpoly([(1.5,-2.2,-3.2,4.5)],2.6) -> '1.5x^3-2.2x^2-3.2x^1+4.5'
+ clcpoly([(1.5m,-2.2,-3.2,4.5)],2.6) -> '1.5m x^3-2.2x^2-3.2x+4.5'
 
 11.06.26 (2.215)
 + A while(expr, init, cond, calc) loop has been added. The init expression is executed before the loop, and the 

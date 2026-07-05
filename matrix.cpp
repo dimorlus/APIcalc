@@ -1358,11 +1358,11 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
       // Coefficients ordered from highest degree to constant: [a_n, a_(n-1), ..., a_1, a_0]
       // For polynomial: a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 = 0
       char *cp = str;
-      char sval[8];
+      char sval[16];
       for (int i = 0; i < M.mcols; i++)
        {
         int nn = M.mcols - i - 1;
-        d2scistr (sval, M.mval[i]);
+        d2scistr (sval, (double)M.mval[i]);
         if ((scfg & IMUL) && (nn > 0)) addspc (sval);
         if (i == 0)
          cp += snprintf (cp, n - (cp - str), "%s", sval);
@@ -1396,10 +1396,10 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
    {
     if (M.mrows == 1 && M.mcols == 2)
      {
-      char sa[8];
-      char sb[8];
-      d2scistr (sa, M.mval[0]);
-      d2scistr (sb, M.mval[1]);
+      char sa[16];
+      char sb[16];
+      d2scistr (sa, (double)M.mval[0]);
+      d2scistr (sb, (double)M.mval[1]);
       if ((scfg & IMUL) == 0)
        snprintf (str, n, "%s*exp(%s*x)", sb, sa);
       else
@@ -1420,10 +1420,10 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
    {
     if (M.mrows == 1 && M.mcols == 2)
      {
-      char sa[8];
-      char sb[8];
-      d2scistr (sa, M.mval[0]);
-      d2scistr (sb, M.mval[1]);
+      char sa[16];
+      char sb[16];
+      d2scistr (sa, (double)M.mval[0]);
+      d2scistr (sb, (double)M.mval[1]);
       if ((scfg & IMUL) == 0)
        {
         if ((scfg & PAS) == 0)
@@ -1451,10 +1451,10 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
    {
     if (M.mrows == 1 && M.mcols == 2)
      {
-      char sa[8];
-      char sb[8];
-      d2scistr (sa, M.mval[0]);
-      d2scistr (sb, M.mval[1]);
+      char sa[16];
+      char sb[16];
+      d2scistr (sa, (double)M.mval[0]);
+      d2scistr (sb, (double)M.mval[1]);
       if ((scfg & IMUL) == 0)
        snprintf (str, n, "%s*log(x)+%s", sa, sb);
       else
@@ -1474,10 +1474,10 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
    {
     if (M.mrows == 1 && M.mcols == 2)
      {
-      char sa[8];
-      char sb[8];
-      d2scistr (sa, M.mval[0]);
-      d2scistr (sb, M.mval[1]);
+      char sa[16];
+      char sb[16];
+      d2scistr (sa, (double)M.mval[0]);
+      d2scistr (sb, (double)M.mval[1]);
       snprintf (str, n, "%s+%s/x", sb, sa);
      }
     else

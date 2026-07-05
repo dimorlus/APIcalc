@@ -408,7 +408,13 @@ solution. Polynomial $degree > 4$: use Durand-Kerner method (numerical).
    The quadratic equation: $x^2 + 2x + 3 = 0$. Roots: $-1 \pm i\sqrt{2} \approx -1 \pm 1.414i$.
   ```
   polynom([(1,2,3)]) → [(-1, 1.414); (-1, -1.414)];; roots -1+1.414i, -1-1.414i
-  ```  
+  ``` 
+	for exact root value use follow syntax:
+	```
+	polynom([(1,2,3)])[0] → -1 				;;real 1'st root
+	polynom([(1,2,3)])[1] → 1.414213562373095		;;imagine 1'st root
+	```
+	See also: [clcpoly()](#regression-calculation)
 * **run("script.txt")**: Run [script](scripts.md). Can be used as operand: 
 ```
 	plot(run("sin.txt"), 0, 2 pi, x)
@@ -856,6 +862,10 @@ C:\Projects>type ntc.txt
 118`C, 4.285k
 119`C, 4.177k
 120`C, 4.071k
+```
+Functions returns also string value (according current syntax):
+```
+clcpoly([(1.5m,-2.2,-3.2,4.5)],2.6) → '1.5m x^3-2.2x^2-3.2x+4.5' 
 ```
 
 ### Statistical Analysis

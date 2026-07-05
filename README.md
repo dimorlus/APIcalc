@@ -352,7 +352,7 @@ The last variable in the initial conditions is the one being solved for:
   ```
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
   This function is built-in (previously defined in `consts.txt`).
-* **calc(expr, var:=val)**, **calc(expr, estimate, var)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
+* **calc(expr, var:=val)**, **calc(expr, val, var)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
   calc(x*(2x+2)-2, -1, x)  →  -2

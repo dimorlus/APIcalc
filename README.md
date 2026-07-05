@@ -351,9 +351,11 @@ The last variable in the initial conditions is the one being solved for:
   solve(z^2+z+1, z:=0+1i)   →  |1|(120`0'0") -0.4999999999999997+0.8660254037844385i
   ```
   Can be used as an operand in complex expressions: `sqrt(solve(...))`.
-* **calc(expr, var:=val)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
+  This function is built-in (previously defined in `consts.txt`).
+* **calc(expr, var:=val)**, **calc(expr, estimate, var)**: Evaluate expression for a given variable value — useful for selecting initial approximation for `solve`:
   ```
   calc(x*(2x+2)-2, x:=-1)  →  -2
+  calc(x*(2x+2)-2, -1, x)  →  -2
   calc(z^2+z+1, z:=0+1i)   →  |1|(90`0'0") 0+1i
   ```
 * **integral/integr(expr, from, to, var)**: Numerical integration using adaptive Gauss-Kronrod G7/K15 method:

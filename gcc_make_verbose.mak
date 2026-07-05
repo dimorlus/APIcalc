@@ -49,11 +49,9 @@ DLL_TARGET = $(OUTDIR)/calclib.dll
 LDFLAGS = -static-libgcc -static-libstdc++ \
           -Wl,--allow-multiple-definition \
           -Wl,--enable-auto-image-base \
-          -Wl,--whole-archive c:/MinGW64-gcc14/mingw64/x86_64-w64-mingw32/lib/libwinpthread.a \
-          -Wl,--no-whole-archive \
-          c:/MinGW64-gcc14/mingw64/lib/libquadmath.a
+          -Wl,-Bstatic -lwinpthread -lquadmath
 
-LDFLAGS += -s -Wl,--gc-sections -Wl,--exclude-libs,ALL
+LDFLAGS += -s -Wl,--gc-sections -Wl,--verbose -Wl,--exclude-libs,ALL
 
 GUI_LIBS = -lhtmlhelp -lcomctl32 -lgdi32 -lcomdlg32 \
            -lole32 -lshell32 -ladvapi32
@@ -104,3 +102,4 @@ clean:
 rebuild: clean all
 
 .PHONY: all clean rebuild
+

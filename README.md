@@ -60,14 +60,14 @@ The ***Casio Fx-991EX*** calculator served as a source of inspiration and ideas.
 
 ## Important note 
 
-The DLL version is only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
+The DLL and GCC versions are only available for 64-bit systems and is compiled using 128-bit floating-point numbers (IEEE 754-2008 quadruple precision (binary128)). This format is used only for actual calculations; input data is processed as 64-bit (IEEE 754), and output is processed only in forced float mode and with the selected precision prec(34) (default: 16 digits).
 
-|Version|Type (bit)         |Exponent (bit) |Mantissa (bit) |Precision (digits) |Range (approximately)      |
-|-------|-------------------|---------------|---------------|-------------------|---------------------------|
-|std    |Double (64)        |11             |52             |15..17             |±2.2E-308 ..  ±1.8E+308    |
-|bcb    |Long Double (80)   |15             |64             |18..19             |±3.4E-4932 .. ±1.1E+4932   |
-|dll    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932   |
-|gcc    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932   |
+|Version   |Type (bit)         |Exponent (bit) |Mantissa (bit) |Precision (digits) |Range (approximately)    |
+|----------|-------------------|---------------|---------------|-------------------|-------------------------|
+|std 32/64 |Double (64)        |11             |52             |15..17             |±2.2E-308 ..  ±1.8E+308  |
+|bcb 32    |Long Double (80)   |15             |64             |18..19             |±3.4E-4932 .. ±1.1E+4932 |
+|dll 64    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932 |
+|gcc 64    |Quad (128)         |15             |112 (+1)       |33..36             |±3.4E-4932 .. ±1.2E+4932 |
 
 Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
 or 128-bit versions. However, you can enter 1.234*10^1234.

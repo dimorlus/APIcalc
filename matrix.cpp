@@ -378,7 +378,7 @@ bool calculator::mxInv (value &res, value &M)
  // special case 1x1
  if (n == 1)
   {
-   if (fabsl (M.mval[0]) < 1e-15L)
+   if (Abs (M.mval[0]) < 1e-15L)
     {
      mxerror ("inv: matrix is singular");
      return false;
@@ -630,8 +630,7 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
      }
    }
    break;
-
-   case 4: // Quartic: x^4 + ax^3 + bx^2 + cx + d = 0 (Ferrari's method)
+  case 4: // Quartic: x^4 + ax^3 + bx^2 + cx + d = 0 (Ferrari's method)
    {
     float__t a  = c[1];
     float__t b  = c[2];
@@ -646,7 +645,7 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
     float__t q      = a2 * a / 8.0L - a * b / 2.0L + cc;
     float__t r      = -3.0L * a2 * a2 / 256.0L + a2 * b / 16.0L - a * cc / 4.0L + d;
 
-    if (fabsl (q) < 1e-10L)
+    if (Abs (q) < 1e-10L)
      {
       // Biquadratic: y^4 + py^2 + r = 0
       // Substitute z = y^2: z^2 + pz + r = 0
@@ -767,8 +766,8 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
         float__t cbrt_r = Pow (rr, 1.0L / 3.0L);
 
         float__t m1 = 2.0L * cbrt_r * Cos (theta / 3.0L) - ac / 3.0L;
-        float__t m2 = 2.0L * cbrt_r * Cos ((theta - 2.0L * M_PI) / 3.0L) - ac / 3.0L;
-        float__t m3 = 2.0L * cbrt_r * Cos ((theta - 4.0L * M_PI) / 3.0L) - ac / 3.0L;
+        float__t m2 = 2.0L * cbrt_r * Cos ((theta + 2.0L * M_PI) / 3.0L) - ac / 3.0L;
+        float__t m3 = 2.0L * cbrt_r * Cos ((theta + 4.0L * M_PI) / 3.0L) - ac / 3.0L;
 
         // Choose the largest positive root
         m = m1;
@@ -776,64 +775,155 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
         if (m3 > m && m3 > 0) m = m3;
        }
 
-      // Ensure m is positive (or at least non-negative)
-      if (m < 0.0L) m = 0.0L;
-
-      // Now solve two quadratics using the resolvent root m
-      // y^4 + py^2 + qy + r = (y^2 + s1*y + t1)(y^2 + s2*y + t2)
-      // where s1 = sqrt(m), s2 = -sqrt(m)
-      // and t1, t2 are determined from p, q, r
-
-      float__t sqrtm = Sqrt (m);
-
-      // From Ferrari's method:
-      // s1 + s2 = 0 => s1 = sqrt(m), s2 = -sqrt(m)
-      // t1 + t2 = p + m
-      // s1*t2 + s2*t1 = q => sqrt(m)*(t2 - t1) = q
-      // t1*t2 = r
-
-      float__t t_sum  = p + m;
-      float__t t_diff = (sqrtm != 0.0L) ? q / sqrtm : 0.0L;
-
-      float__t t1 = (t_sum - t_diff) / 2.0L;
-      float__t t2 = (t_sum + t_diff) / 2.0L;
-
-      // First quadratic: y^2 + sqrt(m)*y + t1 = 0
-      float__t D1 = sqrtm * sqrtm - 4.0L * t1;
-      if (D1 >= 0)
+      // Check if we got a positive m - Ferrari's method requires this
+      if (m <= 0.0L)
        {
-        float__t sqrtD1 = Sqrt (D1);
-        roots[0]        = (-sqrtm + sqrtD1) / 2.0L + offset;
-        roots[1]        = 0.0L;
-        roots[2]        = (-sqrtm - sqrtD1) / 2.0L + offset;
-        roots[3]        = 0.0L;
+        // Analytical method failed - fall back to numerical Durand-Kerner
+        const int max_iterations = 100;
+        const float__t tolerance = 1e-12L;
+
+        float__t *roots_re = (float__t *)alloca (degree * sizeof (float__t));
+        float__t *roots_im = (float__t *)alloca (degree * sizeof (float__t));
+        float__t *next_re  = (float__t *)alloca (degree * sizeof (float__t));
+        float__t *next_im  = (float__t *)alloca (degree * sizeof (float__t));
+
+        // Initial approximations: roots on unit circle
+        for (int i = 0; i < degree; i++)
+         {
+          float__t angle = 2.0L * M_PI * i / degree + 0.4L; // slight offset for better convergence
+          roots_re[i]    = Cos (angle);
+          roots_im[i]    = Sin (angle);
+         }
+
+        // Durand-Kerner iterations
+        for (int iter = 0; iter < max_iterations; iter++)
+         {
+          float__t max_change = 0.0L;
+
+          for (int i = 0; i < degree; i++)
+           {
+            // Evaluate polynomial at current root approximation
+            float__t p_re = c[0], p_im = 0.0L;
+            float__t x_re = roots_re[i], x_im = roots_im[i];
+
+            for (int j = 1; j < n; j++)
+             {
+              float__t tmp_re = p_re * x_re - p_im * x_im + c[j];
+              float__t tmp_im = p_re * x_im + p_im * x_re;
+              p_re            = tmp_re;
+              p_im            = tmp_im;
+             }
+
+            // Product of differences with other roots
+            float__t prod_re = 1.0L, prod_im = 0.0L;
+            for (int k = 0; k < degree; k++)
+             {
+              if (k != i)
+               {
+                float__t diff_re = roots_re[i] - roots_re[k];
+                float__t diff_im = roots_im[i] - roots_im[k];
+                float__t tmp_re  = prod_re * diff_re - prod_im * diff_im;
+                float__t tmp_im  = prod_re * diff_im + prod_im * diff_re;
+                prod_re          = tmp_re;
+                prod_im          = tmp_im;
+               }
+             }
+
+            // Division: delta = P(x_i) / prod
+            float__t denom = prod_re * prod_re + prod_im * prod_im;
+            if (denom > 0.0L)
+             {
+              float__t delta_re = (p_re * prod_re + p_im * prod_im) / denom;
+              float__t delta_im = (p_im * prod_re - p_re * prod_im) / denom;
+
+              next_re[i] = roots_re[i] - delta_re;
+              next_im[i] = roots_im[i] - delta_im;
+
+              float__t change = Sqrt (delta_re * delta_re + delta_im * delta_im);
+              if (change > max_change) max_change = change;
+             }
+            else
+             {
+              next_re[i] = roots_re[i];
+              next_im[i] = roots_im[i];
+             }
+           }
+
+          // Copy next to current
+          for (int i = 0; i < degree; i++)
+           {
+            roots_re[i] = next_re[i];
+            roots_im[i] = next_im[i];
+           }
+
+          if (max_change < tolerance) break;
+         }
+
+        // Copy results
+        for (int i = 0; i < degree; i++)
+         {
+          roots[2 * i]     = roots_re[i];
+          roots[2 * i + 1] = roots_im[i];
+         }
        }
       else
        {
-        float__t sqrtD1 = Sqrt (-D1);
-        roots[0]        = -sqrtm / 2.0L + offset;
-        roots[1]        = sqrtD1 / 2.0L;
-        roots[2]        = -sqrtm / 2.0L + offset;
-        roots[3]        = -sqrtD1 / 2.0L;
-       }
+        // Now solve two quadratics using the resolvent root m
+        // y^4 + py^2 + qy + r = (y^2 + s1*y + t1)(y^2 + s2*y + t2)
+        // where s1 = sqrt(m), s2 = -sqrt(m)
+        // and t1, t2 are determined from p, q, r
 
-      // Second quadratic: y^2 - sqrt(m)*y + t2 = 0
-      float__t D2 = sqrtm * sqrtm - 4.0L * t2;
-      if (D2 >= 0)
-       {
-        float__t sqrtD2 = Sqrt (D2);
-        roots[4]        = (sqrtm + sqrtD2) / 2.0L + offset;
-        roots[5]        = 0.0L;
-        roots[6]        = (sqrtm - sqrtD2) / 2.0L + offset;
-        roots[7]        = 0.0L;
-       }
-      else
-       {
-        float__t sqrtD2 = Sqrt (-D2);
-        roots[4]        = sqrtm / 2.0L + offset;
-        roots[5]        = sqrtD2 / 2.0L;
-        roots[6]        = sqrtm / 2.0L + offset;
-        roots[7]        = -sqrtD2 / 2.0L;
+        float__t sqrtm = Sqrt (m);
+
+        // From Ferrari's method:
+        // s1 + s2 = 0 => s1 = sqrt(m), s2 = -sqrt(m)
+        // t1 + t2 = p + m
+        // s1*t2 + s2*t1 = q => sqrt(m)*(t2 - t1) = q
+        // t1*t2 = r
+
+        float__t t_sum  = p + m;
+        float__t t_diff = q / sqrtm;
+
+        float__t t1 = (t_sum - t_diff) / 2.0L;
+        float__t t2 = (t_sum + t_diff) / 2.0L;
+
+        // First quadratic: y^2 + sqrt(m)*y + t1 = 0
+        float__t D1 = sqrtm * sqrtm - 4.0L * t1;
+        if (D1 >= 0)
+         {
+          float__t sqrtD1 = Sqrt (D1);
+          roots[0]        = (-sqrtm + sqrtD1) / 2.0L + offset;
+          roots[1]        = 0.0L;
+          roots[2]        = (-sqrtm - sqrtD1) / 2.0L + offset;
+          roots[3]        = 0.0L;
+         }
+        else
+         {
+          float__t sqrtD1 = Sqrt (-D1);
+          roots[0]        = -sqrtm / 2.0L + offset;
+          roots[1]        = sqrtD1 / 2.0L;
+          roots[2]        = -sqrtm / 2.0L + offset;
+          roots[3]        = -sqrtD1 / 2.0L;
+         }
+
+        // Second quadratic: y^2 - sqrt(m)*y + t2 = 0
+        float__t D2 = sqrtm * sqrtm - 4.0L * t2;
+        if (D2 >= 0)
+         {
+          float__t sqrtD2 = Sqrt (D2);
+          roots[4]        = (sqrtm + sqrtD2) / 2.0L + offset;
+          roots[5]        = 0.0L;
+          roots[6]        = (sqrtm - sqrtD2) / 2.0L + offset;
+          roots[7]        = 0.0L;
+         }
+        else
+         {
+          float__t sqrtD2 = Sqrt (-D2);
+          roots[4]        = sqrtm / 2.0L + offset;
+          roots[5]        = sqrtD2 / 2.0L;
+          roots[6]        = sqrtm / 2.0L + offset;
+          roots[7]        = -sqrtD2 / 2.0L;
+         }
        }
      }
    }
@@ -853,7 +943,7 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
      // Initialize with spiral pattern: r_k = r^k * e^(2πik/n)
      // where r = max(1, |a_(n-1)/a_n|^(1/n)) to get good initial radius
      float__t init_radius = 1.0L;
-     if (degree > 1 && fabsl (c[1]) > 0.0L) init_radius = Pow (fabsl (c[1]), 1.0L / degree);
+     if (degree > 1 && Abs (c[1]) > 0.0L) init_radius = Pow (Abs (c[1]), 1.0L / degree);
      if (init_radius < 1.0L) init_radius = 1.0L;
 
      for (int k = 0; k < degree; k++)
@@ -956,8 +1046,8 @@ bool calculator::mxPolyRoots (value &res, value &coeffs)
          bool swap = false;
 
          // Real roots come before complex
-         bool i_is_real = (fabsl (roots_im[i]) < tolerance);
-         bool j_is_real = (fabsl (roots_im[j]) < tolerance);
+         bool i_is_real = (Abs (roots_im[i]) < tolerance);
+         bool j_is_real = (Abs (roots_im[j]) < tolerance);
 
          if (j_is_real && !i_is_real)
           swap = true;

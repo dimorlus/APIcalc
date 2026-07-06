@@ -830,7 +830,7 @@ Returns: $[b, a]$.<br>
 Returns: $[b, a]$.
 
 ### Regression Calculation
-Use these functions to evaluate a model previously obtained via fit*("filename") functions.
+Use these functions to evaluate a model previously obtained via fit*("filename") functions (the argument and the result can be complex).
 * **clcpoly(vector, x)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[a_n, \dots, a_1, a_0]$
 * **clcexp(vector, x)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[b, a]$.
 * **clclog(vector, x)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[b, a]$.

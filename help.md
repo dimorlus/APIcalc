@@ -168,11 +168,11 @@ fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to fi
 
 #### [Regression Calculation](README.md#Regression-Calculation)
 ```
-clcpoly(vector, x)              Evaluates a polynomial of any degree (up to 6).
-clcexp(vector, x)               Evaluates y=a*exp(b*x). Expects vector [b, a].
-clclog(vector, x)               Evaluates y = a + b*ln(x). Expects vector [b, a].
-clcpow(vector, x)               Evaluates y = a*x^b. Expects vector [b, a].
-clcinv(vector, x)               Evaluates y = a + b/x. Expects vector [b, a].
+clcpoly(vector, x|z)      (1)   Evaluates a polynomial of any degree (up to 6). Expect vector [a_n ... a_0].
+clcexp(vector, x|z)       (1)   Evaluates y=a*exp(b*x). Expects vector [b, a].
+clclog(vector, x|z)       (1)   Evaluates y = a + b*ln(x). Expects vector [b, a].
+clcpow(vector, x|z)       (1)   Evaluates y = a*x^b. Expects vector [b, a].
+clcinv(vector, x|z)       (1)   Evaluates y = a + b/x. Expects vector [b, a].
 ```
 
 #### [Statistical Analysis](README.md#Statistical-Analysis)

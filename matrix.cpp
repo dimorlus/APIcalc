@@ -1675,6 +1675,195 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
   return qnan; // Should not reach here
 }
 
+void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
+{
+ if (res == nullptr || arg == nullptr) return;
+
+ if (M.tag != tvMATRIX)
+  {
+   mxerror ("matrix required");
+   // Set result to NaN
+   res->fval  = qnan;
+   res->imval = (float__t)0.0L;
+   res->tag   = tvFLOAT;
+   res->ival  = 0;
+   return;
+  }
+
+ // Check if we need complex arithmetic
+ if ((res->tag == tvCOMPLEX) || (res->imval != (float__t)0.0L) || (arg->tag == tvCOMPLEX)
+     || (arg->imval != (float__t)0.0L))
+  {
+   // Complex calculation
+   float__t out_re = (float__t)0.0L;
+   float__t out_im = (float__t)0.0L;
+   float__t x_re   = arg->get ();
+   float__t x_im   = arg->imval;
+
+   switch (rt)
+    {
+    case rtPoly:
+     {
+      if (M.mrows == 1 && M.mcols <= MAX_C)
+       {
+        // Horner's method for complex polynomial evaluation
+        // P(z) = a_n*z^n + a_(n-1)*z^(n-1) + ... + a_1*z + a_0
+        out_re = (float__t)0.0L;
+        out_im = (float__t)0.0L;
+
+        for (int i = 0; i < M.mcols; i++)
+         {
+          // result = result * z + coeff[i]
+          // (out_re + i*out_im) * (x_re + i*x_im) + coeff[i]
+          float__t temp_re = out_re * x_re - out_im * x_im + M.mval[i];
+          float__t temp_im = out_re * x_im + out_im * x_re;
+          out_re           = temp_re;
+          out_im           = temp_im;
+         }
+       }
+      else
+       {
+        mxerror ("polynomial coefficients must be a row vector");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
+
+    case rtExp: // y = a*exp(b*z), [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1];
+        float__t b = M.mval[0];
+
+        // b * z
+        float__t bz_re = b * x_re;
+        float__t bz_im = b * x_im;
+
+        // exp(b*z)
+        float__t exp_re, exp_im;
+        ExpC (bz_re, bz_im, exp_re, exp_im);
+
+        // a * exp(b*z)
+        out_re = a * exp_re;
+        out_im = a * exp_im;
+       }
+      else
+       {
+        mxerror ("exponential regression requires exactly 2 coefficients");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
+
+    case rtPow: // y = a*z^b, [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1];
+        float__t b = M.mval[0];
+
+        // z^b = exp(b * ln(z))
+        float__t pow_re, pow_im;
+        PowC (x_re, x_im, b, (float__t)0.0L, pow_re, pow_im);
+
+        // a * z^b
+        out_re = a * pow_re;
+        out_im = a * pow_im;
+       }
+      else
+       {
+        mxerror ("power regression requires exactly 2 coefficients");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
+
+    case rtLg: // y = a + b*ln(z), [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1];
+        float__t b = M.mval[0];
+
+        // ln(z)
+        float__t ln_re, ln_im;
+        LnC (x_re, x_im, ln_re, ln_im);
+
+        // a + b * ln(z)
+        out_re = a + b * ln_re;
+        out_im = b * ln_im;
+       }
+      else
+       {
+        mxerror ("logarithmic regression requires exactly 2 coefficients");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
+
+    case rtInv: // y = a + b/z, [b, a]
+     {
+      if (M.mrows == 1 && M.mcols == 2)
+       {
+        float__t a = M.mval[1];
+        float__t b = M.mval[0];
+
+        // 1/z = (x - iy) / (x^2 + y^2)
+        float__t denom = x_re * x_re + x_im * x_im;
+        if (denom != (float__t)0.0L)
+         {
+          float__t inv_re = x_re / denom;
+          float__t inv_im = -x_im / denom;
+
+          // a + b/z
+          out_re = a + b * inv_re;
+          out_im = b * inv_im;
+         }
+        else
+         {
+          out_re = qnan;
+          out_im = qnan;
+         }
+       }
+      else
+       {
+        mxerror ("inverse regression requires exactly 2 coefficients");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
+
+    default:
+     out_re = qnan;
+     out_im = qnan;
+     break;
+    }
+
+   // Set result
+   res->fval  = out_re;
+   res->imval = out_im;
+   res->tag   = tvCOMPLEX;
+   res->ival  = (int64_t)out_re;
+  }
+ else
+  {
+   // Real calculation - just call the existing function
+   float__t x      = arg->get ();
+   float__t result = mxCalcFn (M, rt, x);
+   res->fval       = result;
+   res->imval      = (float__t)0.0L;
+   res->tag        = tvFLOAT;
+   res->ival       = (int64_t)result;
+  }
+}
+
+
 // mxNeg: element-wise negation (unary minus) — also in matrixuno, here for completeness
 bool calculator::mxNeg (value &res, value &M)
 {

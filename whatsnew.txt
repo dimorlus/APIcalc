@@ -1,3 +1,14 @@
+05.07.26 (2.218)
+- Fixed a bug in the polynom() function due to which polynom([(1,2,3,4,-5)]) was calculated incorrectly.
+  was: [(-500m, 866m); (-500m, -866m); (-500m, 866m); (-500m, -866m)] 
+  now: [(-312.5m, 1.858); (-2.059, 0); (684.1m, 0); (-312.5m, -1.858)]
++ The following functions can now take a complex argument (and return a complex result) 
+	clcpoly(vector, x) Evaluates a polynomial of any degree (up to 6). Expect vector [an ... a0].
+	clcexp(vector, x) Evaluates y=a·exp(b·x). Expects vector [b, a].
+	clclog(vector, x) Evaluates y = a + b·ln(x). Expects vector [b, a].
+	clcpow(vector, x) Evaluates y = a·x^b. Expects vector [b, a].
+	clcinv(vector, x) Evaluates y = a + b/x. Expects vector [b, a].
+
 04.07.26 (2.217)
 * The DLL version has been optimized for size, and independent fcalc.exe and ccalc.exe versions, compiled with 
   GCC at 128-bit floating point, have been added. Depending on the usage scenario, either the DLL or the 

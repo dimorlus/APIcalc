@@ -3784,13 +3784,14 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsCLCFN: // float clc*(matrix, float)
             {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_MATRIX, // float
-                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };          // matrix
-              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+             const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // float or complex
+                                        MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };         // matrix
+             if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
               errtype = teMath;
-              float__t res = mxCalcFn (v_stack[v_sp - 2], (rtype)sym->fidx, v_stack[v_sp - 1].get());
-              if (isnan (res) || mxerr[0])
+              // void mxCalcFn (value *res, value M, rtype rt, value *arg);
+              mxCalcFn (&v_stack[v_sp - 3], v_stack[v_sp - 2], (rtype)sym->fidx, &v_stack[v_sp - 1]);
+              if (isnan (v_stack[v_sp - 3].fval) || mxerr[0])
                {
                 if (mxerr[0])
                  errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
@@ -3801,8 +3802,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               char strbuf[STRBUF]    = { 0 };
               mxPolystr (strbuf, STRBUF, v_stack[v_sp - 2], (rtype)sym->fidx);
               v_stack[v_sp - 3].sval = dupString (strbuf);
-              v_stack[v_sp - 3].fval = res;
-              v_stack[v_sp - 3].tag = tvFLOAT;
               v_sp -= 2;
              }
             break;

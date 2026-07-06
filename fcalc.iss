@@ -43,6 +43,7 @@ Source: ".\ccalc\ccalc.cfg"; DestDir: "{app}"; Components: ccalc; Flags: ignorev
 Source: ".\consts.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\help.txt"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\README.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
+Source: ".\exelist.md"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\help.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\matrix.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify
 Source: ".\options.md"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall; Permissions: users-modify

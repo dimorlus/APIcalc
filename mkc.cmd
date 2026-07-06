@@ -35,6 +35,8 @@ cd BCB
 call clean.bat
 cd ..
 call clean.bat
+direxe > exelist.md
+
 echo "Compile setup packages"
 pause
 "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" fcalc_w10+64_std_dll.iss

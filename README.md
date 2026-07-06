@@ -72,6 +72,8 @@ The DLL and GCC versions are only available for 64-bit systems and is compiled u
 Since number input is processed as double, it's not possible to directly enter a number outside the double range, even in the 80- 
 or 128-bit versions. However, you can enter 1.234*10^1234.
 
+## [Installation options](exelist.md)
+
 ## Variable types.
 * Numbers: 
 	* Scalar: 

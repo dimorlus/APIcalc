@@ -35,7 +35,7 @@ cd BCB
 call clean.bat
 cd ..
 call clean.bat
-direxe > exelist.md
+direxe1 > exelist.md
 
 echo "Compile setup packages"
 pause

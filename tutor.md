@@ -221,7 +221,7 @@ uint8_t thermo (uint8_t adc)
 
 Let's assume the NTC resistance/temperature relationship is defined in a table. For this example, let's create it as a file every 5 degrees using the formula.
 
-fn:="ntc5.txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t*5, ntcr(100k,t*5)),-40/5, 140/5, t)
+```fn:="ntc5.txt";prnfl(fn,"");for(prnfl(fn,"%S`C %S", t*5, ntcr(100k,t*5)),-40/5, 140/5, t)```
 
 Now we can use the table function to plot the NTC resistance versus temperature and the ADC code versus temperature.
 ```

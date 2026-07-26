@@ -102,7 +102,7 @@ Graphical objects containing plotted curves and coordinate grids.
   The Color data type has been added, returned by the color(rrggbb) function. The following operations   are defined with this type:
    * for two colors: +, -, *
    * for a color and a number (or number and color): +, -, *, /
-   If the expression result is of type Color, the GUI draws a square of the corresponding color.
+   If the expression result is of type Color, the GUI draws a square of the corresponding color.  
    ```color(trgb(2k7)) + color(wrgb(blue))/2 → 0xFFFFD6 'LightGoldenRodYellow'```  
 
 ### Data Persistence (File I/O)
@@ -116,8 +116,8 @@ For all other types (Scalars, Matrices, Strings), it serializes the data into a 
 
 * **load("filename")**: Restores a variable from a file and returns its evaluated value.
 The engine first attempts to parse the file as a valid BMP structure.
-If it is not a BMP, it spawns a silent child parsing instance to evaluate the text expression and reconstruct the original variable type (Scalar, Matrix, or String).
-
+If it is not a BMP, it spawns a silent child parsing instance to evaluate the text expression and reconstruct the original variable type
+(Scalar, Matrix, or String).
 
 ## Two Versions Available
 
@@ -185,20 +185,20 @@ ccalc "help(7)"                 # Options
 
 #### Batch Processing (File or Stdin)
 
-Process a file of expressions line by line, redirecting output to a file:
+Process a file of expressions line by line, redirecting output to a file:  
 ```
 ccalc /ALL-/AUTO+/SRC+/FILE="apicalc_cli_tests.txt" >result.txt
 ```
-Or via stdin pipe:
+Or via stdin pipe:  
 ```
 type apicalc_cli_tests.txt | ccalc /ALL-/AUTO+/SRC+ >result.txt
 ```
-With `/SRC+` each output line includes the source expression:
+With `/SRC+` each output line includes the source expression:  
 ```
 -1^2 ;; -(1^2), not (-1)^2 => -1
 integr(exp(-(x^2)), -5, 5, x) ;; sqrt(pi) => 1.77245385090552
 ```
-Without `/SRC+` only results are printed, one per line:
+Without `/SRC+` only results are printed, one per line:  
 ```
 -1
 1.77245385090552

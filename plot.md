@@ -814,14 +814,6 @@ Available spectrum colors: `red`, `orange`, `yellow`, `green`, `blue`, `indigo`,
 - Non-numeric text (units, labels) is automatically ignored during parsing
 - Minus signs in dates (ISO 8601 format) create separate negative numbers!
 
-### Error Messages
-
-- `"Cannot open data file"` - File not found or access denied
-- `"No valid data points found"` - File contains no parseable numbers matching mask
-- `"Mask has more than 2 parameters"` - Mask contains more than 2 digit characters
-- `"Cannot reopen data file"` - File became unavailable between passes
-
-
 ### File Format
 
 All plotting functions save to BMP (bitmap) format:
@@ -834,7 +826,7 @@ All plotting functions save to BMP (bitmap) format:
 
 ## Function Summary Table
 
-| Function Type | Screen | 
+| Function Type | Name | 
 |--------------|--------|
 | **Cartesian** | `plot` |
 | **Polar** | `plotpol` |
@@ -873,12 +865,3 @@ arg(z) * 180/pi
 | `db(x)` | Convert to decibels | $20\log_{10}(x)$ |
 | `np(x)` | Convert to nepers | $\ln(x)$ |
 
----
-
-## Version Information
-
-- **Author**: APICalc Development Team
-- **License**: See repository
-- **Repository**: https://github.com/dimorlus/APIcalc
-
-For bug reports and feature requests, please visit the GitHub repository.

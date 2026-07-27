@@ -759,16 +759,6 @@ plotdata("log.txt", "****** 01") ;; Skip entire timestamp (6 numbers)
 plotdata("log.txt", "****** 0")  ;; Skip timestamp, plot value over line number
                                  ;; X = line number, Y = Val6
 ```
-#### Saving and Overlaying
-
-```
-;; Save base plot
-fplotdatal("comparison.bmp", "data1.txt", "01")
-
-;; Overlay additional data with different extraction
-oplotdatal("comparison.bmp", "data2.txt", "*01")  ;; Skip first column
-oplotdata("comparison.bmp", "data3.txt", "0")     ;; Add points, single column
-```
 
 ### Features
 
@@ -844,19 +834,18 @@ All plotting functions save to BMP (bitmap) format:
 
 ## Function Summary Table
 
-| Function Type | Screen | File | Overlay |
-|--------------|--------|------|---------|
-| **Cartesian** | `plot` | `fplot` | `oplot` |
-| **Polar** | `plotpol` | `fplotpol` | `oplotpol` |
-| **Parametric** | `plotxy` | `fplotxy` | `oplotxy` |
-| **Log X** | `plotlgx` | `fplotlgx` | `oplotlgx` |
-| **Log Y** | `plotlgy` | `fplotlgy` | `oplotlgy` |
-| **Log XY** | `plotlgxy` | `fplotlgxy` | `oplotlgxy` |
-| **Smith ($Z_0$=50Ω)** | `plotsmith` | `fplotsmith` | `oplotsmith` |
-| **Smith (custom $Z_0$)** | `plotsmithz` | `fplotsmithz` | `osmithz` |
-| **Data points** | `plotdata` | `fplotdata` | `oplotdata` |  
-| **Data liness** | `plotdatal` | `fplotdatal` | `oplotdatal` |  
-
+| Function Type | Screen | 
+|--------------|--------|
+| **Cartesian** | `plot` |
+| **Polar** | `plotpol` |
+| **Parametric** | `plotxy` |
+| **Log X** | `plotlgx` | 
+| **Log Y** | `plotlgy` | 
+| **Log XY** | `plotlgxy` |
+| **Smith ($Z_0$=50Ω)** | `plotsmith` |
+| **Smith (custom $Z_0$)** | `plotsmithz` |
+| **Data points** | `plotdata` |
+| **Data liness** | `plotdatal` |
 
 ---
 

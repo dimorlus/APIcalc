@@ -34,6 +34,8 @@ ADC values correspond to high temperatures).
 
 ---
 ![ntc_diags](ntc_diags.png)<br>
+| Circuit diagram |           ADC(T)                 |             TC(N)           |           Appr+TC(N)                 |
+ 
 ---
 ### 3. The Power of Numerical Inversion: The `solve` Function
 

@@ -167,6 +167,9 @@ void calculator::copy_symbols (symbol **symtab, uint64_t mask)
             else 
             if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
               new_symbol->val.mval = dupMatrix (sp->val); // Duplicate and register matrix value 
+            else if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvWAV))
+             new_symbol->val.sval = dupWAV (sp->val.sval); // Duplicate and register matrix value 
+
            }
          }
        }

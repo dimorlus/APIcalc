@@ -50,6 +50,7 @@ extern "C" {
  typedef void* HCALC;  // opaque handle, no one outside knows what's inside
 
  typedef bool (*fnShowImage) (void *bmpObject);
+ typedef bool (*fnPlayWav) (void *wavObject);
  typedef int (*debug_callback_t) (void *context, const char *fmt, ...);
  typedef int64_t int_t;
  typedef uint64_t unsigned_t;
@@ -77,6 +78,7 @@ CALCAPI int		__cdecl calc_varlist (HCALC h, char *buf, int bsize, int *maxlen);
 CALCAPI void    __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void));
 CALCAPI void	__cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int));
 CALCAPI void	__cdecl calc_setShowImageFn (HCALC h, fnShowImage fn);
+CALCAPI void    __cdecl calc_setPlayWavFn (HCALC h, fnPlayWav fn);
 CALCAPI void	__cdecl calc_setDebugFn (HCALC h, debug_callback_t fn);
 CALCAPI bool	__cdecl calc_block (HCALC h);
 

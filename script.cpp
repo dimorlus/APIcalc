@@ -781,7 +781,7 @@ void calculator::GetChildRes(calculator *child, value &res)
  res.ival  = child->get_int_res ();
  res.fval  = child->get_re_res ();
  res.imval = child->get_im_res ();
- if (res.tag != tvBMP) res.sval  = dupString (child->get_str_res ());
+ if ((res.tag != tvBMP) && (res.tag != tvWAV)) res.sval  = dupString (child->get_str_res ());
  if (res.imval != (float__t)0.0L)
   res.tag = tvCOMPLEX; // Upgrade to complex if imaginary part is non-zero
  else if (res.tag == tvFLOAT && res.fval == (float__t)(int64_t)res.fval)
@@ -822,7 +822,13 @@ void calculator::GetChildRes(calculator *child, value &res)
    res.fval = qnan;
    errorf (res.pos, "Cannot return bitmap result");
   }
- fflags |= child->isfflags ();
+  else if (child->get_res_tag () == tvWAV)
+   {
+    res.tag  = tvERR;
+    res.fval = qnan;
+    errorf (res.pos, "Cannot return WAV result");
+   }
+  fflags |= child->isfflags ();
 }
 
 bool calculator::Eval (char *expr, char *sres)

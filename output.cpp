@@ -1002,6 +1002,60 @@ void calculator::strval (char *str, value &val)
  switch (val.tag)
   {
   case tvBMP:
+   if (val.sval)
+    {
+     bmpdraw *bmp = (bmpdraw *)val.sval;
+     sprintf (str, "BMP(%dx%d)", bmp->width, bmp->height);
+    }
+   break;
+  case tvWAV:
+   if (val.sval)
+    {
+     WavHeader *header   = (WavHeader *)val.sval;
+     uint32_t numSamples = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+     float__t duration   = (float__t)numSamples / (float__t)header->sampleRate;
+     sprintf (str, "WAV(%.3fs,%dHz,%dch)", (double)duration, header->sampleRate,
+              header->numChannels);
+    }
+   break;
+  case tvSTR:
+   {
+    sprintf (str, "'%s'", val.sval ? val.sval : "");
+   }
+   break;
+  case tvMATRIX:
+   {
+    if (val.mval) Mxprint (val.tag, val.mrows, val.mcols, val.mval, str, false, nullptr);
+   }
+   break;
+  case tvINT:
+   {
+    sprintf (str, "%lld", val.ival);
+   }
+   break;
+  case tvCOLOR:
+   {
+    sprintf (str, "%x", (uint32_t)val.ival);
+   }
+   break;
+  case tvFLOAT:
+  case tvCOMPLEX:
+   {
+    qprint (str, val.fval, val.imval, fprec, c_imaginary);
+   }
+   break;
+  default:
+   *str = '\0'; // Unsupported type
+  }
+}
+
+#ifdef _comment_
+void calculator::strval (char *str, value &val)
+{
+ if (!str) return;
+ switch (val.tag)
+  {
+  case tvBMP:
    if (val.sval) 
    {
     bmpdraw *bmp = (bmpdraw *)val.sval;
@@ -1038,5 +1092,6 @@ void calculator::strval (char *str, value &val)
    *str = '\0'; // Unsupported type
   }
 }
+#endif // _comment_
 #pragma endregion
 //---------------------------------------------------------------------------

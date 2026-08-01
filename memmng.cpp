@@ -181,8 +181,103 @@ void calculator::save_vars_mem (void)
    return dup;
   }
 
+// Duplicate a WAV and register it for cleanup
+char *calculator::dupWAV (const char *src)
+{
+ if (!src) return nullptr;
 
+ // Get WAV file size from header
+ WavHeader *header = (WavHeader *)src;
+ uint32_t fileSize = header->fileSize + 8; // fileSize doesn't include first 8 bytes (RIFF + size)
 
+ char *dup = (char *)malloc(fileSize);
+ if (!dup) return nullptr;
+
+ // Copy WAV data
+ memcpy(dup, src, fileSize);
+
+ // Register for cleanup
+ register_mem(dup, ptMALLOC);
+
+ return dup;
+}
+
+bool calculator::dupvar (value &dst, value &src)
+{
+ dst.tag   = src.tag;
+ dst.fval  = src.get ();
+ dst.ival  = src.get_int ();
+ dst.imval = src.imval;
+ if (src.tag == tvSTR)
+  {
+   dst.sval = dupString (src.sval); // Duplicate string value
+   if (!dst.sval) return false;     // Check for duplication failure
+  }
+ else if (src.tag == tvMATRIX)
+  {
+   dst.mval = dupMatrix (src);  // Duplicate matrix value
+   if (!dst.mval) return false; // Check for duplication failure
+   dst.mrows = src.mrows;
+   dst.mcols = src.mcols;
+  }
+ else if (src.tag == tvBMP)
+  {
+   dst.sval = (char *)dupBMP ((bmpdraw *)src.sval); // Duplicate bitmap value
+   if (!dst.sval) return false;                     // Check for duplication failure
+  }
+ else if (src.tag == tvWAV)
+  {
+   dst.sval = dupWAV (src.sval); // Duplicate WAV value
+   if (!dst.sval) return false;  // Check for duplication failure
+  }
+ // else if (src.tag == tvCOLOR)
+ //  {
+ //   char color[128] = { 0 };
+ //   rgb_to_color_name_extended (color, true, src.get_int ());
+ //   dst.sval = dupString (color); // Duplicate color name string
+ //  }
+ return true;
+}
+
+bool calculator::freevar (value &src)
+{
+ if (src.tag == tvSTR)
+  {
+   sf_free (src.sval, ptMALLOC); // Unregister string value
+   src.sval = nullptr;
+  }
+ else if (src.tag == tvMATRIX)
+  {
+   if (src.mval) sf_free (src.mval, ptMALLOC); // Unregister matrix value
+   src.mval  = nullptr;
+   src.mrows = 0;
+   src.mcols = 0;
+  }
+ else if (src.tag == tvBMP)
+  {
+   if (src.sval) sf_free (src.sval, ptBMP); // Unregister bitmap value
+   src.sval = nullptr;
+  }
+ else if (src.tag == tvWAV)
+  {
+   if (src.sval) sf_free (src.sval, ptMALLOC); // Unregister WAV value
+   src.sval = nullptr;
+  }
+ // else if (src.tag == tvCOLOR)
+ //  {
+ //   if (src.sval) sf_free (src.sval, ptMALLOC); // Unregister color name string
+ //   src.sval = nullptr;
+ //  }
+ src.tag   = tvERR; // Reset tag to indicate variable is now empty
+ src.ival  = 0;
+ src.fval  = qnan;
+ src.imval = (float__t)0.0L;
+ if (src.sval) sf_free (src.sval, ptMALLOC);
+ src.sval = nullptr;
+ return true;
+}
+
+#ifdef _COMMENT_
 bool calculator::dupvar (value &dst, value &src) 
 {
  dst.tag = src.tag;
@@ -247,6 +342,7 @@ bool calculator::freevar (value &src)
  src.sval = nullptr; 
  return true;
 }
+#endif // _COMMENT_
 
 #pragma endregion
 //---------------------------------------------------------------------------

@@ -302,9 +302,11 @@ enum t_value // t_value represents the type of a value in the calculator
  tvFOR,
  tvWHILE,
  tvPLOT,
+ tvPLAY,
  tvBMP,
  tvCOLOR,
  tvTBLFN,
+ tvWAV,
 };
 
 #define MSK_ERR     (1 << tvERR)     //  0 Mask for error values
@@ -323,13 +325,14 @@ enum t_value // t_value represents the type of a value in the calculator
 #define MSK_EXTR    (1 << tvEXTR)    // 13 Mask for extremum operator values
 #define MSK_FOR     (1 << tvFOR)     // 14 Mask for for operator values
 #define MSK_WHILE   (1 << tvWHILE)   // 15 Mask for while operator values
-#define MSK_BMP     (1 << tvBMP)     // 16 Mask for bitmap operator values
+#define MSK_BMP     (1 << tvBMP)     // 16 Mask for bitmap (image) values
 #define MSK_INVERCE (1 << tvINVERSE) // 17 Mask for inverse operator values
 #define MSK_COLOR   (1 << tvCOLOR)   // 18 Mask for color operator values
 #define MSK_TBLFN   (1 << tvTBLFN)   // 19 Mask for table function operator values
+#define MSK_WAV     (1 << tvWAV)     // 20 Mask for wave (sound)values
 
 #define MSK_SCALAR (MSK_INT | MSK_FLOAT | MSK_PERCENT) // Mask for scalar values
-#define MSK_ALLVAR (MSK_SCALAR | MSK_COMPLEX | MSK_STR | MSK_MATRIX | MSK_BMP | MSK_COLOR | MSK_UFUNCT)                                                                                    \
+#define MSK_ALLVAR (MSK_SCALAR | MSK_COMPLEX | MSK_STR | MSK_MATRIX | MSK_BMP | MSK_COLOR | MSK_UFUNCT | MSK_WAV)                                                                                    \
  
 #define MAX_R 7
 #define MAX_C 7
@@ -445,7 +448,11 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsGUI,      // 43  GUI service functions
  tsTBLFN,    // 44  table function for creating tables of values (tblfn)
  tsWHILE,    // 45  while operator for loops (while)
- tsNUM       // 46  Total number of symbol types, must be the last in the list
+ tsPLAY,     // 46  play(expr, from, to, var) operator for creating sound files
+ tsFFT,      // 47  fft operator for performing Fast Fourier Transform (fft)
+ tsAFFT,     // 48  afft operator for performing Inverse Fast Fourier Transform (afft)
+ tsHARM,     // 49  harm operator for performing harmonic evaluation (harm) float harm(matrix Mx, float t)
+ tsNUM       // 50  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -503,14 +510,18 @@ enum t_br_result
 #define MASK_LDSV       (1ULL << tsLDSV)        // load/save operator for loading and saving variables
 #define MASK_PLOTREG    (1ULL << tsPLOTREG)     // plotreg(xmin, xmax, ymin, ymax) - define plot region
 #define MASK_INVERSE    (1ULL << tsINVERSE)     // inverse operator for calculating the inverse of a function (inverse)
+#define MASK_PLAY       (1ULL << tsPLAY)        // play(expr, from, to, var) operator for creating sound files
 #define MASK_SCRIPT     (1ULL << tsSCRIPT)      // Script service
 #define MASK_GUI        (1ULL << tsGUI)         // GUI service
 #define MASK_TBLFN      (1ULL << tsTBLFN)       // table function for creating tables of values (tblfn)
 #define MASK_WHILE      (1ULL << tsWHILE)       // while operator for loops (while)
+#define MASK_FFT        (1ULL << tsFFT)         // fft operator for performing Fast Fourier Transform (fft)
+#define MASK_AFFT       (1ULL << tsAFFT)        // afft operator for performing Inverse Fast Fourier Transform (afft)
+#define MASK_HARM       (1ULL << tsHARM)        //  float harm(matrix Mx, float t)
 
 // default mask for user defined functions, excludes variables
-#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI))) 
-#define MASK_SOLVERS ((uint64_t)(MASK_SUM | MASK_INTEGR | MASK_DIFF | MASK_EXTR | MASK_INVERSE | MASK_SOLVE | \
+#define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI|MASK_PLAY))) 
+#define MASK_SOLVERS ((uint64_t)(MASK_SUM | MASK_INTEGR | MASK_DIFF | MASK_EXTR | MASK_INVERSE | MASK_SOLVE | MASK_PLAY | \
                                 MASK_CALC | MASK_PLOT | MASK_FOR | MASK_WHILE))
 
 
@@ -577,6 +588,11 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_pol_rt, //Polynom root
 
  vf_factorial, // Factorial function
+
+ vf_play, // Play function for generating sound
+ vf_fft,  // Fast Fourier Transform function
+ vf_afft, // Inverse Fast Fourier Transform function
+ vf_harm, // Harmonic function for generating harmonic signals
 
  // Cartesian coordinates
  pl_plot,       // plot plot Cartesian to screen
@@ -739,6 +755,31 @@ class symbol // symbol represents a symbol in the calculator, which can be a var
 };
 #pragma endregion
 
+#pragma region WAV File Header Structure
+#pragma pack(push, 1)
+struct WavHeader
+{
+ // RIFF Header
+ char riff[4];      // "RIFF"
+ uint32_t fileSize; // File size - 8
+ char wave[4];      // "WAVE"
+
+ // fmt chunk
+ char fmt[4];            // "fmt "
+ uint32_t fmtSize;       // 16 for PCM
+ uint16_t audioFormat;   // 1 for PCM
+ uint16_t numChannels;   // 1 for mono, 2 for stereo
+ uint32_t sampleRate;    // 44100
+ uint32_t byteRate;      // sampleRate * numChannels * bitsPerSample/8
+ uint16_t blockAlign;    // numChannels * bitsPerSample/8
+ uint16_t bitsPerSample; // 16
+
+ // data chunk
+ char data[4];      // "data"
+ uint32_t dataSize; // numSamples * numChannels * bitsPerSample/8
+};
+#pragma pack(pop)
+#pragma endregion
 
 #pragma region Memory management class
 
@@ -982,6 +1023,7 @@ struct tablefn_data
 };
 #endif
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
+typedef bool (*fnPlayWav) (void *wavObject); // Pointer to function for playing a WAV file
 typedef int (*debug_callback_t) (void *context, const char *fmt, ...);// Debug callback function type
 
 int_t scan_opt (char *str, int_t &opts);
@@ -1066,6 +1108,7 @@ class calculator // calculator represents the main class for the expression calc
  int (*EscFn) (void);
  bool (*FileDlgFn) (char*, int);
  fnShowImage ShowImageFn;
+ fnPlayWav PlayWavFn;
  debug_callback_t debugFn;
 
  uint8_t res_cols; // Number of columns in the matrix result
@@ -1249,6 +1292,15 @@ class calculator // calculator represents the main class for the expression calc
  void PlotReset ();    // Reset plot settings to defaults
  bool AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color);
 
+ //WAV operations
+ bool CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vto, calculator *child, value &res);
+ bool Play (const char *expr, v_func fidx, value &res); // Operator 'play' for playing data points or functions
+ char *dupWAV (const char *src);
+ bool WavOp (value &left, value &right, t_operator cop);
+ // FFT and harmonic synthesis functions
+ bool WavFFT (value &wavVal, value &res);
+ bool HarmonicsToWav (value &harmonics, float__t duration, value &res);
+ float__t EvalHarmonics (value &harmonics, float__t t);
 
  // Matrix operations
  float__t *mxAlloc (int rows, int cols);
@@ -1347,6 +1399,7 @@ class calculator // calculator represents the main class for the expression calc
  void setEscFn (int (__cdecl *fn) (void)) { EscFn = fn; } // Set the escape function for long calculations
  void setFileDlgFn (bool (*fn) (char *, int)) { FileDlgFn = fn; } // Set the file dialog callback
  void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
+ void setPlayWavFn (fnPlayWav fn) { PlayWavFn = fn; }
  void setDebugFn (debug_callback_t fn) { debugFn = fn; }
 
  void addfn (const char *name, void *func) { add (tsGUI, name, func);} // Add a function to the calculator

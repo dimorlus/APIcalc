@@ -216,6 +216,11 @@ void calculator::AddPredefined (void)
  add (tsDATAF, dfDatas, "datas", nullptr);
  add (tsERROR, "error", nullptr);
 
+ add (tsPLAY, vf_play, "play", nullptr, false);
+ add (tsFFT, vf_fft, "fft", nullptr, false);
+ add (tsAFFT, vf_afft, "afft", nullptr, false);
+ add (tsHARM, vf_harm, "harm", nullptr, false);
+
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
 
@@ -1421,6 +1426,22 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
            v_stack[0].sval = nullptr; // Prevent freeing the bitmap data in clear_v_stack
          }
 
+         if (v_stack[0].tag == tvWAV)
+          {
+           if (v_stack[0].sval)
+            {
+             strval (sres, v_stack[0]);
+             v_stack[0].imval = result_imval = (float__t)0.0L;
+             WavHeader *header = (WavHeader *)v_stack[0].sval;
+             uint32_t fileSize = header->fileSize + 8;
+             v_stack[0].ival = result_ival = fileSize;
+             v_stack[0].fval = result_fval = (float__t)v_stack[0].ival;
+             if (PlayWavFn) PlayWavFn ((void *)header);
+            }
+           else error ("Invalid WAV data");
+           v_stack[0].sval = nullptr; // Prevent freeing the WAV data in clear_v_stack
+          }
+
          if (v_stack[0].tag == tvCOLOR)
           {
            rgb_to_color_name_extended (sres, true, v_stack[0].get_int ());
@@ -1472,7 +1493,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              v_stack[0].sval  = nullptr;
             }
            else 
-           if (v_stack[0].tag != tvCOLOR && v_stack[0].tag != tvBMP)
+           if (v_stack[0].tag != tvCOLOR && v_stack[0].tag != tvBMP && v_stack[0].tag != tvWAV)
              sres[0] = '\0'; // Clear sres if not a string result
 
            v_stack[v_sp - 1].var = nullptr;
@@ -1551,6 +1572,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
+         }
+        else if (WavOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvWAV;
          }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
@@ -1640,6 +1665,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }
+        else if (WavOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvWAV;
+         }
         else if ((v_stack[v_sp - 1].tag == tvSTR) || (v_stack[v_sp - 2].tag == tvSTR))
          {
           error (v_stack[v_sp - 2].pos, "Illegal string operation");
@@ -1708,6 +1737,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
          }
+        else if (WavOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvWAV;
+         }
         else if ((v_stack[v_sp - 1].tag == tvINT) && (v_stack[v_sp - 2].tag == tvINT))
          {
           v_stack[v_sp - 2].ival *= v_stack[v_sp - 1].ival;
@@ -1774,6 +1807,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         else if (ColorOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
          {
           v_stack[v_sp - 2].tag = tvCOLOR;
+         }
+        else if (WavOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvWAV;
          }
         else if (((v_stack[v_sp - 1].tag == tvCOMPLEX) || (v_stack[v_sp - 2].tag == tvCOMPLEX))
                  || ((v_stack[v_sp - 1].imval != 0.0) || (v_stack[v_sp - 2].imval != 0.0)))
@@ -2163,6 +2200,10 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           bmpdraw *bmp2 = (bmpdraw *)v_stack[v_sp - 1].sval;
           AddBmp (bmp1, bmp2, fgc);
          }
+        else if (WavOp (v_stack[v_sp - 2], v_stack[v_sp - 1], cop))
+         {
+          v_stack[v_sp - 2].tag = tvWAV;
+         }
         else if (v_stack[v_sp - 1].tag == tvINT && v_stack[v_sp - 2].tag == tvINT)
          {
           v_stack[v_sp - 2].ival |= v_stack[v_sp - 1].ival;
@@ -2204,7 +2245,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        }
        break;
 
-      case toXOR:    // ^
+       case toXOR:    // ^
        case toSETXOR: // ^=
         {
          const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
@@ -2246,7 +2287,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
         }
        break;
 
-      case toASL:    // <<
+       case toASL:    // <<
        case toSETASL: // <<=
         {
          const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
@@ -3037,7 +3078,25 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
             break;
 
-             case tsPLOT: //plot("fname", expr, from, to, var)
+            case tsPLAY: // play(expr, from, to, var)
+             {
+              if (n_args != 1)
+               {
+                error (v_stack[v_sp - n_args - 1].pos, "Function should take one arguments");
+                return result_fval = qnan;
+               }
+              if (v_stack[v_sp - 1].tag == tvPLAY)
+               {
+                const char *fname_expr = v_stack[v_sp - 1].sval ? v_stack[v_sp - 1].sval : "";
+                if (!Play (fname_expr, sym->fidx, v_stack[v_sp - 2])) return result_fval = qnan;
+               }
+              v_stack[v_sp - 2].ival = 1;
+              v_stack[v_sp - 2].fval = (float__t)1.0L;
+              v_sp -= 1;
+             }
+            break;
+
+            case tsPLOT: //plot(expr, from, to, var)
              {
               if (n_args != 1)
                {
@@ -3375,6 +3434,47 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= 1;
              }
              break;
+
+            case tsFFT: // Mx := FFT(WAV)
+             {
+              const uint32_t masks[] = { ~0UL & ~(MSK_WAV), 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_WAV)) return result_fval = qnan;
+              bool res = WavFFT (v_stack[v_sp - 1], v_stack[v_sp - 2]);
+              if (!res) return result_fval = qnan;
+              v_stack[v_sp - 2].tag = tvMATRIX;
+              v_sp -= 1;
+             }
+            break; 
+
+            case tsAFFT: // WAV := AFFT(Mx, float duration)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };         // matrix
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              errtype = teMath;
+              // bool HarmonicsToWav (value &harmonics, float__t duration, value &res);
+              bool res = HarmonicsToWav (v_stack[v_sp - 2], v_stack[v_sp - 1].get (), v_stack[v_sp - 3]);
+              if (!res) return result_fval = qnan;
+              v_sp -= 2;
+             }
+            break; 
+
+            case tsHARM: // float harm(matrix Mx, float t)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float 
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 }; // matrix
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              errtype = teMath;
+              v_stack[v_sp - 3].fval = EvalHarmonics (v_stack[v_sp - 2], v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 3].imval = (float__t)0.0L;
+              v_stack[v_sp - 3].ival  = (int_t)v_stack[v_sp - 3].fval;
+              v_stack[v_sp - 3].tag   = tvFLOAT;
+              v_sp -= 2;
+             }
+            break; 
 
             case tsCOLOR: // color(int x)
              {

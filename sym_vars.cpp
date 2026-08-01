@@ -201,6 +201,11 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
            sf_free (sp->val.sval, ptMALLOC); // Free string value using sf_free to ensure it's unregistered
            sp->val.sval = nullptr;
           }
+         if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvWAV))
+          {
+           sf_free (sp->val.sval, ptMALLOC); // Free WAV value using sf_free to ensure it's unregistered
+           sp->val.sval = nullptr;
+          }
          if ((sp->tag == tsVARIABLE) && (sp->val.tag == tvMATRIX))
           {
            sf_free (sp->val.mval, ptMALLOC); // Free matrix value using sf_free to ensure it's unregistered
@@ -233,6 +238,84 @@ void calculator::destroyvars (void) // Free all symbols in the hash table
 
 #pragma region Variable listing and hash table management
 
+int calculator::varlist (char *buf, int bsize, int *maxlen)
+{
+ char *cp = buf;
+ symbol *sp;
+ int lineCount = 0;
+ int localMax  = 0;
+ for (int i = 0; i < hash_table_size; i++)
+  {
+   if ((sp = hash_table[i]) != nullptr)
+    {
+     do
+      {
+       if (sp->tag == tsVARIABLE)
+        {
+         int written = 0;
+         if ((sp->val.tag == tvCOMPLEX) || (sp->val.imval != 0))
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %-.5g%+.5gi\r\n", sp->name,
+                               (double)sp->val.fval, (double)sp->val.imval);
+          }
+         else if (sp->val.tag == tvSTR)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = \"%s\"\r\n", sp->name,
+                               sp->val.sval ? sp->val.sval : "");
+          }
+         else if (sp->val.tag == tvMATRIX)
+          {
+           char mstr[1024];
+           Mxprint (sp->val.tag, sp->val.mrows, sp->val.mcols, sp->val.mval, mstr, false, nullptr);
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %s\r\n", sp->name, mstr);
+          }
+         else if (sp->val.tag == tvINT)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %lld (%llX)\r\n", sp->name,
+                               (long long)sp->val.ival, (long long)sp->val.ival);
+          }
+         else if (sp->val.tag == tvCOLOR)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %x\r\n", sp->name,
+                               (uint32_t)sp->val.ival);
+          }
+         else if (sp->val.tag == tvBMP)
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = BMP%dx%d\r\n", sp->name,
+                               ((bmpdraw *)sp->val.sval)->width, ((bmpdraw *)sp->val.sval)->height);
+          }
+         else if (sp->val.tag == tvWAV)
+          {
+           if (sp->val.sval)
+            {
+             WavHeader *header = (WavHeader *)sp->val.sval;
+             uint32_t numSamples
+                 = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+             float__t duration = (float__t)numSamples / (float__t)header->sampleRate;
+             written
+                 = snprintf (cp, bsize - (cp - buf), "%-10s = WAV(%.3fs,%dHz,%dch)\r\n", sp->name,
+                             (double)duration, header->sampleRate, header->numChannels);
+            }
+          }
+         else
+          {
+           written = snprintf (cp, bsize - (cp - buf), "%-10s = %-.5g\r\n", sp->name,
+                               (double)sp->val.get ());
+          }
+         if (written > localMax) localMax = written;
+         cp += written;
+         lineCount++;
+        }
+       sp = sp->next;
+      }
+     while (sp);
+    }
+  }
+ if (maxlen) *maxlen = localMax;
+ return lineCount;
+}
+
+#ifdef _comment_
 int calculator::varlist (char *buf, int bsize, int *maxlen)
 {
  char *cp = buf;
@@ -297,7 +380,7 @@ int calculator::varlist (char *buf, int bsize, int *maxlen)
  if (maxlen) *maxlen = localMax;
  return lineCount;
 }
-
+#endif // _comment_
 //---------------------------------------------------------------------------
 // A simple hash function for strings (djb2 by Dan Bernstein)
 unsigned calculator::string_hash_function (const char *p) 

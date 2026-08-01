@@ -3,10 +3,12 @@
 #include <shellapi.h>
 #include <commdlg.h>
 #include <htmlhelp.h>
+#include <mmsystem.h>
 #include <fstream>
 #include <ctime>
 
 #include "bmp.h" 
+#pragma comment(lib, "winmm.lib")
 
 #ifndef max
 #define max(a, b) std::max (a, b)
@@ -151,6 +153,25 @@ bool ShowImageFn (void *bmpObject)
  if (!g_pCalcInstance || !bmpObject) return false;
  return g_pCalcInstance->ShowImageWindowFromBMP (bmpObject);
 }
+
+// Callback function to play WAV from memory
+bool PlayWavFn (void *wavObject)
+{
+ if (!wavObject) return false;
+
+ // Get WAV file size from header
+ WavHeader *header = (WavHeader *)wavObject;
+ DWORD wavSize     = header->fileSize + 8; // Total file size
+
+ // Play WAV from memory using Windows API
+ // SND_MEMORY - play from memory buffer
+ // SND_ASYNC - play asynchronously (non-blocking)
+ // SND_NODEFAULT - don't play default sound if wav is invalid
+ BOOL result = PlaySound ((LPCSTR)wavObject, NULL, SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
+
+ return result != 0;
+}
+
 
 WinApiCalc::WinApiCalc ()
     : m_hInst (nullptr), m_hWnd (nullptr), m_hExpressionEdit (nullptr), m_hResultEdit (nullptr),
@@ -981,6 +1002,7 @@ void WinApiCalc::OnCreate ()
  m_pCalculator->setEscFn (EscFn);
  m_pCalculator->setFileDlgFn (FileDlg);
  m_pCalculator->setShowImageFn (ShowImageFn); 
+ m_pCalculator->setPlayWavFn (PlayWavFn);
 
  // Initialize Common Controls
  INITCOMMONCONTROLSEX icex;

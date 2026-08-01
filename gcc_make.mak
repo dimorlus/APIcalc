@@ -56,7 +56,7 @@ LDFLAGS = -static-libgcc -static-libstdc++ \
 LDFLAGS += -s -Wl,--gc-sections -Wl,--exclude-libs,ALL
 
 GUI_LIBS = -lhtmlhelp -lcomctl32 -lgdi32 -lcomdlg32 \
-           -lole32 -lshell32 -ladvapi32
+           -lole32 -lshell32 -ladvapi32 -lwinmm
 
 # ── Rules ──
 

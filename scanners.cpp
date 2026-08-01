@@ -1378,7 +1378,22 @@ t_operator calculator::sscan (symbol *sym)
        return toERROR;
       }
     }
-   else if (sym->tag == tsPLOT) // plot(fname, expr)
+   else if (sym->tag == tsPLAY)  // play(expr, from, to, var)
+    {
+     if (parenthesis_count == 0 && comma_count == 3)
+      {
+       v_stack[v_sp].tag = tvPLAY;
+      }
+     else
+      {
+       if (parenthesis_count)
+        error ("unmatched parenthesis in play");
+       else
+        error ("wrong number of arguments in play");
+       return toERROR;
+      }
+    }
+   else if (sym->tag == tsPLOT) // plot(expr, from, to, var)
     {
      bool error_in_args = false;
      switch (sym->fidx)

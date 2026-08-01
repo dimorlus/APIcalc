@@ -2499,4 +2499,951 @@ bool calculator::AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color)
 
  return true;
 }
+
+
+// WAV file header structures
+
+// Create WAV file in memory from expression
+bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vto,
+                            calculator *child, value &res)
+{
+ const uint32_t SAMPLE_RATE     = 44100;
+ const uint16_t BITS_PER_SAMPLE = 16;
+ const uint16_t NUM_CHANNELS    = 1; // mono
+
+ // Calculate number of samples
+ float__t duration = vto - vfrom; // duration in seconds
+ if (duration <= 0)
+  {
+   errorf (pos, "Invalid time range for WAV generation");
+   return false;
+  }
+
+ uint32_t numSamples = (uint32_t)(duration * SAMPLE_RATE);
+ if (numSamples == 0)
+  {
+   errorf (pos, "Duration too short for WAV generation");
+   return false;
+  }
+
+ // Allocate memory for WAV file
+ uint32_t dataSize = numSamples * NUM_CHANNELS * (BITS_PER_SAMPLE / 8);
+ uint32_t fileSize = sizeof (WavHeader) + dataSize;
+
+ char *wavData = (char *)malloc (fileSize);
+ if (!wavData)
+  {
+   errorf (pos, "Out of memory for WAV generation");
+   return false;
+  }
+
+ // Initialize WAV header
+ WavHeader *header = (WavHeader *)wavData;
+ memcpy (header->riff, "RIFF", 4);
+ header->fileSize = fileSize - 8;
+ memcpy (header->wave, "WAVE", 4);
+ memcpy (header->fmt, "fmt ", 4);
+ header->fmtSize       = 16;
+ header->audioFormat   = 1; // PCM
+ header->numChannels   = NUM_CHANNELS;
+ header->sampleRate    = SAMPLE_RATE;
+ header->bitsPerSample = BITS_PER_SAMPLE;
+ header->byteRate      = SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE / 8;
+ header->blockAlign    = NUM_CHANNELS * BITS_PER_SAMPLE / 8;
+ memcpy (header->data, "data", 4);
+ header->dataSize = dataSize;
+
+ int16_t *samples = (int16_t *)(wavData + sizeof (WavHeader));
+
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ float__t maxAmplitude = 0.0;
+ float__t save_vfrom   = vfrom;
+
+ // First pass: find maximum amplitude (sample every 2nd point for speed - 22kHz)
+ float__t step_pass1 = duration / (numSamples / 2);
+ float__t t          = vfrom;
+
+ for (uint32_t i = 0; i < numSamples / 2; i++)
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     free (wavData);
+     return false;
+    }
+
+   child->addfvar (svar, t);
+   float__t fvx = child->evaluate_f (sexpr);
+
+   if (isnan (fvx) && child->errt () == teSyntax)
+    {
+     errorf (pos, "%s", child->err);
+     free (wavData);
+     return false;
+    }
+
+   // Check if result is real (not complex)
+   if (!isnan (fvx) && isChildResReal (child))
+    {
+     float__t absVal = fabsl (fvx);
+     if (absVal > maxAmplitude) maxAmplitude = absVal;
+    }
+   // TODO: Check if result goes into complex plane for future stereo WAV support
+
+   t += step_pass1;
+  }
+
+ // Avoid division by zero
+ if (maxAmplitude == 0.0) maxAmplitude = 1.0;
+
+ // Second pass: generate samples at full 44100 Hz
+ float__t step_pass2 = duration / numSamples;
+ t                   = save_vfrom;
+
+ for (uint32_t i = 0; i < numSamples; i++)
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     free (wavData);
+     return false;
+    }
+
+   child->addfvar (svar, t);
+   float__t fvx = child->evaluate_f (sexpr);
+
+   if (isnan (fvx) && child->errt () == teSyntax)
+    {
+     errorf (pos, "%s", child->err);
+     free (wavData);
+     return false;
+    }
+
+   // Normalize and convert to 16-bit PCM
+   int16_t sample = 0;
+   if (!isnan (fvx) && isChildResReal (child))
+    {
+     // Normalize to [-1, 1] range, then scale to 16-bit range
+     float__t normalized = fvx / maxAmplitude;
+     // Clamp to [-1, 1]
+     if (normalized > 1.0) normalized = 1.0;
+     if (normalized < -1.0) normalized = -1.0;
+
+     sample = (int16_t)(normalized * 32767.0);
+    }
+
+   samples[i] = sample;
+   t += step_pass2;
+  }
+
+ // Set result
+ res.tag  = tvWAV;
+ res.sval = wavData;
+ register_mem (res.sval, ptMALLOC);
+
+ return true;
+}
+
+// Utility function to get WAV file size from header
+inline uint32_t GetWavFileSize (const char *wavData)
+{
+ WavHeader *header = (WavHeader *)wavData;
+ return header->fileSize + 8; // fileSize не включает первые 8 байт (RIFF + size)
+}
+
+// Utility function to get number of samples from WAV header
+inline uint32_t GetWavNumSamples (const char *wavData)
+{
+ WavHeader *header = (WavHeader *)wavData;
+ return header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+}
+
+// Play function
+bool calculator::Play (const char *expr, v_func fidx, value &res)
+{
+ if (!expr || !*expr)
+  {
+   errorf (pos, "empty expression");
+   return false;
+  }
+
+ char sexpr[STRBUF]   = { '\0' };
+ char sfrom[MAXOP]    = { '\0' };
+ char sto[MAXOP]      = { '\0' };
+ char svar[STRBUF]    = { '\0' };
+
+ bool split_ok     = false;
+
+ split_ok = Split (expr, sexpr, STRBUF, sfrom, MAXOP, sto, MAXOP, svar, STRBUF, nullptr, 0);
+ if (!split_ok)
+  {
+   result_fval = qnan;
+   return false;
+  }
+ calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+ if (!child)
+  {
+   errorf (pos, "Out of memory");
+   result_fval = qnan;
+   return false;
+  }
+ float__t vfrom = qnan, vto = qnan;
+ float__t fvx = qnan;
+ if (sfrom[0]) vfrom = child->evaluate_f (sfrom);
+ if (isnan (vfrom) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+
+ if (sto[0]) vto = child->evaluate_f (sto);
+ if (isnan (vto) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+ if (!isname (svar))
+  {
+   errorf (pos, "Invalid variable name");
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+ child->addfvar (svar, vfrom);
+ fvx = child->evaluate_f (sexpr); // evaluate the function for
+                                           // the syntax check before starting the integration
+ if ((isnan (fvx) || isinf (fvx)) && child->errt () == teMath)
+  {
+   fvx = 0; 
+  }
+ else if (isnan (fvx) || child->err[0])
+  {
+   errorf (pos, "%s", child->err);
+   delete child;
+   result_fval = qnan;
+   return false;
+  }
+
+ return CreateWav (sexpr, svar, vfrom, vto, child, res);
+}
+
+// WAV operations helper functions
+
+// Mix two WAV samples with clipping
+int16_t MixSamples (int16_t a, int16_t b)
+{
+ int32_t mixed = (int32_t)a + (int32_t)b;
+ if (mixed > 32767) mixed = 32767;
+ if (mixed < -32768) mixed = -32768;
+ return (int16_t)mixed;
+}
+
+// Subtract WAV samples with clipping
+int16_t SubSamples (int16_t a, int16_t b)
+{
+ int32_t result = (int32_t)a - (int32_t)b;
+ if (result > 32767) result = 32767;
+ if (result < -32768) result = -32768;
+ return (int16_t)result;
+}
+
+// Multiply WAV samples (normalized) with clipping
+int16_t MulSamples (int16_t a, int16_t b)
+{
+ int32_t result = ((int32_t)a * (int32_t)b) / 32768;
+ if (result > 32767) result = 32767;
+ if (result < -32768) result = -32768;
+ return (int16_t)result;
+}
+
+//// Scale WAV sample by scalar with clipping
+//int16_t ScaleSample (int16_t sample, float__t scale)
+//{
+// int32_t result = (int32_t)(sample * scale);
+// if (result > 32767) result = 32767;
+// if (result < -32768) result = -32768;
+// return (int16_t)result;
+//}
+
+// Concatenate two WAV files
+char *ConcatenateWav (const char *wav1, const char *wav2)
+{
+ WavHeader *h1 = (WavHeader *)wav1;
+ WavHeader *h2 = (WavHeader *)wav2;
+
+ // Check compatibility
+ if (h1->sampleRate != h2->sampleRate || h1->numChannels != h2->numChannels
+     || h1->bitsPerSample != h2->bitsPerSample)
+  return nullptr; // Incompatible WAV files
+
+ uint32_t samples1     = h1->dataSize / (h1->numChannels * h1->bitsPerSample / 8);
+ uint32_t samples2     = h2->dataSize / (h2->numChannels * h2->bitsPerSample / 8);
+ uint32_t totalSamples = samples1 + samples2;
+
+ // Allocate new WAV
+ uint32_t newDataSize = totalSamples * h1->numChannels * (h1->bitsPerSample / 8);
+ uint32_t newFileSize = sizeof (WavHeader) + newDataSize;
+
+ char *newWav = (char *)malloc (newFileSize);
+ if (!newWav) return nullptr;
+
+ // Copy header from first WAV
+ memcpy (newWav, wav1, sizeof (WavHeader));
+ WavHeader *newHeader = (WavHeader *)newWav;
+ newHeader->fileSize  = newFileSize - 8;
+ newHeader->dataSize  = newDataSize;
+
+ // Copy samples from both WAVs
+ int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
+ int16_t *samples1ptr = (int16_t *)(wav1 + sizeof (WavHeader));
+ int16_t *samples2ptr = (int16_t *)(wav2 + sizeof (WavHeader));
+
+ memcpy (newSamples, samples1ptr, h1->dataSize);
+ memcpy (newSamples + samples1, samples2ptr, h2->dataSize);
+
+ return newWav;
+}
+
+// Add normalized scalar to WAV sample with clipping
+int16_t AddScalar (int16_t sample, float__t value)
+{
+ // value is in range [-1.0, 1.0], scale to [-32768, 32767]
+ int32_t offset = (int32_t)(value * 32767.0);
+ int32_t result = (int32_t)sample + offset;
+ if (result > 32767) result = 32767;
+ if (result < -32768) result = -32768;
+ return (int16_t)result;
+}
+
+// Scale WAV sample by scalar with clipping
+int16_t ScaleSample (int16_t sample, float__t scale)
+{
+ int32_t result = (int32_t)(sample * scale);
+ if (result > 32767) result = 32767;
+ if (result < -32768) result = -32768;
+ return (int16_t)result;
+}
+
+// Main function to perform WAV operations based on the operator
+bool calculator::WavOp (value &left, value &right, t_operator cop)
+{
+ if (left.tag != tvWAV && right.tag != tvWAV) return false; // At least one must be WAV
+
+ // WAV | WAV - concatenation
+ if (cop == toOR && left.tag == tvWAV && right.tag == tvWAV)
+  {
+   char *result = ConcatenateWav (left.sval, right.sval);
+   if (!result)
+    {
+     errorf (left.pos, "Incompatible WAV files for concatenation");
+     return false;
+    }
+
+   // Free old left value and assign new
+   sf_free (left.sval, ptMALLOC);
+   left.sval = result;
+   register_mem (left.sval, ptMALLOC);
+   left.tag = tvWAV;
+   return true;
+  }
+
+ // WAV op WAV - element-wise operations
+ if (left.tag == tvWAV && right.tag == tvWAV)
+  {
+   WavHeader *h1 = (WavHeader *)left.sval;
+   WavHeader *h2 = (WavHeader *)right.sval;
+
+   // Check compatibility
+   if (h1->sampleRate != h2->sampleRate || h1->numChannels != h2->numChannels
+       || h1->bitsPerSample != h2->bitsPerSample)
+    {
+     errorf (left.pos, "Incompatible WAV files for operation");
+     return false;
+    }
+
+   uint32_t samples1   = h1->dataSize / (h1->numChannels * h1->bitsPerSample / 8);
+   uint32_t samples2   = h2->dataSize / (h2->numChannels * h2->bitsPerSample / 8);
+   uint32_t minSamples = samples1 < samples2 ? samples1 : samples2;
+
+   // Use shorter length for result
+   uint32_t newDataSize = minSamples * h1->numChannels * (h1->bitsPerSample / 8);
+   uint32_t newFileSize = sizeof (WavHeader) + newDataSize;
+
+   char *newWav = (char *)malloc (newFileSize);
+   if (!newWav)
+    {
+     errorf (left.pos, "Out of memory for WAV operation");
+     return false;
+    }
+
+   // Copy header
+   memcpy (newWav, left.sval, sizeof (WavHeader));
+   WavHeader *newHeader = (WavHeader *)newWav;
+   newHeader->fileSize  = newFileSize - 8;
+   newHeader->dataSize  = newDataSize;
+
+   int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
+   int16_t *samples1ptr = (int16_t *)(left.sval + sizeof (WavHeader));
+   int16_t *samples2ptr = (int16_t *)(right.sval + sizeof (WavHeader));
+
+   // Perform operation
+   for (uint32_t i = 0; i < minSamples; i++)
+    {
+     switch (cop)
+      {
+      case toADD:
+       newSamples[i] = MixSamples (samples1ptr[i], samples2ptr[i]);
+       break;
+      case toSUB:
+       newSamples[i] = SubSamples (samples1ptr[i], samples2ptr[i]);
+       break;
+      case toMUL:
+       newSamples[i] = MulSamples (samples1ptr[i], samples2ptr[i]);
+       break;
+      default:
+       free (newWav);
+       return false;
+      }
+    }
+
+   // Free old and assign new
+   sf_free (left.sval, ptMALLOC);
+   left.sval = newWav;
+   register_mem (left.sval, ptMALLOC);
+   left.tag = tvWAV;
+   return true;
+  }
+
+ // WAV op scalar
+ if (left.tag == tvWAV && ((right.tag & (t_value)~MSK_SCALAR) == 0))
+  {
+   WavHeader *h1    = (WavHeader *)left.sval;
+   uint32_t samples = h1->dataSize / (h1->numChannels * h1->bitsPerSample / 8);
+
+   float__t scale  = 0.0;
+   float__t offset = 0.0;
+
+   if (cop == toMUL)
+    scale = right.get ();
+   else if (cop == toDIV)
+    {
+     if (right.get () == 0.0)
+      {
+       errorf (left.pos, "Division by zero in WAV operation");
+       return false;
+      }
+     scale = 1.0 / right.get ();
+    }
+   else if (cop == toADD)
+    offset = right.get ();
+   else if (cop == toSUB)
+    offset = -right.get ();
+   else
+    return false; // Unsupported operator
+
+   // Create new WAV
+   uint32_t fileSize = h1->fileSize + 8;
+   char *newWav      = (char *)malloc (fileSize);
+   if (!newWav)
+    {
+     errorf (left.pos, "Out of memory for WAV operation");
+     return false;
+    }
+
+   // Copy header
+   memcpy (newWav, left.sval, sizeof (WavHeader));
+
+   int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
+   int16_t *samples1ptr = (int16_t *)(left.sval + sizeof (WavHeader));
+
+   // Apply operation to all samples
+   for (uint32_t i = 0; i < samples; i++)
+    {
+     if (cop == toMUL || cop == toDIV)
+      newSamples[i] = ScaleSample (samples1ptr[i], scale);
+     else // toADD or toSUB
+      newSamples[i] = AddScalar (samples1ptr[i], offset);
+    }
+
+   // Free old and assign new
+   sf_free (left.sval, ptMALLOC);
+   left.sval = newWav;
+   register_mem (left.sval, ptMALLOC);
+   left.tag = tvWAV;
+   return true;
+  }
+
+ // scalar op WAV
+ if (right.tag == tvWAV && ((left.tag & (t_value)~MSK_SCALAR) == 0))
+  {
+   WavHeader *h1    = (WavHeader *)right.sval;
+   uint32_t samples = h1->dataSize / (h1->numChannels * h1->bitsPerSample / 8);
+
+   float__t scale  = 0.0;
+   float__t offset = 0.0;
+
+   if (cop == toMUL)
+    {
+     // Commutative: scalar * WAV = WAV * scalar
+     value temp = left;
+     left       = right;
+     right      = temp;
+     return WavOp (left, right, cop);
+    }
+   else if (cop == toADD)
+    {
+     // Commutative: scalar + WAV = WAV + scalar
+     value temp = left;
+     left       = right;
+     right      = temp;
+     return WavOp (left, right, cop);
+    }
+   else if (cop == toSUB)
+    {
+     // scalar - WAV: invert and add
+     offset = left.get ();
+     scale  = -1.0;
+    }
+   else if (cop == toDIV)
+    {
+     // scalar / WAV: invert samples (reciprocal operation - experimental)
+     // This is mathematically questionable for audio, but we can implement it
+     scale = left.get ();
+    }
+   else
+    return false;
+
+   // Create new WAV
+   uint32_t fileSize = h1->fileSize + 8;
+   char *newWav      = (char *)malloc (fileSize);
+   if (!newWav)
+    {
+     errorf (left.pos, "Out of memory for WAV operation");
+     return false;
+    }
+
+   // Copy header
+   memcpy (newWav, right.sval, sizeof (WavHeader));
+
+   int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
+   int16_t *samples1ptr = (int16_t *)(right.sval + sizeof (WavHeader));
+
+   // Apply operation to all samples
+   for (uint32_t i = 0; i < samples; i++)
+    {
+     if (cop == toSUB)
+      {
+       // scalar - WAV[i] = scalar + (-WAV[i])
+       int16_t inverted = ScaleSample (samples1ptr[i], scale);
+       newSamples[i]    = AddScalar (inverted, offset);
+      }
+     else if (cop == toDIV)
+      {
+       // scalar / WAV[i]: treat each sample as divisor
+       if (samples1ptr[i] != 0)
+        {
+         float__t reciprocal = scale / (float__t)samples1ptr[i] * 32768.0;
+         newSamples[i]       = ScaleSample (32767, reciprocal / 32767.0);
+        }
+       else
+        newSamples[i] = 0; // Avoid division by zero
+      }
+    }
+
+   // Assign to left
+   left.sval = newWav;
+   register_mem (left.sval, ptMALLOC);
+   left.tag = tvWAV;
+   return true;
+  }
+
+ return false;
+}
+
+#pragma region FFT Implementation
+
+// Simple FFT implementation (Cooley-Tukey algorithm)
+// real and imag arrays must have size n (power of 2)
+// inverse = false for forward FFT, true for inverse FFT
+void PerformFFT (float__t *real, float__t *imag, int n, bool inverse)
+{
+ if (n <= 1) return;
+
+ // Bit-reversal permutation
+ int j = 0;
+ for (int i = 0; i < n - 1; i++)
+  {
+   if (i < j)
+    {
+     float__t temp = real[i];
+     real[i]       = real[j];
+     real[j]       = temp;
+     temp          = imag[i];
+     imag[i]       = imag[j];
+     imag[j]       = temp;
+    }
+   int k = n / 2;
+   while (k <= j)
+    {
+     j -= k;
+     k /= 2;
+    }
+   j += k;
+  }
+
+ // Cooley-Tukey FFT
+ for (int len = 2; len <= n; len *= 2)
+  {
+   float__t angle  = (inverse ? 2.0L : -2.0L) * M_PI / len;
+   float__t wlen_r = cosl (angle);
+   float__t wlen_i = sinl (angle);
+
+   for (int i = 0; i < n; i += len)
+    {
+     float__t w_r = 1.0L;
+     float__t w_i = 0.0L;
+
+     for (int j = 0; j < len / 2; j++)
+      {
+       float__t u_r = real[i + j];
+       float__t u_i = imag[i + j];
+       float__t v_r = real[i + j + len / 2] * w_r - imag[i + j + len / 2] * w_i;
+       float__t v_i = real[i + j + len / 2] * w_i + imag[i + j + len / 2] * w_r;
+
+       real[i + j]           = u_r + v_r;
+       imag[i + j]           = u_i + v_i;
+       real[i + j + len / 2] = u_r - v_r;
+       imag[i + j + len / 2] = u_i - v_i;
+
+       float__t temp = w_r;
+       w_r           = w_r * wlen_r - w_i * wlen_i;
+       w_i           = temp * wlen_i + w_i * wlen_r;
+      }
+    }
+  }
+
+ if (inverse)
+  {
+   for (int i = 0; i < n; i++)
+    {
+     real[i] /= n;
+     imag[i] /= n;
+    }
+  }
+}
+
+// Find next power of 2
+uint32_t NextPowerOf2 (uint32_t n)
+{
+ uint32_t power = 1;
+ while (power < n) power *= 2;
+ return power;
+}
+
+// Analyze WAV and extract top harmonics into matrix [frequency, amplitude]
+bool calculator::WavFFT (value &wavVal, value &res)
+{
+ if (wavVal.tag != tvWAV || !wavVal.sval)
+  {
+   errorf (pos, "Expected WAV object for FFT");
+   return false;
+  }
+
+ WavHeader *header   = (WavHeader *)wavVal.sval;
+ uint32_t numSamples = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+ uint32_t sampleRate = header->sampleRate;
+ int16_t *samples    = (int16_t *)(wavVal.sval + sizeof (WavHeader));
+
+ // Find FFT size (power of 2, limit to 32768 for reasonable performance)
+ uint32_t fftSize = NextPowerOf2 (numSamples);
+ if (fftSize > 32768) fftSize = 32768;
+ if (fftSize < 64) fftSize = 64;
+
+ // Allocate FFT buffers
+ float__t *real = (float__t *)malloc (fftSize * sizeof (float__t));
+ float__t *imag = (float__t *)malloc (fftSize * sizeof (float__t));
+
+ if (!real || !imag)
+  {
+   if (real) free (real);
+   if (imag) free (imag);
+   errorf (pos, "Out of memory for FFT");
+   return false;
+  }
+
+ // Copy samples to real part, normalize to [-1, 1]
+ uint32_t copySize = numSamples < fftSize ? numSamples : fftSize;
+ for (uint32_t i = 0; i < copySize; i++)
+  {
+   real[i] = (float__t)samples[i] / 32768.0L;
+   imag[i] = 0.0L;
+  }
+
+ // Zero-pad if needed
+ for (uint32_t i = copySize; i < fftSize; i++)
+  {
+   real[i] = 0.0L;
+   imag[i] = 0.0L;
+  }
+
+ // Perform FFT
+ PerformFFT (real, imag, fftSize, false);
+
+ // Find top harmonics (peaks in magnitude spectrum)
+ struct Peak
+ {
+  uint32_t index;
+  float__t frequency;
+  float__t magnitude;
+ };
+
+ Peak peaks[7];
+ for (int i = 0; i < 7; i++)
+  {
+   peaks[i].index     = 0;
+   peaks[i].frequency = 0.0L;
+   peaks[i].magnitude = 0.0L;
+  }
+
+ // Only analyze positive frequencies (first half of spectrum)
+ // Skip DC component (index 0)
+ for (uint32_t i = 1; i < fftSize / 2; i++)
+  {
+   float__t mag = sqrtl (real[i] * real[i] + imag[i] * imag[i]);
+
+   // Check if this is a local peak
+   bool isPeak = false;
+   if (i == 1)
+    {
+     float__t next = sqrtl (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
+     isPeak        = (mag > next);
+    }
+   else if (i == fftSize / 2 - 1)
+    {
+     float__t prev = sqrtl (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
+     isPeak        = (mag > prev);
+    }
+   else
+    {
+     float__t prev = sqrtl (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
+     float__t next = sqrtl (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
+     isPeak        = (mag > prev && mag > next);
+    }
+
+   if (isPeak && mag > 0.01L) // Threshold to ignore noise
+    {
+     // Calculate frequency
+     float__t frequency = (float__t)i * sampleRate / fftSize;
+
+     // Try to insert into top 7
+     for (int j = 0; j < 7; j++)
+      {
+       if (mag > peaks[j].magnitude)
+        {
+         // Shift down
+         for (int k = 6; k > j; k--) peaks[k] = peaks[k - 1];
+
+         peaks[j].index     = i;
+         peaks[j].frequency = frequency;
+         peaks[j].magnitude = mag;
+         break;
+        }
+      }
+    }
+  }
+
+ free (real);
+ free (imag);
+
+ // Count actual peaks found
+ int peakCount = 0;
+ for (int i = 0; i < 7; i++)
+  {
+   if (peaks[i].magnitude > 0.0L) peakCount++;
+  }
+
+ if (peakCount == 0)
+  {
+   errorf (pos, "No significant harmonics found in WAV");
+   return false;
+  }
+
+ // Create result matrix [frequency, amplitude]
+ res.tag   = tvMATRIX;
+ res.mrows = peakCount;
+ res.mcols = 2;
+ res.mval  = (float__t *)malloc (peakCount * 2 * sizeof (float__t));
+
+ if (!res.mval)
+  {
+   errorf (pos, "Out of memory for result matrix");
+   return false;
+  }
+
+ register_mem (res.mval, ptMALLOC);
+
+ for (int i = 0; i < peakCount; i++)
+  {
+   // Normalize amplitude (multiply by 2 because we only look at positive frequencies)
+   float__t amplitude = peaks[i].magnitude * 2.0L / fftSize;
+
+   res.mval[i * 2 + 0] = peaks[i].frequency;
+   res.mval[i * 2 + 1] = amplitude;
+  }
+
+ res.fval = (float__t)peakCount;
+ res.ival = peakCount;
+
+ return true;
+}
+
+// Synthesize WAV from harmonics matrix [frequency, amplitude]
+// Duration in seconds
+bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res)
+{
+ if (harmonics.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with harmonics [frequency, amplitude]");
+   return false;
+  }
+
+ if (harmonics.mcols != 2)
+  {
+   errorf (pos, "Matrix must have 2 columns [frequency, amplitude]");
+   return false;
+  }
+
+ if (harmonics.mrows < 1 || harmonics.mrows > 7)
+  {
+   errorf (pos, "Matrix must have 1 to 7 rows");
+   return false;
+  }
+
+ if (duration <= 0.0L)
+  {
+   errorf (pos, "Duration must be positive");
+   return false;
+  }
+
+ const uint32_t SAMPLE_RATE     = 44100;
+ const uint16_t BITS_PER_SAMPLE = 16;
+ const uint16_t NUM_CHANNELS    = 1;
+
+ uint32_t numSamples = (uint32_t)(duration * SAMPLE_RATE);
+
+ if (numSamples == 0)
+  {
+   errorf (pos, "Duration too short");
+   return false;
+  }
+
+ // Allocate WAV
+ uint32_t dataSize = numSamples * NUM_CHANNELS * (BITS_PER_SAMPLE / 8);
+ uint32_t fileSize = sizeof (WavHeader) + dataSize;
+
+ char *wavData = (char *)malloc (fileSize);
+ if (!wavData)
+  {
+   errorf (pos, "Out of memory for WAV synthesis");
+   return false;
+  }
+
+ // Setup WAV header
+ WavHeader *header = (WavHeader *)wavData;
+ memcpy (header->riff, "RIFF", 4);
+ header->fileSize = fileSize - 8;
+ memcpy (header->wave, "WAVE", 4);
+ memcpy (header->fmt, "fmt ", 4);
+ header->fmtSize       = 16;
+ header->audioFormat   = 1; // PCM
+ header->numChannels   = NUM_CHANNELS;
+ header->sampleRate    = SAMPLE_RATE;
+ header->bitsPerSample = BITS_PER_SAMPLE;
+ header->byteRate      = SAMPLE_RATE * NUM_CHANNELS * BITS_PER_SAMPLE / 8;
+ header->blockAlign    = NUM_CHANNELS * BITS_PER_SAMPLE / 8;
+ memcpy (header->data, "data", 4);
+ header->dataSize = dataSize;
+
+ int16_t *samples = (int16_t *)(wavData + sizeof (WavHeader));
+
+ // Synthesize: sum of sinusoids
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ for (uint32_t i = 0; i < numSamples; i++)
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     free (wavData);
+     return false;
+    }
+
+   float__t t     = (float__t)i / SAMPLE_RATE;
+   float__t value = 0.0L;
+
+   // Sum all harmonics
+   for (int h = 0; h < harmonics.mrows; h++)
+    {
+     float__t freq = harmonics.mval[h * 2 + 0];
+     float__t amp  = harmonics.mval[h * 2 + 1];
+
+     value += amp * sinl (2.0L * M_PI * freq * t);
+    }
+
+   // Convert to 16-bit with clipping
+   int32_t sample = (int32_t)(value * 32767.0L);
+   if (sample > 32767) sample = 32767;
+   if (sample < -32768) sample = -32768;
+
+   samples[i] = (int16_t)sample;
+  }
+
+ res.tag  = tvWAV;
+ res.sval = wavData;
+ register_mem (res.sval, ptMALLOC);
+ res.fval = 1.0L;
+ res.ival = 1;
+
+ return true;
+}
+
+// Evaluate harmonic sum at given time t (in seconds)
+// harmonics - matrix [frequency, amplitude]
+// t - time in seconds
+// Returns signal value at time t
+float__t calculator::EvalHarmonics (value &harmonics, float__t t)
+{
+ if (harmonics.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with harmonics");
+   return qnan;
+  }
+
+ if (harmonics.mcols != 2)
+  {
+   errorf (pos, "Harmonics matrix must have 2 columns [frequency, amplitude]");
+   return qnan;
+  }
+
+ if (isnan (t) || isinf (t)) return qnan;
+
+ float__t value = 0.0L;
+
+ // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t))
+ for (int h = 0; h < harmonics.mrows; h++)
+  {
+   float__t freq = harmonics.mval[h * 2 + 0];
+   float__t amp  = harmonics.mval[h * 2 + 1];
+
+   value += amp * sinl (2.0L * M_PI * freq * t);
+  }
+
+ return value;
+}
+#pragma endregion
+
 #pragma endregion

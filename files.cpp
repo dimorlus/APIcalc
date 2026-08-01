@@ -217,6 +217,98 @@
  {
   char fnamebuf[STRBUF] = { 0 };
   NormalizePath (fname, fnamebuf, STRBUF);
+
+  // Try to load as bitmap first
+  bmpdraw *bmp = new bmpdraw ();
+  if (bmp->load (fnamebuf))
+   {
+    int top = (int)getivar ("plot_top");
+    if (top < 0 || top > 2000) top = 0;
+    int left = (int)getivar ("plot_left");
+    if (left < 0 || left > 2000) left = 0;
+    bmp->left = left;
+    bmp->top  = top;
+    res.sval  = (char *)bmp;
+    register_mem (res.sval, ptBMP);
+    res.ival = 1;
+    res.fval = (float__t)1.0L;
+    res.tag  = tvBMP;
+    return true;
+   }
+
+  delete bmp;
+
+  // Try to load as WAV file
+  FILE *f = fopen (fnamebuf, "rb");
+  if (f)
+   {
+    // Check if it's a WAV file by reading RIFF header
+    char riff[4];
+    if (fread (riff, 1, 4, f) == 4 && memcmp (riff, "RIFF", 4) == 0)
+     {
+      // Read file size
+      uint32_t fileSize;
+      if (fread (&fileSize, 1, 4, f) == 4)
+       {
+        // Verify WAVE format
+        char wave[4];
+        if (fread (wave, 1, 4, f) == 4 && memcmp (wave, "WAVE", 4) == 0)
+         {
+          // It's a WAV file, read entire file
+          fseek (f, 0, SEEK_SET);
+          uint32_t totalSize = fileSize + 8;
+          char *wavData      = (char *)malloc (totalSize);
+          if (wavData)
+           {
+            if (fread (wavData, 1, totalSize, f) == totalSize)
+             {
+              fclose (f);
+              res.sval = wavData;
+              register_mem (res.sval, ptMALLOC);
+              res.ival = 1;
+              res.fval = (float__t)1.0L;
+              res.tag  = tvWAV;
+              return true;
+             }
+            free (wavData);
+           }
+         }
+       }
+     }
+    fclose (f);
+   }
+
+  // Try to load as text
+  char line[2048];
+  f = fopen (fnamebuf, "r");
+  if (f)
+   {
+    fgets (line, sizeof (line), f);
+    fclose (f);
+   }
+  else
+   return false;
+
+  if (line[0] == '\0') return false;
+
+  calculator *child = new calculator (scfg | SNAN, hash_table, (MASK_DEFAULT | MASK_VARIABLE), deep);
+  if (!child)
+   {
+    errorf (pos, "Out of memory");
+    return false;
+   }
+  child->evaluate (line);
+  GetChildRes (child, res);
+  delete child;
+
+  return true;
+ }
+
+#ifdef _comment_
+ bool calculator::Load (char *fname, value &res)
+ {
+  char fnamebuf[STRBUF] = { 0 };
+  NormalizePath (fname, fnamebuf, STRBUF);
   // try to load as bitmap first, if fails, try to load as text
   bmpdraw *bmp = new bmpdraw ();
   if (bmp->load (fnamebuf))
@@ -257,9 +349,91 @@
    }
   return true;
  }
+#endif // _comment_
 
- extern int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary);
+extern int qprint (char *str, float__t re, float__t im, int prec, char c_imaginary);
 
+bool calculator::Save (char *fname, value &val)
+ {
+  char fnamebuf[STRBUF] = { 0 };
+  NormalizePath (fname, fnamebuf, STRBUF);
+  switch (val.tag)
+   {
+   case tvBMP:
+    {
+     bmpdraw *bmp = (bmpdraw *)val.sval;
+     if (!bmp) return false;
+     bool r = bmp->save (fnamebuf);
+     // val.tag = tvINT;
+     val.ival  = r ? 1 : 0;
+     val.fval  = (float__t)val.ival;
+     val.imval = (float__t)0.0L;
+     return r;
+    }
+   case tvWAV:
+    {
+     if (!val.sval) return false;
+
+     // Get WAV file size from header
+     WavHeader *header = (WavHeader *)val.sval;
+     uint32_t fileSize = header->fileSize + 8;
+
+     // Write WAV file
+     FILE *f = fopen (fnamebuf, "wb");
+     if (!f) return false;
+
+     size_t written = fwrite (val.sval, 1, fileSize, f);
+     fclose (f);
+
+     bool r    = (written == fileSize);
+     val.ival  = r ? 1 : 0;
+     val.fval  = (float__t)val.ival;
+     val.imval = (float__t)0.0L;
+     return r;
+    }
+   case tvSTR:
+    {
+     FILE *f = fopen (fnamebuf, "w");
+     if (!f) return false;
+     fprintf (f, "'%s'", val.sval ? val.sval : "");
+     fclose (f);
+     return true;
+    }
+   case tvMATRIX:
+    {
+     char dst[2048];
+     FILE *f = fopen (fnamebuf, "w");
+     if (!f) return false;
+     Mxprint (val.tag, val.mrows, val.mcols, val.mval, dst, false, nullptr);
+     fprintf (f, "%s", dst);
+     fclose (f);
+     return true;
+    }
+   case tvINT:
+    {
+     FILE *f = fopen (fnamebuf, "w");
+     if (!f) return false;
+     fprintf (f, "%lld", val.ival);
+     fclose (f);
+     return true;
+    }
+   case tvFLOAT:
+   case tvCOMPLEX:
+    {
+     char str[2048];
+     FILE *f = fopen (fnamebuf, "w");
+     if (!f) return false;
+     qprint (str, val.fval, val.imval, fprec, c_imaginary);
+     fprintf (f, "%s", str);
+     fclose (f);
+     return true;
+    }
+   default:
+    return false; // Unsupported type for saving
+   }
+ }
+
+#ifdef _comment_
  bool calculator::Save(char* fname, value& val)
  {
   char fnamebuf[STRBUF] = { 0 };
@@ -318,3 +492,4 @@
      return false; // Unsupported type for saving
     } 
  }
+#endif // _comment_

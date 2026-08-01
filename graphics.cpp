@@ -3444,6 +3444,45 @@ float__t calculator::EvalHarmonics (value &harmonics, float__t t)
 
  return value;
 }
-#pragma endregion
 
+// Get normalized sample value from WAV at time t (in seconds)
+// Returns value in range [-1, 1], or 0 if t is out of bounds
+float__t calculator::EvalWav (value &wavVal, float__t t)
+{
+ if (wavVal.tag != tvWAV || !wavVal.sval)
+  {
+   errorf (pos, "Expected WAV object");
+   return qnan;
+  }
+
+ if (isnan (t) || isinf (t)) return qnan;
+
+ WavHeader *header   = (WavHeader *)wavVal.sval;
+ uint32_t numSamples = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+ uint32_t sampleRate = header->sampleRate;
+ int16_t *samples    = (int16_t *)(wavVal.sval + sizeof (WavHeader));
+
+ // Calculate sample index from time
+ float__t sampleIndexF = t * sampleRate;
+
+ // Check bounds
+ if (sampleIndexF < 0.0L || sampleIndexF >= (float__t)numSamples)
+  return 0.0L; // Out of bounds - return silence
+
+ // Get sample index (with linear interpolation for better quality)
+ uint32_t index    = (uint32_t)sampleIndexF;
+ float__t fraction = sampleIndexF - index;
+
+ // Get current sample, normalized to [-1, 1]
+ float__t value = (float__t)samples[index] / 32768.0L;
+
+ // Linear interpolation with next sample if available
+ if (fraction > 0.0L && index + 1 < numSamples)
+  {
+   float__t nextValue = (float__t)samples[index + 1] / 32768.0L;
+   value              = value * (1.0L - fraction) + nextValue * fraction;
+  }
+
+ return value;
+}
 #pragma endregion

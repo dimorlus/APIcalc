@@ -452,7 +452,8 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsFFT,      // 47  fft operator for performing Fast Fourier Transform (fft)
  tsAFFT,     // 48  afft operator for performing Inverse Fast Fourier Transform (afft)
  tsHARM,     // 49  harm operator for performing harmonic evaluation (harm) float harm(matrix Mx, float t)
- tsNUM       // 50  Total number of symbol types, must be the last in the list
+ tsEWAV,    // 50  ewave operator for performing wave evaluation  float wav(WAV, float t)
+ tsNUM       // 51  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -518,6 +519,7 @@ enum t_br_result
 #define MASK_FFT        (1ULL << tsFFT)         // fft operator for performing Fast Fourier Transform (fft)
 #define MASK_AFFT       (1ULL << tsAFFT)        // afft operator for performing Inverse Fast Fourier Transform (afft)
 #define MASK_HARM       (1ULL << tsHARM)        //  float harm(matrix Mx, float t)
+#define MASK_EWAVE      (1ULL << tsEWAV)       //  float wav(WAV, float t)
 
 // default mask for user defined functions, excludes variables
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI|MASK_PLAY))) 
@@ -593,6 +595,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_fft,  // Fast Fourier Transform function
  vf_afft, // Inverse Fast Fourier Transform function
  vf_harm, // Harmonic function for generating harmonic signals
+ vf_ewav, // float wav(WAV, float t) 
 
  // Cartesian coordinates
  pl_plot,       // plot plot Cartesian to screen
@@ -1301,6 +1304,7 @@ class calculator // calculator represents the main class for the expression calc
  bool WavFFT (value &wavVal, value &res);
  bool HarmonicsToWav (value &harmonics, float__t duration, value &res);
  float__t EvalHarmonics (value &harmonics, float__t t);
+ float__t EvalWav (value &wavVal, float__t t);
 
  // Matrix operations
  float__t *mxAlloc (int rows, int cols);

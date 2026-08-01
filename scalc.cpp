@@ -220,6 +220,8 @@ void calculator::AddPredefined (void)
  add (tsFFT, vf_fft, "fft", nullptr, false);
  add (tsAFFT, vf_afft, "afft", nullptr, false);
  add (tsHARM, vf_harm, "harm", nullptr, false);
+ add (tsHARM, vf_harm, "harmonic", nullptr, false);
+ add (tsEWAV, vf_ewav, "wav", nullptr, false);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
@@ -3460,6 +3462,22 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= 2;
              }
             break; 
+            // float__t EvalWav (value &wavVal, float__t t);
+            case tsEWAV: // float wav(WAV, float t)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float
+                                         ~0UL & ~(MSK_WAV), 0 };//WAV
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_WAV)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_FLOAT)) return result_fval = qnan;
+              errtype = teMath;
+              v_stack[v_sp - 3].fval  = EvalWav (v_stack[v_sp - 2], v_stack[v_sp - 1].get ());
+              v_stack[v_sp - 3].imval = (float__t)0.0L;
+              v_stack[v_sp - 3].ival  = (int_t)v_stack[v_sp - 3].fval;
+              v_stack[v_sp - 3].tag   = tvFLOAT;
+              v_sp -= 2;
+             }
+             break; 
 
             case tsHARM: // float harm(matrix Mx, float t)
              {

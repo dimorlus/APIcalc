@@ -568,7 +568,6 @@ Example:
 ## Future Enhancements
 
 Planned features:
-- `plotfft(wav)` - Visual FFT spectrum plot
 - `harmonic(mx, z)` - Complex argument support
 - Stereo WAV support (2 channels)
 - Additional window functions for FFT

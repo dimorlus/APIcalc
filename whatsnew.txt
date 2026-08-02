@@ -1,3 +1,26 @@
+02.08.26 (2.219)
++ A new WAV data type has been added. The result of this type is played in the GUI version immediately 
+  after receiving it.
++ The play(expr, from, to, var) function has been added (similar to plot(expr, from, to, var)), returning a WAV.
+	f := 440; w := play(sin(t*2*pi*f), 0, 1, t);; Sine 440 Hz for 1 second.
++ WAV variables can be added, subtracted, multiplied, and divided by a scalar or another WAV, and can also be 
+  concatenated using w1|w2.
++ The save(filename, var) and load(filename) functions now support the WAV type.
++ The ewav(wav, t) function has been added for reading a sample (time in seconds).
++ The fft(wav) function has been added, which returns a two-column matrix with the frequency and amplitude of 
+  harmonics (up to 7).
++ The fftplot(wav) function has been added, which plots a signal's oscillogram and spectrum.
++ The afft(harmonics, duration) function has been added, which creates a waveform from a two- or three-column 
+  matrix [(frequency, amplitude, phase)].
++ The harmonic(harmonics, t) function has been added, which calculates the instantaneous value of a signal 
+  specified by a harmonic matrix.
++ Added custom functions for signal generation
+	;;Signal generation
+	{sawp(f,t) per:=1/f; 2*f*(t%per)-1}
+	{sawm(f,t) per:=1/f; 1-2*f*(t%per)}
+	{trng(f,t) per:=1/f; sl:=f*(t%per);1+4*if(sl<0.5,sl-0.5,0.5-sl)}
+	{mndr(f,t) per:=1/(2*f); sl:=2*f*(t%per);if(sl<0.5,-1,1)}
+
 05.07.26 (2.218)
 - Fixed a bug in the polynom() function due to which polynom([(1,2,3,4,-5)]) was calculated incorrectly.
   was: [(-500m, 866m); (-500m, -866m); (-500m, 866m); (-500m, -866m)] 

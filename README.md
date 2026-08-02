@@ -452,7 +452,7 @@ The **[plot*](help.md#plot-functions)** group of functions is designed to constr
 * **plotdata("datafile"[,"mask"])**: Display points in window 
 * **plotdatal ("datafile"[,"mask"])**: Display lines in window
 
-### [Audio signals](wave.md)
+### [Audio signals](wav.md)
 
 #### The following WAV functions are available	   
 

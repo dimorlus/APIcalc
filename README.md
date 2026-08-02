@@ -21,6 +21,7 @@
    - [Mathematical Functions](#mathematical-functions)
    - [Utility Functions and Solvers](#utility-functions-and-solvers)
    - [Plotting](#plotting)
+   - [Audio signals](#audio-signals)
    - [Complex Number Support](#complex-number-support)
    - [User-Defined Functions](#user-defined-functions)
    - [Table Functions](#table-functions)

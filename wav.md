@@ -9,6 +9,7 @@ This calculator includes comprehensive support for WAV audio generation, manipul
 - [File Operations](#file-operations)
 - [Reading WAV Values](#reading-wav-values)
 - [FFT Analysis](#fft-analysis)
+- [WAV Plotting](#wav-plotting)
 - [Harmonic Synthesis](#harmonic-synthesis)
 - [Examples](#examples)
 
@@ -222,7 +223,63 @@ Performs Fast Fourier Transform on a WAV file to extract dominant frequencies.
 - Numerical precision
 
 ---
+## WAV Plotting
 
+### `fftplot(wav)`
+
+Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
+
+**Parameters:**
+- `wav` - WAV object to visualize
+
+**Returns:** BMP object with two panels:
+- **Top panel:** Time-domain waveform (amplitude vs. time)
+- **Bottom panel:** Frequency spectrum (amplitude vs. frequency)
+
+**Example:**
+```
+;; Generate complex signal
+f := 440
+w := play(sin(t*2*pi*f) + sin(t*2*pi*f*2)/2 + sin(t*2*pi*f*3)/3, 0, 1, t)
+
+;; Create visualization
+img := fftplot(w)
+```
+
+**Features:**
+- Automatically scales both plots to fit the image
+- Uses standard plot colors and dimensions from `plot_width`, `plot_height`, etc.
+- Top waveform shows time in seconds on X-axis
+- Bottom spectrum shows frequency in Hz on X-axis
+- Both panels share the same width for easy comparison
+
+**Use cases:**
+```
+;; Analyze recorded audio
+audio := load("recording.wav")
+img := fftplot(audio)
+
+;; Compare original and processed signals visually
+original := play(sin(t*2*pi*440), 0, 1, t)
+processed := original * 0.5 + play(sin(t*2*pi*880), 0, 1, t) * 0.3
+fftplot(original)
+fftplot(processed)
+
+;; Verify synthesis matches analysis
+w := play(sin(t*2*pi*440) + sin(t*2*pi*880)/2, 0, 1, t)
+h := fft(w)
+reconstructed := afft(h, 1.0)
+fftplot(w)              ;; Original
+fftplot(reconstructed)  ;; Should look very similar
+```
+
+**Technical Details:**
+- Waveform panel shows up to the first 1 second or entire duration if shorter
+- Spectrum is computed using FFT (up to 32768 samples)
+- Frequency axis ranges from 0 Hz to Nyquist frequency (22050 Hz for 44100 Hz sample rate)
+- Both plots use the same styling as `plot()` function
+
+---
 ## Harmonic Synthesis
 
 ### `afft(harmonics, duration)`
@@ -407,6 +464,44 @@ Evaluates harmonic sum at a specific time point.
     ;; Create inverted signal using phase
     h_inv := [(440, 1.0, pi)]  ;; 180° phase shift = inversion
     w_inv := afft(h_inv, 1.0)
+```
+### Example 10: Visual Signal Analysis
+```
+;; Create signal with multiple harmonics
+w := play(sin(t*2*pi*440) + sin(t*2*pi*880)/2 + sin(t*2*pi*1320)/4, 0, 1, t)
+
+;; Visualize waveform and spectrum together
+analysis := fftplot(w)
+save("harmonic_analysis.bmp", analysis)
+
+;; Compare with FFT data
+harmonics := fft(w)
+;; harmonics matrix will show peaks at ~440, ~880, ~1320 Hz
+
+;; Visualize the reconstructed signal
+reconstructed := afft(harmonics, 1.0)
+comparison := fftplot(reconstructed)
+save("reconstructed_analysis.bmp", comparison)
+```
+
+### Example 11: Audio Processing Visualization
+```
+;; Original signal
+original := play(sin(t*2*pi*440), 0, 2, t)
+img1 := fftplot(original)
+
+;; Add harmonic
+enhanced := original + play(sin(t*2*pi*880), 0, 2, t) * 0.5
+img2 := fftplot(enhanced)
+
+;; Apply amplitude modulation
+modulated := enhanced * play(0.5 + 0.5*sin(t*2*pi*5), 0, 2, t)
+img3 := fftplot(modulated)
+
+;; Save all visualizations
+save("step1_original.bmp", img1)
+save("step2_enhanced.bmp", img2)
+save("step3_modulated.bmp", img3)
 ```
 ---
 

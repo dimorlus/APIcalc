@@ -8,8 +8,9 @@
 #include <ctime>
 
 #include "bmp.h" 
+#ifndef __GNUC__
 #pragma comment(lib, "winmm.lib")
-
+#endif
 #ifndef max
 #define max(a, b) std::max (a, b)
 #define min(a, b) std::min (a, b)

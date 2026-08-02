@@ -2501,7 +2501,6 @@ bool calculator::AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color)
 }
 
 
-// WAV file header structures
 
 // Create WAV file in memory from expression
 bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vto,
@@ -2586,7 +2585,7 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
    // Check if result is real (not complex)
    if (!isnan (fvx) && isChildResReal (child))
     {
-     float__t absVal = fabsl (fvx);
+     float__t absVal = Abs (fvx);
      if (absVal > maxAmplitude) maxAmplitude = absVal;
     }
    // TODO: Check if result goes into complex plane for future stereo WAV support
@@ -2648,7 +2647,7 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
 inline uint32_t GetWavFileSize (const char *wavData)
 {
  WavHeader *header = (WavHeader *)wavData;
- return header->fileSize + 8; // fileSize не включает первые 8 байт (RIFF + size)
+ return header->fileSize + 8; // fileSize not includes the first 8 bytes (RIFF + size)
 }
 
 // Utility function to get number of samples from WAV header
@@ -2760,15 +2759,6 @@ int16_t MulSamples (int16_t a, int16_t b)
  return (int16_t)result;
 }
 
-//// Scale WAV sample by scalar with clipping
-//int16_t ScaleSample (int16_t sample, float__t scale)
-//{
-// int32_t result = (int32_t)(sample * scale);
-// if (result > 32767) result = 32767;
-// if (result < -32768) result = -32768;
-// return (int16_t)result;
-//}
-
 // Concatenate two WAV files
 char *ConcatenateWav (const char *wav1, const char *wav2)
 {
@@ -2792,7 +2782,7 @@ char *ConcatenateWav (const char *wav1, const char *wav2)
  if (!newWav) return nullptr;
 
  // Copy header from first WAV
- memcpy (newWav, wav1, sizeof (WavHeader));
+ memcpy (newWav, wav1, (int_t)sizeof (WavHeader));
  WavHeader *newHeader = (WavHeader *)newWav;
  newHeader->fileSize  = newFileSize - 8;
  newHeader->dataSize  = newDataSize;
@@ -2881,7 +2871,7 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
     }
 
    // Copy header
-   memcpy (newWav, left.sval, sizeof (WavHeader));
+   memcpy (newWav, left.sval, (int_t)sizeof (WavHeader));
    WavHeader *newHeader = (WavHeader *)newWav;
    newHeader->fileSize  = newFileSize - 8;
    newHeader->dataSize  = newDataSize;
@@ -2955,7 +2945,7 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
     }
 
    // Copy header
-   memcpy (newWav, left.sval, sizeof (WavHeader));
+   memcpy (newWav, left.sval, (int_t)sizeof (WavHeader));
 
    int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
    int16_t *samples1ptr = (int16_t *)(left.sval + sizeof (WavHeader));
@@ -3027,7 +3017,7 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
     }
 
    // Copy header
-   memcpy (newWav, right.sval, sizeof (WavHeader));
+   memcpy (newWav, right.sval, (int_t)sizeof (WavHeader));
 
    int16_t *newSamples  = (int16_t *)(newWav + sizeof (WavHeader));
    int16_t *samples1ptr = (int16_t *)(right.sval + sizeof (WavHeader));
@@ -3064,8 +3054,6 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
  return false;
 }
 
-#pragma region FFT Implementation
-
 // Simple FFT implementation (Cooley-Tukey algorithm)
 // real and imag arrays must have size n (power of 2)
 // inverse = false for forward FFT, true for inverse FFT
@@ -3099,8 +3087,8 @@ void PerformFFT (float__t *real, float__t *imag, int n, bool inverse)
  for (int len = 2; len <= n; len *= 2)
   {
    float__t angle  = (inverse ? 2.0L : -2.0L) * M_PI / len;
-   float__t wlen_r = cosl (angle);
-   float__t wlen_i = sinl (angle);
+   float__t wlen_r = Cos (angle);
+   float__t wlen_i = Sin (angle);
 
    for (int i = 0; i < n; i += len)
     {
@@ -3213,24 +3201,24 @@ bool calculator::WavFFT (value &wavVal, value &res)
  // Skip DC component (index 0)
  for (uint32_t i = 1; i < fftSize / 2; i++)
   {
-   float__t mag = sqrtl (real[i] * real[i] + imag[i] * imag[i]);
+   float__t mag = Sqrt (real[i] * real[i] + imag[i] * imag[i]);
 
    // Check if this is a local peak
    bool isPeak = false;
    if (i == 1)
     {
-     float__t next = sqrtl (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
+     float__t next = Sqrt (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
      isPeak        = (mag > next);
     }
    else if (i == fftSize / 2 - 1)
     {
-     float__t prev = sqrtl (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
+     float__t prev = Sqrt (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
      isPeak        = (mag > prev);
     }
    else
     {
-     float__t prev = sqrtl (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
-     float__t next = sqrtl (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
+     float__t prev = Sqrt (real[i - 1] * real[i - 1] + imag[i - 1] * imag[i - 1]);
+     float__t next = Sqrt (real[i + 1] * real[i + 1] + imag[i + 1] * imag[i + 1]);
      isPeak        = (mag > prev && mag > next);
     }
 
@@ -3307,17 +3295,13 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 {
  if (harmonics.tag != tvMATRIX)
   {
-   errorf (
-       pos,
-       "Expected matrix with harmonics [frequency, amplitude] or [frequency, amplitude, phase]");
+   errorf (pos, "Expected matrix with harmonics");
    return false;
   }
 
  if (harmonics.mcols < 2 || harmonics.mcols > 3)
   {
-   errorf (
-       pos,
-       "Matrix must have 2 or 3 columns [frequency, amplitude] or [frequency, amplitude, phase]");
+   errorf (pos,"Matrix must have 2 or 3 columns");
    return false;
   }
 
@@ -3494,5 +3478,222 @@ float__t calculator::EvalWav (value &wavVal, float__t t)
   }
 
  return value;
+}
+
+// FFT Plot: displays waveform (top) and spectrum (bottom) on single BMP
+bool calculator::FFTPlot (value &wavVal, value &res)
+{
+ if (wavVal.tag != tvWAV || !wavVal.sval)
+  {
+   errorf (pos, "Expected WAV object for FFT plot");
+   return false;
+  }
+
+ WavHeader *header   = (WavHeader *)wavVal.sval;
+ uint32_t numSamples = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+ uint32_t sampleRate = header->sampleRate;
+ float__t duration   = (float__t)numSamples / sampleRate;
+
+ // Perform FFT to get harmonics
+ value harmonics;
+ if (!WavFFT (wavVal, harmonics)) return false;
+
+ // Get fundamental frequency (first harmonic)
+ float__t fundamental = 0.0L;
+ if (harmonics.mrows > 0) fundamental = harmonics.mval[0]; // First column of first row
+
+ if (fundamental <= 0.0L) fundamental = 440.0L; // Default if can't determine
+
+ // Calculate period and display duration (3-4 periods)
+ float__t period      = 1.0L / fundamental;
+ float__t displayTime = period * 3.5L; // 3.5 periods
+ if (displayTime > duration) displayTime = duration;
+ if (displayTime < 0.001L) displayTime = 0.01L; // At least 10ms
+
+ // Get plot settings from variables
+ int bgc   = (int)getivar ("plot_bgc");
+ int fgc   = (int)getivar ("plot_fgc");
+ int width = (int)getivar ("plot_width");
+ if ((width <= 100) || (width > 2000)) width = 800;
+ int height = (int)getivar ("plot_height");
+ if ((height <= 100) || (height > 2000)) height = 600;
+ int top = (int)getivar ("plot_top");
+ if (top < 0 || top > 2000) top = 0;
+ int left = (int)getivar ("plot_left");
+ if (left < 0 || left > 2000) left = 0;
+
+ int padding         = 40;
+ uint32_t grid_color = 0xC0C0C0;
+ uint32_t axis_color = 0x808080;
+ uint32_t text_color = ~bgc;
+
+ // Create bitmap
+ bmpdraw *bmp = new bmpdraw ();
+ if (!bmp || !bmp->newbmp (width, height, bgc))
+  {
+   if (bmp) delete bmp;
+   freevar (harmonics);
+   errorf (pos, "Failed to create bitmap");
+   return false;
+  }
+
+ bmp->top  = top;
+ bmp->left = left;
+
+ int topHeight = height / 2; // Upper half for waveform
+
+ // === Draw Waveform (Top) ===
+ {
+  int plotTop    = padding;
+  int plotBottom = topHeight - padding / 2;
+  int plotLeft   = padding;
+  int plotRight  = width - padding;
+  int plotHeight = plotBottom - plotTop;
+  int plotWidth  = plotRight - plotLeft;
+
+  // Draw grid (dotted lines)
+  for (int i = 0; i <= 10; i++)
+   {
+    int y = plotTop + (plotHeight * i) / 10;
+    for (int x = plotLeft; x < plotRight; x += 4) bmp->drawPixel (x, y, grid_color);
+   }
+  for (int i = 0; i <= 10; i++)
+   {
+    int x = plotLeft + (plotWidth * i) / 10;
+    for (int y = plotTop; y < plotBottom; y += 4) bmp->drawPixel (x, y, grid_color);
+   }
+
+  // Draw axes
+  int centerY = (plotTop + plotBottom) / 2;
+  bmp->drawLine (plotLeft, centerY, plotRight, centerY, 1, axis_color);
+  bmp->drawLine (plotLeft, plotTop, plotLeft, plotBottom, 1, axis_color);
+
+  // Draw waveform
+  bool hasValidPoint = false;
+
+  for (int x = 0; x <= plotWidth; x++)
+   {
+    float__t t     = (float__t)x / plotWidth * displayTime;
+    float__t value = EvalWav (wavVal, t);
+
+    // Map value [-1, 1] to y coordinate
+    int yPos = centerY - (int)(value * plotHeight / 2);
+    if (yPos < plotTop) yPos = plotTop;
+    if (yPos > plotBottom) yPos = plotBottom;
+
+    int xPos = plotLeft + x;
+
+    if (hasValidPoint)
+     bmp->lineTo (xPos, yPos, 2, fgc);
+    else
+     bmp->moveTo (xPos, yPos);
+
+    hasValidPoint = true;
+   }
+
+  // Draw title
+  char title[128];
+  sprintf (title, "Waveform (%.3f ms, %.1f Hz)", (double)(displayTime * 1000.0L),
+           (double)fundamental);
+  bmp->drawString (plotLeft + 10, plotTop + 10, title, text_color, 0, 1);
+ }
+
+ // === Draw Spectrum (Bottom) ===
+ {
+  int plotTop    = topHeight + padding / 2;
+  int plotBottom = height - padding;
+  int plotLeft   = padding;
+  int plotRight  = width - padding;
+  int plotHeight = plotBottom - plotTop;
+  int plotWidth  = plotRight - plotLeft;
+
+  // Find max frequency and amplitude for scaling
+  float__t maxFreq = 0.0L;
+  float__t maxAmp  = 0.0L;
+
+  for (int i = 0; i < harmonics.mrows; i++)
+   {
+    float__t freq = harmonics.mval[i * harmonics.mcols + 0];
+    float__t amp  = harmonics.mval[i * harmonics.mcols + 1];
+    if (freq > maxFreq) maxFreq = freq;
+    if (amp > maxAmp) maxAmp = amp;
+   }
+
+  if (maxFreq == 0.0L) maxFreq = sampleRate / 2.0L;
+  if (maxAmp == 0.0L) maxAmp = 1.0L;
+
+  // Limit frequency range to reasonable values
+  if (maxFreq > 5000.0L) maxFreq = 5000.0L;
+
+  // Draw grid (dotted lines)
+  for (int i = 0; i <= 10; i++)
+   {
+    int y = plotTop + (plotHeight * i) / 10;
+    for (int x = plotLeft; x < plotRight; x += 4) bmp->drawPixel (x, y, grid_color);
+   }
+  for (int i = 0; i <= 10; i++)
+   {
+    int x = plotLeft + (plotWidth * i) / 10;
+    for (int y = plotTop; y < plotBottom; y += 4) bmp->drawPixel (x, y, grid_color);
+   }
+
+  // Draw axes
+  bmp->drawLine (plotLeft, plotBottom, plotRight, plotBottom, 1, axis_color);
+  bmp->drawLine (plotLeft, plotTop, plotLeft, plotBottom, 1, axis_color);
+
+  // Draw spectrum bars
+  for (int i = 0; i < harmonics.mrows; i++)
+   {
+    float__t freq = harmonics.mval[i * harmonics.mcols + 0];
+    float__t amp  = harmonics.mval[i * harmonics.mcols + 1];
+
+    if (freq > maxFreq) continue;
+
+    // Map frequency to x coordinate
+    int xPos = plotLeft + (int)((freq / maxFreq) * plotWidth);
+
+    // Map amplitude to height
+    int barHeight = (int)((amp / maxAmp) * plotHeight);
+    int yTop      = plotBottom - barHeight;
+
+    // Draw bar
+    bmp->drawLine (xPos, plotBottom, xPos, yTop, 3, fgc);
+
+    // Draw frequency label for significant peaks
+    if (amp > maxAmp * 0.1L) // Only label peaks > 10% of max
+     {
+      char label[32];
+      if (freq < 1000.0L)
+       sprintf (label, "%.0f", (double)freq);
+      else
+       sprintf (label, "%.1fk", (double)(freq / 1000.0L));
+
+      bmp->drawString (xPos - 10, yTop - 15, label, text_color, 0, 1);
+     }
+   }
+
+  // Draw title
+  char title[128];
+  sprintf (title, "Spectrum (0 - %.0f Hz)", (double)maxFreq);
+  bmp->drawString (plotLeft + 10, plotTop + 10, title, text_color, 0, 1);
+
+  // Draw amplitude scale
+  char scale[32];
+  sprintf (scale, "%.2f", (double)maxAmp);
+  bmp->drawString (plotLeft - 35, plotTop + 5, scale, text_color, 0, 1);
+  bmp->drawString (plotLeft - 20, plotBottom - 5, "0", text_color, 0, 1);
+ }
+
+ // Clean up harmonics matrix
+ freevar (harmonics);
+
+ // Set result
+ res.tag  = tvBMP;
+ res.sval = (char *)bmp;
+ register_mem (res.sval, ptBMP);
+ res.ival = 1;
+ res.fval = 1.0L;
+
+ return true;
 }
 #pragma endregion

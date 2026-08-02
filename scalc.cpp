@@ -223,6 +223,7 @@ void calculator::AddPredefined (void)
  add (tsHARM, vf_harm, "harm", nullptr, false);
  add (tsHARM, vf_harm, "harmonic", nullptr, false);
  add (tsEWAV, vf_ewav, "ewav", nullptr, false);
+ add (tsFFTPLOT, vf_fftplot, "fftplot", nullptr, false);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
@@ -3446,6 +3447,19 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               bool res = WavFFT (v_stack[v_sp - 1], v_stack[v_sp - 2]);
               if (!res) return result_fval = qnan;
               v_stack[v_sp - 2].tag = tvMATRIX;
+              v_sp -= 1;
+             }
+            break; 
+
+            case tsFFTPLOT:
+             {
+              const uint32_t masks[] = { ~0UL & ~(MSK_WAV), 0, 0 };
+              if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
+              if (!CheckOperand (1, MSK_WAV)) return result_fval = qnan;
+              //bool FFTPlot (value &wavVal, value &res);
+              bool res = FFTPlot (v_stack[v_sp - 1], v_stack[v_sp - 2]);
+              if (!res) return result_fval = qnan;
+              v_stack[v_sp - 2].tag = tvBMP;
               v_sp -= 1;
              }
             break; 

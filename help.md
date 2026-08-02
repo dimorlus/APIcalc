@@ -157,6 +157,16 @@ path                            Default path to the "fname"
 plot_ymin, plot_ymax            Set y-scale, if 0 - auto scale.
 ```
 
+#### WAV
+```
+play(expr,from,to,t)            Generates a WAV audio file from a mathematical expression.
+ewav(wav, t)                    Reads a normalized sample value from a WAV object at a specific time.
+fft(wav)                        Performs Fast Fourier Transform on a WAV file to extract dominant frequencies.
+afft(harmonics, duration)       Synthesizes a WAV file from a harmonics matrix.
+harmonic(harmonics, t), harm()  Evaluates harmonic sum at a specific time point.
+fftplot(wav)                    Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
+```
+
 #### [Regression and Data Fitting](README.md#Regression-and-Data-Fitting)
 ```
 fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.

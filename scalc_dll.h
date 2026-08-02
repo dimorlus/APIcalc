@@ -2,6 +2,32 @@
 #pragma once
 #include "calclib.h"
 
+#pragma region WAV File Header Structure
+#pragma pack(push, 1)
+struct WavHeader
+{
+ // RIFF Header
+ char riff[4];      // "RIFF"
+ uint32_t fileSize; // File size - 8
+ char wave[4];      // "WAVE"
+
+ // fmt chunk
+ char fmt[4];            // "fmt "
+ uint32_t fmtSize;       // 16 for PCM
+ uint16_t audioFormat;   // 1 for PCM
+ uint16_t numChannels;   // 1 for mono, 2 for stereo
+ uint32_t sampleRate;    // 44100
+ uint32_t byteRate;      // sampleRate * numChannels * bitsPerSample/8
+ uint16_t blockAlign;    // numChannels * bitsPerSample/8
+ uint16_t bitsPerSample; // 16
+
+ // data chunk
+ char data[4];      // "data"
+ uint32_t dataSize; // numSamples * numChannels * bitsPerSample/8
+};
+#pragma pack(pop)
+#pragma endregion
+
 
 class calculator
 {

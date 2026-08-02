@@ -91,6 +91,12 @@ void __cdecl calc_setShowImageFn (HCALC h, fnShowImage fn)
  c->setShowImageFn (fn);
 }
 
+void __cdecl calc_setPlayWavFn (HCALC h, fnPlayWav fn)
+{
+ calculator *c = (calculator *)h;
+ c->setPlayWavFn (fn);
+}
+
 void __cdecl calc_setDebugFn (HCALC h, debug_callback_t fn)
 {
  calculator *c = (calculator *)h;

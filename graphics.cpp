@@ -3301,19 +3301,23 @@ bool calculator::WavFFT (value &wavVal, value &res)
  return true;
 }
 
-// Synthesize WAV from harmonics matrix [frequency, amplitude]
+// Synthesize WAV from harmonics matrix [frequency, amplitude] or [frequency, amplitude, phase]
 // Duration in seconds
 bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res)
 {
  if (harmonics.tag != tvMATRIX)
   {
-   errorf (pos, "Expected matrix with harmonics [frequency, amplitude]");
+   errorf (
+       pos,
+       "Expected matrix with harmonics [frequency, amplitude] or [frequency, amplitude, phase]");
    return false;
   }
 
- if (harmonics.mcols != 2)
+ if (harmonics.mcols < 2 || harmonics.mcols > 3)
   {
-   errorf (pos, "Matrix must have 2 columns [frequency, amplitude]");
+   errorf (
+       pos,
+       "Matrix must have 2 or 3 columns [frequency, amplitude] or [frequency, amplitude, phase]");
    return false;
   }
 
@@ -3370,6 +3374,8 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
  int16_t *samples = (int16_t *)(wavData + sizeof (WavHeader));
 
+ bool hasPhase = (harmonics.mcols == 3);
+
  // Synthesize: sum of sinusoids
  uint64_t init_ms        = GetTickCount64 ();
  uint64_t last_gui_check = 0;
@@ -3385,13 +3391,14 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    float__t t     = (float__t)i / SAMPLE_RATE;
    float__t value = 0.0L;
 
-   // Sum all harmonics
+   // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t + phase))
    for (int h = 0; h < harmonics.mrows; h++)
     {
-     float__t freq = harmonics.mval[h * 2 + 0];
-     float__t amp  = harmonics.mval[h * 2 + 1];
+     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
 
-     value += amp * sinl (2.0L * M_PI * freq * t);
+     value += amp * Sin (2.0L * M_PI * freq * t + phase);
     }
 
    // Convert to 16-bit with clipping
@@ -3412,7 +3419,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 }
 
 // Evaluate harmonic sum at given time t (in seconds)
-// harmonics - matrix [frequency, amplitude]
+// harmonics - matrix [frequency, amplitude] or [frequency, amplitude, phase]
 // t - time in seconds
 // Returns signal value at time t
 float__t calculator::EvalHarmonics (value &harmonics, float__t t)
@@ -3423,23 +3430,26 @@ float__t calculator::EvalHarmonics (value &harmonics, float__t t)
    return qnan;
   }
 
- if (harmonics.mcols != 2)
+ if (harmonics.mcols < 2 || harmonics.mcols > 3)
   {
-   errorf (pos, "Harmonics matrix must have 2 columns [frequency, amplitude]");
+   errorf (pos, "Harmonics matrix must have 2 or 3 columns [frequency, amplitude] or [frequency, "
+                "amplitude, phase]");
    return qnan;
   }
 
  if (isnan (t) || isinf (t)) return qnan;
 
+ bool hasPhase  = (harmonics.mcols == 3);
  float__t value = 0.0L;
 
- // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t))
+ // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t + phase))
  for (int h = 0; h < harmonics.mrows; h++)
   {
-   float__t freq = harmonics.mval[h * 2 + 0];
-   float__t amp  = harmonics.mval[h * 2 + 1];
+   float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+   float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+   float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
 
-   value += amp * sinl (2.0L * M_PI * freq * t);
+   value += amp * Sin (2.0L * M_PI * freq * t + phase);
   }
 
  return value;

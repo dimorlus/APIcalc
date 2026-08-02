@@ -29,14 +29,14 @@ Generates a WAV audio file from a mathematical expression.
 **Returns:** WAV object (mono, 44100 Hz, 16-bit PCM)
 
 **Example:**
-```
+
     ;; Generate 440 Hz sine wave (A4 note) for 1 second
     f := 440
     w := play(sin(t*2*pi*f), 0, 1, t)
     
     ;; Generate chord (multiple frequencies)
     w := play(sin(t*2*pi*440) + sin(t*2*pi*554.37)/2 + sin(t*2*pi*659.25)/3, 0, 2, t)
-```
+
 **Notes:**
 - The expression is normalized to the maximum amplitude found during generation
 - Two-pass algorithm: first pass finds maximum, second generates samples
@@ -51,54 +51,54 @@ WAV objects support arithmetic operations similar to numbers.
 ### Addition: `wav1 + wav2` or `wav + scalar`
 
 **WAV + WAV:** Mixes two audio signals
-```
+
     w1 := play(sin(t*2*pi*440), 0, 1, t)
     w2 := play(sin(t*2*pi*880), 0, 1, t)
     mixed := w1 + w2  ;; Mix both signals
-```
+
 **WAV + scalar:** Adds DC offset (values in range [-1.0, 1.0])
-```
+
     w := play(sin(t*2*pi*440), 0, 1, t)
     shifted := w + 0.5  ;; Shift signal up by 50% of maximum amplitude
-```
+
 ### Subtraction: `wav1 - wav2` or `wav - scalar`
 
 **WAV - WAV:** Subtracts one signal from another
-```
+
     result := w1 - w2  ;; Signal difference
-```
+
 **WAV - scalar:** Removes DC offset
-```
+
     centered := w - 0.1  ;; Shift signal down
-```
+
 ### Multiplication: `wav1 * wav2` or `wav * scalar`
 
 **WAV * WAV:** Element-wise multiplication (modulation)
-```
+
     carrier := play(sin(t*2*pi*1000), 0, 1, t)
     modulator := play(sin(t*2*pi*10), 0, 1, t)
     am_signal := carrier * modulator  ;; Amplitude modulation
-```
+
 **WAV * scalar:** Volume control
-```
+
     quiet := w * 0.5  ;; Reduce volume by 50%
     loud := w * 2.0   ;; Double volume (may clip)
-```
+
 ### Division: `wav / scalar`
 
 Divides amplitude by scalar (volume reduction)
-```
+
     w := play(sin(t*2*pi*440), 0, 1, t)
     quiet := w / 2  ;; Reduce volume by half
-```
+
 ### Concatenation: `wav1 | wav2`
 
 Joins two WAV files sequentially (plays first, then second)
-```
+
     w1 := play(sin(t*2*pi*440), 0, 0.5, t)
     w2 := play(sin(t*2*pi*880), 0, 0.5, t)
     sequence := w1 | w2  ;; Play w1 for 0.5s, then w2 for 0.5s (total 1s)
-```
+
 **Requirements:** Both WAV files must have same sample rate, channels, and bit depth.
 
 ---
@@ -110,21 +110,21 @@ Joins two WAV files sequentially (plays first, then second)
 Saves a WAV object to a file.
 
 **Example:**
-```
+
     w := play(sin(t*2*pi*440), 0, 1, t)
     save("tone_440hz.wav", w)
-```
+
 ### `load(filename)`
 
 Loads a WAV file from disk.
 
 **Example:**
-```
+
     w := load("tone_440hz.wav")
     ;; Now can perform operations
     louder := w * 1.5
     save("tone_440hz_loud.wav", louder)
-```
+
 **Note:** `load()` automatically detects file type (WAV, BMP, or text).
 
 ---
@@ -142,7 +142,7 @@ Reads a normalized sample value from a WAV object at a specific time.
 **Returns:** Normalized amplitude value in range [-1.0, 1.0], or 0 if time is out of bounds
 
 **Example:**
-```
+
     ;; Create WAV file
     f := 440
     w := play(sin(t*2*pi*f), 0, 1, t)
@@ -158,14 +158,14 @@ Reads a normalized sample value from a WAV object at a specific time.
     
     ;; Reading beyond file duration returns 0
     y := ewav(w, 5.0)  ;; Returns 0 (file is only 1 second)
-```
+
 **Features:**
 - Linear interpolation between samples for smooth values
 - Returns 0 for time values outside the WAV duration
 - Can be used in mathematical expressions and plotting
 
 **Use cases:**
-```
+
     ;; Use WAV as modulation source
     carrier := 1000
     modulated := play(sin(t*2*pi*carrier) * ewav(w, t), 0, 1, t)
@@ -178,7 +178,7 @@ Reads a normalized sample value from a WAV object at a specific time.
     ;; Reverse playback (read from end to start)
     duration := 1.0
     reversed := play(ewav(w, duration-t), 0, duration, t)
-```
+
 ---
 
 ## FFT Analysis
@@ -193,7 +193,7 @@ Performs Fast Fourier Transform on a WAV file to extract dominant frequencies.
 **Returns:** Matrix with 2 columns [frequency, amplitude] and up to 7 rows (top 7 harmonics)
 
 **Example:**
-```
+
     ;; Create signal with known frequencies
     f := 440
     w := play(sin(t*2*pi*f) + sin(t*2*pi*f*2)/2, 0, 1, t)
@@ -202,14 +202,14 @@ Performs Fast Fourier Transform on a WAV file to extract dominant frequencies.
     h := fft(w)
     
     ;; Result matrix:
-	[( 440.1, 764.7m);
-	( 880.2, 375.1m);
-	( 1.281k, 288.4u);
-	( 1.319k, 272u);
-	( 1.322k, 268.6u);
-	( 1.54k, 203.6u);
-	( 1.6k, 191.4u)]
-```
+    [( 440.1, 764.7m);
+    ( 880.2, 375.1m);
+    ( 1.281k, 288.4u);
+    ( 1.319k, 272u);
+    ( 1.322k, 268.6u);
+    ( 1.54k, 203.6u);
+    ( 1.6k, 191.4u)]
+
 **Algorithm:**
 - Uses Cooley-Tukey FFT algorithm
 - FFT size is power of 2 (max 32768 samples)
@@ -237,8 +237,8 @@ Synthesizes a WAV file from a harmonics matrix.
 
 **Returns:** WAV object
 
-**Example:**
-```
+**Examples:**
+
     ;; Define harmonics without phase
     h := [(440, 1.0); (880, 0.5); (1320, 0.25)]
     
@@ -253,7 +253,7 @@ Synthesizes a WAV file from a harmonics matrix.
     
     ;; Save
     save("synthesized.wav", w)
-```
+
 **Phase Control:**
 - Phase is specified in radians
 - Phase = 0: standard sine wave
@@ -262,7 +262,6 @@ Synthesizes a WAV file from a harmonics matrix.
 - Phase allows precise control over harmonic relationships
 
 ### `harmonic(harmonics, t)`
-### `harm(harmonics, t)`
 
 Evaluates harmonic sum at a specific time point.
 
@@ -274,8 +273,8 @@ Evaluates harmonic sum at a specific time point.
 
 **Returns:** Signal amplitude at time t
 
-**Example:**
-```
+**Examples:**
+
     ;; Without phase
     h := [(440, 1.0); (880, 0.5)]
     
@@ -283,12 +282,11 @@ Evaluates harmonic sum at a specific time point.
     y := harmonic(h, 0.005)  ;; Value at t=5ms
     
     ;; Plot the signal
-    plot(harm(h, t), 0, 0.01, t)  ;; Plot first 10ms
-
+    plot(harmonic(h, t), 0, 0.01, t)  ;; Plot first 10ms
+    
     ;; With phase control
     h := [(440, 1.0, 0); (880, 0.5, pi/2)]
     plot(harmonic(h, t), 0, 0.01, t)
-```
 
 **Use case:** Visualize synthesized signal without creating full WAV file.
 
@@ -297,7 +295,7 @@ Evaluates harmonic sum at a specific time point.
 ## Examples
 
 ### Example 1: Musical Notes
-```
+
     ;; Define note frequencies (A4, C#5, E5 - A major chord)
     a4 := 440
     cs5 := 554.37
@@ -308,24 +306,24 @@ Evaluates harmonic sum at a specific time point.
     
     ;; Save
     save("a_major_chord.wav", chord)
-```
+
 ### Example 2: Frequency Sweep
-```
+
     ;; Linear sweep from 440Hz to 880Hz over 2 seconds
     f := 440 + (880-440)*t/2
     sweep := play(sin(t*2*pi*f), 0, 2, t)
     save("sweep_440_880.wav", sweep)
-```
+
 ### Example 3: Beat Frequency
-```
+
     ;; Two close frequencies create beating effect
     f1 := 440
     f2 := 445
     beats := play(sin(t*2*pi*f1) + sin(t*2*pi*f2), 0, 4, t)
     save("beats_5hz.wav", beats)
-```
+
 ### Example 4: Analysis and Resynthesis
-```
+
     ;; Create original signal
     original := play(sin(t*2*pi*440) + sin(t*2*pi*880)/2, 0, 1, t)
     
@@ -337,9 +335,9 @@ Evaluates harmonic sum at a specific time point.
     
     ;; Compare by plotting
     plot(harmonic(harmonics, t), 0, 0.01, t)
-```
+
 ### Example 5: Audio Processing Chain
-```
+
     ;; Generate tone
     w := play(sin(t*2*pi*440), 0, 1, t)
     
@@ -355,18 +353,18 @@ Evaluates harmonic sum at a specific time point.
     
     ;; Save
     save("processed_sequence.wav", result)
-```
+
 ### Example 6: Amplitude Modulation
-```
+
     ;; Carrier frequency: 1000 Hz
     ;; Modulation frequency: 10 Hz
     carrier := play(sin(t*2*pi*1000), 0, 2, t)
     modulator := play(0.5 + 0.5*sin(t*2*pi*10), 0, 2, t)
     am_signal := carrier * modulator
     save("am_modulation.wav", am_signal)
-```
+
 ### Example 7: Visualizing WAV Content
-```
+
     ;; Generate complex signal
     f := 440
     w := play(sin(t*2*pi*f) + sin(t*4*pi*f)/2, 0, 1, t)
@@ -380,18 +378,18 @@ Evaluates harmonic sum at a specific time point.
     ;; Compare original expression with stored WAV
     plot(sin(t*2*pi*f) + sin(t*4*pi*f)/2, 0, 0.01, t)
     plot(ewav(w, t), 0, 0.01, t)
-```
+
 ### Example 8: WAV-based Modulation
-```
+
     ;; Create modulation envelope
     envelope := play(0.5 + 0.5*sin(t*2*pi*2), 0, 2, t)
     
     ;; Use envelope to modulate a tone
     tone := play(sin(t*2*pi*440) * ewav(envelope, t), 0, 2, t)
     save("envelope_modulated.wav", tone)
-```
+
 ### Example 9: Phase Manipulation
-```
+
     ;; Create harmonics with controlled phase relationships
     ;; Fundamental at 0°, second harmonic at 90°, third at 180°
     h := [(440, 1.0, 0); (880, 0.5, pi/2); (1320, 0.33, pi)]
@@ -407,7 +405,7 @@ Evaluates harmonic sum at a specific time point.
     ;; Create inverted signal using phase
     h_inv := [(440, 1.0, pi)]  ;; 180° phase shift = inversion
     w_inv := afft(h_inv, 1.0)
-```
+
 ---
 
 ## Technical Details
@@ -460,14 +458,14 @@ Where phase is in radians.
 ## Variable Display
 
 WAV variables are displayed in the format:
-```
+
     wavvar = WAV(duration, sampleRate, channels)
-```
+
 Example:
-```
+
     w := play(sin(t*2*pi*440), 0, 2.5, t)
     ;; Displays: w = WAV(2.500s,44100Hz,1ch)
-```
+
 ---
 
 ## Future Enhancements

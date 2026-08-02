@@ -348,4 +348,4 @@ const("mm",1e-3)
 {sawp(f,t) per:=1/f; 2*f*(t%per)-1}
 {sawm(f,t) per:=1/f; 1-2*f*(t%per)}
 {trng(f,t) per:=1/f; sl:=f*(t%per);1+4*if(sl<0.5,sl-0.5,0.5-sl)}
-{mndr(f,t) per:=1/(2*f); sl:=2*f*(t%per);if(sl<0.5,-1,1)}
+{pwm(f,q,t) per:=1/f;if(f*(t%per)>q,-1,1)}

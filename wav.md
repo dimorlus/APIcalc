@@ -42,7 +42,14 @@ Generates a WAV audio file from a mathematical expression.
 - The expression is normalized to the maximum amplitude found during generation
 - Two-pass algorithm: first pass finds maximum, second generates samples
 - Duration is specified in seconds: `to - from`
-
+- The consts.txt file defines several functions for generating different signals (saw, triangle, PWM)
+```
+	;;Signal generation
+	{sawp(f,t) per:=1/f; 2*f*(t%per)-1}
+	{sawm(f,t) per:=1/f; 1-2*f*(t%per)}
+	{trng(f,t) per:=1/f; sl:=f*(t%per);1+4*if(sl<0.5,sl-0.5,0.5-sl)}
+	{pwm(f,q,t) per:=1/f; if(f*(t%per)>q,-1,1)}
+```
 ---
 
 ## WAV Operations

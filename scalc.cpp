@@ -224,6 +224,8 @@ void calculator::AddPredefined (void)
  add (tsHARM, vf_harm, "harmonic", nullptr, false);
  add (tsEWAV, vf_ewav, "ewav", nullptr, false);
  add (tsFFTPLOT, vf_fftplot, "fftplot", nullptr, false);
+ add (tsCHEB, vf_cheb, "cheb", nullptr, false);
+ add (tsCHEB, vf_cheb, "chebyshev", nullptr, false);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
@@ -1086,6 +1088,9 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask
       case tvMATRIX:
        error (pos, "Illegal matrix operand");
        break;
+      case tvWAV:
+       error (pos, "Illegal WAV operand");
+       break;
       default:
        error (pos, "Invalid argument type");
        break;
@@ -1551,7 +1556,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toADD:    // +
       case toSETADD: // +=
        {
-        const uint32_t masks[] = { MSK_ERR, MSK_ERR};
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR,0};
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -1650,7 +1655,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toSUB:    // -
       case toSETSUB: // -=
        {
-        const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+        const uint32_t masks[] = { MSK_ERR, MSK_ERR,0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -1722,7 +1727,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        case toMUL:    // *
        case toSETMUL: // *=
         {
-         const uint32_t masks[] = { MSK_ERR|MSK_STR, MSK_ERR|MSK_STR };
+         const uint32_t masks[] = { MSK_ERR|MSK_STR|MSK_WAV, 
+                                    MSK_ERR|MSK_STR|MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -1793,7 +1799,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toDIV:    // /
       case toSETDIV: // /=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -1882,7 +1889,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPAR: // // parallel resistors
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -1976,8 +1984,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPERCENT: // %
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2023,8 +2031,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toMOD:    // %
       case toSETMOD: // %=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR, 
-                                   MSK_ERR | MSK_STR};
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_WAV, 0};
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2082,7 +2090,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toPOW:    // ** ^
       case toSETPOW: // **= ^=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR, MSK_ERR | MSK_STR };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_WAV, 0};
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2135,8 +2144,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toAND:    // &
       case toSETAND: // &=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2178,7 +2187,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toSETOR: // |=
        {
         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                   MSK_ERR | MSK_STR | MSK_COMPLEX };
+                                   MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2228,7 +2237,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
        case toMX_ELEM: // M[1,2]
        {
-        const uint32_t masks[] = { MSK_ERR, MSK_ERR};
+        const uint32_t masks[] = { MSK_ERR | MSK_WAV, MSK_ERR | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
         if (((v_stack[v_sp - 1].tag == tvERR) || (v_stack[v_sp - 2].tag == tvERR)))
@@ -2252,8 +2261,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        case toXOR:    // ^
        case toSETXOR: // ^=
         {
-         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
          mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2294,8 +2303,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
        case toASL:    // <<
        case toSETASL: // <<=
         {
-         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
          mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2336,8 +2345,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toASR:    // >>
        case toSETASR: // >>=
         {
-         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
          mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2378,8 +2387,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
       case toLSR:    // >>> (logical shift right)
        case toSETLSR: // >>>=
         {
-         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 
-                                    MSK_ERR | MSK_STR | MSK_COMPLEX };
+         const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 
+                                    MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
 
          mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
@@ -2419,7 +2428,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toEQ: // ==
         {
-         const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+         const uint32_t masks[] = { MSK_ERR | MSK_WAV, 
+                                    MSK_ERR | MSK_WAV, 0 };
          if (!CheckOpArgs (2, masks)) return result_fval = qnan;
          mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
          if (mr == mrERROR)
@@ -2455,7 +2465,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toNE: // !=, <>
        {
-        const uint32_t masks[] = { MSK_ERR, MSK_ERR };
+        const uint32_t masks[] = { MSK_ERR | MSK_WAV, 
+                                   MSK_ERR | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2491,7 +2502,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toGT: // >
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2526,7 +2538,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toGE: // >=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2561,7 +2574,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toLT: // <
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2596,7 +2610,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toLE: // <=
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX, MSK_ERR | MSK_COMPLEX };
+        const uint32_t masks[] = { MSK_ERR | MSK_COMPLEX | MSK_WAV, 
+                                   MSK_ERR | MSK_WAV | MSK_COMPLEX, 0 };
         if (!CheckOpArgs (2, masks)) return result_fval = qnan;
         mr = matrixbin (v_stack[v_sp - 2], v_stack[v_sp - 2], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2631,7 +2646,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPREINC: //++v
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2665,7 +2680,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPREDEC: // --v
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2699,7 +2714,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPOSTINC: // v++
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2737,7 +2752,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toPOSTDEC: // v--
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2775,7 +2790,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toFACT: // n!
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -2861,7 +2876,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
       case toNOT: // !
        {
-        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+        const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
         if (!CheckOpArgs (1, masks)) return result_fval = qnan;
         mr = matrixuno (v_stack[v_sp - 1], v_stack[v_sp - 1], cop);
         if (mr == mrERROR)
@@ -3209,7 +3224,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             {
             case tsFFUNCM: // float f(matrix x)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag != tvMATRIX)
@@ -3258,8 +3273,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsMFUNCM2: // matrix f(matrix x, matrix y)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX,
-                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV,
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };
               bool res;
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
@@ -3295,8 +3310,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               bool res = false;
               int rows = 0, cols = 0;
               value *resval = nullptr;
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 
-                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };
               if (n_args == 1 && v_stack[v_sp - 1].tag == tvMATRIX)
               {
                rows = v_stack[v_sp - 1].mrows;
@@ -3364,7 +3379,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsVFUNC1: // float or complex f(x|z)
              {
-              uint32_t masks[] = { MSK_ERR | MSK_STR , 0, 0 };
+              uint32_t masks[] = { MSK_ERR | MSK_STR| MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag == tvMATRIX)
@@ -3391,8 +3406,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsVFUNC2: // float or complex f(x|z,y|z)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,
-                                         MSK_ERR | MSK_STR | MSK_MATRIX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_WAV,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_WAV, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               errtype = teMath;
               ((void (*) (value *, value *, value *, int))sym->func) (
@@ -3403,7 +3418,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
              case tsFFUNCI1: // float f(int x) (float() function)
               {
-               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                errtype = teMath;
                v_stack[v_sp - 2].fval = (*(float__t (*) (int_t))sym->func) (v_stack[v_sp - 1].ival);
@@ -3414,7 +3429,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
              case tsIFUNCF1: // int f(float x) (wrgb() function)
               {
-               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
                if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                v_stack[v_sp - 2].ival = (*(int_t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
                v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 2].ival;
@@ -3425,7 +3440,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCF1: // str f(float x) (winf())
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               const char *resStr = (*(const char *(*)(float__t))sym->func) (v_stack[v_sp - 1].get ());
               strncpy (sres, resStr ? resStr : "", STRBUF - 1);
@@ -3451,7 +3466,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
             break; 
 
-            case tsFFTPLOT:
+            case tsFFTPLOT: // bmp := fftplot(wav)
              {
               const uint32_t masks[] = { ~0UL & ~(MSK_WAV), 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
@@ -3466,8 +3481,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsAFFT: // WAV := AFFT(Mx, float duration)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float
-                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };         // matrix
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // float
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };         // matrix
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
               errtype = teMath;
@@ -3480,7 +3495,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsEWAV: // float wav(WAV, float t)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // float
                                          ~0UL & ~(MSK_WAV), 0 };//WAV
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_WAV)) return result_fval = qnan;
@@ -3494,6 +3509,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
              }
              break; 
 
+#ifdef _OLD_
             case tsHARM: // float harm(matrix Mx, float t)
              {
               const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // float 
@@ -3508,10 +3524,75 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               v_sp -= 2;
              }
             break; 
+#endif
+            case tsHARM: // float/complex harm(matrix Mx, float/complex t)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_WAV, // float or complex time
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX, 0 }; // matrix
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              errtype = teMath;
+
+              // Check if time argument has imaginary component (check imval first, then tag)
+              if (v_stack[v_sp - 1].imval != (float__t)0.0L || v_stack[v_sp - 1].tag == tvCOMPLEX)
+               {
+                // Use complex-capable version
+                bool res = EvalHarmonics (v_stack[v_sp - 2], v_stack[v_sp - 1], v_stack[v_sp - 3]);
+                if (!res) return result_fval = qnan;
+                v_sp -= 2;
+               }
+              else
+               {
+                // Fast real path
+                v_stack[v_sp - 3].fval
+                    = EvalHarmonics (v_stack[v_sp - 2], v_stack[v_sp - 1].get ());
+                v_stack[v_sp - 3].imval = (float__t)0.0L;
+                v_stack[v_sp - 3].ival  = (int_t)v_stack[v_sp - 3].fval;
+                v_stack[v_sp - 3].tag   = tvFLOAT;
+                v_sp -= 2;
+               }
+             }
+             break;
+
+            case tsCHEB: // float/complex/WAV cheb(matrix coeffs, float/complex/WAV x)
+             {
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // x: float, complex, or WAV
+                                         MSK_ERR | MSK_STR | MSK_COMPLEX|MSK_WAV, 0 }; // coeffs: matrix
+              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+              errtype = teMath;
+
+              // Check argument type
+              if (v_stack[v_sp - 1].tag == tvWAV)
+               {
+                // WAV processing path
+                bool res = EvalChebyshevWav (v_stack[v_sp - 2], v_stack[v_sp - 1], v_stack[v_sp - 3]);
+                if (!res) return result_fval = qnan;
+                v_sp -= 2;
+               }
+              else if (v_stack[v_sp - 1].imval != (float__t)0.0L
+                       || v_stack[v_sp - 1].tag == tvCOMPLEX)
+               {
+                // Complex path
+                bool res = EvalChebyshev (v_stack[v_sp - 2], v_stack[v_sp - 1], v_stack[v_sp - 3]);
+                if (!res) return result_fval = qnan;
+                v_sp -= 2;
+               }
+              else
+               {
+                // Fast real path
+                v_stack[v_sp - 3].fval = EvalChebyshev (v_stack[v_sp - 2], v_stack[v_sp - 1].get ());
+                v_stack[v_sp - 3].imval = (float__t)0.0L;
+                v_stack[v_sp - 3].ival  = (int_t)v_stack[v_sp - 3].fval;
+                v_stack[v_sp - 3].tag   = tvFLOAT;
+                v_sp -= 2;
+               }
+             }
+            break;
 
             case tsCOLOR: // color(int x)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               v_stack[v_sp - 2].ival = v_stack[v_sp - 1].get_int ();
               v_stack[v_sp - 2].fval = (float__t)v_stack[v_sp - 2].ival;
@@ -3523,7 +3604,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIFUNC1: // int f(int x) (int() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               v_stack[v_sp - 2].ival = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
               v_stack[v_sp - 2].tag = tvINT;
@@ -3533,7 +3614,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsGUI: // int f(int x) (int() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               v_stack[v_sp - 2].ival
                   = (*(int_t (*) (int_t))sym->func) (v_stack[v_sp - 1].get_int ());
@@ -3544,8 +3625,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIFUNC2: // int f(int x, int y) (invmod() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
 
               v_stack[v_sp - 3].ival = (*(int_t (*) (int_t, int_t))sym->func) (
@@ -3557,7 +3638,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC1: // float f(float x) (sing(x) function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               errtype = teMath;
               v_stack[v_sp - 2].fval = (*(float__t (*) (float__t))sym->func) (v_stack[v_sp - 1].get ());
@@ -3568,8 +3649,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC2: // float f(float x, float y) (min(), max(), ee() functions)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               errtype = teMath;
               v_stack[v_sp - 3].fval = (*(float__t (*) (float__t, float__t))sym->func) (
@@ -3581,9 +3662,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsFFUNC3: // float f(float x, float y, float z) (vout() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,
-                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX,  
-                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,  
+                                         MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,0 };
               if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 1].tag == tvPERCENT) v_stack[v_sp - 1].fval /= ((float__t)100.0);
@@ -3598,7 +3679,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsPLOTREG: // plotreg(xmin, xmax, ymin, ymax)
              {
               const uint32_t masks[] = { (uint32_t)~MSK_SCALAR, (uint32_t)~MSK_SCALAR,
-                                         (uint32_t)~MSK_SCALAR, (uint32_t)~MSK_SCALAR };
+                                         (uint32_t)~MSK_SCALAR, (uint32_t)~MSK_SCALAR,0 };
               if (!CheckFnArgs (n_args, 4, masks)) return result_fval = qnan;
               PlotRegion (v_stack[v_sp - 4].get (), v_stack[v_sp - 3].get (),
                           v_stack[v_sp - 2].get (), v_stack[v_sp - 1].get ());
@@ -3670,7 +3751,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsFDLG: // str f(str) (filedlg("*.*) function)
              {
               char filename[STRBUF];
-              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR| MSK_WAV, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (!CheckOperand (n_args, MSK_STR)) return result_fval = qnan; // file mask (1st argument should be string)
               char *filemask = v_stack[v_sp - n_args].get_str ();
@@ -3691,7 +3772,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsRUN: //run("script.txt")
             {
-              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_SCALAR| MSK_WAV, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (!CheckOperand (n_args, MSK_STR))
                return result_fval = qnan; // file mask (1st argument should be string)
@@ -3709,7 +3790,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsCIFUNC1: // int f(int x) (method of calculator class with int argument,
                             // prec() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               int_t prec = v_stack[v_sp - 1].get_int ();
               switch (sym->fidx)
@@ -3758,7 +3839,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSCRIPT: // int f(int x) (method of calculator class with int argument,
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               int_t ival = v_stack[v_sp - 1].get_int ();
               ival = ScriptService (ival, sym->fidx);
@@ -3770,7 +3851,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCF2: //  f(str, val) (const())
              {
-              const uint32_t masks[] = { MSK_ERR, MSK_ERR, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR|MSK_WAV, 
+                                         MSK_ERR|MSK_WAV, 0, 0 };
               bool res;
               if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
@@ -3796,7 +3878,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSIFUNC1: // int f(char *str) (datatime() function)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
               v_stack[v_sp - 2].ival = (*(int_t (*) (char *))sym->func) (v_stack[v_sp - 1].get_str ());
@@ -3807,7 +3889,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsIF: //  if(x, y, z) 
              {
-              const uint32_t masks[] = { MSK_ERR, MSK_ERR, MSK_ERR};
+              const uint32_t masks[] = { MSK_ERR, 
+                                         MSK_ERR, 
+                                         MSK_ERR|MSK_WAV, 0};
               if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
 
               if (v_stack[v_sp - 3].ival)
@@ -3820,7 +3904,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsSFUNCI1: // char* f(int n) (factorize)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               (*(void (*) (char *, bool, int_t))sym->func) (sres, (scfg & PAS), v_stack[v_sp - 1].get_int ());
               sres[STRBUF - 1] = '\0';
@@ -3846,9 +3930,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                {               // only 1 or 2 argument
                 if (n_args == 3) // fitlin("data", "msk", n)
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, //n
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX,           // msk
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };      // filename 
+                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, //n
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,           // msk
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };      // filename 
                   if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
                   if (!CheckOperand (3, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 3].get_str ();
@@ -3860,8 +3944,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 else
                 if (n_args == 2) // fitlin("data", n) 
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, // n
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };   // filename
+                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // n
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };   // filename
                   if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
                   if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 2].get_str ();
@@ -3878,8 +3962,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                {
                 if (n_args == 2) // fitlin("data", "msk") 
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, // msk
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 }; // filename
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // msk
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 }; // filename
                   if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
                   if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 2].get_str ();
@@ -3888,7 +3972,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  }
                 else if (n_args == 1) // fitlin("data") 
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0, 0 }; // filename
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0, 0 }; // filename
                   if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                   if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 1].get_str ();
@@ -3918,7 +4002,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             case tsCLCFN: // float clc*(matrix, float)
             {
              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // float or complex
-                                        MSK_ERR | MSK_STR | MSK_COMPLEX, 0 };         // matrix
+                                        MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };         // matrix
              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
               if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
               errtype = teMath;
@@ -3949,8 +4033,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                {
                 if (n_args == 2) // mean("data", "msk")
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
                   if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
                   if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 2].get_str ();
@@ -3960,7 +4044,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 else 
                 if (n_args == 1) // mean("data")
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
                   if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
                   if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 1].get_str ();
@@ -3976,8 +4060,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (n_args == 3) // normp("fname", "msk", x)
                  {
                   const uint32_t masks[]
-                      = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
-                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
+                      = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 
+                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };
                   if (!CheckFnArgs (n_args, 3, masks)) return result_fval = qnan;
                   if (!CheckOperand (3, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 3].get_str ();
@@ -3989,8 +4074,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 else 
                 if (n_args == 2) // normp("fname", x)
                  {
-                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX,
-                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0 };
+                  const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,
+                                             MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };
                   if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
                   if (!CheckOperand (2, MSK_STR)) return result_fval = qnan;
                   filename = v_stack[v_sp - 2].get_str ();
@@ -4110,7 +4195,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsERROR: // error(char *str)
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               if (!CheckOperand (1, MSK_STR)) return result_fval = qnan;
               char *errStr = v_stack[v_sp - 1].get_str ();
@@ -4125,7 +4210,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
 
             case tsTBLFN: // table function
              {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX, 0, 0 };
+              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0, 0 };
               if (!CheckFnArgs (n_args, 1, masks)) return result_fval = qnan;
               errtype = teMath;
               v_stack[v_sp - 2].fval = tablefn_eval ((tablefn_data *)sym->func, v_stack[v_sp - 1].get ());

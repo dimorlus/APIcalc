@@ -47,7 +47,7 @@ Generates a WAV audio file from a mathematical expression.
 	;;Signal generation
 	{sawp(f,t) per:=1/f; 2*f*(t%per)-1}
 	{sawm(f,t) per:=1/f; 1-2*f*(t%per)}
-	{trng(f,t) per:=1/f; sl:=f*(t%per);1+4*if(sl<0.5,sl-0.5,0.5-sl)}
+	{trng(f,t) per:=1/f; sl:=f*(t%per);1+4*if(sl<.5,sl-.5,.5-sl)}
 	{pwm(f,q,t) per:=1/f; if(f*(t%per)>q,-1,1)}
 ```
 ---
@@ -355,6 +355,31 @@ Evaluates harmonic sum at a specific time point.
 ```
 
 **Use case:** Visualize synthesized signal without creating full WAV file.
+
+**Complex Time Support:**
+
+The `harm()` and `harmonic()` functions support complex time arguments for analytical continuation of signals:
+```
+;; Define harmonics
+h := [(440, 1.0); (880, 0.5)]
+
+;; Real time evaluation (fast path)
+y_real := harm(h, 0.5)
+
+;; Complex time evaluation
+z := 0.5 + 0.1i
+y_complex := harm(h, z)  ;; Returns complex value
+
+;; Plot real and imaginary parts
+plot(Re(harm(h, t + 0.1i)), 0, 0.01, t)
+plot(Im(harm(h, t + 0.1i)), 0, 0.01, t)
+```
+
+**Implementation notes:**
+- If `t` is real or has zero imaginary part, uses optimized real arithmetic
+- For complex `t`, computes `sin(2π·f·t + φ)` using complex sine function
+- Result is complex when `t` is complex: `Σ(amplitude · sin(2π·frequency·t + phase))`
+- Useful for Laplace/Z-transform analysis and complex frequency domain studies
 
 ---
 

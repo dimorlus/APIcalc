@@ -2479,7 +2479,8 @@ void WinApiCalc::ShowVariablesDialog ()
   }
  if (hFont) DeleteObject (hFont);
 }
-#ifdef _comment_
+
+#ifdef OLD_HIST
 void WinApiCalc::LoadHistory ()
 {
  HKEY hKey;
@@ -2521,7 +2522,8 @@ void WinApiCalc::LoadHistory ()
    RegCloseKey (hKey);
   }
 }
-#endif
+#endif 
+
 void WinApiCalc::LoadHistory ()
 {
  HKEY hKey;
@@ -2633,7 +2635,7 @@ void WinApiCalc::SaveHistory ()
   }
 }
 
-#ifdef _comment_
+#ifdef OLD_HIST
 void WinApiCalc::AddToHistory (const std::string &expression)
 {
  if (expression.empty ()) return;

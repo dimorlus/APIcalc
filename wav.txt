@@ -1,0 +1,21 @@
+f:=440;plot(sin(t 2 pi f), 0, 10,t)
+
+f:=440;save("sin440+880.wav",play(sin(t 2 pi f)+0.5sin(t 2 pi 2 f), 0, 1,t))
+f:=440;plot(sin(t 2 pi f)+0.5sin(t 2 pi 2 f), 0, .01,t)
+f:=440;wave:=save("sin440+880.wav",play(sin(t 2 pi f)+sin(t 4 pi f)/2, 0, 1,t));fft(wave)
+
+f:=440;ww:=play(sin(t 2 pi f)+sin(t 4 pi f)/2, 0, 1,t);plot(ewav(ww, t), 0, 0.01,t)
+f:=440;ww:=play(sin(t 2 pi f)+sin(t 4 pi f)/2, 0, 1,t);ewav(ww, 1m)
+{trngl(f,t) per:=1/2f; (t%per)*(t/per)}
+f:=440;save("tri440.wav",play(trng(f,t),0,1,t))
+f:=440;save("saw440.wav",play(sawp(f,t),0,1,t))
+load("saw440.wav")
+
+save("sin880.wav", play(sin(t*2*pi*880), 0, 1, t))
+load("sin880.wav")/2|load("sin440.wav")/3
+plot(pwm(100,.5,t),0,10,t)
+save("03q440.wav",play(pwm(440,.3,t),0,1,t))
+save("rect440.wav",play(pwm(440,.5,t),0,1,t))
+fftplot(load("rect440.wav"))
+fftplot(load("03q440.wav"))
+

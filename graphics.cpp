@@ -2500,7 +2500,9 @@ bool calculator::AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color)
  return true;
 }
 
+#pragma endregion
 
+#pragma region WAV
 
 // Create WAV file in memory from expression
 bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vto,
@@ -3301,7 +3303,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
  if (harmonics.mcols < 2 || harmonics.mcols > 3)
   {
-   errorf (pos,"Matrix must have 2 or 3 columns");
+   errorf (pos, "Matrix must have 2 or 3 columns");
    return false;
   }
 
@@ -3329,6 +3331,52 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    return false;
   }
 
+ bool hasPhase = (harmonics.mcols == 3);
+
+ // First pass: compute all samples and find maximum absolute value
+ float__t maxAbs      = 0.0L;
+ float__t *tempBuffer = (float__t *)malloc (numSamples * sizeof (float__t));
+
+ if (!tempBuffer)
+  {
+   errorf (pos, "Memory allocation failed for temporary buffer");
+   return false;
+  }
+
+ uint64_t init_ms        = GetTickCount64 ();
+ uint64_t last_gui_check = 0;
+
+ for (uint32_t i = 0; i < numSamples; i++)
+  {
+   if (check_break (init_ms, last_gui_check) != brNONE)
+    {
+     free (tempBuffer);
+     return false;
+    }
+
+   float__t t     = (float__t)i / SAMPLE_RATE;
+   float__t value = 0.0L;
+
+   // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t + phase))
+   for (int h = 0; h < harmonics.mrows; h++)
+    {
+     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
+
+     value += amp * Sin (2.0L * M_PI * freq * t + phase);
+    }
+
+   tempBuffer[i] = value;
+
+   float__t absVal = Abs (value);
+   if (absVal > maxAbs) maxAbs = absVal;
+  }
+
+ // Determine if normalization is needed
+ bool needNormalize = (maxAbs > 1.0L);
+ float__t scale     = needNormalize ? (1.0L / maxAbs) : 1.0L;
+
  // Allocate WAV
  uint32_t dataSize = numSamples * NUM_CHANNELS * (BITS_PER_SAMPLE / 8);
  uint32_t fileSize = sizeof (WavHeader) + dataSize;
@@ -3336,6 +3384,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  char *wavData = (char *)malloc (fileSize);
  if (!wavData)
   {
+   free (tempBuffer);
    errorf (pos, "Out of memory for WAV synthesis");
    return false;
   }
@@ -3358,46 +3407,23 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
  int16_t *samples = (int16_t *)(wavData + sizeof (WavHeader));
 
- bool hasPhase = (harmonics.mcols == 3);
-
- // Synthesize: sum of sinusoids
- uint64_t init_ms        = GetTickCount64 ();
- uint64_t last_gui_check = 0;
-
+ // Second pass: write normalized samples
  for (uint32_t i = 0; i < numSamples; i++)
   {
-   if (check_break (init_ms, last_gui_check) != brNONE)
-    {
-     free (wavData);
-     return false;
-    }
+   float__t value = tempBuffer[i] * scale;
 
-   float__t t     = (float__t)i / SAMPLE_RATE;
-   float__t value = 0.0L;
+   // Clamp to [-1, 1] just in case
+   if (value > 1.0L) value = 1.0L;
+   if (value < -1.0L) value = -1.0L;
 
-   // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t + phase))
-   for (int h = 0; h < harmonics.mrows; h++)
-    {
-     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
-     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
-     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
-
-     value += amp * Sin (2.0L * M_PI * freq * t + phase);
-    }
-
-   // Convert to 16-bit with clipping
-   int32_t sample = (int32_t)(value * 32767.0L);
-   if (sample > 32767) sample = 32767;
-   if (sample < -32768) sample = -32768;
-
-   samples[i] = (int16_t)sample;
+   samples[i] = (int16_t)(value * 32767.0L);
   }
+
+ free (tempBuffer);
 
  res.tag  = tvWAV;
  res.sval = wavData;
  register_mem (res.sval, ptMALLOC);
- res.fval = 1.0L;
- res.ival = 1;
 
  return true;
 }
@@ -3438,6 +3464,82 @@ float__t calculator::EvalHarmonics (value &harmonics, float__t t)
 
  return value;
 }
+
+// Evaluate harmonics at complex time t
+// If t is real (imval == 0), uses fast real path
+// Returns false on error
+bool calculator::EvalHarmonics (value &harmonics, value &t, value &res)
+{
+ if (harmonics.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with harmonics");
+   return false;
+  }
+
+ if (harmonics.mcols < 2 || harmonics.mcols > 3)
+  {
+   errorf (pos, "Harmonics matrix must have 2 or 3 columns");
+   return false;
+  }
+
+ // Check if t has imaginary component first
+ if (t.imval != (float__t)0.0L || t.tag == tvCOMPLEX)
+  {
+   // Complex path: sin(2π·f·t + φ) with complex t
+   // sin(z) where z = 2π·f·t + φ (complex)
+
+   bool hasPhase   = (harmonics.mcols == 3);
+   float__t sum_re = 0.0L;
+   float__t sum_im = 0.0L;
+
+   for (int h = 0; h < harmonics.mrows; h++)
+    {
+     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
+
+     // Calculate z = 2π·f·t + φ
+     // t is complex: t = fval + i·imval
+     // 2π·f·t = 2π·f·(fval + i·imval) = 2π·f·fval + i·2π·f·imval
+     float__t z_re = 2.0L * M_PI * freq * t.fval + phase;
+     float__t z_im = 2.0L * M_PI * freq * t.imval;
+
+     // sin(z) for complex z
+     float__t sin_re, sin_im;
+     SinC (z_re, z_im, sin_re, sin_im);
+
+     // Multiply by amplitude (real scalar)
+     sum_re += amp * sin_re;
+     sum_im += amp * sin_im;
+    }
+
+   res.tag   = tvCOMPLEX;
+   res.fval  = sum_re;
+   res.imval = sum_im;
+   res.ival  = (int_t)sum_re;
+   return true;
+  }
+ else
+  {
+   // Fast real path
+   if (isnan (t.fval) || isinf (t.fval))
+    {
+     res.tag   = tvFLOAT;
+     res.fval  = qnan;
+     res.imval = (float__t)0.0L;
+     res.ival  = 0;
+     return true;
+    }
+
+   float__t result = EvalHarmonics (harmonics, t.fval);
+   res.tag         = tvFLOAT;
+   res.fval        = result;
+   res.imval       = (float__t)0.0L;
+   res.ival        = (int_t)result;
+   return true;
+  }
+}
+
 
 // Get normalized sample value from WAV at time t (in seconds)
 // Returns value in range [-1, 1], or 0 if t is out of bounds
@@ -3695,5 +3797,283 @@ bool calculator::FFTPlot (value &wavVal, value &res)
  res.fval = 1.0L;
 
  return true;
+}
+#pragma endregion
+
+#pragma region Chebyshev
+// Evaluate Chebyshev polynomial at point x
+// T_n(x) = cos(n * arccos(x)) for |x| <= 1
+// For |x| > 1, use recurrence relation
+// coeffs is a vector (row or column) with polynomial coefficients [a0, a1, a2, ..., an]
+// Result = a0*T0(x) + a1*T1(x) + a2*T2(x) + ... + an*Tn(x)
+float__t calculator::EvalChebyshev (value &coeffs, float__t x)
+{
+ if (coeffs.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   return qnan;
+  }
+
+ // Accept both row vector (1 row, N cols) and column vector (N rows, 1 col)
+ int n;
+ if (coeffs.mrows == 1)
+  {
+   // Row vector: [(a0, a1, a2, ...)]
+   n = coeffs.mcols;
+  }
+ else if (coeffs.mcols == 1)
+  {
+   // Column vector: [(a0); (a1); (a2); ...]
+   n = coeffs.mrows;
+  }
+ else
+  {
+   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   return qnan;
+  }
+
+ if (isnan (x) || isinf (x)) return qnan;
+
+ if (n == 0) return 0.0L;
+
+ // Use Clenshaw algorithm for stable evaluation
+ // b_{n+1} = b_{n+2} = 0
+ // b_k = a_k + 2*x*b_{k+1} - b_{k+2}  for k = n-1, n-2, ..., 0
+ // Result = a_0 + x*b_1 - b_2
+
+ float__t b_k  = 0.0L; // b_{k+1}
+ float__t b_k1 = 0.0L; // b_{k+2}
+ float__t x2   = 2.0L * x;
+
+ // Access coefficients sequentially (same for row or column vector)
+ for (int k = n - 1; k >= 1; k--)
+  {
+   float__t b_new = coeffs.mval[k] + x2 * b_k - b_k1;
+   b_k1           = b_k;
+   b_k            = b_new;
+  }
+
+ // Final step
+ return coeffs.mval[0] + x * b_k - b_k1;
+}
+
+// Complex Chebyshev evaluation
+bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
+{
+ if (coeffs.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   return false;
+  }
+
+ // Accept both row vector (1 row, N cols) and column vector (N rows, 1 col)
+ int n;
+ if (coeffs.mrows == 1)
+  {
+   n = coeffs.mcols;
+  }
+ else if (coeffs.mcols == 1)
+  {
+   n = coeffs.mrows;
+  }
+ else
+  {
+   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   return false;
+  }
+
+ // Check if x has imaginary component
+ if (x.imval != (float__t)0.0L || x.tag == tvCOMPLEX)
+  {
+   // Complex path using Clenshaw algorithm
+   if (n == 0)
+    {
+     res.tag   = tvCOMPLEX;
+     res.fval  = 0.0L;
+     res.imval = 0.0L;
+     res.ival  = 0;
+     return true;
+    }
+
+   float__t b_re = 0.0L, b_im = 0.0L;   // b_{k+1}
+   float__t b1_re = 0.0L, b1_im = 0.0L; // b_{k+2}
+   float__t x2_re = 2.0L * x.fval;
+   float__t x2_im = 2.0L * x.imval;
+
+   for (int k = n - 1; k >= 1; k--)
+    {
+     // b_new = coeffs[k] + 2*x*b_k - b_k1
+     // 2*x*b_k (complex multiplication)
+     float__t prod_re = x2_re * b_re - x2_im * b_im;
+     float__t prod_im = x2_re * b_im + x2_im * b_re;
+
+     float__t b_new_re = coeffs.mval[k] + prod_re - b1_re;
+     float__t b_new_im = prod_im - b1_im;
+
+     b1_re = b_re;
+     b1_im = b_im;
+     b_re  = b_new_re;
+     b_im  = b_new_im;
+    }
+
+   // Final: a_0 + x*b_1 - b_2
+   // x*b_1
+   float__t prod_re = x.fval * b_re - x.imval * b_im;
+   float__t prod_im = x.fval * b_im + x.imval * b_re;
+
+   res.tag   = tvCOMPLEX;
+   res.fval  = coeffs.mval[0] + prod_re - b1_re;
+   res.imval = prod_im - b1_im;
+   res.ival  = (int_t)res.fval;
+   return true;
+  }
+ else
+  {
+   // Fast real path
+   if (isnan (x.fval) || isinf (x.fval))
+    {
+     res.tag   = tvFLOAT;
+     res.fval  = qnan;
+     res.imval = (float__t)0.0L;
+     res.ival  = 0;
+     return true;
+    }
+
+   float__t result = EvalChebyshev (coeffs, x.fval);
+   res.tag         = tvFLOAT;
+   res.fval        = result;
+   res.imval       = (float__t)0.0L;
+   res.ival        = (int_t)result;
+   return true;
+  }
+}
+
+// WAV Chebyshev evaluation with normalization
+bool calculator::EvalChebyshevWav (value &coeffs, value &wavVal, value &res)
+{
+ if (coeffs.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   return false;
+  }
+
+ // Accept both row vector and column vector
+ int n;
+ if (coeffs.mrows == 1)
+  {
+   n = coeffs.mcols;
+  }
+ else if (coeffs.mcols == 1)
+  {
+   n = coeffs.mrows;
+  }
+ else
+  {
+   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   return false;
+  }
+
+ if (wavVal.tag != tvWAV || !wavVal.sval)
+  {
+   errorf (pos, "Expected WAV object");
+   return false;
+  }
+
+ WavHeader *header   = (WavHeader *)wavVal.sval;
+ uint32_t numSamples = header->dataSize / (header->numChannels * header->bitsPerSample / 8);
+ int16_t *inSamples  = (int16_t *)(wavVal.sval + sizeof (WavHeader));
+
+ // First pass: compute and find maximum
+ float__t maxAbs      = 0.0L;
+ float__t *tempBuffer = (float__t *)malloc (numSamples * sizeof (float__t));
+
+ if (!tempBuffer)
+  {
+   errorf (pos, "Memory allocation failed");
+   return false;
+  }
+
+ for (uint32_t i = 0; i < numSamples; i++)
+  {
+   // Normalize input to [-1, 1]
+   float__t x = (float__t)inSamples[i] / 32768.0L;
+
+   // Evaluate Chebyshev polynomial
+   float__t y = EvalChebyshev (coeffs, x);
+
+   tempBuffer[i] = y;
+   float__t absY = Abs (y);
+   if (absY > maxAbs) maxAbs = absY;
+
+   if (check_break (0, 0) != brNONE)
+    {
+     free (tempBuffer);
+     return false;
+    }
+  }
+
+ // Determine if normalization is needed
+ bool needNormalize = (maxAbs > 1.0L);
+ float__t scale     = needNormalize ? (1.0L / maxAbs) : 1.0L;
+
+ // Create output WAV
+ char *wavBuf
+     = CreateWavBuffer (header->sampleRate, header->numChannels, header->bitsPerSample, numSamples);
+ if (!wavBuf)
+  {
+   free (tempBuffer);
+   errorf (pos, "Failed to create WAV buffer");
+   return false;
+  }
+
+ int16_t *outSamples = (int16_t *)(wavBuf + sizeof (WavHeader));
+
+ // Second pass: write samples
+ for (uint32_t i = 0; i < numSamples; i++)
+  {
+   float__t y = tempBuffer[i] * scale;
+
+   // Clamp to [-1, 1] just in case
+   if (y > 1.0L) y = 1.0L;
+   if (y < -1.0L) y = -1.0L;
+
+   outSamples[i] = (int16_t)(y * 32767.0L);
+  }
+
+ free (tempBuffer);
+
+ res.tag  = tvWAV;
+ res.sval = wavBuf;
+ register_mem (wavBuf, ptMALLOC);
+
+ return true;
+}
+
+// Helper to create WAV buffer
+char *calculator::CreateWavBuffer (uint32_t sampleRate, uint16_t numChannels,
+                                   uint16_t bitsPerSample, uint32_t numSamples)
+{
+ uint32_t dataSize = numSamples * numChannels * (bitsPerSample / 8);
+ uint32_t fileSize = sizeof (WavHeader) + dataSize;
+
+ char *buffer = (char *)malloc (fileSize);
+ if (!buffer) return nullptr;
+
+ WavHeader *header = (WavHeader *)buffer;
+ memcpy (header->riff, "RIFF", 4);
+ header->fileSize = fileSize - 8;
+ memcpy (header->wave, "WAVE", 4);
+ memcpy (header->fmt, "fmt ", 4);
+ header->fmtSize       = 16;
+ header->audioFormat   = 1; // PCM
+ header->numChannels   = numChannels;
+ header->sampleRate    = sampleRate;
+ header->bitsPerSample = bitsPerSample;
+ header->byteRate      = sampleRate * numChannels * (bitsPerSample / 8);
+ header->blockAlign    = numChannels * (bitsPerSample / 8);
+ memcpy (header->data, "data", 4);
+ header->dataSize = dataSize;
+
+ return buffer;
 }
 #pragma endregion

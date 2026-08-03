@@ -1,4 +1,4 @@
-# Chebyshev Polynomials in Calculator
+# Chebyshev Polynomials
 
 This calculator supports Chebyshev polynomial evaluation with real, complex, and WAV arguments.
 
@@ -7,7 +7,9 @@ This calculator supports Chebyshev polynomial evaluation with real, complex, and
 Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
 
 **Parameters:**
-- `coeffs` - Column vector (matrix with 1 column) containing coefficients [a0; a1; a2; ...; an]
+- `coeffs` - Vector (row or column) containing coefficients
+  - Row vector: `[(a0, a1, a2, ..., an)]` (recommended - easier to type)
+  - Column vector: `[(a0); (a1); (a2); ...; (an)]`
 - `x` - Real number, complex number, or WAV object
 
 **Returns:** 
@@ -25,13 +27,14 @@ Where Tn(x) are Chebyshev polynomials of the first kind:
 - Recurrence: Tn+1(x) = 2x·Tn(x) - Tn-1(x)
 
 ---
-
 ## Examples
 
 ### Example 1: Simple Polynomial Evaluation
-    ;; Define coefficients for T0 + 2·T1 + 3·T2
+
+```
+    ;; Define coefficients for T0 + 2·T1 + 3·T2 using row vector
     ;; T2(x) = 2x² - 1, so result = 1 + 2x + 3(2x² - 1) = 6x² + 2x - 2
-    c := [1; 2; 3]
+    c := [(1, 2, 3)]
     
     ;; Evaluate at x = 0.5
     y := cheb(c, 0.5)
@@ -39,50 +42,182 @@ Where Tn(x) are Chebyshev polynomials of the first kind:
     
     ;; Plot the polynomial
     plot(cheb(c, t), -1, 1, t)
+```
 
-### Example 2: Low-Pass Filter Approximation
-    ;; Chebyshev approximation for smooth low-pass filter
-    ;; Keeps DC (x=1), attenuates high frequencies
-    c := [0.5; 0.5; 0; 0; 0]
-    
-    ;; Generate test signal (440 Hz + harmonic at 880 Hz)
-    w := play(sin(t*2*pi*440) + 0.5*sin(t*2*pi*880), 0, 1, t)
-    
-    ;; Apply Chebyshev filter
-    filtered := cheb(c, w)
-    
-    ;; Compare original and filtered
-    fftplot(w)
-    fftplot(filtered)
-    
-    ;; Save result
-    save("filtered.wav", filtered)
+### Example 2: Understanding Waveshaping (DC Offset Issue)
 
-### Example 3: Waveshaping / Distortion
-    ;; Non-linear waveshaping using Chebyshev polynomials
-    ;; Creates harmonic distortion
+```
+    ;; IMPORTANT: cheb() does pointwise transformation, NOT filtering!
     
-    ;; Mild distortion: adds 3rd harmonic
-    ;; T3(x) = 4x³ - 3x
-    c := [0; 1; 0; 0.3]
+    ;; Linear transformation: 0.5 + 0.5·x
+    c := [(0.5, 0.5)]
     
-    ;; Generate clean sine wave
-    clean := play(sin(t*2*pi*220), 0, 2, t)
+    ;; Input signal in range [-1, 1]
+    w := afft([(440, 1); (880, 0.5)], 0.8)
     
-    ;; Apply waveshaping
+    ;; Output will be in range [0, 1] - DC offset!
+    shifted := cheb(c, w)
+    
+    ;; To see the issue:
+    fftplot(w)        ;; Original: centered at 0
+    fftplot(shifted)  ;; Shifted: centered at 0.5, same harmonics
+    
+    ;; For waveshaping without DC offset, use only odd terms
+    c2 := [(0, 1)]  ;; T1(x) = x (identity, no change)
+    unchanged := cheb(c2, w)
+```
+
+### Example 3: Adding Second Harmonic (Waveshaping)
+
+```
+    ;; T2(x) = 2x² - 1 generates second harmonic from sine
+    ;; When x = sin(ωt): T2(sin ωt) = 2sin²(ωt) - 1 = -cos(2ωt)
+    
+    ;; Pure 220 Hz tone
+    fundamental := afft([(220, 1)], 1)
+    
+    ;; Add second harmonic using T2
+    ;; Mix: 90% fundamental + 10% second harmonic
+    c := [(0, 0.9, 0.1)]  ;; 0·T0 + 0.9·T1 + 0.1·T2
+    
+    enriched := cheb(c, fundamental)
+    
+    ;; Verify: should see peaks at 220 Hz and 440 Hz
+    h1 := fft(fundamental)
+    h2 := fft(enriched)
+    
+    fftplot(fundamental)
+    fftplot(enriched)
+```
+
+### Example 4: Third Harmonic Distortion
+
+```
+    ;; T3(x) = 4x³ - 3x generates third harmonic
+    ;; Creates warm, tube-like distortion
+    
+    c := [(0, 1, 0, 0.2)]  ;; Add 20% of T3
+    
+    clean := afft([(440, 1)], 1)
     distorted := cheb(c, clean)
     
-    ;; Analyze harmonics
-    h_clean := fft(clean)
-    h_dist := fft(distorted)
-    
-    ;; Visualize
+    ;; Original: only 440 Hz
+    ;; Distorted: 440 Hz + 1320 Hz (third harmonic)
     fftplot(clean)
     fftplot(distorted)
+```
 
-### Example 4: Complex Domain Evaluation
+### Example 5: Soft Clipping / Saturation
+
+```
+    ;; Smooth saturation curve prevents harsh clipping
+    ;; Uses multiple Chebyshev terms for gradual compression
+    
+    ;; Soft saturation formula
+    c := [(0, 0.9, 0, -0.15, 0, 0.02)]
+    
+    ;; Loud signal that would normally clip
+    loud := afft([(440, 2)], 1)  ;; Amplitude > 1, will normalize
+    
+    ;; Apply soft clipping
+    soft := cheb(c, loud)
+    
+    ;; Compare waveforms
+    plot(ewav(loud, t), 0, 0.01, t)
+    plot(ewav(soft, t), 0, 0.01, t)
+    
+    ;; Soft clipping adds harmonics
+    fftplot(soft)
+```
+
+### Example 6: Symmetric Waveshaping (Odd Harmonics Only)
+
+```
+    ;; Use only odd Chebyshev terms (T1, T3, T5, ...)
+    ;; Maintains symmetry, adds only odd harmonics
+    
+    ;; T1 + 0.3·T3 + 0.1·T5
+    c := [(0, 1, 0, 0.3, 0, 0.1)]
+    
+    f0 := 110  ;; Low A
+    clean := afft([(f0, 1)], 1)
+    shaped := cheb(c, clean)
+    
+    ;; Should see: 110 Hz, 330 Hz (3rd), 550 Hz (5th)
+    h := fft(shaped)
+    fftplot(shaped)
+```
+
+### Example 7: Asymmetric Waveshaping (Even + Odd Harmonics)
+
+```
+    ;; Include even terms (T2, T4) for asymmetric distortion
+    ;; Creates richer harmonic content
+    
+    c := [(0, 1, 0.2, 0.15, 0.05)]  ;; T1 + 0.2·T2 + 0.15·T3 + 0.05·T4
+    
+    clean := afft([(220, 1)], 1)
+    shaped := cheb(c, clean)
+    
+    ;; Will have: 220, 440, 660, 880 Hz etc.
+    fftplot(shaped)
+```
+
+### Example 8: Comparison - Linear vs Chebyshev
+
+```
+    ;; Show difference between power series and Chebyshev
+    
+    ;; Same numerical coefficients
+    coeffs := [(0, 1, 0.2)]
+    
+    ;; Chebyshev: 0 + 1·T1(x) + 0.2·T2(x) = x + 0.2·(2x²-1) = 0.4x² + x - 0.2
+    w := afft([(440, 1)], 1)
+    cheb_result := cheb(coeffs, w)
+    
+    ;; Note: Chebyshev automatically handles the basis transformation
+    ;; T2 term creates second harmonic at 880 Hz
+    fftplot(cheb_result)
+```
+
+### Example 9: Tube Amplifier Emulation
+
+```
+    ;; Classic tube saturation curve using Chebyshev series
+    ;; Emphasizes odd harmonics (warm sound)
+    
+    c := [(0, 0.95, 0, -0.2, 0, 0.08, 0, -0.02)]
+    
+    ;; Guitar-like signal
+    guitar := afft([(196, 1); (196*3/2, 0.6); (196*2, 0.3)], 2)
+    
+    ;; Apply tube saturation
+    tube := cheb(c, guitar)
+    
+    save("tube_sound.wav", tube)
+    fftplot(tube)
+```
+
+### Example 10: Extreme Fuzz Effect
+
+```
+    ;; Heavy distortion with many harmonics
+    
+    c := [(0, 0.7, 0.3, 0.4, 0.2, 0.1)]
+    
+    clean := afft([(440, 1)], 1)
+    fuzz := cheb(c, clean)
+    
+    ;; Very rich harmonic content
+    h := fft(fuzz)
+    fftplot(fuzz)
+```
+
+### Example 11: Complex Domain Analysis
+
+```
     ;; Chebyshev polynomials extend to complex plane
-    c := [1; 0; 1]  ;; T0 + T2 = 1 + 2x² - 1 = 2x²
+    c := [(1, 0, 1)]  ;; T0 + T2 = 1 + 2x² - 1 = 2x²
     
     ;; Real evaluation
     y_real := cheb(c, 0.5)
@@ -91,175 +226,46 @@ Where Tn(x) are Chebyshev polynomials of the first kind:
     z := 0.5 + 0.3i
     y_complex := cheb(c, z)
     
-    ;; Plot real and imaginary parts
+    ;; Plot real and imaginary parts in complex domain
     plot(Re(cheb(c, t + 0.1i)), -1, 1, t)
     plot(Im(cheb(c, t + 0.1i)), -1, 1, t)
-
-### Example 5: Approximating Functions
-    ;; Chebyshev polynomials provide near-optimal polynomial approximations
-    ;; Example: approximate sin(πx/2) on [-1, 1]
-    
-    ;; Chebyshev coefficients for sin(πx/2) (computed externally)
-    c := [0; 1.5708; 0; -0.6459; 0; 0.0796]
-    
-    ;; Compare approximation with actual function
-    plot(sin(t*pi/2), -1, 1, t)
-    plot(cheb(c, t), -1, 1, t)
-    
-    ;; Error plot
-    plot(sin(t*pi/2) - cheb(c, t), -1, 1, t)
-
-### Example 6: Audio Equalization
-    ;; Multi-band emphasis using Chebyshev polynomial
-    
-    ;; Coefficients for midrange boost
-    c := [0.8; 0; 0.4; 0; -0.2]
-    
-    ;; Load audio file
-    audio := load("music.wav")
-    
-    ;; Apply equalization
-    eq_audio := cheb(c, audio)
-    
-    ;; Save processed audio
-    save("music_eq.wav", eq_audio)
-    
-    ;; Compare spectra
-    fftplot(audio)
-    fftplot(eq_audio)
-
-### Example 7: Soft Clipping
-    ;; Smooth saturation curve using Chebyshev series
-    ;; Prevents hard clipping while adding harmonics
-    
-    ;; Coefficients for soft saturation
-    c := [0; 0.9; 0; -0.1; 0; 0.01]
-    
-    ;; Generate loud signal that would clip
-    loud := play(2*sin(t*2*pi*440), 0, 1, t)
-    
-    ;; Apply soft clipping
-    soft_clip := cheb(c, loud)
-    
-    ;; Compare waveforms
-    plot(ewav(loud, t), 0, 0.01, t)
-    plot(ewav(soft_clip, t), 0, 0.01, t)
-
-### Example 8: Harmonic Generation
-    ;; Generate specific harmonic content
-    ;; Tn(sin(ωt)) produces frequency nω
-    
-    ;; Add 2nd and 4th harmonics to fundamental
-    c := [0; 1; 0.3; 0; 0.1]
-    
-    ;; Pure 220 Hz sine
-    fundamental := play(sin(t*2*pi*220), 0, 2, t)
-    
-    ;; Add harmonics at 440 Hz and 880 Hz
-    rich := cheb(c, fundamental)
-    
-    ;; Verify harmonics
-    h := fft(rich)
-    ;; Should show peaks at 220, 440, and 880 Hz
-    
-    fftplot(rich)
+```
 
 ---
 
-## Technical Details
+## Important Notes
 
-### Numerical Stability
+### What cheb() Does
 
-The function uses the **Clenshaw algorithm**, which is numerically stable even for high-degree polynomials:
+**Pointwise transformation:** Each sample is processed independently through the polynomial.
 
-    b[n+1] = b[n+2] = 0
-    b[k] = a[k] + 2·x·b[k+1] - b[k+2]  for k = n-1, n-2, ..., 0
-    Result = a[0] + x·b[1] - b[2]
+    ```output[i] = cheb(coeffs, input[i])```
 
-This avoids direct computation of individual Chebyshev polynomials and reduces rounding errors.
+**NOT frequency-domain filtering!** The function does not:
+- Filter specific frequencies
+- Implement low-pass/high-pass/band-pass filters
+- Perform convolution
 
-### Complex Arguments
+### What cheb() Is Good For
 
-For complex x = re + im·i:
-- Uses complex arithmetic throughout Clenshaw recursion
-- Returns complex result
-- Automatically switches to fast real path if imaginary part is zero
+1. **Waveshaping / Distortion**
+   - Adds harmonics based on Tn(sin ωt) property
+   - Creates tube-like saturation
+   - Soft clipping
 
-### WAV Processing
+2. **Function Approximation**
+   - Polynomial evaluation with good numerical stability
+   - Approximating expensive functions
 
-**Two-Pass Algorithm:**
+3. **Harmonic Generation**
+   - Tn(sin ωt) produces frequency n·ω
+   - Controlled harmonic content for synthesis
 
-1. **First pass:** Evaluate polynomial at all samples, find max(|y|)
-2. **Normalization decision:**
-   - If max(|y|) > 1.0 → scale all samples by 1/max(|y|)
-   - If max(|y|) ≤ 1.0 → keep original values
-3. **Second pass:** Write normalized samples to output WAV
+### Avoiding DC Offset
 
-**Why normalize?**
-- WAV samples must stay in range [-1, 1] (or [-32768, 32767] for 16-bit)
-- Polynomial evaluation can produce values outside this range
-- Automatic normalization prevents clipping while preserving waveform shape
+To avoid DC offset in audio waveshaping:
+- Use only odd terms: `[(0, a1, 0, a3, 0, a5, ...)]`
+- First coefficient (T0 = constant) adds DC offset
+- Even terms (T2, T4, ...) also shift the average
 
-### Chebyshev Properties
-
-**Orthogonality on [-1, 1]:**
-    ∫ Tn(x)·Tm(x) / √(1-x²) dx = 0  for n ≠ m
-
-**Minimax property:**
-- Chebyshev polynomials minimize maximum approximation error
-- Best polynomial approximation for many functions
-
-**Recurrence relation:**
-    T0(x) = 1
-    T1(x) = x
-    Tn+1(x) = 2x·Tn(x) - Tn-1(x)
-
-**Trigonometric form:**
-    Tn(cos θ) = cos(nθ)
-
----
-
-## Use Cases
-
-### Signal Processing
-- **Filtering:** Design filters with specific frequency response
-- **Equalization:** Boost or attenuate frequency ranges
-- **Waveshaping:** Non-linear distortion for audio effects
-
-### Function Approximation
-- **Fast evaluation:** Replace expensive functions with polynomial
-- **Near-optimal:** Chebyshev approximations minimize max error
-
-### Audio Synthesis
-- **Harmonic control:** Tn(sin ωt) generates frequency nω
-- **Additive synthesis:** Build complex timbres from harmonics
-
-### Digital Effects
-- **Saturation:** Soft clipping curves
-- **Exciter:** Add artificial harmonics
-- **Character:** Analog-style non-linearity
-
----
-
-## Comparison with Power Polynomials
-
-Given coefficients c = [a0; a1; a2]:
-
-**Power polynomial:**  a0 + a1·x + a2·x²
-
-**Chebyshev polynomial:**  a0·T0(x) + a1·T1(x) + a2·T2(x) = a0 + a1·x + a2·(2x² - 1)
-
-**Advantages of Chebyshev:**
-- Better numerical stability for high degrees
-- More uniform error distribution
-- Easier to control harmonic content in audio
-
----
-
-## Future Enhancements
-
-Planned additions:
-- Chebyshev polynomial coefficient computation from function samples
-- Type-II Chebyshev polynomials (Un)
-- Automatic best-fit approximation for arbitrary functions
-- Filter design tools using Chebyshev response
+For symmetric distortion: `c := [(0, 1, 0, 0.3, 0, 0.1)]`

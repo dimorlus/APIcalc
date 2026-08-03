@@ -165,6 +165,7 @@ fft(wav)                        Performs Fast Fourier Transform on a WAV file to
 afft(harmonics, duration)       Synthesizes a WAV file from a harmonics matrix.
 harmonic(harmonics, t), harm()  Evaluates harmonic sum at a specific time point.
 fftplot(wav)                    Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
+cheb(coeffs, x|z|wav)     (1)   Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
 ```
 
 #### [Regression and Data Fitting](README.md#Regression-and-Data-Fitting)

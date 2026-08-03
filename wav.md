@@ -1,4 +1,4 @@
-# WAV Audio Support in Calculator
+# WAV Audio Support
 
 This calculator includes comprehensive support for WAV audio generation, manipulation, and analysis.
 

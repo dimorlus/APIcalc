@@ -538,7 +538,7 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 * **afft(harmonics, duration)**: Synthesizes a WAV file from a harmonics matrix.
 * **fftplot(wav)**: Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
 * **harmonic(harmonics, t)**, **harm(harmonics, t)**: Evaluates harmonic sum at a specific time point.
-
+* **cheb(coeffs, x|z|wav)**: Evaluates [Chebyshev polynomial](cheb.md) series at point x using Clenshaw algorithm.
 
 ### Complex Number Support
 

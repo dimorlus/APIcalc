@@ -325,8 +325,12 @@ Synthesizes a WAV file from a harmonics matrix.
 - Phase = π: inverted sine wave (180° shift)
 - Phase allows precise control over harmonic relationships
 
-### `harmonic(harmonics, t)`
-### `harm(harmonics, t)`
+**Note:** A two-pass algorithm is used. If the harmonic sum does 
+not exceed the range -1.0 to 1.0 anywhere, the result remains as is;
+otherwise, it is normalized to 1.
+
+### `harmonic(harmonics, t|z)`
+### `harm(harmonics, t|z)`
 
 Evaluates harmonic sum at a specific time point.
 

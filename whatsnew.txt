@@ -1,3 +1,8 @@
+03.08.26 (2.220)
+* The afft() function now uses a two-pass algorithm. If the harmonic sum does not exceed the 
+  range -1.0 to 1.0 anywhere, the result remains as is; otherwise, it is normalized to 1.
++ The harmonic(harmonics, t|z) function can now take a complex argument.  
+
 02.08.26 (2.219)
 + A new WAV data type has been added. The result of this type is played in the GUI version immediately 
   after receiving it.

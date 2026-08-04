@@ -4,7 +4,17 @@
 + The harmonic(harmonics, t|z) function can now take a complex argument. 
 + Added function cheb(coeffs, x|z|wav) Evaluates Chebyshev polynomial series at point x using Clenshaw 
   algorithm. 
-
++ Added function clamp(vector, x|z|wav) Clamp the given value to the range [(min, max)]
++ The following functions can now accept WAV objects:
+	clcpoly(vector, x|z|wav) Evaluates a polynomial of any degree (up to 6). Expect vector [(a_n ... a_0)].
+	clcexp(vector, x|z|wav)  Evaluates y=a*exp(b*x). Expects vector [(b, a)].
+	clclog(vector, x|z|wav)  Evaluates y = a + b*ln(x). Expects vector [(b, a)].
+	clcpow(vector, x|z|wav)  Evaluates y = a*x^b. Expects vector [(b, a)].
+	clcinv(vector, x|z|wav)  Evaluates y = a + b/x. Expects vector [(b, a)].
+  
+  Note: All functions work pointwise - each sample is transformed independently. Automatic normalization is 
+   applied (except clamp) if output exceeds [-1, 1] range.
+   
 02.08.26 (2.219)
 + A new WAV data type has been added. The result of this type is played in the GUI version immediately 
   after receiving it.

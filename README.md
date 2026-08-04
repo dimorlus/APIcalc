@@ -1083,13 +1083,15 @@ The engine handles chromatic algebra using clamped saturation (0..255 per channe
   ```
 ---
 
-### Scripts
+## Scripts
 
 The engine supports multi-line scripts, allowing you to define variables, perform sequential calculations, and even create simple loops and conditionals. Scripts are executed in a single pass, with all variables and functions available throughout the script's scope. A more detailed description is [here](scripts.md). 
 
 ```
  run("script.txt")
 ```
+---
+
 ## Architecture of Variable Scopes and Calculator Contexts
 
 The expression engine utilizes a hierarchical structure of nested calculators to handle variable scopes, data isolation, and context management.
@@ -1135,7 +1137,6 @@ completely isolated from the parent workspace, recognizing only the explicit arg
 {summa(x, y) x+y}
 x := 10; y := 20;
 res := summa(1, 2)  ;; 'res' evaluates to 3, completely ignoring parent x and y
-
 ```
 
 * **Teardown:** Upon termination, the local context is wiped from memory, returning only the final computed scalar or matrix to the parent.
@@ -1153,8 +1154,6 @@ also remain updated in the main context.
 for the remainder of the script's execution. However, these changes do not leak back into the top-level GUI calculator instance that originally 
 spawned the script.
 
----
-
 ## 3. Scope and Feature Reference Matrix
 
 | Target Operation | Instantiates Child Calculator? | Inherits Parent Variables? | Commits Changes Back to Parent? | Plot functions Available? (`plot*`) |
@@ -1168,7 +1167,6 @@ spawned the script.
 | **Debug Console (`F7`)** | **No** | Yes | **Yes (To Script Context)** | **No** (Triggers "Unknown function" error) |
 
 > To visualize the result of a `plot`, the script `run("script.txt")` or `eval("expr")` must return the BMP type.
----
 
 ## 4. Operational Notes
 

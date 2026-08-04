@@ -166,24 +166,25 @@ afft(harmonics, duration)       Synthesizes a WAV file from a harmonics matrix.
 harmonic(harmonics, t), harm()  Evaluates harmonic sum at a specific time point.
 fftplot(wav)                    Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
 cheb(coeffs, x|z|wav)     (1)   Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
+clamp(vector, x|z|wav)    (1)   Clamp the given value to the range [(min, max)]
 ```
 
 #### [Regression and Data Fitting](README.md#Regression-and-Data-Fitting)
 ```
-fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [a_n ... a_0] for y=∑a_i*x^i.
-fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [b, a]
-fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [b, a]
-fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file data. Return [b, a]
-fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [b, a]
+fitpoly("fname","msk", n)       Polynomial regression. Returns coefficients vector [(a_n ... a_0)] for y=∑a_i*x^i.
+fitexp("fname","msk")           Exponential regression. Fits y=a*exp(b*x) model to file data. Return [(b, a)]
+fitlog("fname","msk")           Logarithmic regression. Fits y = a + b*ln(x) model to file data. Return [(b, a)]
+fitpow("fname","msk")           Power regression. Fits y = a*x^b model to file data. Return [(b, a)]
+fitinv("fname","msk")           Inverse regression. Fits y = a + b/x model to file data. Return [(b, a)]
 ```
 
 #### [Regression Calculation](README.md#Regression-Calculation)
 ```
-clcpoly(vector, x|z)      (1)   Evaluates a polynomial of any degree (up to 6). Expect vector [a_n ... a_0].
-clcexp(vector, x|z)       (1)   Evaluates y=a*exp(b*x). Expects vector [b, a].
-clclog(vector, x|z)       (1)   Evaluates y = a + b*ln(x). Expects vector [b, a].
-clcpow(vector, x|z)       (1)   Evaluates y = a*x^b. Expects vector [b, a].
-clcinv(vector, x|z)       (1)   Evaluates y = a + b/x. Expects vector [b, a].
+clcpoly(vector, x|z|wav)  (1)   Evaluates a polynomial of any degree (up to 6). Expect vector [(a_n ... a_0)].
+clcexp(vector, x|z|wav)   (1)   Evaluates y=a*exp(b*x). Expects vector [(b, a)].
+clclog(vector, x|z|wav)   (1)   Evaluates y = a + b*ln(x). Expects vector [(b, a)].
+clcpow(vector, x|z|wav)   (1)   Evaluates y = a*x^b. Expects vector [(b, a)].
+clcinv(vector, x|z|wav)   (1)   Evaluates y = a + b/x. Expects vector [(b, a)].
 ```
 
 #### [Statistical Analysis](README.md#Statistical-Analysis)

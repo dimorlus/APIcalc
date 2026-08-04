@@ -267,6 +267,7 @@
               register_mem (res.sval, ptMALLOC);
               res.ival = 1;
               res.fval = (float__t)1.0L;
+              res.imval = (float__t)0.0L;
               res.tag  = tvWAV;
               return true;
              }

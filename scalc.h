@@ -633,6 +633,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  rtLg,   // Logarithmic regression (y = a + b * ln(x))
  rtPow,  // Power regression (y = a * x^b)
  rtInv,  // Inverse regression (y = a + b / x)
+ rtClp,  // Clamp value to range (y = [(min, max)])
 
  sfNum,     // Number of elements in the dataset
  sfMean,    // Mean (average) of the dataset

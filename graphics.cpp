@@ -2640,6 +2640,9 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
  // Set result
  res.tag  = tvWAV;
  res.sval = wavData;
+ res.imval = (float__t)0.0L;
+ res.fval  = (float__t)0.0L;
+ res.ival  = 0;
  register_mem (res.sval, ptMALLOC);
 
  return true;
@@ -2840,6 +2843,9 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
    left.sval = result;
    register_mem (left.sval, ptMALLOC);
    left.tag = tvWAV;
+   left.imval = (float__t)0.0L;
+   left.fval  = (float__t)0.0L;
+   left.ival  = 0;
    return true;
   }
 
@@ -2907,6 +2913,9 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
    left.sval = newWav;
    register_mem (left.sval, ptMALLOC);
    left.tag = tvWAV;
+   left.imval = (float__t)0.0L;
+   left.fval  = (float__t)0.0L;
+   left.ival  = 0;
    return true;
   }
 
@@ -2966,6 +2975,9 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
    left.sval = newWav;
    register_mem (left.sval, ptMALLOC);
    left.tag = tvWAV;
+   left.imval = (float__t)0.0L;
+   left.fval  = (float__t)0.0L;
+   left.ival  = 0;
    return true;
   }
 
@@ -3050,6 +3062,9 @@ bool calculator::WavOp (value &left, value &right, t_operator cop)
    left.sval = newWav;
    register_mem (left.sval, ptMALLOC);
    left.tag = tvWAV;
+   left.imval = (float__t)0.0L;
+   left.fval  = (float__t)0.0L;
+   left.ival  = 0;
    return true;
   }
 
@@ -3333,31 +3348,15 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
  bool hasPhase = (harmonics.mcols == 3);
 
- // First pass: compute all samples and find maximum absolute value
- float__t maxAbs      = 0.0L;
- float__t *tempBuffer = (float__t *)malloc (numSamples * sizeof (float__t));
-
- if (!tempBuffer)
-  {
-   errorf (pos, "Memory allocation failed for temporary buffer");
-   return false;
-  }
-
- uint64_t init_ms        = GetTickCount64 ();
- uint64_t last_gui_check = 0;
+ // First pass: find maximum absolute value
+ float__t maxAbs = 0.0L;
 
  for (uint32_t i = 0; i < numSamples; i++)
   {
-   if (check_break (init_ms, last_gui_check) != brNONE)
-    {
-     free (tempBuffer);
-     return false;
-    }
-
    float__t t     = (float__t)i / SAMPLE_RATE;
    float__t value = 0.0L;
 
-   // Sum all harmonics: value = Σ(amplitude * sin(2π * frequency * t + phase))
+   // Sum all harmonics
    for (int h = 0; h < harmonics.mrows; h++)
     {
      float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
@@ -3367,15 +3366,12 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
      value += amp * Sin (2.0L * M_PI * freq * t + phase);
     }
 
-   tempBuffer[i] = value;
-
    float__t absVal = Abs (value);
    if (absVal > maxAbs) maxAbs = absVal;
   }
 
- // Determine if normalization is needed
- bool needNormalize = (maxAbs > 1.0L);
- float__t scale     = needNormalize ? (1.0L / maxAbs) : 1.0L;
+ // Determine normalization scale
+ float__t scale = (maxAbs > 1.0L) ? (1.0L / maxAbs) : 1.0L;
 
  // Allocate WAV
  uint32_t dataSize = numSamples * NUM_CHANNELS * (BITS_PER_SAMPLE / 8);
@@ -3384,7 +3380,6 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  char *wavData = (char *)malloc (fileSize);
  if (!wavData)
   {
-   free (tempBuffer);
    errorf (pos, "Out of memory for WAV synthesis");
    return false;
   }
@@ -3396,7 +3391,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  memcpy (header->wave, "WAVE", 4);
  memcpy (header->fmt, "fmt ", 4);
  header->fmtSize       = 16;
- header->audioFormat   = 1; // PCM
+ header->audioFormat   = 1;
  header->numChannels   = NUM_CHANNELS;
  header->sampleRate    = SAMPLE_RATE;
  header->bitsPerSample = BITS_PER_SAMPLE;
@@ -3407,22 +3402,35 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
  int16_t *samples = (int16_t *)(wavData + sizeof (WavHeader));
 
- // Second pass: write normalized samples
+ // Second pass: compute and write normalized samples
  for (uint32_t i = 0; i < numSamples; i++)
   {
-   float__t value = tempBuffer[i] * scale;
+   float__t t     = (float__t)i / SAMPLE_RATE;
+   float__t value = 0.0L;
 
-   // Clamp to [-1, 1] just in case
+   for (int h = 0; h < harmonics.mrows; h++)
+    {
+     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
+
+     value += amp * Sin (2.0L * M_PI * freq * t + phase);
+    }
+
+   value *= scale;
+
+   // Clamp to [-1, 1]
    if (value > 1.0L) value = 1.0L;
    if (value < -1.0L) value = -1.0L;
 
    samples[i] = (int16_t)(value * 32767.0L);
   }
 
- free (tempBuffer);
-
  res.tag  = tvWAV;
  res.sval = wavData;
+ res.fval  = (float__t)0.0L;
+ res.imval = (float__t)0.0L;
+ res.ival  = 0;
  register_mem (res.sval, ptMALLOC);
 
  return true;
@@ -3725,7 +3733,7 @@ bool calculator::FFTPlot (value &wavVal, value &res)
   if (maxAmp == 0.0L) maxAmp = 1.0L;
 
   // Limit frequency range to reasonable values
-  if (maxFreq > 5000.0L) maxFreq = 5000.0L;
+  if (maxFreq > 15000.0L) maxFreq = 15000.0L;
 
   // Draw grid (dotted lines)
   for (int i = 0; i <= 10; i++)
@@ -3762,7 +3770,7 @@ bool calculator::FFTPlot (value &wavVal, value &res)
     bmp->drawLine (xPos, plotBottom, xPos, yTop, 3, fgc);
 
     // Draw frequency label for significant peaks
-    if (amp > maxAmp * 0.1L) // Only label peaks > 10% of max
+    if (amp > maxAmp * 0.01L) // Only label peaks > 1% of max
      {
       char label[32];
       if (freq < 1000.0L)
@@ -3795,6 +3803,7 @@ bool calculator::FFTPlot (value &wavVal, value &res)
  register_mem (res.sval, ptBMP);
  res.ival = 1;
  res.fval = 1.0L;
+ res.imval = 0.0L;
 
  return true;
 }
@@ -3960,16 +3969,12 @@ bool calculator::EvalChebyshevWav (value &coeffs, value &wavVal, value &res)
  // Accept both row vector and column vector
  int n;
  if (coeffs.mrows == 1)
-  {
-   n = coeffs.mcols;
-  }
+  n = coeffs.mcols;
  else if (coeffs.mcols == 1)
-  {
-   n = coeffs.mrows;
-  }
+  n = coeffs.mrows;
  else
   {
-   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   errorf (pos, "Chebyshev coefficients must be a vector");
    return false;
   }
 
@@ -3984,14 +3989,7 @@ bool calculator::EvalChebyshevWav (value &coeffs, value &wavVal, value &res)
  int16_t *inSamples  = (int16_t *)(wavVal.sval + sizeof (WavHeader));
 
  // First pass: compute and find maximum
- float__t maxAbs      = 0.0L;
- float__t *tempBuffer = (float__t *)malloc (numSamples * sizeof (float__t));
-
- if (!tempBuffer)
-  {
-   errorf (pos, "Memory allocation failed");
-   return false;
-  }
+ float__t maxAbs = 0.0L;
 
  for (uint32_t i = 0; i < numSamples; i++)
   {
@@ -4001,49 +3999,42 @@ bool calculator::EvalChebyshevWav (value &coeffs, value &wavVal, value &res)
    // Evaluate Chebyshev polynomial
    float__t y = EvalChebyshev (coeffs, x);
 
-   tempBuffer[i] = y;
    float__t absY = Abs (y);
    if (absY > maxAbs) maxAbs = absY;
-
-   if (check_break (0, 0) != brNONE)
-    {
-     free (tempBuffer);
-     return false;
-    }
   }
 
- // Determine if normalization is needed
- bool needNormalize = (maxAbs > 1.0L);
- float__t scale     = needNormalize ? (1.0L / maxAbs) : 1.0L;
+ // Determine normalization scale
+ float__t scale = (maxAbs > 1.0L) ? (1.0L / maxAbs) : 1.0L;
 
  // Create output WAV
  char *wavBuf
      = CreateWavBuffer (header->sampleRate, header->numChannels, header->bitsPerSample, numSamples);
  if (!wavBuf)
   {
-   free (tempBuffer);
    errorf (pos, "Failed to create WAV buffer");
    return false;
   }
 
  int16_t *outSamples = (int16_t *)(wavBuf + sizeof (WavHeader));
 
- // Second pass: write samples
+ // Second pass: compute and write normalized samples
  for (uint32_t i = 0; i < numSamples; i++)
   {
-   float__t y = tempBuffer[i] * scale;
+   float__t x = (float__t)inSamples[i] / 32768.0L;
+   float__t y = EvalChebyshev (coeffs, x) * scale;
 
-   // Clamp to [-1, 1] just in case
+   // Clamp to [-1, 1]
    if (y > 1.0L) y = 1.0L;
    if (y < -1.0L) y = -1.0L;
 
    outSamples[i] = (int16_t)(y * 32767.0L);
   }
 
- free (tempBuffer);
-
  res.tag  = tvWAV;
  res.sval = wavBuf;
+ res.fval  = (float__t)0.0L;
+ res.imval = (float__t)0.0L;
+ res.ival  = 0;
  register_mem (wavBuf, ptMALLOC);
 
  return true;

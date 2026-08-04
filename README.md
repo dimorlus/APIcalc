@@ -539,6 +539,13 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 * **fftplot(wav)**: Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
 * **harmonic(harmonics, t)**, **harm(harmonics, t)**: Evaluates harmonic sum at a specific time point.
 * **cheb(coeffs, x|z|wav)**: Evaluates [Chebyshev polynomial](cheb.md) series at point x using Clenshaw algorithm.
+* **clcpoly(vector, x|z|wav)**: Evaluates a [polynomial](regr_wav.md) of any degree (up to 6). Expect vector [an ... a0].
+* **clcexp(vector, x|z|wav)**: Evaluates y=a·exp(b·x). Expects vector [b, a].
+* **clclog(vector, x|z|wav)**: Evaluates y = a + b·ln(x). Expects vector [b, a].
+* **clcpow(vector, x|z|wav)**: Evaluates y = a·x^b. Expects vector [b, a].
+* **clcinv(vector, x|z|wav)**: Evaluates y = a + b/x. Expects vector [b, a].
+* **clamp(vector, x|z|wav)**: Clamp the given value to the range [(min, max)]
+
 
 ### Complex Number Support
 

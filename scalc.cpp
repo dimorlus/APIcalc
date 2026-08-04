@@ -284,6 +284,8 @@ void calculator::AddPredefined (void)
  add (tsCLCFN, rtLg, "clclog", nullptr);
  add (tsCLCFN, rtPow, "clcpow", nullptr);
  add (tsCLCFN, rtInv, "clcinv", nullptr);
+ add (tsCLCFN, rtClp, "clamp", nullptr);
+
  add (tsSTFUN, sfNum, "num", nullptr);
  add (tsSTFUN, sfMean, "mean", nullptr);
  add (tsSTFUN, sfMedian, "median", nullptr);
@@ -4016,9 +4018,12 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                  error (v_stack[v_sp - 1].pos, "Error in clc* function");
                 return result_fval = qnan;
                }
-              char strbuf[STRBUF]    = { 0 };
-              mxPolystr (strbuf, STRBUF, v_stack[v_sp - 2], (rtype)sym->fidx);
-              v_stack[v_sp - 3].sval = dupString (strbuf);
+              if (v_stack[v_sp - 3].tag != tvWAV)
+               {
+                char strbuf[STRBUF] = { 0 };
+                mxPolystr (strbuf, STRBUF, v_stack[v_sp - 2], (rtype)sym->fidx);
+                v_stack[v_sp - 3].sval = dupString (strbuf);
+               }
               v_sp -= 2;
              }
             break;

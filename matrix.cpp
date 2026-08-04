@@ -1281,6 +1281,9 @@ float__t calculator::StatFn (const char *fname, const char *msk, sfntype sfn, fl
  return qnan; // Should never reach here
 }
 
+#include "mxRegr.cpp"
+
+#ifdef _old_
 bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res)
 {
  FILE *f = nullptr;
@@ -1420,7 +1423,7 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
 
  return true;
 }
-
+#endif //_old_
 static void addspc (char *s)
 {
  int len = (int)strlen (s);
@@ -1580,6 +1583,155 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
   }
 }
 
+// Evaluate Chebyshev polynomial at point x
+// T_n(x) = cos(n * arccos(x)) for |x| <= 1
+// For |x| > 1, use recurrence relation
+// coeffs is a vector (row or column) with polynomial coefficients [a0, a1, a2, ..., an]
+// Result = a0*T0(x) + a1*T1(x) + a2*T2(x) + ... + an*Tn(x)
+float__t calculator::EvalChebyshev (value &coeffs, float__t x)
+{
+ if (coeffs.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   return qnan;
+  }
+
+ // Accept both row vector (1 row, N cols) and column vector (N rows, 1 col)
+ int n;
+ if (coeffs.mrows == 1)
+  {
+   // Row vector: [(a0, a1, a2, ...)]
+   n = coeffs.mcols;
+  }
+ else if (coeffs.mcols == 1)
+  {
+   // Column vector: [(a0); (a1); (a2); ...]
+   n = coeffs.mrows;
+  }
+ else
+  {
+   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   return qnan;
+  }
+
+ if (isnan (x) || isinf (x)) return qnan;
+
+ if (n == 0) return 0.0L;
+
+ // Use Clenshaw algorithm for stable evaluation
+ // b_{n+1} = b_{n+2} = 0
+ // b_k = a_k + 2*x*b_{k+1} - b_{k+2}  for k = n-1, n-2, ..., 0
+ // Result = a_0 + x*b_1 - b_2
+
+ float__t b_k  = 0.0L; // b_{k+1}
+ float__t b_k1 = 0.0L; // b_{k+2}
+ float__t x2   = 2.0L * x;
+
+ // Access coefficients sequentially (same for row or column vector)
+ for (int k = n - 1; k >= 1; k--)
+  {
+   float__t b_new = coeffs.mval[k] + x2 * b_k - b_k1;
+   b_k1           = b_k;
+   b_k            = b_new;
+  }
+
+ // Final step
+ return coeffs.mval[0] + x * b_k - b_k1;
+}
+
+// Complex Chebyshev evaluation
+bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
+{
+ if (coeffs.tag != tvMATRIX)
+  {
+   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   return false;
+  }
+
+ // Accept both row vector (1 row, N cols) and column vector (N rows, 1 col)
+ int n;
+ if (coeffs.mrows == 1)
+  {
+   n = coeffs.mcols;
+  }
+ else if (coeffs.mcols == 1)
+  {
+   n = coeffs.mrows;
+  }
+ else
+  {
+   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   return false;
+  }
+
+ // Check if x has imaginary component
+ if (x.imval != (float__t)0.0L || x.tag == tvCOMPLEX)
+  {
+   // Complex path using Clenshaw algorithm
+   if (n == 0)
+    {
+     res.tag   = tvCOMPLEX;
+     res.fval  = 0.0L;
+     res.imval = 0.0L;
+     res.ival  = 0;
+     return true;
+    }
+
+   float__t b_re = 0.0L, b_im = 0.0L;   // b_{k+1}
+   float__t b1_re = 0.0L, b1_im = 0.0L; // b_{k+2}
+   float__t x2_re = 2.0L * x.fval;
+   float__t x2_im = 2.0L * x.imval;
+
+   for (int k = n - 1; k >= 1; k--)
+    {
+     // b_new = coeffs[k] + 2*x*b_k - b_k1
+     // 2*x*b_k (complex multiplication)
+     float__t prod_re = x2_re * b_re - x2_im * b_im;
+     float__t prod_im = x2_re * b_im + x2_im * b_re;
+
+     float__t b_new_re = coeffs.mval[k] + prod_re - b1_re;
+     float__t b_new_im = prod_im - b1_im;
+
+     b1_re = b_re;
+     b1_im = b_im;
+     b_re  = b_new_re;
+     b_im  = b_new_im;
+    }
+
+   // Final: a_0 + x*b_1 - b_2
+   // x*b_1
+   float__t prod_re = x.fval * b_re - x.imval * b_im;
+   float__t prod_im = x.fval * b_im + x.imval * b_re;
+
+   res.tag   = tvCOMPLEX;
+   res.fval  = coeffs.mval[0] + prod_re - b1_re;
+   res.imval = prod_im - b1_im;
+   res.ival  = (int_t)res.fval;
+   return true;
+  }
+ else
+  {
+   // Fast real path
+   if (isnan (x.fval) || isinf (x.fval))
+    {
+     res.tag   = tvFLOAT;
+     res.fval  = qnan;
+     res.imval = (float__t)0.0L;
+     res.ival  = 0;
+     return true;
+    }
+
+   float__t result = EvalChebyshev (coeffs, x.fval);
+   res.tag         = tvFLOAT;
+   res.fval        = result;
+   res.imval       = (float__t)0.0L;
+   res.ival        = (int_t)result;
+   return true;
+  }
+}
+
+
+
 float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
 {
   if (M.tag != tvMATRIX)
@@ -1590,6 +1742,9 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
  
   switch (rt)
    {
+   case rtCheb: // Chebyshev polynomial
+    return EvalChebyshev (M, x);
+    
     case rtPoly:
     {
      if (M.mrows == 1 && M.mcols <= MAX_C)
@@ -1798,8 +1953,8 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
  // ============================================================
  // Complex arithmetic path
  // ============================================================
- if ((res->tag == tvCOMPLEX) || (res->imval != (float__t)0.0L) || (arg->tag == tvCOMPLEX)
-     || (arg->imval != (float__t)0.0L))
+ if ((res->tag == tvCOMPLEX) || (res->imval != (float__t)0.0L) 
+  || (arg->tag == tvCOMPLEX) || (arg->imval != (float__t)0.0L))
   {
    float__t out_re = (float__t)0.0L;
    float__t out_im = (float__t)0.0L;
@@ -1808,6 +1963,20 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
 
    switch (rt)
     {
+    case rtCheb: // Chebyshev polynomial
+     {
+      //bool calculator::EvalChebyshev (value & coeffs, value & x, value & res)
+      bool bres = EvalChebyshev (M, *arg, *res);
+      out_re    = res->fval;
+      out_im    = res->imval;
+      if (!bres)
+       {
+        mxerror ("Chebyshev evaluation failed");
+        out_re = qnan;
+        out_im = qnan;
+       }
+     }
+     break;
     case rtPoly:
      {
       if (M.mrows == 1 && M.mcols <= MAX_C)

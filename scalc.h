@@ -454,8 +454,7 @@ enum t_symbol // t_symbol represents the type of a symbol in the calculator
  tsHARM,     // 49  harm operator for performing harmonic evaluation (harm) float harm(matrix Mx, float t)
  tsEWAV,    // 50  ewave operator for performing wave evaluation  float wav(WAV, float t)
  tsFFTPLOT, // 51  fftplot operator for plotting Fast Fourier Transform (fftplot)
- tsCHEB,    // 52  cheb operator for Chebyshev polynomial evaluation cheb(coeffs, x/wav)
- tsNUM       // 53  Total number of symbol types, must be the last in the list
+ tsNUM       // 52  Total number of symbol types, must be the last in the list
 };
 
 enum t_mresult
@@ -523,7 +522,6 @@ enum t_br_result
 #define MASK_AFFT       (1ULL << tsAFFT)        // afft operator for performing Inverse Fast Fourier Transform (afft)
 #define MASK_HARM       (1ULL << tsHARM)        //  float harm(matrix Mx, float t)
 #define MASK_EWAVE      (1ULL << tsEWAV)       //  float wav(WAV, float t)
-#define MASK_CHEB       (1ULL << tsCHEB)        //  cheb(coeffs, x/wav)
 
 // default mask for user defined functions, excludes variables
 #define MASK_DEFAULT ((uint64_t)(MASK_ALL & ~(MASK_VARIABLE|MASK_PLOT|MASK_FDLG|MASK_GUI|MASK_PLAY|MASK_FFT_PLOT))) 
@@ -601,7 +599,6 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  vf_harm, // Harmonic function for generating harmonic signals
  vf_ewav, // float wav(WAV, float t) 
  vf_fftplot, // Fast Fourier Transform plot function
- vf_cheb,    // Chebyshev polynomial function
 
  // Cartesian coordinates
  pl_plot,       // plot plot Cartesian to screen
@@ -628,6 +625,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  pl_any,        // special value for plotreg  
  fn_plotreg, // plotreg(xmin, xmax, ymin, ymax) - define plot region
 
+ rtCheb, // Chebyshev polynomial
  rtPoly, // Linear regression (polynomial fit of degree up to 6)
  rtExp,  // Exponential regression (y = a * exp(b * x))
  rtLg,   // Logarithmic regression (y = a + b * ln(x))
@@ -1317,7 +1315,6 @@ class calculator // calculator represents the main class for the expression calc
 
  float__t EvalChebyshev (value &coeffs, float__t x);
  bool EvalChebyshev (value &coeffs, value &x, value &res);
- bool EvalChebyshevWav (value &coeffs, value &wavVal, value &res);
  char *CreateWavBuffer (uint32_t sampleRate, uint16_t numChannels, uint16_t bitsPerSample,
                         uint32_t numSamples);
 

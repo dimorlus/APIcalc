@@ -832,17 +832,20 @@ The fit family of functions provides high-precision curve fitting using the Ordi
 Designed for engineers and hardware developers, these functions can process data directly from text files 
 (logs, CSVs, sensor dumps) and return a vector of coefficients for the best-fit model. 
 
-### Key Features
+#### Key Features
 * Stream Processing: Files are read line-by-line, allowing for the analysis of large datasets without high memory overhead.
 * Robust Parsing: Uses an "all-terrain" scanner that ignores non-numeric headers and supports engineering notation 
 (e.g., 100k, 5m, 2.5u).
 * High Precision: All internal calculations are performed using 128-bit floating-point (__float128) math to ensure 
 stability even with high-degree polynomials.
 
-### Function Reference
+#### Function Reference
 * **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $(x, y)$. Degree: $1$ to $6$.<br>
 Returns: A row vector $[a_n, \dots, a_1, a_0]$ representing the polynomial: $y = a_n x^n + \dots + a_1 x + a_0$<br>
 Example: ```fitpoly("ntc.txt","01", 2)``` returns coefficients for a quadratic curve.
+* **fitcheb("fname","msk" degree)**: Fits Chebyshev polynomial to data points from file using least squares method.
+  Returns:  Row vector with Chebyshev coefficients [(c0, c1, c2, ..., cn)]
+  Important: Data is automatically normalized to [-1, 1] range before fitting.
 * **fitexp("filename", ["msk"])**: Fits an exponential model: $y = a \cdot e^{bx}$.<br>
 Returns: $[b, a]$.<br>
 *Note*: Automatically performs linearization via $\ln(y)$.
@@ -854,19 +857,29 @@ Returns: $[b, a]$.<br>
 * **fitinv("filename", ["msk"])**: Fits an inverse model: $y = a + b/x$.<br>
 Returns: $[b, a]$.
 
-### Regression Calculation
+#### Regression Calculation
 Use these functions to evaluate a model previously obtained via fit*("filename") functions (the argument and the result can be complex).
 * **clcpoly(vector, x)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[a_n, \dots, a_1, a_0]$
+* **cheb(coeffs, x|z|wav)**: Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
 * **clcexp(vector, x)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[b, a]$.
 * **clclog(vector, x)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[b, a]$.
 * **clcpow(vector, x)**: Evaluates $y = a \cdot x^b$. Expects vector $[b, a]$.
 * **clcinv(vector, x)**: Evaluates $y = a + b/x$. Expects vector $[b, a]$.
+
+#### Polynom example
+
+##### Step 1: Create test data file:
+
 ```
 C:\Projects>ccalc for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp) /ALL-
 for(prnf("ntc.txt","%3d`C, %S", temp, ntcr(100k, temp)), 20, 120, temp)
                                                                14 f
                                                                14 S
+```
 
+##### Step 2: Fit polynom:
+
+```
 C:\Projects>ccalc clcpoly(fitpoly("ntc.txt","01",6), 25) /ALL-
 clcpoly(fitpoly("ntc.txt","01",6), 25)
                                                 100056.0293486226 f
@@ -890,10 +903,42 @@ C:\Projects>type ntc.txt
 119`C, 4.177k
 120`C, 4.071k
 ```
+
+##### Step 3: Evaluate fitted function
+
 Functions returns also string value (according current syntax):
 ```
 clcpoly([(1.5m,-2.2,-3.2,4.5)],2.6) → '1.5m x^3-2.2x^2-3.2x+4.5' 
 ```
+
+### Chebyshev Polynomial Regression example
+#### Step 1: Create test data file
+Create file dsin.txt with noisy sine wave:
+```
+0.0   0.05 
+0.5   0.52 
+1.0   0.88 
+1.5   0.98 
+2.0   0.92 
+2.5   0.61 
+3.0   0.18 
+3.5  -0.35 
+4.0  -0.72 
+4.5  -0.95 
+5.0  -0.98 
+5.5  -0.85 
+6.0  -0.32
+```
+
+#### Step 2: Fit Chebyshev polynomial
+
+```
+c5:=fitcheb("dsin.txt", "01", 5) → [(-39.54m, -729.8m, -156.1m,  595.5m,  51.35m, -57.36m)]
+```
+
+#### Step 3: Evaluate fitted function
+
+```save("chebtst.bmp",plot(cheb(c5, t), -1, 1, t)+plotdata("dsin.txt","01"))```
 
 ### Statistical Analysis
 

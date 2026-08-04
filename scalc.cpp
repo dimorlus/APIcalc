@@ -224,8 +224,6 @@ void calculator::AddPredefined (void)
  add (tsHARM, vf_harm, "harmonic", nullptr, false);
  add (tsEWAV, vf_ewav, "ewav", nullptr, false);
  add (tsFFTPLOT, vf_fftplot, "fftplot", nullptr, false);
- add (tsCHEB, vf_cheb, "cheb", nullptr, false);
- add (tsCHEB, vf_cheb, "chebyshev", nullptr, false);
 
  // Cartesian plots
  add (tsPLOT, pl_plot, "plot", nullptr, false);
@@ -278,6 +276,7 @@ void calculator::AddPredefined (void)
  add (tsFITFN, rtLg, "fitlog", nullptr);
  add (tsFITFN, rtPow, "fitpow", nullptr);
  add (tsFITFN, rtInv, "fitinv", nullptr);
+ add (tsFITFN, rtCheb, "fitcheb", nullptr);
 
  add (tsCLCFN, rtPoly, "clcpoly", nullptr);
  add (tsCLCFN, rtExp, "clcexp", nullptr);
@@ -285,6 +284,7 @@ void calculator::AddPredefined (void)
  add (tsCLCFN, rtPow, "clcpow", nullptr);
  add (tsCLCFN, rtInv, "clcinv", nullptr);
  add (tsCLCFN, rtClp, "clamp", nullptr);
+ add (tsCLCFN, rtCheb, "cheb", nullptr);
 
  add (tsSTFUN, sfNum, "num", nullptr);
  add (tsSTFUN, sfMean, "mean", nullptr);
@@ -3554,42 +3554,6 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 v_sp -= 2;
                }
              }
-             break;
-
-            case tsCHEB: // float/complex/WAV cheb(matrix coeffs, float/complex/WAV x)
-             {
-              const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // x: float, complex, or WAV
-                                         MSK_ERR | MSK_STR | MSK_COMPLEX|MSK_WAV, 0 }; // coeffs: matrix
-              if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
-              errtype = teMath;
-
-              // Check argument type
-              if (v_stack[v_sp - 1].tag == tvWAV)
-               {
-                // WAV processing path
-                bool res = EvalChebyshevWav (v_stack[v_sp - 2], v_stack[v_sp - 1], v_stack[v_sp - 3]);
-                if (!res) return result_fval = qnan;
-                v_sp -= 2;
-               }
-              else if (v_stack[v_sp - 1].imval != (float__t)0.0L
-                       || v_stack[v_sp - 1].tag == tvCOMPLEX)
-               {
-                // Complex path
-                bool res = EvalChebyshev (v_stack[v_sp - 2], v_stack[v_sp - 1], v_stack[v_sp - 3]);
-                if (!res) return result_fval = qnan;
-                v_sp -= 2;
-               }
-              else
-               {
-                // Fast real path
-                v_stack[v_sp - 3].fval = EvalChebyshev (v_stack[v_sp - 2], v_stack[v_sp - 1].get ());
-                v_stack[v_sp - 3].imval = (float__t)0.0L;
-                v_stack[v_sp - 3].ival  = (int_t)v_stack[v_sp - 3].fval;
-                v_stack[v_sp - 3].tag   = tvFLOAT;
-                v_sp -= 2;
-               }
-             }
             break;
 
             case tsCOLOR: // color(int x)
@@ -3928,7 +3892,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               int n = 0;
               bool res = false;
               rtype rfn = (rtype)sym->fidx;
-              if (rfn == rtPoly) // fitlin can take either 1, 2 or 3 arguments, other fit functions take
+              
+              if (rfn == rtPoly||rfn ==rtCheb) // fitlin can take either 1, 2 or 3 arguments, other fit functions take
                {               // only 1 or 2 argument
                 if (n_args == 3) // fitlin("data", "msk", n)
                  {

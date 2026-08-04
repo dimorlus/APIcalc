@@ -859,12 +859,12 @@ Returns: $[b, a]$.
 
 #### Regression Calculation
 Use these functions to evaluate a model previously obtained via fit*("filename") functions (the argument and the result can be complex).
-* **clcpoly(vector, x)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[a_n, \dots, a_1, a_0]$
+* **clcpoly(vector, x|z|wav)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[(a_n, \dots, a_1, a_0)]$
 * **cheb(coeffs, x|z|wav)**: Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
-* **clcexp(vector, x)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[b, a]$.
-* **clclog(vector, x)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[b, a]$.
-* **clcpow(vector, x)**: Evaluates $y = a \cdot x^b$. Expects vector $[b, a]$.
-* **clcinv(vector, x)**: Evaluates $y = a + b/x$. Expects vector $[b, a]$.
+* **clcexp(vector, x|z|wav)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[(b, a)]$.
+* **clclog(vector, x|z|wav)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[(b, a)]$.
+* **clcpow(vector, x|z|wav)**: Evaluates $y = a \cdot x^b$. Expects vector $[(b, a)]$.
+* **clcinv(vector, x|z|wav)**: Evaluates $y = a + b/x$. Expects vector $[(b, a)]$.
 
 #### Polynom example
 

@@ -311,7 +311,7 @@ All functions receive normalized samples in range [-1, 1] from WAV (16-bit sampl
 
 | Feature | Polynomial (clcpoly) | Chebyshev (cheb) |
 |---------|---------------------|------------------|
-| Basis | Power series (x^n) | Chebyshev polynomials (Tn) |
+| Basis | Power series $(x^n)$ | Chebyshev polynomials (Tn) |
 | Harmonics | Direct control via powers | Tn(sin ωt) = harmonic nω |
 | Stability | Can be unstable for high degrees | More numerically stable |
 | Use case | General waveshaping | Controlled harmonic generation |

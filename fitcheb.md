@@ -39,7 +39,7 @@ Create file `data.txt` with noisy sine wave:
 ### Step 2: Fit Chebyshev polynomial
 ```
 ;; Fit 3rd degree Chebyshev polynomial 
-c := regrcheb("data.txt", "ff", 3)
+c := fitcheb("dsin.txt", "01", 3) ;;[(-37.91m, -742.6m, -160.2m, 595.5m)]
 ;; Result: 
 c = [(c0, c1, c2, c3)] ;; Example: c ≈ [(0.05, 0.95, 0.01, -0.15)]
 ```
@@ -74,7 +74,7 @@ c5 := regrcheb("data.txt", "ff", 5)
 ;; 3. Define range (must match your data file!) 
 x_min := 0 x_max := 6.28  ;; ~2π
 ;; 4. Normalization helper 
-normalize(x) := 2*(x - x_min)/(x_max - x_min) - 1
+{normalize(x) 2*(x - x_min)/(x_max - x_min) - 1}
 ;; 5. Evaluate fitted functions 
 y3 := cheb(c3, normalize(3.14)) 
 y4 := cheb(c4, normalize(3.14)) 
@@ -84,3 +84,36 @@ plot(cheb(c3, normalize(t)), x_min, x_max, t)
 plot(cheb(c4, normalize(t)), x_min, x_max, t) 
 plot(cheb(c5, normalize(t)), x_min, x_max, t)
 ```
+
+ 
+c5:=fitcheb("dsin.txt", "01", 5) -> [(-39.54m, -729.8m, -156.1m,  595.5m,  51.35m, -57.36m)]
+save("chebtst.bmp",plot(cheb(c5, t), -1, 1, t)+plotdata("dsin.txt","01"))
+
+---
+
+## Advantages of Chebyshev Regression
+
+1. **Better numerical stability** than power series for high degrees
+2. **Uniform error distribution** (minimax property)
+3. **Natural for [-1, 1] data** (just scale your input)
+
+## Limitations
+
+- Requires knowing data range (x_min, x_max) for normalization
+- User must normalize input when evaluating
+- Coefficients are not directly interpretable (unlike y = a + bx)
+
+## Comparison with Polynomial Regression
+
+| Feature | regr(file, "ff", n) | regrcheb(file, "ff", n) |
+|---------|---------------------|-------------------------|
+| Basis | Power series (1, x, x²) | Chebyshev (T₀, T₁, T₂) |
+| Stability | Poor for n > 4 | Good even for n = 6 |
+| Normalization | Not needed | Auto (to [-1, 1]) |
+| Usage | Direct: clcpoly(c, x) | Need norm: cheb(c, norm(x)) |
+
+---
+
+## Quick Test
+
+1. Create simple linear data `line.txt`:

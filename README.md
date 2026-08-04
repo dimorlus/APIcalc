@@ -44,6 +44,7 @@
    - [Implicit Multiplication](#implicit-multiplication)
 10. [Keyboard Shortcuts](#keyboard-shortcuts)
 11. [Menu Options](#menu-options)
+---
 
 A scientific calculator with both **GUI** and **CLI** versions, built using pure Win32 API without MFC dependencies. Supports various number formats, binary operations with configurable width, advanced mathematical functions, complex numbers, matrices (up to 7×7), user-defined functions, and loading custom constants from a file.
 
@@ -74,6 +75,7 @@ Since number input is processed as double, it's not possible to directly enter a
 or 128-bit versions. However, you can enter 1.234*10^1234.
 
 ## [Installation options](exelist.md)
+---
 
 ## Variable types.
 * Numbers: 
@@ -111,6 +113,7 @@ Generates a WAV audio file (mono, 44100 Hz, 16-bit PCM) from a mathematical expr
   * Operations: `+`, `-`, `*`, `/`, `|` (concatenation).
   * Features: Analysis, synthesis, visualization.
   * Behavior: If the expression result is of type WAV, it is played by the GUI version as soon as it becomes available.
+---
   
 ### Data Persistence (File I/O)
 
@@ -125,6 +128,7 @@ For all other types (Scalars, Matrices, Strings), it serializes the data into a 
 The engine first attempts to parse the file as a valid BMP structure, then as WAV.
 If it is not a BMP or WAV, it spawns a silent child parsing instance to evaluate the text expression and reconstruct the original variable type
 (Scalar, Matrix, or String).
+---
 
 ## Two Versions Available
 
@@ -135,6 +139,7 @@ Windows desktop application with native interface, history dropdown, and real-ti
 ### 💻 CLI Version (ccalc.exe)
 
 Command-line calculator for scripts, automation, and terminal use.
+---
 
 ## Features
 
@@ -155,6 +160,7 @@ Command-line calculator for scripts, automation, and terminal use.
 * **Custom Constants File**: Load user-defined constants and functions from `consts.txt` and `user.txt`
 * **Matrix Support**: Full matrix arithmetic up to 7×7, including inverse, determinant, transpose
 * **Numerical Methods**: Equation solving (`solve`), integration (`integr`), differentiation (`diff`), summation (`sum`)
+---
 
 ### CLI Version (ccalc)
 
@@ -253,6 +259,7 @@ option is enabled, which determines the output format based on the input format.
   /BW=64     	;Binary width (default 64)  
 ```
 >**IMPORTANT**: Always use quotes around expressions! Symbols like `^`, `|`, `&`, `<`, `>` have special meaning in PowerShell/CMD.
+---
 
 ## Supported Functions
 
@@ -265,6 +272,7 @@ option is enabled, which determines the output format based on the input format.
 * `;` to separate expressions
 
 > **Note**: Unary minus has lower priority than power: `-1^2 = -(1^2) = -1`, not `(-1)^2 = 1`. Use parentheses when needed: `(-1)^2 = 1`.
+---
 
 ### Percentage Operations
 
@@ -295,6 +303,7 @@ x %% y  →  (x / y - 1) * 100
 
 57.6 %% 72        →  -20       (57.6 is 20% less than 72)
 ```
+---
 
 ### [Mathematical Functions](help.md#functions)
 
@@ -302,6 +311,7 @@ x %% y  →  (x / y - 1) * 100
 * **Hyperbolic**: sinh, cosh, tanh
 * **Logarithmic**: ln, log (natural log), lg (base 10)
 * **Other**: sqrt, exp, abs, floor, ceil, round
+---
 
 ### Utility Functions and solvers
 
@@ -434,6 +444,7 @@ solution. Polynomial $degree > 4$: use Durand-Kerner method (numerical).
 	RET
 ```	
 * **eval("expr")**: Evaluate string as expression.
+---
 
 ### [Plotting](plot.md)
 
@@ -527,6 +538,7 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 * **path**: Default path to the "fname" `path:="%USERPROFILE%\Downloads"`
 
 > **Technical Note**: To ensure accuracy, the engine monitors the ratio of the imaginary part to the total magnitude. If $Abs(im) / |z| > 10^{-12}$, the point is considered undefined in the real plane, and the line is broken.
+---
 
 ### [Audio signals](wav.md)
 
@@ -545,6 +557,7 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 * **clcpow(vector, x|z|wav)**: Evaluates y = a·x^b. Expects vector [b, a].
 * **clcinv(vector, x|z|wav)**: Evaluates y = a + b/x. Expects vector [b, a].
 * **clamp(vector, x|z|wav)**: Clamp the given value to the range [(min, max)]
+---
 
 
 ### Complex Number Support
@@ -561,6 +574,7 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
   ~(1+2j)  →  |2.236068|(-63`-26'-5")  1-2j
   ```
   Polar form notation: ``|modulus|(degrees`minutes'seconds")``
+---
 
 ### User-Defined Functions
 
@@ -578,6 +592,7 @@ frq(130u, 2n2) → 297602.87
 * When a user-defined function is called, all previously defined constants (including those from `consts.txt`) are available inside it, but not variables.
 * User-defined functions can be **overridden** by re-declaring them (previously, re-declarations were silently ignored).
 * Type checking is enforced on function arguments — for example, you cannot call `sin` on a string.
+---
 
 ## Table Functions
 
@@ -599,7 +614,7 @@ values are averaged automatically. The implementation uses binary search with in
 access patterns.
 
 Use regression functions (`fitpoly`, `fitexp`, `fitpow`, etc.) when extrapolation beyond table boundaries is required.
-
+---
 
 ### Comments
 
@@ -607,6 +622,7 @@ Use the `;;` operator for inline comments:
 ```
 2+2 ;; This is a comment
 ```
+---
 
 ### Matrix Support
 
@@ -641,6 +657,7 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 [(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)] → [(-1k, 0, 3M); (0, 0, 0); (0, 8G, 9)] ;;Filtered
 [(-1k, 2m, 3M); (4, 5u, 6n); (7p, 8G, 9)][1,1] → 5e-06                            ;;Raw
 ```
+---
 
 #### Matrix Operations
 
@@ -689,6 +706,7 @@ Elements that are negligibly small compared to the matrix norm (Frobenius) are d
 * The **zeros** function can accept the number of elements, the number of rows and columns, and a matrix. If there is only one element, the function returns a matrix with 
 an equal or greater number of elements (it can also be used as a linear array of up to 7x7 = 49 elements, accessible at index [i]). If there is a matrix, the function 
 returns a zero matrix of the same dimension as the one passed. The **diag/eye** function works the same way.
+---
 
 #### Matrix Examples
 
@@ -737,6 +755,8 @@ solve_lin([(2, -3);(3, -2)],[(-4);(-1)]) → [(1); (2)]
 rand(zeros(3,3)+10) → [(2.988, 9.108, 9.058); (6.294, 2.281, 3.198); (8.518, 9.509, 7.563)]
 round(rand(zeros(3,3)+10)) → [(2, 4, 4); (6, 3, 2); (2, 7, 7)]
 ```
+---
+
 ### Data Format and File Handling
 
 #### File Requirements
@@ -769,6 +789,7 @@ while entering an expression containing a call to `fdlg("mask")`, it's recommend
 like `dlg` instead of `fdlg` and only change it to `fdlg` once the entire expression has been entered. 
 Multiple calls to `fdlg` in a single expression are allowed, but which one appears first depends on 
 the calculation priority, which may not be obvious during expression interpretation.
+---
 
 #### The "All-Terrain" Parser
 The engine uses a robust, fault-tolerant scanner designed to extract numeric data from real-world engineering logs.
@@ -806,6 +827,7 @@ as "* 0 1" to skip the date and go directly to the data columns.
 
 > **Data Safety**: If a mask is invalid (e.g., `"1 1"` for two variables) or the data line is incomplete, the engine ensures integrity by 
 initializing results with `qnan`. These lines are automatically ignored during analysis, preventing corrupted calculations.
+---
 
 #### Data Structures for Different Modes
 * **Statistical Functions** (mean, median, rms, etc.):<br>
@@ -824,6 +846,7 @@ Temp: 40.0    Res: 5.5k  -- sensor jitter here --
 # End of log
 ```
 The parser will cleanly extract pairs: `(25.0, 10000)`, `(30.5, 8200)`, and `(40.0, 5500)`.
+---
 
 ### Regression and Data Fitting
 
@@ -865,6 +888,7 @@ Use these functions to evaluate a model previously obtained via fit*("filename")
 * **clclog(vector, x|z|wav)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[(b, a)]$.
 * **clcpow(vector, x|z|wav)**: Evaluates $y = a \cdot x^b$. Expects vector $[(b, a)]$.
 * **clcinv(vector, x|z|wav)**: Evaluates $y = a + b/x$. Expects vector $[(b, a)]$.
+---
 
 #### Polynom example
 
@@ -910,6 +934,7 @@ Functions returns also string value (according current syntax):
 ```
 clcpoly([(1.5m,-2.2,-3.2,4.5)],2.6) → '1.5m x^3-2.2x^2-3.2x+4.5' 
 ```
+---
 
 ### Chebyshev Polynomial Regression example
 #### Step 1: Create test data file
@@ -939,6 +964,30 @@ c5:=fitcheb("dsin.txt", "01", 5) → [(-39.54m, -729.8m, -156.1m,  595.5m,  51.3
 #### Step 3: Evaluate fitted function
 
 ```save("chebtst.bmp",plot(cheb(c5, t), -1, 1, t)+plotdata("dsin.txt","01"))```
+---
+
+### Advantages of Chebyshev Regression
+
+1. **Better numerical stability** than power series for high degrees
+2. **Uniform error distribution** (minimax property)
+3. **Natural for [-1, 1] data** (just scale your input)
+
+### Limitations
+
+- Requires knowing data range (x_min, x_max) for normalization
+- User must normalize input when evaluating
+- Coefficients are not directly interpretable (unlike y = a + bx)
+
+### Comparison with Polynomial Regression
+
+| Feature | fitpoly(file, "01", n) | fitcheb(file, "01", n) |
+|---------|---------------------|-------------------------|
+| Basis | Power series (1, x, x²) | Chebyshev (T₀, T₁, T₂) |
+| Stability | Poor for n > 4 | Good even for n = 6 |
+| Normalization | Not needed | Auto (to [-1, 1]) |
+| Usage | Direct: clcpoly(c, x) | Need norm: cheb(c, norm(x)) |
+
+---
 
 ### Statistical Analysis
 
@@ -992,12 +1041,15 @@ These functions use mean and stddev calculated from the data file:
 * **normq("file", ["msk"], x)** Probability of falling within |x - mean| range.
 * **normr("file", ["msk"], x)** Upper tail probability P(X > x).
 * **invnorm("file", ["msk"], p)** Inverse Normal: find x such that P(X <= x) = p.
+---
 
 ### Strings
 You can enter a string, assign a string value to a variable, and perform string concatenation.
 ```
 S1:="Hello,";S2:="World";S1+S2 → 'Hello, World!' 
 ```
+---
+
 ### Color Data Type & Chromatic Algebra
 
 The engine introduces a native `Color` data type, instantiated via the `color(RRGGBB)` constructor. This enables complex colorimetric and photometric simulations directly in the expression line.
@@ -1018,6 +1070,8 @@ The engine handles chromatic algebra using clamped saturation (0..255 per channe
   ```
   color(trgb(2k7)) + color(wrgb(blue)) / 2  ->  0xFFFFD6 ;; LightGoldenRodYellow
   ```
+---
+
 ### Scripts
 
 The engine supports multi-line scripts, allowing you to define variables, perform sequential calculations, and even create simple loops and conditionals. Scripts are executed in a single pass, with all variables and functions available throughout the script's scope. A more detailed description is [here](scripts.md). 
@@ -1110,12 +1164,14 @@ spawned the script.
 * **The `fdlg("*.txt")` Routine:** This is a dedicated GUI wrapper function that opens a standard Windows file selection dialog and returns the chosen filename as a string. It carries no variable context and does not utilize a child calculator.
 * **The Purpose of `eval()`:** This function is primarily an architecture utility intended for internal engine debugging and dynamic code injection. It is not designed for standard user-facing mathematical modeling.
 * **Automatic Debug Interface Cleanup:** In the GUI application, the debug console interface is bound to the lifecycle of the script. It automatically terminates and closes as soon as the script completes execution or encounters a `RET` instruction.  
+---
 
 ## [Constants](help.md#predefined-constants)
 
 * **pi**: 3.14159265358979323846
 * **e**: 2.71828182845904523536
 * **phi**: 1.61803398874989484820 (Golden ratio)
+---
 
 #### Physical Constants (CODATA 2018)
 
@@ -1168,6 +1224,7 @@ spawned the script.
 * **timezone**: System timezone offset (hours)
 * **daylight**: Daylight saving time flag
 * **tz**: Current timezone with DST
+---
 
 #### User Constants Files
 
@@ -1177,6 +1234,7 @@ Place these files in the same directory as the calculator executable to automati
 * **`user.txt`** — loaded at startup, **never overwritten** by installer. Use for personal constants and functions that should survive updates.
 
 Both files support the same syntax: `const(...)`, `var(...)`, and function definitions `{name(args) expression}`. All predefined constants are available inside user-defined functions loaded from these files.
+---
 
 ## Output Formats
 
@@ -1197,6 +1255,7 @@ Both files support the same syntax: `const(...)`, `var(...)`, and function defin
 * Temperature in Fahrenheit (`75F` format for input/output)
 * String
 * Inch
+---
 
 ### Engineering / Scientific Suffixes
 
@@ -1210,6 +1269,7 @@ polar(10k, 30`20'40")  →  8.63k+5.052ki
 Here `k` is applied separately to the real part (`8.63k`) and the imaginary part (`5.052k`), followed by `i`.
 
 In engineering and normalized formats, the suffix order is based on the **modulus**. If the real or imaginary part differs from the modulus by three or more orders of magnitude, it is considered negligible and displayed as zero.
+---
 
 ## Usage
 
@@ -1221,6 +1281,7 @@ In engineering and normalized formats, the suffix order is based on the **modulu
 4. Use the history dropdown to recall previous calculations
 5. Copy results with Ctrl+C or paste expressions with Ctrl+V
 6. Access format options and binary width settings via the Calc menu or local menu jf the output panel
+---
 
 ### Example Expressions
 [Tutorial](tutor.md)
@@ -1248,6 +1309,7 @@ Creates an ntc.txt file like:
 2PI                 ;; Same as 2 * PI ≈ 6.28 (uppercase PI to avoid pico suffix)
 3e                  ;; Same as 3 * e ≈ 8.15 (with uppercase E is 3e+18, 3 exa)
 ```
+---
 
 ### Implicit Multiplication
 
@@ -1284,6 +1346,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
   * `2E` → `22e+18` (exa)
 
 **Recommended naming convention**: Use **UPPERCASE** for constants/variables to avoid conflicts with scientific suffixes and imaginary unit (e.g., `PI`, `E`, `PHI`, `X`, `Y`, `Z`).
+---
 
 ## Keyboard Shortcuts
 
@@ -1296,6 +1359,7 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 * **F1**: Show help contents
 * **Esc**: Close help window / minimize main window (if ESC minimized option is enabled)
 * **Right-click on output field**: Context menu with Copy and Format submenu — allows quick format changes even when the main menu is hidden (`menu(0)` mode)
+---
 
 ## Menu Options
 
@@ -1312,10 +1376,13 @@ When **Implicit Multiplication** is enabled (via Calc menu), you can omit the `*
 * Binary width submenu: Select binary display width (8, 16, 24, 32, 48, 64 bits)
 * View variables: Open variables dialog
 * Exit: Close application
+---
 
 [Quick reference guide](help.md)
 
+---
 
 ## License
 
 Copyright (C) 2026. All rights reserved.
+---

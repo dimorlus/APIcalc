@@ -1281,7 +1281,8 @@ float__t calculator::StatFn (const char *fname, const char *msk, sfntype sfn, fl
  return qnan; // Should never reach here
 }
 
-bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res)
+bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res,
+                           int args, value *v_stack)
 {
  FILE *f = nullptr;
 
@@ -1301,7 +1302,9 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
   }
 
  // For Chebyshev: need to find min/max for normalization
- float__t x_min = 0.0L, x_max = 0.0L;
+ enum { min, max };
+ float__t x_[2] = { (float__t)0.0L, (float__t)0.0L };
+ //float__t x_min = 0.0L, x_max = 0.0L;
  bool first_point = true;
 
  if (rt == rtCheb)
@@ -1323,13 +1326,13 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
        float__t x = (float__t)xd;
        if (first_point)
         {
-         x_min = x_max = x;
+         x_[min] = x_[max] = x;
          first_point   = false;
         }
        else
         {
-         if (x < x_min) x_min = x;
-         if (x > x_max) x_max = x;
+         if (x < x_[min]) x_[min] = x;
+         if (x > x_[max]) x_[max] = x;
         }
       }
     }
@@ -1342,7 +1345,7 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
     }
 
    // Avoid division by zero
-   if (x_max - x_min < 1e-10L)
+   if (x_[max] - x_[min] < 1e-10L)
     {
      mxerror ("all x values are the same");
      return false;
@@ -1411,7 +1414,7 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
        if (rt == rtCheb)
         {
          // Normalize x to [-1, 1]
-         float__t x_norm = 2.0L * (x - x_min) / (x_max - x_min) - 1.0L;
+         float__t x_norm = 2.0L * (x - x_[min]) / (x_[max] - x_[min]) - 1.0L;
 
          // Compute Chebyshev polynomials T_0(x), T_1(x), ..., T_degree(x)
          float__t *T = (float__t *)alloca ((degree + 1) * sizeof (float__t));
@@ -1502,6 +1505,24 @@ bool calculator::mxRegrFn (const char *fname, const char *msk, int n, rtype rt, 
    // Note: caller needs x_min, x_max for denormalization
    // We could store them as additional "metadata" but that breaks matrix format
    // Better: document that Chebyshev regression assumes normalized input
+   for (int n = 0; n < args; n++)
+    {
+     if ((v_stack[n].tag == tvERR || v_stack[n].tag == tvFLOAT)
+         && (v_stack[n].var
+             && (v_stack[n].var->val.tag == tvERR || v_stack[n].var->val.tag == tvFLOAT)))
+      {
+       v_stack[n].tag  = tvFLOAT;
+       v_stack[n].fval = (float__t)x_[n];
+       v_stack[n].ival = (int_t)x_[n];
+       if (v_stack[n].var)
+        {
+         v_stack[n].var->val.tag  = tvFLOAT;
+         v_stack[n].var->val.fval = (float__t)x_[n];
+         v_stack[n].var->val.ival = (int_t)x_[n];
+        }
+      }
+    }
+
   }
  else
   {
@@ -1684,7 +1705,7 @@ void calculator::mxPolystr (char *str, int n, value M, rtype rt)
 // For |x| > 1, use recurrence relation
 // coeffs is a vector (row or column) with polynomial coefficients [a0, a1, a2, ..., an]
 // Result = a0*T0(x) + a1*T1(x) + a2*T2(x) + ... + an*Tn(x)
-float__t calculator::EvalChebyshev (value &coeffs, float__t x)
+float__t calculator::EvalChebyshev_re (value &coeffs, float__t x, float__t xmin, float__t xmax)
 {
  if (coeffs.tag != tvMATRIX)
   {
@@ -1706,7 +1727,7 @@ float__t calculator::EvalChebyshev (value &coeffs, float__t x)
   }
  else
   {
-   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   errorf (pos, "Chebyshev coefficients must be a vector");
    return qnan;
   }
 
@@ -1714,14 +1735,31 @@ float__t calculator::EvalChebyshev (value &coeffs, float__t x)
 
  if (n == 0) return 0.0L;
 
+ // Normalize x to [-1, 1] if xmin/xmax are provided and not default [-1, 1]
+ float__t x_norm = x;
+
+ // Check if normalization is needed (not default [-1, 1] range)
+ if (!(xmin == -1.0L && xmax == 1.0L))
+  {
+   // Check for valid range
+   if (xmax <= xmin)
+    {
+     errorf (pos, "xmax must be greater than xmin");
+     return qnan;
+    }
+
+   // Normalize: map [xmin, xmax] -> [-1, 1]
+   x_norm = 2.0L * (x - xmin) / (xmax - xmin) - 1.0L;
+  }
+
  // Use Clenshaw algorithm for stable evaluation
  // b_{n+1} = b_{n+2} = 0
- // b_k = a_k + 2*x*b_{k+1} - b_{k+2}  for k = n-1, n-2, ..., 0
- // Result = a_0 + x*b_1 - b_2
+ // b_k = a_k + 2*x_norm*b_{k+1} - b_{k+2}  for k = n-1, n-2, ..., 0
+ // Result = a_0 + x_norm*b_1 - b_2
 
  float__t b_k  = 0.0L; // b_{k+1}
  float__t b_k1 = 0.0L; // b_{k+2}
- float__t x2   = 2.0L * x;
+ float__t x2   = 2.0L * x_norm;
 
  // Access coefficients sequentially (same for row or column vector)
  for (int k = n - 1; k >= 1; k--)
@@ -1732,7 +1770,7 @@ float__t calculator::EvalChebyshev (value &coeffs, float__t x)
   }
 
  // Final step
- return coeffs.mval[0] + x * b_k - b_k1;
+ return coeffs.mval[0] + x_norm * b_k - b_k1;
 }
 
 // Complex Chebyshev evaluation
@@ -1817,7 +1855,7 @@ bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
      return true;
     }
 
-   float__t result = EvalChebyshev (coeffs, x.fval);
+   float__t result = EvalChebyshev_re (coeffs, x.fval, (float__t) - 1.0L, (float__t)1.0L);
    res.tag         = tvFLOAT;
    res.fval        = result;
    res.imval       = (float__t)0.0L;
@@ -1828,7 +1866,7 @@ bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
 
 
 
-float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
+float__t calculator::mxCalcFn(value M, rtype rt, float__t x, float__t xmin, float__t xmax)
 {
   if (M.tag != tvMATRIX)
    {
@@ -1839,7 +1877,7 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
   switch (rt)
    {
    case rtCheb: // Chebyshev polynomial
-    return EvalChebyshev (M, x);
+    return EvalChebyshev_re (M, x, xmin, xmax);
     
     case rtPoly:
     {
@@ -1946,7 +1984,9 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x)
    }
   return qnan; // Should not reach here
 }
-void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
+
+
+void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg, float__t xmin, float__t xmax)
 {
  if (res == nullptr || arg == nullptr) return;
 
@@ -1990,7 +2030,7 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
        float__t x = (float__t)inSamples[i] / 32768.0L;
 
        // Evaluate regression function
-       float__t y = mxCalcFn (M, rt, x);
+       float__t y = mxCalcFn (M, rt, x, (float__t) - 1.0L, (float__t)1.0L);
 
        if (isnan (y) || isinf (y))
         {
@@ -2028,7 +2068,7 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
    for (uint32_t i = 0; i < numSamples; i++)
     {
      float__t x = (float__t)inSamples[i] / 32768.0L;
-     float__t y = mxCalcFn (M, rt, x) * scale;
+     float__t y = mxCalcFn (M, rt, x, (float__t) - 1.0L, (float__t)1.0L) * scale;
 
      // Clamp to [-1, 1]
      if (y > 1.0L) y = 1.0L;
@@ -2237,7 +2277,7 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg)
  else
   {
    float__t x      = arg->get ();
-   float__t result = mxCalcFn (M, rt, x);
+   float__t result = mxCalcFn (M, rt, x, xmin, xmax);
    res->fval       = result;
    res->imval      = (float__t)0.0L;
    res->tag        = tvFLOAT;

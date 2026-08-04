@@ -1313,7 +1313,7 @@ class calculator // calculator represents the main class for the expression calc
  float__t EvalWav (value &wavVal, float__t t);
  bool FFTPlot (value &wavVal, value &res);
 
- float__t EvalChebyshev (value &coeffs, float__t x);
+ float__t EvalChebyshev_re(value &coeffs, float__t x, float__t xmin, float__t xmax);
  bool EvalChebyshev (value &coeffs, value &x, value &res);
  char *CreateWavBuffer (uint32_t sampleRate, uint16_t numChannels, uint16_t bitsPerSample,
                         uint32_t numSamples);
@@ -1334,10 +1334,10 @@ class calculator // calculator represents the main class for the expression calc
  bool mxTranspose (value &res, value &M);
 
  bool mxPolyRoots (value &res, value &coeffs);
- bool mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res);
+ bool mxRegrFn (const char *fname, const char *msk, int n, rtype rt, value &res, int args, value *v_stack);
  void mxPolystr (char *str, int n, value M, rtype rt);
- float__t mxCalcFn (value M, rtype rt, float__t x);
- void mxCalcFn (value *res, value M, rtype rt, value *arg);
+ float__t mxCalcFn (value M, rtype rt, float__t x, float__t xmin, float__t xmax);
+ void mxCalcFn (value *res, value M, rtype rt, value *arg, float__t xmin, float__t xmax);
 
  t_mresult matrixbin (value &res, value &left, value &right, t_operator cop);
  t_mresult matrixuno (value &res, value &left, t_operator cop);

@@ -1074,6 +1074,7 @@ bool calculator::CheckFnArgs (int n_args, int expected_args, const uint32_t mask
   {
    t_value tag = v_stack[v_sp - 1 - i].tag;
    int pos     = v_stack[v_sp - 1 - i].pos;
+   if (mask[i] == 0) break;
    if ((1 << tag) & mask[i]) // invalid type for this argument
     {
      switch (tag)
@@ -3895,6 +3896,23 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               
               if (rfn == rtPoly||rfn ==rtCheb) // fitlin can take either 1, 2 or 3 arguments, other fit functions take
                {               // only 1 or 2 argument
+                if (n_args == 5 && rfn == rtCheb)
+                 {
+                  const uint32_t masks[]
+                      = { MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // max
+                          MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // min
+                          MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, // n
+                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV,           // msk
+                          MSK_ERR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, 0 };      // filename
+                  if (!CheckFnArgs (n_args, 5, masks)) return result_fval = qnan;
+                  if (!CheckOperand (5, MSK_STR)) return result_fval = qnan; // filename
+                  filename = v_stack[v_sp - 5].get_str ();                   // filename
+                  if (!CheckOperand (4, MSK_STR)) return result_fval = qnan; // msk
+                  msk = v_stack[v_sp - 4].get_str ();                        // msk
+                  if (!CheckOperand (3, MSK_SCALAR)) return result_fval = qnan; // n
+                  n = (int)v_stack[v_sp - 3].get_int ();                        // n
+                 }
+                else
                 if (n_args == 3) // fitlin("data", "msk", n)
                  {
                   const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX | MSK_COMPLEX | MSK_WAV, //n
@@ -3952,7 +3970,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                }
               char fnamebuf[STRBUF] = { 0 };
               NormalizePath (filename, fnamebuf, STRBUF);
-              res = mxRegrFn (fnamebuf, msk, n, rfn, v_stack[v_sp - n_args - 1]); 
+              res = mxRegrFn (fnamebuf, msk, n, rfn, v_stack[v_sp - n_args - 1], n_args - 3,
+                              &v_stack[v_sp - n_args + 3]); 
 
               if (!res || mxerr[0])
                {
@@ -3966,31 +3985,70 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
+            // v_stack[v_sp - n_args] - first argument,
+            // v_stack[v_sp - n_args + 1] - second argument, etc.
+            // v_stack[v_sp - n_args + 2] - third argument, etc.
+            // v_stack[v_sp - n_args + 3] - fourth argument, etc.
+            // v_stack[v_sp - n_args - 1] - result
+            
             case tsCLCFN: // float clc*(matrix, float)
             {
-             const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // float or complex
-                                        MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };         // matrix
-             if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
-              if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
-              errtype = teMath;
-              // void mxCalcFn (value *res, value M, rtype rt, value *arg);
-              mxCalcFn (&v_stack[v_sp - 3], v_stack[v_sp - 2], (rtype)sym->fidx, &v_stack[v_sp - 1]);
-              if (isnan (v_stack[v_sp - 3].fval) || mxerr[0])
+              if (n_args == 4 && (rtype)sym->fidx == rtCheb) //cheb(matrix, xmin, xmax, x)
                {
-                if (mxerr[0])
-                 errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
-                else
-                 error (v_stack[v_sp - 1].pos, "Error in clc* function");
-                return result_fval = qnan;
+                const uint32_t masks[] = 
+                      { (uint32_t)~MSK_SCALAR, // float x
+                        (uint32_t)~MSK_SCALAR, // float xmax
+                        (uint32_t)~MSK_SCALAR, // float xmin
+                        MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 }; // matrix
+                if (!CheckFnArgs (n_args, 4, masks)) return result_fval = qnan;
+                if (!CheckOperand (4, MSK_MATRIX)) return result_fval = qnan;
+                if (!CheckOperand (3, MSK_SCALAR)) return result_fval = qnan;
+                if (!CheckOperand (2, MSK_SCALAR)) return result_fval = qnan;
+                if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
+                errtype = teMath;
+                // void mxCalcFn (value *res, value M, rtype rt, value *arg, float__t xmin, float__t
+                // xmax);
+
+                mxCalcFn (&v_stack[v_sp - n_args - 1], v_stack[v_sp - n_args], (rtype)sym->fidx,
+                          &v_stack[v_sp - n_args + 3], v_stack[v_sp - n_args + 1].get (),
+                          v_stack[v_sp - n_args + 2].get ());
+                if (isnan (v_stack[v_sp - n_args - 1].fval) || mxerr[0])
+                 {
+                  if (mxerr[0])
+                   errorf (v_stack[v_sp - n_args].pos, "%s", mxerr);
+                  else
+                   error (v_stack[v_sp - n_args].pos, "Error in cheb function");
+                  return result_fval = qnan;
+                 }
+                v_sp -= n_args;
                }
-              if (v_stack[v_sp - 3].tag != tvWAV)
-               {
-                char strbuf[STRBUF] = { 0 };
-                mxPolystr (strbuf, STRBUF, v_stack[v_sp - 2], (rtype)sym->fidx);
-                v_stack[v_sp - 3].sval = dupString (strbuf);
-               }
-              v_sp -= 2;
-             }
+              else
+                {
+                  const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // float or complex
+                                             MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };         // matrix
+                  if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
+                  if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
+                  errtype = teMath;
+                  // void mxCalcFn (value *res, value M, rtype rt, value *arg, float__t xmin, float__t xmax);
+                  mxCalcFn (&v_stack[v_sp - 3], v_stack[v_sp - 2], (rtype)sym->fidx, &v_stack[v_sp - 1], 
+                      (float__t)-1.0L, (float__t)1.0L);
+                  if (isnan (v_stack[v_sp - 3].fval) || mxerr[0])
+                   {
+                    if (mxerr[0])
+                     errorf (v_stack[v_sp - 1].pos, "Stat: %s", mxerr);
+                    else
+                     error (v_stack[v_sp - 1].pos, "Error in clc* function");
+                    return result_fval = qnan;
+                   }
+                  if (v_stack[v_sp - 3].tag != tvWAV && (rtype)sym->fidx != rtCheb)
+                   {
+                    char strbuf[STRBUF] = { 0 };
+                    mxPolystr (strbuf, STRBUF, v_stack[v_sp - 2], (rtype)sym->fidx);
+                    v_stack[v_sp - 3].sval = dupString (strbuf);
+                   }
+                  v_sp -= 2;
+                 }
+            }
             break;
 
             case tsSTFUN: // float mean("data") (stat functions)

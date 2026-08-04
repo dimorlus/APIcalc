@@ -17,6 +17,12 @@
    
 +  Added function fitcheb("fname","msk" n) Fits Chebyshev polynomial to data points from file using least 
    squares method.
++ Added optional form for fitcheb() and cheb() functions.
+    ;;The variables xmin and xmax are created and the values ​​of the minimum and maximum arguments are received.
+	c5:=fitcheb("fname","msk" n, xmin, xmax)
+	;;The obtained xmin and xmax are used to denormalize the Chebyshev polynomial.
+    cheb(c5, xmin, xmax, t)
+
 
 02.08.26 (2.219)
 + A new WAV data type has been added. The result of this type is played in the GUI version immediately 

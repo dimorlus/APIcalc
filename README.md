@@ -866,8 +866,10 @@ stability even with high-degree polynomials.
 * **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $(x, y)$. Degree: $1$ to $6$.<br>
 Returns: A row vector $[(a_n, \dots, a_1, a_0)]$ representing the polynomial: $y = a_n x^n + \dots + a_1 x + a_0$<br>
 Example: ```fitpoly("ntc.txt","01", 2)``` returns coefficients for a quadratic curve.
-* **fitcheb("fname","msk" degree)**: Fits Chebyshev polynomial to data points from file using least squares method.<br>
-  Returns:  Row vector with Chebyshev coefficients $[(c_0, c_1, c_2, \dots, c_n)]$<br>
+* **fitcheb("fname","msk" degree)**, **fitcheb("fname","msk", degree, xmin, xmax)**: Fits Chebyshev polynomial to data points from 
+file using least squares method. If xmin and xmax are passed, these variables are set to the minimum and maximum argument values ​​for 
+further denormalization.<br>
+  Returns:  Row vector with Chebyshev coefficients $[(c_0, c_1, c_2, \dots, c_n)]$, optional xmin and xmax.<br>
   Important: Data is automatically normalized to [-1, 1] range before fitting.
 * **fitexp("filename", ["msk"])**: Fits an exponential model: $y = a \cdot e^{bx}$.<br>
 Returns: $[b, a]$.<br>
@@ -883,7 +885,7 @@ Returns: $[b, a]$.
 #### Regression Calculation
 Use these functions to evaluate a model previously obtained via fit*("filename") functions (the argument and the result can be complex).
 * **clcpoly(vector, x|z|wav)**: Evaluates a polynomial of any degree (up to 6). Expects vector $[(a_n, \dots, a_1, a_0)]$
-* **cheb(coeffs, x|z|wav)**: Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
+* **cheb(coeffs, x|z|wav)**, **cheb(coeffs, xmin, xmax, x)**: Evaluates Chebyshev polynomial series at point x using Clenshaw algorithm.
 * **clcexp(vector, x|z|wav)**: Evaluates $y = a \cdot e^{bx}$. Expects vector $[(b, a)]$.
 * **clclog(vector, x|z|wav)**: Evaluates $y = a + b \cdot \ln(x)$. Expects vector $[(b, a)]$.
 * **clcpow(vector, x|z|wav)**: Evaluates $y = a \cdot x^b$. Expects vector $[(b, a)]$.
@@ -964,6 +966,15 @@ c5:=fitcheb("dsin.txt", "01", 5) → [(-39.54m, -729.8m, -156.1m,  595.5m,  51.3
 #### Step 3: Evaluate fitted function
 
 ```save("chebtst.bmp",plot(cheb(c5, t), -1, 1, t)+plotdata("dsin.txt","01"))```
+
+#### Step 4: Evaluate fitted function with denormalization
+
+```
+;;The variables xmin and xmax are created and the values ​​of the minimum and maximum arguments are assigned.
+c5:=fitcheb("dsin.txt", "01", 5, xmin, xmax)
+;;The obtained xmin and xmax are used to denormalize the Chebyshev polynomial.
+plot(cheb(c5, xmin, xmax, t), xmin, xmax, t)
+```
 ---
 
 ### Advantages of Chebyshev Regression

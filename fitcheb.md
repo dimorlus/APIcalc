@@ -41,7 +41,7 @@ Create file `data.txt` with noisy sine wave:
 ;; Fit 3rd degree Chebyshev polynomial 
 c := fitcheb("dsin.txt", "01", 3) ;;[(-37.91m, -742.6m, -160.2m, 595.5m)]
 ;; Result: 
-c = [(c0, c1, c2, c3)] ;; Example: c ≈ [(0.05, 0.95, 0.01, -0.15)]
+c = [(c0, c1, c2, c3)] ;; Example: c ≈ [(-37.91m, -742.6m, -160.2m, 595.5m)]
 ```
 
 ### Step 3: Evaluate fitted function
@@ -66,11 +66,11 @@ y := cheb(c, x_norm)
 ### Step 4: Plot comparison
 ```
 ;; 1. Generate test file programmatically (in external tool) 
-;;    data.txt contains: x, sin(x) with some noise
+;;    dsin.txt contains: x, sin(x) with some noise
 ;; 2. Fit different degrees 
-c3 := regrcheb("data.txt", "ff", 3) 
-c4 := regrcheb("data.txt", "ff", 4) 
-c5 := regrcheb("data.txt", "ff", 5)
+c3 := fitcheb("dsin.txt", "01", 3) 
+c4 := fitcheb("dsin.txt", "01", 4) 
+c5 := fitcheb("dsin.txt", "01", 5)
 ;; 3. Define range (must match your data file!) 
 x_min := 0 x_max := 6.28  ;; ~2π
 ;; 4. Normalization helper 

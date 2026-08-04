@@ -27,7 +27,7 @@
    - [Table Functions](#table-functions)
    - [Comments](#comments)
    - [Matrix Support](#matrix-support)
-   - [Regression & Data Fitting](#regression--data-fitting)
+   - [Regression & Data Fitting](#regression-and-data-fitting)
    - [Statistical Analysis](#statistical-analysis)
    - [Probability & Distributions (Normal)](#probability--distributions-normal)
    - [Strings](#strings)

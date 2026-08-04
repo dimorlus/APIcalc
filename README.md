@@ -843,8 +843,8 @@ stability even with high-degree polynomials.
 * **fitpoly("filename", ["msk"], degree)**: Fits a polynomial of the specified degree to the data pairs $(x, y)$. Degree: $1$ to $6$.<br>
 Returns: A row vector $[(a_n, \dots, a_1, a_0)]$ representing the polynomial: $y = a_n x^n + \dots + a_1 x + a_0$<br>
 Example: ```fitpoly("ntc.txt","01", 2)``` returns coefficients for a quadratic curve.
-* **fitcheb("fname","msk" degree)**: Fits Chebyshev polynomial to data points from file using least squares method.
-  Returns:  Row vector with Chebyshev coefficients $[(c_0, c_1, c_2, \dots, c_n)]$
+* **fitcheb("fname","msk" degree)**: Fits Chebyshev polynomial to data points from file using least squares method.<br>
+  Returns:  Row vector with Chebyshev coefficients $[(c_0, c_1, c_2, \dots, c_n)]$<br>
   Important: Data is automatically normalized to [-1, 1] range before fitting.
 * **fitexp("filename", ["msk"])**: Fits an exponential model: $y = a \cdot e^{bx}$.<br>
 Returns: $[b, a]$.<br>

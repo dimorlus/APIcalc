@@ -3985,11 +3985,21 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
             }
             break;
 
+            // masks[] = { last argument exclusive mask, 
+            // ..., 
+            // first argument exclusive mask, 0 }
+            // if (!CheckOperand (n_args, first argument inclusive mask)) error;
+            // if (!CheckOperand (n_args-1, second argument inclusive mask)) error;
+            // if (!CheckOperand (n_args-2, third argument inclusive mask)) error;
+            // ...
+            // 
             // v_stack[v_sp - n_args] - first argument,
             // v_stack[v_sp - n_args + 1] - second argument, etc.
             // v_stack[v_sp - n_args + 2] - third argument, etc.
             // v_stack[v_sp - n_args + 3] - fourth argument, etc.
             // v_stack[v_sp - n_args - 1] - result
+            // ...
+            // v_sp -= n_args;
             
             case tsCLCFN: // float clc*(matrix, float)
             {
@@ -4006,9 +4016,8 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
                 if (!CheckOperand (2, MSK_SCALAR)) return result_fval = qnan;
                 if (!CheckOperand (1, MSK_SCALAR)) return result_fval = qnan;
                 errtype = teMath;
-                // void mxCalcFn (value *res, value M, rtype rt, value *arg, float__t xmin, float__t
-                // xmax);
-
+                // void mxCalcFn (value *res, value M, rtype rt, value *arg, 
+                // float__t xmin, float__t xmax);
                 mxCalcFn (&v_stack[v_sp - n_args - 1], v_stack[v_sp - n_args], (rtype)sym->fidx,
                           &v_stack[v_sp - n_args + 3], v_stack[v_sp - n_args + 1].get (),
                           v_stack[v_sp - n_args + 2].get ());

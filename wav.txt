@@ -18,4 +18,8 @@ save("03q440.wav",play(pwm(440,.3,t),0,1,t))
 save("rect440.wav",play(pwm(440,.5,t),0,1,t))
 fftplot(load("rect440.wav"))
 fftplot(load("03q440.wav"))
+cheb([(-39.54m, -729.8m, -156.1m,  595.5m,  51.35m, -57.36m)], 0, 6, 2)
 
+c5:=fitcheb("ntc.txt", "01", 6, xmin, xmax)
+p5:=fitpoly("ntc.txt", "01",6)
+plot(clcpoly(p5, t), -40, 120, t)+plot(cheb(c5, xmin, xmax, t), xmin, xmax, t)+plot(ntcr(100k,t),-40,120,t)

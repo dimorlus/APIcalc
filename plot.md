@@ -85,7 +85,6 @@ Standard $y = f(x)$ plots in Cartesian coordinates.
 - **from**: Starting value of the variable
 - **to**: Ending value of the variable
 - **var**: Variable name (typically `x`, `t`, `f`, etc.)
-- **filename**: Output file path (for `fplot` and `oplot`)
 
 ### Features
 

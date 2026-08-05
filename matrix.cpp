@@ -1709,7 +1709,7 @@ float__t calculator::EvalChebyshev_re (value &coeffs, float__t x, float__t xmin,
 {
  if (coeffs.tag != tvMATRIX)
   {
-   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   mxerror ("Expected matrix with Chebyshev coefficients");
    return qnan;
   }
 
@@ -1727,7 +1727,7 @@ float__t calculator::EvalChebyshev_re (value &coeffs, float__t x, float__t xmin,
   }
  else
   {
-   errorf (pos, "Chebyshev coefficients must be a vector");
+   mxerror ("Chebyshev coefficients must be a vector");
    return qnan;
   }
 
@@ -1778,7 +1778,7 @@ bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
 {
  if (coeffs.tag != tvMATRIX)
   {
-   errorf (pos, "Expected matrix with Chebyshev coefficients");
+   mxerror ("Expected matrix with Chebyshev coefficients");
    return false;
   }
 
@@ -1794,7 +1794,7 @@ bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
   }
  else
   {
-   errorf (pos, "Chebyshev coefficients must be a vector (row or column matrix)");
+   mxerror ("Chebyshev coefficients must be a vector");
    return false;
   }
 
@@ -1863,8 +1863,6 @@ bool calculator::EvalChebyshev (value &coeffs, value &x, value &res)
    return true;
   }
 }
-
-
 
 float__t calculator::mxCalcFn(value M, rtype rt, float__t x, float__t xmin, float__t xmax)
 {
@@ -1976,7 +1974,7 @@ float__t calculator::mxCalcFn(value M, rtype rt, float__t x, float__t xmin, floa
        }
       else
        {
-        mxerror ("clipping regression requires exactly 2 coefficients");
+        mxerror ("clamp requires exactly 2 coefficients");
         return qnan;
        }
      }
@@ -2255,7 +2253,7 @@ void calculator::mxCalcFn (value *res, value M, rtype rt, value *arg, float__t x
        }
       else
        {
-        mxerror ("clipping regression requires exactly 2 coefficients");
+        mxerror ("clamp requires exactly 2 coefficients");
         out_re = qnan;
         out_im = qnan;
        }

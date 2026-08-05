@@ -4034,7 +4034,7 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               else
                 {
                   const uint32_t masks[] = { MSK_ERR | MSK_STR | MSK_MATRIX,       // float or complex
-                                             MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };         // matrix
+                                             MSK_ERR | MSK_STR | MSK_COMPLEX | MSK_WAV, 0 };  // matrix
                   if (!CheckFnArgs (n_args, 2, masks)) return result_fval = qnan;
                   if (!CheckOperand (2, MSK_MATRIX)) return result_fval = qnan;
                   errtype = teMath;

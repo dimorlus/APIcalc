@@ -544,17 +544,17 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 #### The following WAV functions are available	   
 
 * **play(expr,from,to,t)**: Generates a WAV audio file from a mathematical expression.
-* **ewav(wavObject, t)**: Reads a normalized sample value from a WAV object at a specific time.
+* **ewav(wav, t)**: Reads a normalized sample value from a WAV object at a specific time.
 * **fft(wav)**: Performs Fast Fourier Transform on a WAV file to extract dominant frequencies.
 * **afft(harmonics, duration)**: Synthesizes a WAV file from a harmonics matrix.
 * **fftplot(wav)**: Generates a combined visualization of waveform and frequency spectrum in a single BMP image.
 * **harmonic(harmonics, t)**, **harm(harmonics, t)**: Evaluates harmonic sum at a specific time point.
 * **cheb(coeffs, x|z|wav)**: Evaluates [Chebyshev polynomial](cheb.md) series at point x using Clenshaw algorithm.
-* **clcpoly(vector, x|z|wav)**: Evaluates a [polynomial](regr_wav.md) of any degree (up to 6). Expect vector [an ... a0].
-* **clcexp(vector, x|z|wav)**: Evaluates y=a·exp(b·x). Expects vector [b, a].
-* **clclog(vector, x|z|wav)**: Evaluates y = a + b·ln(x). Expects vector [b, a].
-* **clcpow(vector, x|z|wav)**: Evaluates y = a·x^b. Expects vector [b, a].
-* **clcinv(vector, x|z|wav)**: Evaluates y = a + b/x. Expects vector [b, a].
+* **clcpoly(vector, x|z|wav)**: Evaluates a [polynomial](regr_wav.md) of any degree (up to 6). Expect vector $[(a_n \dots a_0)]$.
+* **clcexp(vector, x|z|wav)**: Evaluates y=a·exp(b·x). Expects vector [(b, a)].
+* **clclog(vector, x|z|wav)**: Evaluates y = a + b·ln(x). Expects vector [(b, a)].
+* **clcpow(vector, x|z|wav)**: Evaluates y = a·x^b. Expects vector [(b, a(].
+* **clcinv(vector, x|z|wav)**: Evaluates y = a + b/x. Expects vector [(b, a)].
 * **clamp(vector, x|z|wav)**: Clamp the given value to the range [(min, max)]
 ---
 

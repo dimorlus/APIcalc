@@ -102,11 +102,7 @@ plot(sin(x), 0, 2*pi, x)
 plot(exp(-t/10)*sin(t), 0, 50, t)
 
 ;; Transfer function magnitude 
-fplot("filter.bmp", abs(1/(1+i2 pi*f/1k)), 1, 100k, f)
-
-;; Overlay multiple functions 
-fplot("combined.bmp", sin(x), 0, 2 pi, x) 
-oplot("combined.bmp", cos(x), 0, 2 pi, x)
+plot(abs(1/(1+i2 pi*f/1k)), 1, 100k, f)
 ```
 ---
 

@@ -157,12 +157,12 @@ Loads a WAV file from disk.
 
 ## Reading WAV Values
 
-### `ewav(wavObject, t)`
+### `ewav(wav, t)`
 
 Reads a normalized sample value from a WAV object at a specific time.
 
 **Parameters:**
-- `wavObject` - WAV object to read from
+- `wav` - WAV object to read from
 - `t` - Time in seconds
 
 **Returns:** Normalized amplitude value in range [-1.0, 1.0], or 0 if time is out of bounds

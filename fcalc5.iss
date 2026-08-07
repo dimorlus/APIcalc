@@ -59,6 +59,9 @@ Source: ".\Fcalc\test.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexis
 Source: ".\Fcalc\ntc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\Fcalc\tc.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 Source: ".\Fcalc\tc.c"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\data"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\dsin.txt"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
+Source: ".\Fcalc\Sensor_Output.log"; DestDir: "{userdocs}\Fcalc"; Flags: onlyifdoesntexist uninsneveruninstall; Permissions: users-modify
 
 ; Visual C++ Redistributables
 Source: ".\Redistr\VC_redist.x86.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: not Is64BitInstallMode

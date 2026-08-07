@@ -27,6 +27,7 @@
    - [Table Functions](#table-functions)
    - [Comments](#comments)
    - [Matrix Support](#matrix-support)
+   - [Output Parameter Binding and Variable Initialization](#output-parameter-binding-and-variable-initialization)
    - [Regression & Data Fitting](#regression-and-data-fitting)
    - [Statistical Analysis](#statistical-analysis)
    - [Probability & Distributions (Normal)](#probability--distributions-normal)
@@ -560,7 +561,6 @@ no false lines connect disconnected real branches (e.g., in $ln(x)$ or $\sqrt{x}
 * **load(filename)**: Loads a WAV file from disk.
 ---
 
-
 ### Complex Number Support
 
 * All mathematical operations and functions (including trigonometric, hyperbolic, exponential, logarithmic, power, and square root) support complex arguments and return complex results where appropriate.
@@ -848,6 +848,26 @@ Temp: 40.0    Res: 5.5k  -- sensor jitter here --
 ```
 The parser will cleanly extract pairs: `(25.0, 10000)`, `(30.5, 8200)`, and `(40.0, 5500)`.
 ---
+### Output Parameter Binding and Variable Initialization
+
+Functions in this group (`dataf`, `datas`, `fitcheb`) accept optional trailing arguments that act as output parameters to receive returned or calculated values.
+
+* **Variable Creation / Assignment**: If a standard scalar variable (e.g., xmin, xmax, x, y) passed as an output parameter does not yet exist in the current 
+scope, it will be automatically created and populated upon function execution. If it already exists, its previous value will be overwritten.
+* **Structured Types Requirement (Matrices/Vectors)**: When passing complex or structured data types (such as matrices or vectors), the target variable must 
+be declared and properly dimensioned prior to the function call. The function will write output values into the existing structure without altering its 
+dimensions.
+
+Examples:
+```
+;; 1. Automatic creation of scalar variables (variables may or may not exist)
+datas("10 20", "01", x, y)       ;; Creates/updates x = 10, y = 20
+fitcheb("data.txt", "01", 5, xmin, xmax) ;; Creates/updates xmin and xmax
+
+;; 2. Writing to an existing pre-dimensioned matrix
+M := [(0, 0)]                    ;; Pre-declare 1x2 matrix structure
+datas("10 20", "01", M)          ;; Populates M → [(10, 20)]
+```
 
 ### Regression and Data Fitting
 
@@ -941,7 +961,7 @@ clcpoly([(1.5m,-2.2,-3.2,4.5)],2.6) → '1.5m x^3-2.2x^2-3.2x+4.5'
 
 ### Chebyshev Polynomial Regression example
 #### Step 1: Create test data file
-Create file dsin.txt with noisy sine wave:
+Create file `dsin.txt` with noisy sine wave:
 ```
 0.0   0.05 
 0.5   0.52 
@@ -1042,8 +1062,8 @@ Raw data from a faulty ADC or a sensor working in a high-noise environment (like
 10.4
 10.2
 ```
-* `mean("Sensor_Output.log")` $\approx$ 175.25 (The result is ruined by a single spike).
-* `median("Sensor_Output.log")` $=$ 10.35 (The spike is ignored; you get the true physical value).
+* `mean("Sensor_Output.log")` $\approx$ 150.2 (The result is ruined by a single spike).
+* `median("Sensor_Output.log")` $=$ 10.3 (The spike is ignored; you get the true physical value).
 
 ### Probability & Distributions (Normal)
 These functions use mean and stddev calculated from the data file:

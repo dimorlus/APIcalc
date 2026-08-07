@@ -23,3 +23,25 @@ cheb([(-39.54m, -729.8m, -156.1m,  595.5m,  51.35m, -57.36m)], 0, 6, 2)
 c5:=fitcheb("ntc.txt", "01", 6, xmin, xmax)
 p5:=fitpoly("ntc.txt", "01",6)
 plot(clcpoly(p5, t), -40, 120, t)+plot(cheb(c5, xmin, xmax, t), xmin, xmax, t)+plot(ntcr(100k,t),-40,120,t)
+
+   ;; Smooth saturation curve prevents harsh clipping
+   ;; Uses multiple Chebyshev terms for gradual compression
+   ;; Soft saturation formula
+   c := [(0, 0.9, 0, -0.15, 0, 0.02)]
+   ;; Loud signal that would normally clip
+   loud := afft([(440, 2)], 1)  ;; Amplitude > 1, will normalize
+   ;; Apply soft clipping
+   soft := cheb(c, loud)
+   ;; Compare waveforms
+   plot(ewav(loud, t), 0, 0.01, t)+plot(ewav(soft, t), 0, 0.01, t)
+
+  
+
+   ;; Soft clipping adds harmonics
+
+   fftplot(soft)
+
+
+clcpoly([(.5,0,1)],afft([440,1],1))
+
+fftplot(clcpoly([(1,0,1,0,1,0)],afft([(440,1)],1)))

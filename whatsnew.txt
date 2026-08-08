@@ -1,3 +1,7 @@
+08.08.26 (2.222)
++ Some long-running functions now display the progress percentage in the GUI window title (play, for, sum).
++ The progr(n) function has been added for directly displaying progress, for example, from scripts.
+
 04.08.26 (2.220)
 * The afft() function now uses a two-pass algorithm. If the harmonic sum does not exceed the 
   range -1.0 to 1.0 anywhere, the result remains as is; otherwise, it is normalized to 1.
@@ -18,11 +22,10 @@
 +  Added function fitcheb("fname","msk" n) Fits Chebyshev polynomial to data points from file using least 
    squares method.
 + Added optional form for fitcheb() and cheb() functions.
-    ;;The variables xmin and xmax are created and the values ​​of the minimum and maximum arguments are received.
+    ;;The variables xmin and xmax are created and the values ​​of the minimum and maximum arguments are assigned.
 	c5:=fitcheb("fname","msk" n, xmin, xmax)
 	;;The obtained xmin and xmax are used to denormalize the Chebyshev polynomial.
     cheb(c5, xmin, xmax, t)
-
 
 02.08.26 (2.219)
 + A new WAV data type has been added. The result of this type is played in the GUI version immediately 

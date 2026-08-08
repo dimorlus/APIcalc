@@ -97,12 +97,18 @@ void __cdecl calc_setPlayWavFn (HCALC h, fnPlayWav fn)
  c->setPlayWavFn (fn);
 }
 
+void __cdecl calc_setProgressFn (HCALC h, fnProgress fn)
+{
+ calculator *c = (calculator *)h;
+ c->setProgressFn (fn);
+}
+
+
 void __cdecl calc_setDebugFn (HCALC h, debug_callback_t fn)
 {
  calculator *c = (calculator *)h;
  c->setDebugFn (fn);
 }
-
 
 bool __cdecl calc_block (HCALC h)
 {

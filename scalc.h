@@ -672,6 +672,7 @@ enum v_func // v_func represents the index of a built-in function in the calcula
  ccOptOn,   // Set specific options (e.g., enable/disable features) without affecting other options
  ccOptOff,  // Clear specific options without affecting other options
  ccTimeout,
+ ccProgr,   // calculator's progress function for long calculations
 
  scRun,    // Run a script file containing calculator commands
  scEval,   // Evaluate an expression from a string
@@ -1032,7 +1033,9 @@ struct tablefn_data
 #endif
 typedef bool (*fnShowImage) (void *bmpObject); // Pointer to function for showing an image
 typedef bool (*fnPlayWav) (void *wavObject); // Pointer to function for playing a WAV file
-typedef int (*debug_callback_t) (void *context, const char *fmt, ...);// Debug callback function type
+typedef bool (*fnProgress) (uint8_t percent);   // Pointer to function for reporting progress
+typedef int (*debug_callback_t) (void *context, const char *fmt,
+                                 ...); // Debug callback function type
 
 int_t scan_opt (char *str, int_t &opts);
 int Mxprint (t_value tag, int8_t res_rows, int8_t res_cols, 
@@ -1117,6 +1120,7 @@ class calculator // calculator represents the main class for the expression calc
  bool (*FileDlgFn) (char*, int);
  fnShowImage ShowImageFn;
  fnPlayWav PlayWavFn;
+ fnProgress ProgressFn;
  debug_callback_t debugFn;
 
  uint8_t res_cols; // Number of columns in the matrix result
@@ -1416,6 +1420,7 @@ class calculator // calculator represents the main class for the expression calc
  void setFileDlgFn (bool (*fn) (char *, int)) { FileDlgFn = fn; } // Set the file dialog callback
  void setShowImageFn (fnShowImage fn) { ShowImageFn = fn; }
  void setPlayWavFn (fnPlayWav fn) { PlayWavFn = fn; }
+ void setProgressFn (fnProgress fn) { ProgressFn = fn; }
  void setDebugFn (debug_callback_t fn) { debugFn = fn; }
 
  void addfn (const char *name, void *func) { add (tsGUI, name, func);} // Add a function to the calculator

@@ -51,6 +51,7 @@ extern "C" {
 
  typedef bool (*fnShowImage) (void *bmpObject);
  typedef bool (*fnPlayWav) (void *wavObject);
+ typedef bool (*fnProgress) (uint8_t percent); // Pointer to function for reporting progress
  typedef int (*debug_callback_t) (void *context, const char *fmt, ...);
  typedef int64_t int_t;
  typedef uint64_t unsigned_t;
@@ -61,7 +62,6 @@ extern "C" {
 #else
  #define CALCAPI __declspec(dllimport)
 #endif
-
 
 CALCAPI HCALC	__cdecl calc_create (int_t cfg);
 CALCAPI void	__cdecl calc_destroy (HCALC h);
@@ -79,6 +79,7 @@ CALCAPI void    __cdecl calc_setEscFn (HCALC h, int (__cdecl*fn) (void));
 CALCAPI void	__cdecl calc_setFileDlgFn (HCALC h, bool (__cdecl *fn) (char *, int));
 CALCAPI void	__cdecl calc_setShowImageFn (HCALC h, fnShowImage fn);
 CALCAPI void    __cdecl calc_setPlayWavFn (HCALC h, fnPlayWav fn);
+CALCAPI void    __cdecl calc_setProgressFn (HCALC h, fnProgress fn);
 CALCAPI void	__cdecl calc_setDebugFn (HCALC h, debug_callback_t fn);
 CALCAPI bool	__cdecl calc_block (HCALC h);
 

@@ -1,8 +1,8 @@
 ; -- TesterAll.iss --
 [Setup]
 AppName=fcalc
-AppVerName=fcalc (Scientific formula calculator) 2.221 files
-VersionInfoVersion=2.221
+AppVerName=fcalc (Scientific formula calculator) 2.222 files
+VersionInfoVersion=2.222
 AppContact=http://dorlov.no-ip.com
 DefaultDirName={autopf}\FC
 DefaultGroupName=fcalc

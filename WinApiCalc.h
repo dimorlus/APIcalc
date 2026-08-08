@@ -193,6 +193,7 @@ public:
     bool ShowImageWindowFromBMP (void *bmpObject);
     // Method to check if we should block evaluation:
     bool ShouldBlockEvaluation ();
+    bool ShowProgress (uint8_t percent);
 
     void SetLastImageWindowPos (LONG x, LONG y);
     void GetLastImageWindowPos (LONG &x, LONG &y, bool &hasPos);

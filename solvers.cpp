@@ -532,6 +532,10 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      uint64_t init_ms = GetTickCount64 ();
      uint64_t last_gui_check = 0;
      float__t fvx  = (float__t)0.0L;
+     int_t AllCnt            = 0; // total number of points to evaluate (for progress)
+     int_t Cnt               = 0; // counter for progress
+     uint8_t progress        = 0;
+
      // initial evaluation 
      float__t sum = child->evaluate_f (sexpr); // evaluate the function for
                                                // the syntax check before starting the integration
@@ -544,6 +548,7 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
 
      if (vfrom > vto)
       {
+       AllCnt = (int_t)(vfrom - vto + 1);
        do
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
@@ -580,11 +585,19 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
          sum += fvx;
+         Cnt++;
+         uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+         if (prg > progress)
+          {
+           progress = prg;
+           if (ProgressFn) ProgressFn (progress);
+          }
         }
        while (vfrom >= vto);
       }
      else
       {
+       AllCnt = (int_t)(vto - vfrom + 1);
        do
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
@@ -621,6 +634,13 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
          sum += fvx;
+         Cnt++;
+         uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+         if (prg > progress)
+          {
+           progress = prg;
+           if (ProgressFn) ProgressFn (progress);
+          }
         }
        while (vfrom <= vto);
       }
@@ -687,9 +707,13 @@ bool calculator::For (const char *expr, value &res)
     float__t fvx            = (float__t)0.0L;
     uint64_t init_ms        = GetTickCount64 ();
     uint64_t last_gui_check = 0;
+    int_t AllCnt = 0; // total number of points to evaluate (for progress)
+    int_t Cnt    = 0;                           // counter for progress
+    uint8_t progress = 0;
 
     if (vfrom > vto)
      {
+      AllCnt = (int_t)(vfrom - vto + 1);
       do
        {
         if (check_break (init_ms, last_gui_check) != brNONE)
@@ -718,6 +742,13 @@ bool calculator::For (const char *expr, value &res)
 
         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                          // the syntax check before starting the integration
+        Cnt++;
+        uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+        if (prg > progress)
+         {
+          progress = prg;
+          if (ProgressFn) ProgressFn (progress);
+         }
 
         if (isnan (fvx) || child->err[0])
          {
@@ -733,6 +764,7 @@ bool calculator::For (const char *expr, value &res)
      {
       do
        {
+        AllCnt = (int_t)(vto - vfrom + 1);
         if (check_break (init_ms, last_gui_check) != brNONE)
          {
           delete child;
@@ -758,6 +790,13 @@ bool calculator::For (const char *expr, value &res)
          }
         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                          // the syntax check before starting the integration
+        Cnt++;
+        uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+        if (prg > progress)
+         {
+          progress = prg;
+          if (ProgressFn) ProgressFn (progress);
+         }
 
         if (isnan (fvx) || child->err[0])
          {

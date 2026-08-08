@@ -16,5 +16,6 @@ EXPORTS
     calc_setFileDlgFn
     calc_setShowImageFn
     calc_setPlayWavFn
+    calc_setProgressFn
     calc_setDebugFn
     calc_block

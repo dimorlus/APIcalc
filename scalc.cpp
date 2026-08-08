@@ -131,11 +131,13 @@ calculator::calculator (int_t cfg, symbol **symtab, int_t copyMask, int deep)
  o_sp         = 0;    // Clear the operator stack pointer
 
  blockflag     = false;   // Clear the block flag
+ 
  EscFn         = nullptr; // Clear the escape function pointer
  FileDlgFn     = nullptr; // Clear the file dialog function pointer
  ShowImageFn   = nullptr; // Clear the show image function pointer
  debugFn       = nullptr; // Clear the debug callback function pointer
  PlayWavFn     = nullptr; // Clear the play WAV callback function pointer
+ ProgressFn    = nullptr; // Clear the progress callback function pointer
 
  res_cols      = 0;    // Clear the result columns count
  res_rows      = 0;    // Clear the result rows count
@@ -315,6 +317,7 @@ void calculator::AddPredefined (void)
  add (tsCIFUNC1, ccOptOn,  "opton", nullptr);
  add (tsCIFUNC1, ccOptOff, "optoff", nullptr);
  add (tsCIFUNC1, ccTimeout, "timeout", nullptr);
+ add (tsCIFUNC1, ccProgr, "progr", nullptr);
 
  add (tsVFUNC1, vf_abs, "abs", (void *)vfunc);
  add (tsVFUNC1, vf_pol, "pol", (void *)vfunc);
@@ -3762,6 +3765,9 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
               int_t prec = v_stack[v_sp - 1].get_int ();
               switch (sym->fidx)
                {
+               case ccProgr:
+                if (ProgressFn) ProgressFn ((uint8_t)(prec & 0xff));
+               break;
                case ccOpt:
                 {
                  // Handle option setting

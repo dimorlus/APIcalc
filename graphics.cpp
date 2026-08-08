@@ -2566,6 +2566,9 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
  float__t step_pass1 = duration / (numSamples / 2);
  float__t t          = vfrom;
 
+ int_t AllCnt = numSamples + numSamples / 2; // total number of points to evaluate (for progress)
+ int_t Cnt    = 0;                           // counter for progress 
+ uint8_t progress = 0;
  for (uint32_t i = 0; i < numSamples / 2; i++)
   {
    if (check_break (init_ms, last_gui_check) != brNONE)
@@ -2576,7 +2579,14 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
 
    child->addfvar (svar, t);
    float__t fvx = child->evaluate_f (sexpr);
-
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
+   
    if (isnan (fvx) && child->errt () == teSyntax)
     {
      errorf (pos, "%s", child->err);
@@ -2612,6 +2622,13 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
 
    child->addfvar (svar, t);
    float__t fvx = child->evaluate_f (sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    if (isnan (fvx) && child->errt () == teSyntax)
     {

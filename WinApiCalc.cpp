@@ -155,6 +155,12 @@ bool ShowImageFn (void *bmpObject)
  return g_pCalcInstance->ShowImageWindowFromBMP (bmpObject);
 }
 
+bool Progres (uint8_t percent)
+{
+ if (!g_pCalcInstance) return false;
+ return g_pCalcInstance->ShowProgress (percent);
+}
+
 // Callback function to play WAV from memory
 bool PlayWavFn (void *wavObject)
 {
@@ -1004,6 +1010,9 @@ void WinApiCalc::OnCreate ()
  m_pCalculator->setFileDlgFn (FileDlg);
  m_pCalculator->setShowImageFn (ShowImageFn); 
  m_pCalculator->setPlayWavFn (PlayWavFn);
+ m_pCalculator->setProgressFn (Progres);
+
+
 
  // Initialize Common Controls
  INITCOMMONCONTROLSEX icex;
@@ -3839,6 +3848,14 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
    return DefWindowProc (hWnd, message, wParam, lParam);
   }
  return 0;
+}
+
+bool WinApiCalc::ShowProgress (uint8_t percent)
+{
+ char title[64];
+ snprintf (title, sizeof (title), "Progress: %u%%", percent);
+ SetWindowTextA (m_hWnd, title); 
+ return true;
 }
 
 bool WinApiCalc::ShowImageWindowFromBMP (void *bmpObject)

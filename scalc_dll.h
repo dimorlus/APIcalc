@@ -44,6 +44,7 @@ public:
  void setFileDlgFn (bool (__cdecl *fn) (char *, int)) { calc_setFileDlgFn (h, fn); }
  void setShowImageFn (fnShowImage fn) { calc_setShowImageFn (h, fn); }
  void setPlayWavFn (fnPlayWav fn) { calc_setPlayWavFn (h, fn); }
+ void setProgressFn (fnProgress fn) { calc_setProgressFn (h, fn); }
  void setDebugFn (debug_callback_t fn) { calc_setDebugFn (h, fn); }
 
  double evaluate (char *expr)  { return calc_evaluate(h, expr); } 

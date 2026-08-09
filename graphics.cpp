@@ -513,6 +513,10 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
  int available_size     = (width < height ? width : height) - 2 * padding;
  float__t circumference = 2.0 * M_PI * (available_size / 2);
  float__t step          = (angle_to - angle_from) / (circumference / 4.0); // ~4 pixels per step
+ 
+ int_t AllCnt = (int_t)((angle_to - angle_from) / step) * 2; // total number of points to evaluate (for progress)
+ int_t Cnt              = 0;         // counter for progress
+ uint8_t progress       = 0;
 
  float__t rmax           = 0;
  bool first_point        = true;
@@ -530,6 +534,14 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
 
    child->addfvar (params.svar, angle);
    float__t r = child->evaluate_f (params.sexpr);
+
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    if (!isnan (r) && isChildResReal (child))
     {
@@ -570,6 +582,13 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
     }
    child->addfvar (params.svar, angle);
    float__t r = child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    if (!isnan (r) && isChildResReal (child))
     {
@@ -595,7 +614,6 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
     {
      has_valid_points = false;
     }
-
    angle += step;
   }
  while (angle <= angle_to);
@@ -718,6 +736,10 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
  uint64_t init_ms        = GetTickCount64 ();
  uint64_t last_gui_check = 0;
 
+ int_t AllCnt    = (int_t)((vto - vfrom) / step) * 2; // total number of points to evaluate (for progress)
+ int_t Cnt       = 0;                                 // counter for progress
+ uint8_t progress = 0;
+
  // First pass: find ymin/ymax
  for (int pass = 0; pass < 2; pass++)
   {
@@ -730,6 +752,14 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
 
      child->addfvar (params.svar, vfrom);
      float__t fvx = child->evaluate_f (params.sexpr);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
+
      if (isnan (fvx) && child->errt () == teSyntax)
       {
        errorf (pos, "%s", child->err);
@@ -964,6 +994,10 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
  bool first_point        = true;
  uint64_t init_ms        = GetTickCount64 ();
  uint64_t last_gui_check = 0;
+ 
+ int_t AllCnt    = (int_t)((t_to - t_from) / step) * 2; // total number of points to evaluate (for progress)
+ int_t Cnt       = 0;                                 // counter for progress
+ uint8_t progress = 0;
 
  // First pass: find bounding box
  float__t t = t_from;
@@ -974,6 +1008,13 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
    child->addfvar (params.svar, t);
 
    float__t x = child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
    if (!(isnan (x) && child->errt () == teMath))
     {
      if (isnan (x) || child->err[0] || !CheckChildRes (child))
@@ -1087,6 +1128,14 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
    child->addfvar (params.svar, t);
 
    float__t x   = child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
+
    bool x_valid = true;
    if (isnan (x) && child->errt () == teMath)
     x = 0;
@@ -1267,6 +1316,10 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
  // Calculate step
  float__t step = (vto - vfrom) / ((width - 2 * padding) * 10);
+ 
+ int_t AllCnt    = (int_t)((vto - vfrom) / step) * 2; // total number of points to evaluate (for progress)
+ int_t Cnt       = 0;                                 // counter for progress
+ uint8_t progress = 0;
 
  float__t xmin = 0, xmax = 0, ymin = 0, ymax = 0;
  bool first_point        = true;
@@ -1281,6 +1334,13 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
    child->addfvar (params.svar, x);
    float__t y = child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    // Skip NaN and complex results
    if (!(isnan (y) && child->errt () == teMath))
@@ -1400,6 +1460,13 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
    child->addfvar (params.svar, x);
    float__t y = child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    bool valid = true;
    if (isnan (y) && child->errt () == teMath)
@@ -1721,6 +1788,10 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
  float__t step           = (vto - vfrom) / (radius * 50);
  uint64_t init_ms        = GetTickCount64 ();
  uint64_t last_gui_check = 0;
+ 
+ int_t AllCnt    = (int_t)((vto - vfrom) / step); // total number of points to evaluate (for progress)
+ int_t Cnt       = 0;                                 // counter for progress
+ uint8_t progress = 0;
 
  // Storage for axis crossings
  struct AxisCrossing
@@ -1749,6 +1820,13 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 
    // Evaluate impedance (can be complex)
    child->evaluate_f (params.sexpr);
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
 
    float__t z_re = child->get_re_res ();
    float__t z_im = child->get_im_res ();
@@ -3368,6 +3446,10 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  // First pass: find maximum absolute value
  float__t maxAbs = 0.0L;
 
+ int_t AllCnt    = numSamples * 2; // total number of points to evaluate (for progress)
+ int_t Cnt       = 0;                           // counter for progress
+ uint8_t progress = 0;
+
  for (uint32_t i = 0; i < numSamples; i++)
   {
    float__t t     = (float__t)i / SAMPLE_RATE;
@@ -3385,6 +3467,15 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
    float__t absVal = Abs (value);
    if (absVal > maxAbs) maxAbs = absVal;
+
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
+
   }
 
  // Determine normalization scale
@@ -3441,6 +3532,15 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    if (value < -1.0L) value = -1.0L;
 
    samples[i] = (int16_t)(value * 32767.0L);
+
+   Cnt++;
+   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+   if (prg > progress)
+    {
+     progress = prg;
+     if (ProgressFn) ProgressFn (progress);
+    }
+
   }
 
  res.tag  = tvWAV;

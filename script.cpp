@@ -698,6 +698,8 @@ bool calculator::Run (const char *expr, v_func fidx, value &res) // Run a script
 
      child->setEscFn(EscFn);
      sct->setEscFn(EscFn);
+     child->setProgressFn (ProgressFn);
+
      sct->set_debug_callback (nullptr);
      if (scfg & DBG) console (1);
      if (debugFn) sct->set_debug_callback(debugFn);

@@ -1314,6 +1314,7 @@ class calculator // calculator represents the main class for the expression calc
  bool WavOp (value &left, value &right, t_operator cop);
  // FFT and harmonic synthesis functions
  bool WavFFT (value &wavVal, value &res);
+ float__t HarmSum (value &harmonics, float__t t);
  bool HarmonicsToWav (value &harmonics, float__t duration, value &res);
  float__t EvalHarmonics (value &harmonics, float__t t);
  bool EvalHarmonics (value &harmonics, value &t, value &res); // Complex-capable version

@@ -3813,7 +3813,28 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
   case WM_LBUTTONDOWN:
   case WM_RBUTTONDOWN:
   case WM_KEYDOWN:
-   // Any key closes the window
+   // Ctrl+C: copy the displayed image to the clipboard
+   if (wParam == 'C' && (GetKeyState (VK_CONTROL) & 0x8000))
+    {
+     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
+     if (hBitmap && OpenClipboard (hWnd))
+      {
+       HBITMAP hCopy = (HBITMAP)CopyImage (hBitmap, IMAGE_BITMAP, 0, 0, 0);
+       if (hCopy)
+        {
+         EmptyClipboard ();
+         SetClipboardData (CF_BITMAP, hCopy);
+        }
+       CloseClipboard ();
+      }
+     return 0;
+    }
+
+   // Modifier keys alone should not close the window
+   if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU)
+     return 0;
+
+   // Any other key closes the window
    {
     HBITMAP hBitmap = (HBITMAP)GetWindowLongPtrA (hWnd, GWLP_USERDATA);
     if (hBitmap) DeleteObject (hBitmap);

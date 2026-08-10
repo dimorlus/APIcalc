@@ -982,7 +982,7 @@ double calculator::CalcTime (char *sexpr, char *svar, float__t vfrom, int_t cnt,
  float__t fvx = child->evaluate_f (sexpr);
  // End timing
  QueryPerformanceCounter (&end);
- // Calculate elapsed time in microseconds
+ // Calculate elapsed time in seconds
  return cnt * ((double)(end.QuadPart - start.QuadPart)) / frequency.QuadPart;
 }
 

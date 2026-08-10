@@ -1,3 +1,6 @@
+10.08.26 (2.223)
++ Now pressing Ctrl+C in the graph window copies it to the clipboard.
+
 08.08.26 (2.222)
 + Some long-running functions now display the progress percentage in the GUI window title (play, afft, plot*, 
   for, sum) when the calculation time exceeds approximately 500ms.

@@ -3456,6 +3456,22 @@ bool calculator::WavFFT (value &wavVal, value &res)
  return true;
 }
 
+float__t calculator::HarmSum(value& harmonics, float__t t)
+{
+ // Sum all harmonics
+ bool hasPhase = (harmonics.mcols == 3);
+ float__t value = 0.0L;
+ for (int h = 0; h < harmonics.mrows; h++)
+  {
+   float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
+   float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
+   float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
+
+   value += amp * Sin (2.0L * M_PI * freq * t + phase);
+  }
+ return value;
+}
+
 // Synthesize WAV from harmonics matrix [frequency, amplitude] or [frequency, amplitude, phase]
 // Duration in seconds
 bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res)
@@ -3505,7 +3521,24 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  int_t Cnt       = 0;                           // counter for progress
  uint8_t progress = 0;
 
- if (duration < (float__t)1.5L) AllCnt = 0;
+ //if (duration < (float__t)1.5L) AllCnt = 0;
+
+ {
+  LARGE_INTEGER frequency;
+  LARGE_INTEGER start;
+  LARGE_INTEGER end;
+  // Get the ticks per second
+  QueryPerformanceFrequency (&frequency);
+  // Start timing
+  QueryPerformanceCounter (&start);
+
+  (void)Abs(HarmSum (harmonics, 0.0L)); // warm up
+  // End timing
+  QueryPerformanceCounter (&end);
+  // Calculate elapsed time in seconds
+  double CalcTime = AllCnt * ((double)(end.QuadPart - start.QuadPart)) / frequency.QuadPart;
+  if (CalcTime < 0.5L) AllCnt = 0; // if it takes less than 0.5 seconds, don't show progress)
+ }
 
  for (uint32_t i = 0; i < numSamples; i++)
   {
@@ -3513,14 +3546,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    float__t value = 0.0L;
 
    // Sum all harmonics
-   for (int h = 0; h < harmonics.mrows; h++)
-    {
-     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
-     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
-     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
-
-     value += amp * Sin (2.0L * M_PI * freq * t + phase);
-    }
+   value = HarmSum (harmonics, t);
 
    float__t absVal = Abs (value);
    if (absVal > maxAbs) maxAbs = absVal;
@@ -3576,16 +3602,7 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    float__t t     = (float__t)i / SAMPLE_RATE;
    float__t value = 0.0L;
 
-   for (int h = 0; h < harmonics.mrows; h++)
-    {
-     float__t freq  = harmonics.mval[h * harmonics.mcols + 0];
-     float__t amp   = harmonics.mval[h * harmonics.mcols + 1];
-     float__t phase = hasPhase ? harmonics.mval[h * harmonics.mcols + 2] : 0.0L;
-
-     value += amp * Sin (2.0L * M_PI * freq * t + phase);
-    }
-
-   value *= scale;
+   value = HarmSum (harmonics, t)*scale;
 
    // Clamp to [-1, 1]
    if (value > 1.0L) value = 1.0L;

@@ -549,6 +549,8 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
      if (vfrom > vto)
       {
        AllCnt = (int_t)(vfrom - vto + 1);
+       if (CalcTime (sexpr, svar, vfrom, AllCnt, child) < 0.5L)
+        AllCnt = 0; // Skip progress if too fast
        do
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
@@ -585,19 +587,27 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
          sum += fvx;
-         Cnt++;
-         uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-         if (prg > progress)
+
+         if (AllCnt)
           {
-           progress = prg;
-           if (ProgressFn) ProgressFn (progress);
+           Cnt++;
+           uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+           if (prg > progress)
+            {
+             progress = prg;
+             if (ProgressFn) ProgressFn (progress);
+            }
           }
+
         }
        while (vfrom >= vto);
       }
      else
       {
        AllCnt = (int_t)(vto - vfrom + 1);
+       if (CalcTime (sexpr, svar, vfrom, AllCnt, child) < 0.5L)
+        AllCnt = 0; // Skip progress if too fast
+
        do
         {
          if (check_break (init_ms, last_gui_check) != brNONE)
@@ -634,13 +644,18 @@ float__t calculator::Integr (const char *expr, t_symbol tag)
            return result_fval = qnan;
           }
          sum += fvx;
-         Cnt++;
-         uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-         if (prg > progress)
+
+         if (AllCnt)
           {
-           progress = prg;
-           if (ProgressFn) ProgressFn (progress);
+           Cnt++;
+           uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+           if (prg > progress)
+            {
+             progress = prg;
+             if (ProgressFn) ProgressFn (progress);
+            }
           }
+
         }
        while (vfrom <= vto);
       }
@@ -714,6 +729,9 @@ bool calculator::For (const char *expr, value &res)
     if (vfrom > vto)
      {
       AllCnt = (int_t)(vfrom - vto + 1);
+      if (CalcTime (sexpr, svar, vfrom, AllCnt, child) < 0.5L)
+       AllCnt = 0; // Skip progress if too fast
+
       do
        {
         if (check_break (init_ms, last_gui_check) != brNONE)
@@ -742,12 +760,15 @@ bool calculator::For (const char *expr, value &res)
 
         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                          // the syntax check before starting the integration
-        Cnt++;
-        uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-        if (prg > progress)
+        if (AllCnt)
          {
-          progress = prg;
-          if (ProgressFn) ProgressFn (progress);
+          Cnt++;
+          uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+          if (prg > progress)
+           {
+            progress = prg;
+            if (ProgressFn) ProgressFn (progress);
+           }
          }
 
         if (isnan (fvx) || child->err[0])
@@ -765,6 +786,8 @@ bool calculator::For (const char *expr, value &res)
       do
        {
         AllCnt = (int_t)(vto - vfrom + 1);
+        if (CalcTime (sexpr, svar, vfrom, AllCnt, child) < 0.5L)
+         AllCnt = 0; // Skip progress if too fast
         if (check_break (init_ms, last_gui_check) != brNONE)
          {
           delete child;
@@ -790,12 +813,15 @@ bool calculator::For (const char *expr, value &res)
          }
         fvx = child->evaluate_f (sexpr); // evaluate the function for
                                          // the syntax check before starting the integration
-        Cnt++;
-        uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-        if (prg > progress)
+        if (AllCnt)
          {
-          progress = prg;
-          if (ProgressFn) ProgressFn (progress);
+          Cnt++;
+          uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+          if (prg > progress)
+           {
+            progress = prg;
+            if (ProgressFn) ProgressFn (progress);
+           }
          }
 
         if (isnan (fvx) || child->err[0])

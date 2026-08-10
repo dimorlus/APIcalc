@@ -523,8 +523,10 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
  uint64_t init_ms        = GetTickCount64 ();
  uint64_t last_gui_check = 0;
 
+
  // First pass: find maximum radius
  float__t angle = angle_from;
+ if (CalcTime (params.sexpr, params.svar, angle, AllCnt, child) < 0.5L) AllCnt = 0; // Skip progress if too fast
  do
   {
    if (check_break (init_ms, last_gui_check) != brNONE)
@@ -535,12 +537,15 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
    child->addfvar (params.svar, angle);
    float__t r = child->evaluate_f (params.sexpr);
 
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    if (!isnan (r) && isChildResReal (child))
@@ -582,12 +587,16 @@ bool calculator::PlotPolar (bmpdraw *bmp, PlotParams &params)
     }
    child->addfvar (params.svar, angle);
    float__t r = child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    if (!isnan (r) && isChildResReal (child))
@@ -740,6 +749,9 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
  int_t Cnt       = 0;                                 // counter for progress
  uint8_t progress = 0;
 
+ if (CalcTime (params.sexpr, params.svar, vfrom, AllCnt, child) < 0.5L)
+  AllCnt = 0; // Skip progress if too fast
+
  // First pass: find ymin/ymax
  for (int pass = 0; pass < 2; pass++)
   {
@@ -752,12 +764,16 @@ bool calculator::PlotCartesian (bmpdraw *bmp, PlotParams &params)
 
      child->addfvar (params.svar, vfrom);
      float__t fvx = child->evaluate_f (params.sexpr);
-     Cnt++;
-     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-     if (prg > progress)
+
+     if (AllCnt)
       {
-       progress = prg;
-       if (ProgressFn) ProgressFn (progress);
+       Cnt++;
+       uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+       if (prg > progress)
+        {
+         progress = prg;
+         if (ProgressFn) ProgressFn (progress);
+        }
       }
 
      if (isnan (fvx) && child->errt () == teSyntax)
@@ -999,6 +1015,9 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
  int_t Cnt       = 0;                                 // counter for progress
  uint8_t progress = 0;
 
+ if (CalcTime (params.sexpr, params.svar, t_from, AllCnt, child) < 0.5L)
+  AllCnt = 0; // Skip progress if too fast
+
  // First pass: find bounding box
  float__t t = t_from;
  do
@@ -1008,13 +1027,18 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
    child->addfvar (params.svar, t);
 
    float__t x = child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
+
    if (!(isnan (x) && child->errt () == teMath))
     {
      if (isnan (x) || child->err[0] || !CheckChildRes (child))
@@ -1128,12 +1152,16 @@ bool calculator::PlotParametric (bmpdraw *bmp, PlotParams &params)
    child->addfvar (params.svar, t);
 
    float__t x   = child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    bool x_valid = true;
@@ -1328,18 +1356,26 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
  // First pass: find min/max, skipping invalid values
  float__t x = vfrom;
+
+ if (CalcTime (params.sexpr, params.svar, vfrom, AllCnt, child) < 0.5L)
+  AllCnt = 0; // Skip progress if too fast
+
  do
   {
    if (check_break (init_ms, last_gui_check) != brNONE) return false;
 
    child->addfvar (params.svar, x);
    float__t y = child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    // Skip NaN and complex results
@@ -1460,12 +1496,16 @@ bool calculator::PlotLogarithmic (bmpdraw *bmp, PlotParams &params)
 
    child->addfvar (params.svar, x);
    float__t y = child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    bool valid = true;
@@ -1812,6 +1852,9 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
  float__t param        = vfrom;
  bool has_valid_points = false;
 
+ if (CalcTime (params.sexpr, params.svar, vfrom, AllCnt, child) < 0.5L)
+  AllCnt = 0; // Skip progress if too fast
+
  do
   {
    if (check_break (init_ms, last_gui_check) != brNONE) return false;
@@ -1820,12 +1863,16 @@ bool calculator::PlotSmith (bmpdraw *bmp, PlotParams &params)
 
    // Evaluate impedance (can be complex)
    child->evaluate_f (params.sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    float__t z_re = child->get_re_res ();
@@ -2580,6 +2627,7 @@ bool calculator::AddBmp (bmpdraw *bmp1, bmpdraw *bmp2, uint32_t fg_color)
 
 #pragma endregion
 
+
 #pragma region WAV
 
 // Create WAV file in memory from expression
@@ -2647,6 +2695,8 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
  int_t AllCnt = numSamples + numSamples / 2; // total number of points to evaluate (for progress)
  int_t Cnt    = 0;                           // counter for progress 
  uint8_t progress = 0;
+
+ if (CalcTime (sexpr, svar, vfrom, AllCnt, child) < 0.5L) AllCnt = 0; // Skip progress if too fast
  for (uint32_t i = 0; i < numSamples / 2; i++)
   {
    if (check_break (init_ms, last_gui_check) != brNONE)
@@ -2657,14 +2707,16 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
 
    child->addfvar (svar, t);
    float__t fvx = child->evaluate_f (sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
-   
    if (isnan (fvx) && child->errt () == teSyntax)
     {
      errorf (pos, "%s", child->err);
@@ -2700,12 +2752,15 @@ bool calculator::CreateWav (char *sexpr, char *svar, float__t vfrom, float__t vt
 
    child->addfvar (svar, t);
    float__t fvx = child->evaluate_f (sexpr);
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
    if (isnan (fvx) && child->errt () == teSyntax)
@@ -3450,6 +3505,8 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
  int_t Cnt       = 0;                           // counter for progress
  uint8_t progress = 0;
 
+ if (duration < (float__t)1.5L) AllCnt = 0;
+
  for (uint32_t i = 0; i < numSamples; i++)
   {
    float__t t     = (float__t)i / SAMPLE_RATE;
@@ -3468,12 +3525,15 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
    float__t absVal = Abs (value);
    if (absVal > maxAbs) maxAbs = absVal;
 
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
   }
@@ -3533,12 +3593,15 @@ bool calculator::HarmonicsToWav (value &harmonics, float__t duration, value &res
 
    samples[i] = (int16_t)(value * 32767.0L);
 
-   Cnt++;
-   uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
-   if (prg > progress)
+   if (AllCnt)
     {
-     progress = prg;
-     if (ProgressFn) ProgressFn (progress);
+     Cnt++;
+     uint8_t prg = (uint8_t)((Cnt * 100) / AllCnt);
+     if (prg > progress)
+      {
+       progress = prg;
+       if (ProgressFn) ProgressFn (progress);
+      }
     }
 
   }

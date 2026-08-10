@@ -45,3 +45,4 @@ plot(clcpoly(p5, t), -40, 120, t)+plot(cheb(c5, xmin, xmax, t), xmin, xmax, t)+p
 clcpoly([(.5,0,1)],afft([440,1],1))
 
 fftplot(clcpoly([(1,0,1,0,1,0)],afft([(440,1)],1)))
+fftplot(afft([(440,1);(2*440,1/2);(3*440,1/3);(4*440,1/4);(5*440,1/5)],5))  

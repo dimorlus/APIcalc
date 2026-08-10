@@ -1274,6 +1274,9 @@ class calculator // calculator represents the main class for the expression calc
                                                                       //during long calculations
  void NormalizePath (const char *input, char *output, int outSize);
 
+ // Estimate calculation time based on the number of operations and the complexity of the expression
+ double CalcTime (char *sexpr, char *svar, float__t vfrom, int_t cnt, calculator *child);
+
  bool isChildResReal (calculator *child);
  bool CheckChildRes (calculator *child);
  void GetChildRes (calculator *child, value &res);

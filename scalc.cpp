@@ -968,6 +968,24 @@ t_br_result calculator::check_break (uint64_t init_ms, uint64_t last_gui_check)
 #endif // NDEBUG
  return brNONE;
 }
+
+double calculator::CalcTime (char *sexpr, char *svar, float__t vfrom, int_t cnt, calculator *child)
+{
+ LARGE_INTEGER frequency;
+ LARGE_INTEGER start;
+ LARGE_INTEGER end;
+ // Get the ticks per second
+ QueryPerformanceFrequency (&frequency);
+ // Start timing
+ QueryPerformanceCounter (&start);
+ child->addfvar (svar, vfrom);
+ float__t fvx = child->evaluate_f (sexpr);
+ // End timing
+ QueryPerformanceCounter (&end);
+ // Calculate elapsed time in microseconds
+ return cnt * ((double)(end.QuadPart - start.QuadPart)) / frequency.QuadPart;
+}
+
 #pragma endregion
 //---------------------------------------------------------------------------
 

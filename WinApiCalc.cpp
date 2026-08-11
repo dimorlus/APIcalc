@@ -3874,8 +3874,28 @@ LRESULT CALLBACK WinApiCalc::ImageWndProc (HWND hWnd, UINT message, WPARAM wPara
 bool WinApiCalc::ShowProgress (uint8_t percent)
 {
  char title[64];
- snprintf (title, sizeof (title), "Progress: %u%%", percent);
- SetWindowTextA (m_hWnd, title); 
+ const char animation[] = { '|', '/', '-', '\\' };
+ static uint64_t last_ms = 0;
+ static uint8_t cntr = 0;
+ uint64_t current_ms = GetTickCount64 ();
+ if (percent <= 100)
+  {
+   snprintf (title, sizeof (title), "Progress: %u%%", percent);
+   SetWindowTextA (m_hWnd, title);
+  }
+ else 
+ if (percent == 254)
+  {
+   SetWindowTextA (m_hWnd, "Calculate done");
+  }
+ else
+ if (current_ms - last_ms >= 100)
+  {
+   last_ms = current_ms;
+   cntr++;
+   snprintf (title, sizeof (title), "Calculate %c", animation[cntr % 4]);
+   SetWindowTextA (m_hWnd, title);  
+  }
  return true;
 }
 

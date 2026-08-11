@@ -188,6 +188,7 @@ float__t xi = child->get_im_res (); // 0 if real initial approximation
    // f(z)
    child->addfvar (nvar, xr, xi);
    child->evaluate_f (sexpr);
+   if (ProgressFn) ProgressFn (255);
    if (child->err[0])
     {
      errorf (pos, "%s", child->err);
@@ -283,7 +284,7 @@ float__t xi = child->get_im_res (); // 0 if real initial approximation
 
  fflags |= child->isfflags ();
  delete child;
-
+ if (ProgressFn) ProgressFn (254);
  if (!converged)
   {
    errorf (pos, "No solution found");
@@ -340,6 +341,7 @@ float__t calculator::gkEval (calculator *pCalc, char *sexpr, const char *svar, f
 {
  pCalc->addfvar (svar, x);
  float__t val = pCalc->evaluate_f (sexpr);
+ if (ProgressFn) ProgressFn (255);
  if ((isnan (val) || isinf (val)) && pCalc->errt () == teMath) return (float__t)0.0L;
 
  if (pCalc->err[0]) return qnan;
@@ -889,7 +891,7 @@ bool calculator::While (const char *expr, value &res)
        result_fval = qnan;
        return qnan;
       }
-
+     if (ProgressFn) ProgressFn (255);
      fexpr = child->evaluate_f (sexpr);
      if (isnan (fexpr) || child->err[0])
       {
@@ -918,6 +920,7 @@ bool calculator::While (const char *expr, value &res)
       }
     }
    while (fcond != (float__t)0.0L);
+   if (ProgressFn) ProgressFn (254);
    delete child;
    return true;
   }
@@ -1042,6 +1045,7 @@ float__t calculator::Extremum (const char *expr)
 #define EVAL_F(xval, result)                                                                       \
  do                                                                                                \
   {                                                                                                \
+   if (ProgressFn) ProgressFn (255);                                                               \
    eval_ok = true;                                                                                 \
    child->addfvar (svar, xval);                                                                    \
    result = child->evaluate_f (sexpr);                                                             \
@@ -1327,6 +1331,7 @@ float__t calculator::Extremum (const char *expr)
 
  fflags |= child->isfflags ();
  delete child;
+ if (ProgressFn) ProgressFn (254);
  return x;
 }
 
@@ -1481,6 +1486,7 @@ float__t calculator::Inverse (const char *expr)
 
  for (int i = 0; i < maxIter; i++)
   {
+   if (ProgressFn) ProgressFn (255);
    if (fabsl (fb) < fabsl (fc))
     {
      a  = b;
@@ -1498,6 +1504,7 @@ float__t calculator::Inverse (const char *expr)
     {
      fflags |= child->isfflags ();
      delete child;
+     if (ProgressFn) ProgressFn (254);
      return b;
     }
 

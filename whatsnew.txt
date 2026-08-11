@@ -1,4 +1,8 @@
-10.08.26 (2.223)
+11.08.26 (2.223)
++ Now, for an unknown number of iterations (solve, inverse, extr, while) and with a direct call to progr(255), 
+  the text "Calculate " and the symbols '|', '/', '-', '\',, progr(254) are sequentially displayed in the window 
+  title at intervals of ~100ms, and at the end of calculations with an unknown number of iterations, it displays 
+  "Calculate done".
 + Now pressing Ctrl+C in the graph window copies it to the clipboard.
 
 08.08.26 (2.222)

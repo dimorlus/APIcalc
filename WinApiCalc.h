@@ -11,13 +11,14 @@
 // Forward declarations
 class calculator;
 
-// Constants  
-const int WINDOW_MIN_WIDTH = 533;  // Reduced from 800 to ~533 (1.5x smaller) 
-const int WINDOW_MIN_HEIGHT = 200;
-const int CONTROL_HEIGHT = 25; // Increased from 20 to 25 for proper text rendering
-const int CONTROL_MARGIN = 0;  // No margins as per requirements
-const int HISTORY_HEIGHT = 100;
-const int MAX_HISTORY = 300;
+// Constants
+const int WINDOW_MIN_WIDTH         = 533; // Reduced from 800 to ~533 (1.5x smaller)
+const int WINDOW_MIN_HEIGHT        = 200;
+const int CONTROL_HEIGHT           = 25; // Increased from 20 to 25 for proper text rendering
+const int CONTROL_MARGIN           = 0;  // No margins as per requirements
+const int HISTORY_HEIGHT           = 100;
+const int MAX_HISTORY              = 300;
+const int HISTORY_SAVE_LIMIT       = 200; // Number of history entries to persist to registry
 const int WM_DELAYED_CLEAR_HISTORY = WM_APP + 100;
 
 // Main application class

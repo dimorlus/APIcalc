@@ -1680,9 +1680,23 @@ void WinApiCalc::OnKeyDown (WPARAM key)
      WrapExpressionWith ("(", ")");
      break;
     case 'N': // Ctrl+N - Clear input
-     SetWindowTextA (m_hExpressionEdit, "");
-     SetWindowTextA (m_hComboBox, "");
-     OnExpressionChanged (); // Ctrl+N
+     {
+      // Save previous expression to history
+      if (m_hExpressionEdit)
+       {
+        char prev[2048] = { 0 };
+        GetWindowTextA (m_hExpressionEdit, prev, sizeof (prev));
+        if (prev[0] != '\0')
+         {
+          AddToHistory (std::string (prev));
+         }
+       }
+
+      // Clear input and combobox edit text
+      SetWindowTextA (m_hExpressionEdit, "");
+      if (m_hComboBox) SetWindowTextA (m_hComboBox, "");
+      OnExpressionChanged (); // Ctrl+N
+     }
      break;
     case VK_ADD:
     case VK_OEM_PLUS: // Ctrl+Shift++ - Increase opacity
@@ -2609,6 +2623,7 @@ void WinApiCalc::LoadHistory ()
    RegCloseKey (hKey);
   }
 }
+
 void WinApiCalc::SaveHistory ()
 {
  HKEY hKey;
@@ -2616,13 +2631,15 @@ void WinApiCalc::SaveHistory ()
                       &hKey, nullptr)
      == ERROR_SUCCESS)
   {
-   // Save history count
-   DWORD historyCount = (DWORD)m_history.size ();
+   // Save only up to HISTORY_SAVE_LIMIT newest entries
+   size_t saveCount
+       = (m_history.size () > (size_t)HISTORY_SAVE_LIMIT) ? HISTORY_SAVE_LIMIT : m_history.size ();
+   DWORD historyCount = (DWORD)saveCount;
    RegSetValueExA (hKey, "HistoryCount", 0, REG_DWORD, (LPBYTE)&historyCount,
                    sizeof (historyCount));
 
-   // Save history items
-   for (size_t i = 0; i < m_history.size (); ++i)
+   // Save history items (History000 = newest)
+   for (size_t i = 0; i < saveCount; ++i)
     {
      char szValueName[32];
      sprintf_s (szValueName, "History%03zu", i);
@@ -2632,9 +2649,8 @@ void WinApiCalc::SaveHistory ()
 
    RegCloseKey (hKey);
   }
+
  // Apply UI flags loaded from registry
- // Ensure window handle may not be created yet; caller should call SetMenu/SetWindowPos after
- // window creation if needed.
  if (m_hWnd)
   {
    SetWindowPos (m_hWnd, (m_options & TOP) ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
@@ -2644,61 +2660,16 @@ void WinApiCalc::SaveHistory ()
   }
 }
 
-#ifdef OLD_HIST
-void WinApiCalc::AddToHistory (const std::string &expression)
-{
- if (expression.empty ()) return;
-
- // Check if expression consists only of whitespace
- bool onlyWhitespace = true;
- for (char c : expression)
-  {
-   if (c != ' ' && c != '\t' && c != '\r' && c != '\n')
-    {
-     onlyWhitespace = false;
-     break;
-    }
-  }
- if (onlyWhitespace) return;
-
- // Check if expression already exists in history
- for (const auto &item : m_history)
-  {
-   if (item == expression)
-    {
-     return; // Do nothing if already exists
-    }
-  }
-
- // Add to vector
- if (m_history.size () < MAX_HISTORY) m_history.insert (m_history.begin (), expression);
-
- // Limit history size
- if (m_history.size () > MAX_HISTORY)
-  {
-   m_history.pop_back ();
-  }
-
- // Update ComboBox - REMOVED
- // We use populate-on-demand strategy (PopulateHistoryCombo on dropdown).
- // Adding items here would make PopulateHistoryCombo think the list is already populated (count >
- // 0), resulting in a list containing only this new item until the next close/clear cycle. if
- // (m_hComboBox)
- // {
- //    SendMessageA(m_hComboBox, CB_INSERTSTRING, 0, (LPARAM)expression.c_str());
- //    ...
- // }
-}
-#endif
 void WinApiCalc::AddToHistory (const std::string &expression)
 {
  if (expression.empty ()) return;
 
  // Helper lambda to trim trailing whitespace
- auto trimRight = [] (const std::string &str) -> std::string {
-  size_t end = str.find_last_not_of (" \t\r\n");
-  return (end == std::string::npos) ? "" : str.substr (0, end + 1);
- };
+ auto trimRight = [] (const std::string &str) -> std::string
+  {
+   size_t end = str.find_last_not_of (" \t\r\n");
+   return (end == std::string::npos) ? "" : str.substr (0, end + 1);
+  };
 
  // Normalize the expression by trimming trailing whitespace
  std::string normalizedExpr = trimRight (expression);
@@ -2715,15 +2686,14 @@ void WinApiCalc::AddToHistory (const std::string &expression)
     }
   }
 
- // Add normalized expression to vector
- if (m_history.size () < MAX_HISTORY) m_history.insert (m_history.begin (), normalizedExpr);
+ // Insert normalized expression as newest (front of vector)
+ m_history.insert (m_history.begin (), normalizedExpr);
 
- // Limit history size
- if (m_history.size () > MAX_HISTORY)
+ // Limit history size to MAX_HISTORY (drop oldest)
+ if (m_history.size () > (size_t)MAX_HISTORY)
   {
    m_history.pop_back ();
   }
-
 }
 
 void WinApiCalc::LoadHistoryItem (int index)
@@ -2777,6 +2747,11 @@ void WinApiCalc::LoadHistoryItem (int index)
 
  // NOW evaluate the expression (this may open console windows)
  OnExpressionChanged (true); // OnHistoryItemSelected
+ // Ensure combo items are cleared after selection to avoid interfering with typing
+ if (m_hWnd)
+  {
+   PostMessage (m_hWnd, WM_DELAYED_CLEAR_HISTORY, 0, 0);
+  }
 }
 void WinApiCalc::DeleteSelectedHistoryItem ()
 {
@@ -3877,7 +3852,11 @@ bool WinApiCalc::ShowProgress (uint8_t percent)
  const char animation[] = { '|', '/', '-', '\\' };
  static uint64_t last_ms = 0;
  static uint8_t cntr = 0;
+#ifndef __GNUC__
  uint64_t current_ms = GetTickCount64 ();
+ #else
+ uint64_t current_ms = GetTickCount ();
+#endif
  if (percent <= 100)
   {
    snprintf (title, sizeof (title), "Progress: %u%%", percent);

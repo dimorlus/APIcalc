@@ -7,11 +7,11 @@ ccalc.exe - 317952 bytes<br>
 fcalc.exe - 355328 bytes
 
 ### GCC win64 float128 (fcalc_w10+64_std_dll_setup.exe)
-ccalc.exe - 752128 bytes<br>
+ccalc.exe - 751616 bytes<br>
 fcalc.exe - 834048 bytes
 
 ### DLL based win64 float128 (fcalc_w10+64_std_dll_setup.exe)
-calclib.dll - 729088 bytes<br>
+calclib.dll - 728576 bytes<br>
 ccalc.exe - 38400 bytes<br>
 fcalc.exe - 79360 bytes
 

@@ -1,3 +1,8 @@
+14.09.26 (2.224)
+- Fixed bug with parallel (//) complex values. 
+07.09.26 (2.224)
+- Fixed an issue with history behavior.
+ 
 11.08.26 (2.223)
 + Now, for an unknown number of iterations (solve, inverse, extr, while) and with a direct call to progr(255), 
   the text "Calculate " and the symbols '|', '/', '-', '\',, progr(254) are sequentially displayed in the window 

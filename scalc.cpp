@@ -1929,15 +1929,16 @@ float__t calculator::evaluate_f (char *expression, __int64 *piVal, float__t *pim
           v_stack[v_sp - 1].var = nullptr;
           break;
          }
-        else if ((v_stack[v_sp - 1].get () == (float__t)0.0L)
-                 || (v_stack[v_sp - 2].get () == (float__t)0.0L))
-         {
-          if ((scfg & SNAN) == 0)
-           {
-            error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
-            return result_fval = qnan;
-           }
-         }
+        else 
+        //if ((v_stack[v_sp - 1].get () == (float__t)0.0L)
+        //   || (v_stack[v_sp - 2].get () == (float__t)0.0L))
+        // {
+        //  if ((scfg & SNAN) == 0)
+        //   {
+        //    error (v_stack[v_sp - 2].pos, "Division by zero", teMath);
+        //    return result_fval = qnan;
+        //   }
+        // }
         if (v_stack[v_sp - 1].tag == tvPERCENT)
          {
           float__t left = v_stack[v_sp - 2].get ();

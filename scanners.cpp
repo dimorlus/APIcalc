@@ -2019,6 +2019,11 @@ t_operator calculator::scan (bool operand, bool percent)
      else
       sym = add (tsVARIABLE, name);
     }
+   if (sym && sym->tag == tsCONSTANT && sym->name[1] == '\0'
+       && (sym->name[0] == 'i' || sym->name[0] == 'j'))
+    {
+     c_imaginary = sym->name[0];
+    }   
    if (v_sp == max_stack_size)
     {
      error ("stack overflow");

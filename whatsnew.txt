@@ -1,5 +1,11 @@
-14.09.26 (2.224)
-- Fixed bug with parallel (//) complex values. 
+15.09.26 (2.226)
+* Now, the imaginary one (i or j), when used as a standalone constant rather than as part of a number, also 
+  determines the output format (i or j). For instance, if you enter `j*2*pi*f`, the result will use `j` 
+  instead of `i` as it did previously.
+ 
+14.09.26 (2.225)
+- Fixed bug with parallel (//) complex values.
+ 
 07.09.26 (2.224)
 - Fixed an issue with history behavior.
  

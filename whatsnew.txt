@@ -1,3 +1,6 @@
+12.10.26 (2.227)
+* Now, the font should be equally sharp on displays with different resolutions and scaling factors.
+
 15.09.26 (2.226)
 * Now, the imaginary one (i or j), when used as a standalone constant rather than as part of a number, also 
   determines the output format (i or j). For instance, if you enter `j*2*pi*f`, the result will use `j` 

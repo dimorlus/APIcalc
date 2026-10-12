@@ -220,6 +220,9 @@
     <None Include="scripts.md" />
     <None Include="tutor.md" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="WinApiCalc.dpi.manifest" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

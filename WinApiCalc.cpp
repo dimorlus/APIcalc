@@ -11,6 +11,10 @@
 #ifndef __GNUC__
 #pragma comment(lib, "winmm.lib")
 #endif
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0 // Missing in older MinGW headers
+#endif
+
 #ifndef max
 #define max(a, b) std::max (a, b)
 #define min(a, b) std::min (a, b)
@@ -77,6 +81,12 @@ void LogKeyEvent (const char *location, int key, bool ctrlPressed = false)
 
 // Global pointer for pseudo-functions access
 static WinApiCalc *g_pCalcInstance = nullptr;
+
+// Font face used for all edit controls
+static const char *CalcFontFace ()
+{
+ return "Courier New";
+}
 
 // Static member for low-level keyboard hook (Esc closes CHM help)
 HHOOK WinApiCalc::s_hKeyboardHook = nullptr;
@@ -355,7 +365,21 @@ BOOL WinApiCalc::InitInstance (HINSTANCE hInstance, int nCmdShow)
 {
  m_hInst = hInstance;
 
- // Initialize DPI (without SetProcessDpiAware for compatibility)
+ // Declare DPI awareness (must be before any window is created), otherwise Windows
+ // bitmap-stretches the client area on displays with scaling > 100% and text looks blurry.
+ // Loaded dynamically for compatibility with old Windows / Wine.
+ {
+  HMODULE hUser = GetModuleHandleA ("user32.dll");
+  typedef BOOL (WINAPI * SetCtxFn) (HANDLE);
+  SetCtxFn setCtx = hUser ? (SetCtxFn)GetProcAddress (hUser, "SetProcessDpiAwarenessContext") : nullptr;
+  // -4 = DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, -2 = DPI_AWARENESS_CONTEXT_SYSTEM_AWARE
+  if (!setCtx || !(setCtx ((HANDLE)(INT_PTR)-4) || setCtx ((HANDLE)(INT_PTR)-2)))
+   {
+    typedef BOOL (WINAPI * SetAwareFn) ();
+    SetAwareFn setAware = hUser ? (SetAwareFn)GetProcAddress (hUser, "SetProcessDPIAware") : nullptr;
+    if (setAware) setAware ();
+   }
+ }
  InitializeDPI ();
 
  // Load settings first
@@ -804,9 +828,16 @@ LRESULT CALLBACK WinApiCalc::WndProc (HWND hWnd, UINT message, WPARAM wParam, LP
    if (g_pApp)
     {
      g_pApp->m_hWnd = hWnd; // Set window handle first!
+     g_pApp->InitializeDPI (); // DPI of the monitor the window is created on
      g_pApp->OnCreate ();
     }
    break;
+  case WM_DPICHANGED:
+   if (g_pApp)
+    {
+     g_pApp->OnDpiChanged (HIWORD (wParam), (const RECT *)lParam);
+    }
+   return 0;
   case WM_COMMAND:
    if (g_pApp)
     {
@@ -1099,7 +1130,7 @@ void WinApiCalc::OnCreate ()
  // Set monospaced font for controls
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  if (hFont)
   {
@@ -1934,7 +1965,7 @@ int WinApiCalc::GetCharWidth ()
 
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
@@ -1956,7 +1987,7 @@ int WinApiCalc::GetCharHeight ()
 
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
@@ -2001,7 +2032,7 @@ int WinApiCalc::CalculateOptimalWidth (int charCount)
 
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
@@ -2050,7 +2081,7 @@ void WinApiCalc::UpdateFont ()
  // Create new Courier New font
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  if (hFont)
   {
@@ -2073,7 +2104,7 @@ int WinApiCalc::CalculateContentBasedWidth ()
 
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
@@ -2142,7 +2173,7 @@ int WinApiCalc::CalculateCurrentResultWidth ()
 
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
 
  HFONT hOldFont = (HFONT)SelectObject (hdc, hFont);
 
@@ -2376,7 +2407,7 @@ void WinApiCalc::ShowVariablesDialog ()
  // Calculate width in pixels for maxlen characters in current font
  HFONT hFontMeasure = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                    DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                   DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                                   DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
  HDC hdc            = GetDC (m_hWnd);
  HFONT hOldFont     = hFontMeasure ? (HFONT)SelectObject (hdc, hFontMeasure) : nullptr;
  SIZE sz            = { 0, 0 };
@@ -2432,7 +2463,7 @@ void WinApiCalc::ShowVariablesDialog ()
  // Set the font to match calculator's font (new object for edit control)
  HFONT hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Courier New");
+                            DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, CalcFontFace ());
  if (hFont)
   {
    SendMessage (hMemoEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -2880,8 +2911,43 @@ void WinApiCalc::SaveSettings ()
   }
 }
 
+void WinApiCalc::OnDpiChanged (UINT dpi, const RECT *suggested)
+{
+ if (dpi == 0) return;
+ m_dpiX = m_dpiY = (int)dpi;
+ m_lastComboHeight = 0; // cached height is in old-DPI pixels
+
+ if (suggested)
+  SetWindowPos (m_hWnd, nullptr, suggested->left, suggested->top, suggested->right - suggested->left,
+                suggested->bottom - suggested->top, SWP_NOZORDER | SWP_NOACTIVATE);
+
+ if (m_hExpressionEdit && m_hResultEdit && m_hComboBox) UpdateFont (); // recreates fonts + ResizeWindow
+}
+
+void WinApiCalc::AdjustRectForDpi (RECT *rect, DWORD style, BOOL menu)
+{
+ typedef BOOL (WINAPI * AdjustFn) (LPRECT, DWORD, BOOL, DWORD, UINT);
+ static AdjustFn fn = (AdjustFn)GetProcAddress (GetModuleHandleA ("user32.dll"),
+                                                "AdjustWindowRectExForDpi");
+ if (fn)
+  fn (rect, style, menu, 0, (UINT)m_dpiX);
+ else
+  AdjustWindowRect (rect, style, menu);
+}
+
 void WinApiCalc::InitializeDPI ()
 {
+ typedef UINT (WINAPI * GetDpiFn) (HWND);
+ static GetDpiFn getDpi = (GetDpiFn)GetProcAddress (GetModuleHandleA ("user32.dll"), "GetDpiForWindow");
+ if (getDpi && m_hWnd)
+  {
+   UINT dpi = getDpi (m_hWnd);
+   if (dpi)
+    {
+     m_dpiX = m_dpiY = (int)dpi;
+     return;
+    }
+  }
  HDC hdc = GetDC (nullptr);
  if (hdc)
   {
@@ -3038,7 +3104,7 @@ void WinApiCalc::ResizeWindow ()
  style &= ~(WS_THICKFRAME | WS_MAXIMIZEBOX);
  style |= (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
  // Apply temp size to allow UpdateLayout to measure control client size with the correct width
- AdjustWindowRect (&tempRect, style, m_menuVisible ? TRUE : FALSE);
+ AdjustRectForDpi (&tempRect, style, m_menuVisible ? TRUE : FALSE);
  SetWindowPos (m_hWnd, nullptr, 0, 0, tempRect.right - tempRect.left,
                tempRect.bottom - tempRect.top, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -3135,7 +3201,7 @@ void WinApiCalc::ResizeWindow ()
 
  // Adjust for menu presence so the non-client area (menu bar) is accounted for.
  // If the menu is visible, pass TRUE; otherwise FALSE.
- AdjustWindowRect (&rect, style, m_menuVisible ? TRUE : FALSE);
+ AdjustRectForDpi (&rect, style, m_menuVisible ? TRUE : FALSE);
 #if ENABLE_DEBUG_LOG
  {
   char dbg3[256];
@@ -3267,15 +3333,25 @@ void WinApiCalc::SetWindowOpacity (int opacity)
  // Store the opacity value
  m_opacity = opacity;
 
- // Set window layered style if not already set
+ // Layered style only when really transparent: layered windows are composed by DWM
+ // as a bitmap and look soft (including the title bar) on mixed-DPI setups.
  LONG exStyle = GetWindowLongA (m_hWnd, GWL_EXSTYLE);
- if (!(exStyle & WS_EX_LAYERED))
+ if (opacity >= 255)
   {
-   SetWindowLongA (m_hWnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+   if (exStyle & WS_EX_LAYERED)
+    {
+     SetWindowLongA (m_hWnd, GWL_EXSTYLE, exStyle & ~WS_EX_LAYERED);
+     RedrawWindow (m_hWnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_FRAME);
+    }
   }
-
- // Set the actual transparency
- SetLayeredWindowAttributes (m_hWnd, 0, (BYTE)opacity, LWA_ALPHA);
+ else
+  {
+   if (!(exStyle & WS_EX_LAYERED))
+    {
+     SetWindowLongA (m_hWnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+    }
+   SetLayeredWindowAttributes (m_hWnd, 0, (BYTE)opacity, LWA_ALPHA);
+  }
 
  // Save settings immediately
  SaveSettings ();
@@ -3502,7 +3578,7 @@ int WinApiCalc::MeasureTextHeightForWidth (const std::string &text, int width)
    // Create matching font if none is applied
    hFont = CreateFontA (ScaleDPI (m_fontSize), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                        FIXED_PITCH | FF_MODERN, "Courier New");
+                        FIXED_PITCH | FF_MODERN, CalcFontFace ());
   }
 
  HFONT hOld = (HFONT)SelectObject (hdc, hFont);

@@ -160,6 +160,8 @@ public:
 
     // Layout management
     void InitializeDPI();
+    void OnDpiChanged(UINT dpi, const RECT *suggested);
+    void AdjustRectForDpi(RECT *rect, DWORD style, BOOL menu);
     int ScaleDPI(int value);
     void UpdateLayout();
     void ResizeWindow();

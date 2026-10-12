@@ -17,7 +17,7 @@ PrivilegesRequired=admin
 UsedUserAreasWarning=no
 ArchitecturesAllowed=x86 x64os
 ArchitecturesInstallIn64BitMode=x64os
-WizardStyle=classic
+WizardStyle=classic dynamic
 
 [Types]
 Name: "std";    Description: "Standard (built-in calculator engine)"
